@@ -1,0 +1,40 @@
+╔════════════════════════════════════════════════════════════╗
+║                    IMPORTANT NOTICE                         ║
+╚════════════════════════════════════════════════════════════╝
+
+  SERVER NOW RUNS ON PORT 8001 (not 8000)
+
+  Reason: Windows service is using port 8000
+
+╔════════════════════════════════════════════════════════════╗
+║                     UPDATED URLS                            ║
+╚════════════════════════════════════════════════════════════╝
+
+  API Base:         http://localhost:8001
+  Documentation:    http://localhost:8001/docs
+  Health Check:     http://localhost:8001/health
+
+╔════════════════════════════════════════════════════════════╗
+║                   START THE SERVER                          ║
+╚════════════════════════════════════════════════════════════╝
+
+  python run.py
+
+  Server will start on: http://localhost:8001
+
+╔════════════════════════════════════════════════════════════╗
+║                  UPDATED FILES                              ║
+╚════════════════════════════════════════════════════════════╝
+
+  ✓ run.py                 → port=8001
+  ✓ client/api_client.py   → base_url="http://localhost:8001"
+  ✓ example.py             → NotionClient("http://localhost:8001")
+
+╔════════════════════════════════════════════════════════════╗
+║                  NO OTHER CHANGES                           ║
+╚════════════════════════════════════════════════════════════╝
+
+  All functionality remains the same - just different port!
+
+  See PORT_CHANGE.md for detailed information.
+

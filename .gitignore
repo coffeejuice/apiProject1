@@ -205,3 +205,9 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Client config
+.notion_client_config.json
+
+# Alembic versions
+alembic/versions/__pycache__/
