@@ -38,7 +38,7 @@ class NotionClient:
             headers["Authorization"] = f"Bearer {self.token}"
         return headers
 
-    def _request(self, method: str, endpoint: str, **kwargs) -> Optional[Dict]:
+    def _request(self, method: str, endpoint: str, silent: bool = False, **kwargs) -> Optional[Dict]:
         """Make HTTP request"""
         url = f"{self.base_url}{endpoint}"
         try:
@@ -46,7 +46,8 @@ class NotionClient:
             response.raise_for_status()
             return response.json() if response.content else None
         except requests.exceptions.RequestException as e:
-            print(f"Request failed: {e}")
+            if not silent:
+                print(f"Request failed: {e}")
             return None
 
     # Auth methods
@@ -77,9 +78,9 @@ class NotionClient:
         data = {"title": title}
         return self._request("POST", "/documents", json=data)
 
-    def list_documents(self, page: int = 1, page_size: int = 50) -> Optional[Dict]:
+    def list_documents(self, page: int = 1, page_size: int = 50, silent: bool = False) -> Optional[Dict]:
         """List all accessible documents"""
-        return self._request("GET", f"/documents?page={page}&page_size={page_size}")
+        return self._request("GET", f"/documents?page={page}&page_size={page_size}", silent=silent)
 
     def get_document(self, document_id: str) -> Optional[Dict]:
         """Get document by ID"""

@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from uuid import UUID
 from app.models import (
     Document, Block, Revision, Operation, OperationType,
-    BlockType, RevisionSnapshot
+    BlockType, RevisionSnapshot, Device
 )
 from app.schemas import OpData, ConflictInfo
 
@@ -126,6 +126,17 @@ def commit_operations(
     if existing:
         return True, existing.rev_number, None
 
+    # Ensure device exists (auto-register if not)
+    device = db.query(Device).filter(Device.device_id == device_id).first()
+    if not device:
+        device = Device(
+            device_id=device_id,
+            user_id=user_id,
+            device_name="Auto-registered device"
+        )
+        db.add(device)
+        db.flush()
+
     # Get document
     doc = db.query(Document).filter(Document.document_id == document_id).first()
     if not doc:
@@ -170,6 +181,9 @@ def commit_operations(
         return True, new_rev_number, None
 
     except Exception as e:
+        print(f"Error in commit_operations: {e}")
+        import traceback
+        traceback.print_exc()
         db.rollback()
         return False, None, None
 

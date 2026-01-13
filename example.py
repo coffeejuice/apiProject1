@@ -11,14 +11,27 @@ def main():
 
     print("=== Notion-Style Block Editor Demo ===\n")
 
-    # Register and login (comment out if already registered)
-    print("1. Registering user...")
-    client.register("demo_user", "demo@example.com", "password123")
+    is_logged = False
+    is_new_user = False
+    print("1. Logging in...")
+    if client.login("demo_user", "password123"):
+        is_logged = True
+        print("Successfully logged in!")
 
-    print("2. Logging in...")
-    if not client.login("demo_user", "password123"):
-        print("Login failed!")
-        return
+    if not is_logged:
+        print("Login failed! \n2. Try registering a new user...")
+        # Register and login (comment out if already registered)
+        client.register("demo_user", "demo@example.com", "password123")
+        is_new_user = True
+
+    if is_new_user:
+        print("1. Logging in again...")
+        if client.login("demo_user", "password123"):
+            is_logged = True
+            print("Successfully logged in!")
+        else:
+            print("Login failed!")
+            return
 
     # Create a document
     print("\n3. Creating document...")
@@ -37,9 +50,11 @@ def main():
         "Welcome to Block Editor",
         block_type="heading1"
     )
-    if result["success"]:
+    if result and result.get("success"):
         current_rev = result["new_rev_number"]
         print(f"   ✓ Added heading (rev {current_rev})")
+    else:
+        print(f"   ✗ Failed to add heading: {result}")
 
     # Add paragraph
     result = client.insert_block(
@@ -48,9 +63,11 @@ def main():
         "This is a demonstration of the block-based editor.",
         block_type="paragraph"
     )
-    if result["success"]:
+    if result and result.get("success"):
         current_rev = result["new_rev_number"]
         print(f"   ✓ Added paragraph (rev {current_rev})")
+    else:
+        print(f"   ✗ Failed to add paragraph: {result}")
 
     # Add todo list
     result = client.insert_block(
@@ -59,9 +76,11 @@ def main():
         "Create backend API",
         block_type="todo"
     )
-    if result["success"]:
+    if result and result.get("success"):
         current_rev = result["new_rev_number"]
         print(f"   ✓ Added todo (rev {current_rev})")
+    else:
+        print(f"   ✗ Failed to add todo: {result}")
 
     result = client.insert_block(
         doc_id,
@@ -69,16 +88,22 @@ def main():
         "Build Python client",
         block_type="todo"
     )
-    if result["success"]:
+    if result and result.get("success"):
         current_rev = result["new_rev_number"]
         print(f"   ✓ Added todo (rev {current_rev})")
+    else:
+        print(f"   ✗ Failed to add todo: {result}")
 
     # List all blocks
     print("\n5. Listing blocks...")
     blocks = client.get_root_blocks(doc_id)
-    print(f"   Found {len(blocks)} blocks:")
-    for block in blocks:
-        print(f"   - [{block['block_type']}] {block['text'][:50]}")
+    if blocks:
+        print(f"   Found {len(blocks)} blocks:")
+        for block in blocks:
+            print(f"   - [{block['block_type']}] {block['text'][:50]}")
+    else:
+        print("   Found 0 blocks or failed to retrieve blocks")
+        blocks = []
 
     # Update a block
     if blocks:
@@ -90,9 +115,11 @@ def main():
             str(first_block["block_id"]),
             "Welcome to Block Editor (Updated!)"
         )
-        if result["success"]:
+        if result and result.get("success"):
             current_rev = result["new_rev_number"]
             print(f"   ✓ Updated block (rev {current_rev})")
+        else:
+            print(f"   ✗ Failed to update block: {result}")
 
     # List revisions
     print("\n7. Listing revisions...")
