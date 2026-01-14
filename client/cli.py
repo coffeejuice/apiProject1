@@ -23,53 +23,53 @@ def main():
 
     subparsers.add_parser("me", help="Show current user info")
 
-    # Document commands
+    # Process commands
     create_parser = subparsers.add_parser("create", help="Create a new document")
     create_parser.add_argument("title")
 
     subparsers.add_parser("list", help="List documents")
 
     get_parser = subparsers.add_parser("get", help="Get document")
-    get_parser.add_argument("document_id")
+    get_parser.add_argument("process_id")
 
     update_parser = subparsers.add_parser("update", help="Update document title")
-    update_parser.add_argument("document_id")
+    update_parser.add_argument("process_id")
     update_parser.add_argument("title")
 
     delete_parser = subparsers.add_parser("delete", help="Delete document")
-    delete_parser.add_argument("document_id")
+    delete_parser.add_argument("process_id")
 
     restore_parser = subparsers.add_parser("restore", help="Restore document")
-    restore_parser.add_argument("document_id")
+    restore_parser.add_argument("process_id")
 
     # Block commands
     blocks_parser = subparsers.add_parser("blocks", help="Get root blocks")
-    blocks_parser.add_argument("document_id")
+    blocks_parser.add_argument("process_id")
 
     add_parser = subparsers.add_parser("add", help="Add a block")
-    add_parser.add_argument("document_id")
+    add_parser.add_argument("process_id")
     add_parser.add_argument("text")
     add_parser.add_argument("--type", default="paragraph", choices=["paragraph", "heading1", "heading2", "list", "todo", "code", "quote"])
 
     edit_parser = subparsers.add_parser("edit", help="Edit block text")
-    edit_parser.add_argument("document_id")
+    edit_parser.add_argument("process_id")
     edit_parser.add_argument("block_id")
     edit_parser.add_argument("text")
 
     del_block_parser = subparsers.add_parser("delete-block", help="Delete a block")
-    del_block_parser.add_argument("document_id")
+    del_block_parser.add_argument("process_id")
     del_block_parser.add_argument("block_id")
 
     # Revision commands
     revisions_parser = subparsers.add_parser("revisions", help="List revisions")
-    revisions_parser.add_argument("document_id")
+    revisions_parser.add_argument("process_id")
 
     restore_rev_parser = subparsers.add_parser("restore-rev", help="Restore to revision")
-    restore_rev_parser.add_argument("document_id")
+    restore_rev_parser.add_argument("process_id")
     restore_rev_parser.add_argument("rev_number", type=int)
 
     diff_parser = subparsers.add_parser("diff", help="Get diff between revisions")
-    diff_parser.add_argument("document_id")
+    diff_parser.add_argument("process_id")
     diff_parser.add_argument("from_rev", type=int)
     diff_parser.add_argument("to_rev", type=int)
 
@@ -78,12 +78,12 @@ def main():
     search_parser.add_argument("query")
 
     search_doc_parser = subparsers.add_parser("search-doc", help="Search in document")
-    search_doc_parser.add_argument("document_id")
+    search_doc_parser.add_argument("process_id")
     search_doc_parser.add_argument("query")
 
     # Import/Export commands
     export_parser = subparsers.add_parser("export", help="Export to Markdown")
-    export_parser.add_argument("document_id")
+    export_parser.add_argument("process_id")
     export_parser.add_argument("--output", "-o", help="Output file")
 
     import_parser = subparsers.add_parser("import", help="Import from Markdown")
@@ -92,12 +92,12 @@ def main():
 
     # Sharing commands
     invite_parser = subparsers.add_parser("invite", help="Invite user")
-    invite_parser.add_argument("document_id")
+    invite_parser.add_argument("process_id")
     invite_parser.add_argument("email")
     invite_parser.add_argument("--role", default="viewer", choices=["viewer", "editor"])
 
     share_parser = subparsers.add_parser("share", help="Create share link")
-    share_parser.add_argument("document_id")
+    share_parser.add_argument("process_id")
     share_parser.add_argument("--expires", type=int, help="Expires in N days")
 
     args = parser.parse_args()
@@ -132,7 +132,7 @@ def main():
         elif args.command == "create":
             doc = client.create_document(args.title)
             if doc:
-                print(f"✓ Created document: {doc['document_id']}")
+                print(f"✓ Created document: {doc['process_id']}")
                 print(f"  Title: {doc['title']}")
 
         elif args.command == "list":
@@ -140,12 +140,12 @@ def main():
             if result:
                 print(f"Documents ({result['total']}):")
                 for doc in result['documents']:
-                    print(f"  [{doc['document_id']}] {doc['title']}")
+                    print(f"  [{doc['process_id']}] {doc['title']}")
 
         elif args.command == "get":
             doc = client.get_document(args.document_id)
             if doc:
-                print(f"Document ID: {doc['document_id']}")
+                print(f"Process ID: {doc['process_id']}")
                 print(f"Title: {doc['title']}")
                 print(f"Owner: {doc['owner_id']}")
                 print(f"Revision: {doc['current_rev_number']}")
@@ -157,7 +157,7 @@ def main():
 
         elif args.command == "delete":
             if client.delete_document(args.document_id):
-                print("✓ Document deleted")
+                print("✓ Process deleted")
 
         elif args.command == "restore":
             doc = client.restore_document(args.document_id)
@@ -258,7 +258,7 @@ def main():
                 markdown = f.read()
             doc = client.import_document(args.title, markdown)
             if doc:
-                print(f"✓ Imported as: {doc['document_id']}")
+                print(f"✓ Imported as: {doc['process_id']}")
 
         elif args.command == "invite":
             if client.invite_user(args.document_id, args.email, args.role):

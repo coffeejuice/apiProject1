@@ -72,7 +72,7 @@ class NotionClient:
         """Get current user info"""
         return self._request("GET", "/auth/me")
 
-    # Document methods
+    # Process methods
     def create_document(self, title: str) -> Optional[Dict]:
         """Create a new document"""
         data = {"title": title}

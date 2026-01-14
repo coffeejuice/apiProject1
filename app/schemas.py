@@ -2,21 +2,23 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from uuid import UUID
-from app.models import BlockType, Role, OperationType
+from app.models.block import BlockType
+from app.models.process import Role, Status
+from app.models.revision import OperationType
 
 # Auth schemas
 class UserRegister(BaseModel):
-    username: str = Field(min_length=3, max_length=50)
+    login: str = Field(min_length=3, max_length=50)
     email: EmailStr
     password: str = Field(min_length=8)
 
 class UserLogin(BaseModel):
-    username: str
+    login: str
     password: str
 
 class UserResponse(BaseModel):
-    user_id: UUID
-    username: str
+    user_id: int
+    login: str
     email: str
     created_at: datetime
 
@@ -27,27 +29,81 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-# Document schemas
-class DocumentCreate(BaseModel):
+# Process schemas
+class ProcessCreate(BaseModel):
+    user_id: int = 1
+    material_id: int = 1
+    heat_no: str
+    lot_no: str
+    finished_size: str
+    standard_customer: str
+    standard_wst: str
+    product_condition: str
+    product_surface: str
+    product_diameter_tolerance: str
+    product_length_tolerance: Optional[str] = None
+    product_curvature_tolerance: str
+    stock_size: str
+    stock_weight: float
+    stock_no: str
+    material_btt: float
+    material_btt_sym_tolerance: float
+    remarks: str
     title: str = Field(min_length=1, max_length=255)
 
-class DocumentUpdate(BaseModel):
+class ProcessUpdate(BaseModel):
+    user_id: Optional[int] = None
+    material_id: Optional[int] = None
+    heat_no: Optional[str] = None
+    lot_no: Optional[str] = None
+    finished_size: Optional[str] = None
+    standard_customer: Optional[str] = None
+    standard_wst: Optional[str] = None
+    product_condition: Optional[str] = None
+    product_surface: Optional[str] = None
+    product_diameter_tolerance: Optional[str] = None
+    product_length_tolerance: Optional[str] = None
+    product_curvature_tolerance: Optional[str] = None
+    stock_size: Optional[str] = None
+    stock_weight: Optional[float] = None
+    stock_no: Optional[str] = None
+    material_btt: Optional[float] = None
+    material_btt_sym_tolerance: Optional[float] = None
+    remarks: Optional[str] = None
     title: Optional[str] = Field(None, min_length=1, max_length=255)
 
-class DocumentResponse(BaseModel):
-    document_id: UUID
-    owner_id: UUID
+class ProcessResponse(BaseModel):
+    process_id: int
+    user_id: int
+    material_id: int
+    heat_no: str
+    lot_no: str
+    finished_size: str
+    standard_customer: str
+    standard_wst: str
+    product_condition: str
+    product_surface: str
+    product_diameter_tolerance: str
+    product_length_tolerance: Optional[str]
+    product_curvature_tolerance: str
+    stock_size: str
+    stock_weight: float
+    stock_no: str
+    material_btt: float
+    material_btt_sym_tolerance: float
+    remarks: str
     title: str
     created_at: datetime
-    updated_at: datetime
+    last_edit_at: datetime
     deleted_at: Optional[datetime]
     current_rev_number: int
+    preview_status: Status
 
     class Config:
         from_attributes = True
 
-class DocumentListResponse(BaseModel):
-    documents: List[DocumentResponse]
+class ProcessListResponse(BaseModel):
+    documents: List[ProcessResponse]
     total: int
     page: int
     page_size: int
@@ -55,7 +111,7 @@ class DocumentListResponse(BaseModel):
 # Block schemas
 class BlockResponse(BaseModel):
     block_id: UUID
-    document_id: UUID
+    process_id: int
     parent_block_id: Optional[UUID]
     order_key: str
     block_type: BlockType
@@ -116,10 +172,10 @@ class CommitResponse(BaseModel):
 # Revision schemas
 class RevisionResponse(BaseModel):
     revision_id: UUID
-    document_id: UUID
+    process_id: int
     rev_number: int
     created_at: datetime
-    created_by: UUID
+    created_by: int
 
     class Config:
         from_attributes = True
@@ -135,7 +191,7 @@ class InviteRequest(BaseModel):
 
 class ACLResponse(BaseModel):
     acl_id: UUID
-    user_id: UUID
+    user_id: int
     role: Role
     created_at: datetime
 
@@ -154,7 +210,7 @@ class ShareLinkResponse(BaseModel):
 # Search schemas
 class SearchResult(BaseModel):
     block_id: UUID
-    document_id: UUID
+    process_id: int
     snippet: str
     block_type: BlockType
 

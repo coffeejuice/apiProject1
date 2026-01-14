@@ -35,8 +35,8 @@ def main():
 
     # Create a document
     print("\n3. Creating document...")
-    doc = client.create_document("My Example Document")
-    doc_id = doc["document_id"]
+    doc = client.create_document("My Example Process")
+    doc_id = doc["process_id"]
     print(f"   Created: {doc['title']} (ID: {doc_id})")
 
     # Add some blocks

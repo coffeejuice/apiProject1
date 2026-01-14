@@ -151,14 +151,14 @@ curl -X POST http://localhost:8000/auth/login \
 curl -X POST http://localhost:8000/documents \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{"title": "My Document"}'
+  -d '{"title": "My Process"}'
 
 # List documents
 curl http://localhost:8000/documents \
   -H "Authorization: Bearer <token>"
 
 # Get document
-curl http://localhost:8000/documents/{document_id} \
+curl http://localhost:8000/documents/{process_id} \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -166,11 +166,11 @@ curl http://localhost:8000/documents/{document_id} \
 
 ```bash
 # Get root blocks
-curl http://localhost:8000/documents/{document_id}/blocks/root \
+curl http://localhost:8000/documents/{process_id}/blocks/root \
   -H "Authorization: Bearer <token>"
 
 # Commit changes
-curl -X POST http://localhost:8000/documents/{document_id}/commit \
+curl -X POST http://localhost:8000/documents/{process_id}/commit \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -247,8 +247,8 @@ client = NotionClient("http://localhost:8000")
 client.login("alice", "password123")
 
 # Create document
-doc = client.create_document("My Document")
-doc_id = doc["document_id"]
+doc = client.create_document("My Process")
+doc_id = doc["process_id"]
 
 # Insert a block
 result = client.insert_block(

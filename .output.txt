@@ -1,0 +1,851 @@
+[File: C:\Users\alext\PycharmProjects\apiProject1\alembic\versions\f645f21e2af7_initial_schema.py (147 lines total)]
+(36 more lines above)
+37:    sa.Column('created_at', sa.DateTime(), nullable=True),
+38:    sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ),
+39:    sa.PrimaryKeyConstraint('device_id')
+40:    )
+41:    op.create_table('documents',
+42:    sa.Column('process_id', sa.UUID(), nullable=False),
+43:    sa.Column('owner_id', sa.UUID(), nullable=False),
+44:    sa.Column('title', sa.String(length=255), nullable=False),
+45:    sa.Column('created_at', sa.DateTime(), nullable=True),
+46:    sa.Column('updated_at', sa.DateTime(), nullable=True),
+47:    sa.Column('deleted_at', sa.DateTime(), nullable=True),
+48:    sa.Column('current_rev_number', sa.Integer(), nullable=True),
+49:    sa.ForeignKeyConstraint(['owner_id'], ['users.user_id'], ),
+50:    sa.PrimaryKeyConstraint('process_id')
+51:    )
+52:    op.create_table('blocks',
+53:    sa.Column('block_id', sa.UUID(), nullable=False),
+54:    sa.Column('process_id', sa.UUID(), nullable=False),
+55:    sa.Column('parent_block_id', sa.UUID(), nullable=True),
+56:    sa.Column('order_key', sa.String(length=100), nullable=False),
+57:    sa.Column('block_type', sa.Enum('paragraph', 'heading1', 'heading2', 'list', 'todo', 'code', 'quote', 'divider', name='blocktype'), nullable=False),
+58:    sa.Column('text', sa.Text(), nullable=True),
+59:    sa.Column('props', sa.JSON(), nullable=True),
+60:    sa.Column('created_at', sa.DateTime(), nullable=True),
+61:    sa.Column('updated_at', sa.DateTime(), nullable=True),
+62:    sa.ForeignKeyConstraint(['process_id'], ['documents.process_id'], ),
+63:    sa.PrimaryKeyConstraint('block_id')
+64:    )
+65:    op.create_index('idx_document_order', 'blocks', ['process_id', 'order_key'], unique=False)
+66:    op.create_index('idx_document_parent', 'blocks', ['process_id', 'parent_block_id'], unique=False)
+67:    op.create_table('document_acl',
+68:    sa.Column('acl_id', sa.UUID(), nullable=False),
+69:    sa.Column('process_id', sa.UUID(), nullable=False),
+70:    sa.Column('user_id', sa.UUID(), nullable=False),
+71:    sa.Column('role', sa.Enum('owner', 'editor', 'viewer', name='role'), nullable=False),
+72:    sa.Column('created_at', sa.DateTime(), nullable=True),
+73:    sa.ForeignKeyConstraint(['process_id'], ['documents.process_id'], ),
+74:    sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ),
+75:    sa.PrimaryKeyConstraint('acl_id')
+76:    )
+77:    op.create_index('idx_document_user', 'document_acl', ['process_id', 'user_id'], unique=True)
+78:    op.create_table('revisions',
+79:    sa.Column('revision_id', sa.UUID(), nullable=False),
+80:    sa.Column('process_id', sa.UUID(), nullable=False),
+81:    sa.Column('rev_number', sa.Integer(), nullable=False),
+82:    sa.Column('device_id', sa.UUID(), nullable=False),
+83:    sa.Column('client_batch_id', sa.UUID(), nullable=False),
+84:    sa.Column('created_at', sa.DateTime(), nullable=True),
+85:    sa.Column('created_by', sa.UUID(), nullable=False),
+86:    sa.ForeignKeyConstraint(['created_by'], ['users.user_id'], ),
+87:    sa.ForeignKeyConstraint(['device_id'], ['devices.device_id'], ),
+88:    sa.ForeignKeyConstraint(['process_id'], ['documents.process_id'], ),
+89:    sa.PrimaryKeyConstraint('revision_id')
+90:    )
+91:    op.create_index('idx_device_batch', 'revisions', ['device_id', 'client_batch_id'], unique=False)
+92:    op.create_index('idx_document_rev', 'revisions', ['process_id', 'rev_number'], unique=False)
+93:    op.create_table('share_links',
+94:    sa.Column('link_id', sa.UUID(), nullable=False),
+95:    sa.Column('process_id', sa.UUID(), nullable=False),
+96:    sa.Column('token', sa.String(length=100), nullable=False),
+97:    sa.Column('created_at', sa.DateTime(), nullable=True),
+98:    sa.Column('created_by', sa.UUID(), nullable=False),
+99:    sa.Column('expires_at', sa.DateTime(), nullable=True),
+100:    sa.ForeignKeyConstraint(['created_by'], ['users.user_id'], ),
+101:    sa.ForeignKeyConstraint(['process_id'], ['documents.process_id'], ),
+102:    sa.PrimaryKeyConstraint('link_id')
+103:    )
+104:    op.create_index(op.f('ix_share_links_token'), 'share_links', ['token'], unique=True)
+105:    op.create_table('ops',
+106:    sa.Column('op_id', sa.UUID(), nullable=False),
+(41 more lines below)
+
+
+-------------------------------------------------
+
+[File: C:\Users\alext\PycharmProjects\apiProject1\app\models\block.py (56 lines total)]
+(33 more lines above)
+34:
+35:class Block(Base):
+36:    __tablename__ = "blocks"
+37:
+38:    block_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+39:    document_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("documents.process_id"), nullable=False)
+40:    parent_block_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+41:    order_key: Mapped[str] = mapped_column(String(100), nullable=False)
+42:    block_type: Mapped[BlockType] = mapped_column(SQLEnum(BlockType), nullable=False)
+43:    text: Mapped[str] = mapped_column(Text, default="")
+44:    props: Mapped[dict] = mapped_column(JSON, default=dict)
+45:    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+46:    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+47:
+48:    document: Mapped["Process"] = relationship("Process", back_populates="blocks")
+49:
+50:    __table_args__ = (
+51:        Index("idx_document_parent", "process_id", "parent_block_id"),
+52:        Index("idx_document_order", "process_id", "order_key"),
+53:    )
+54:
+55:
+56:
+
+
+-------------------------------------------------
+
+[File: C:\Users\alext\PycharmProjects\apiProject1\app\models\document.py (66 lines total)]
+(18 more lines above)
+19:    ok_not_editable = "ok_not_editable"
+20:
+21:class Process(Base):
+22:    __tablename__ = "documents"
+23:
+24:    process_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+25:    owner_id: Mapped[int] = mapped_column(Integer, ForeignKey("accounts.user_id"), nullable=False)
+26:    title: Mapped[str] = mapped_column(String(255), nullable=False)
+27:    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+28:    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+29:    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+30:    current_rev_number: Mapped[int] = mapped_column(Integer, default=0)
+31:    preview_status: Mapped[Status] = mapped_column(SQLEnum(Status, name="preview_status_enum"), default=Status.empty, nullable=False)
+32:
+33:    owner: Mapped["User"] = relationship("User", back_populates="documents")
+34:    blocks: Mapped[List["Block"]] = relationship("Block", back_populates="document", cascade="all, delete-orphan")
+35:    revisions: Mapped[List["Revision"]] = relationship("Revision", back_populates="document", cascade="all, delete-orphan")
+36:    acl: Mapped[List["DocumentACL"]] = relationship("DocumentACL", back_populates="document", cascade="all, delete-orphan")
+37:    share_links: Mapped[List["ShareLink"]] = relationship("ShareLink", back_populates="document", cascade="all, delete-orphan")
+38:
+39:class DocumentACL(Base):
+40:    __tablename__ = "document_acl"
+41:
+42:    acl_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+43:    document_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("documents.process_id"), nullable=False)
+44:    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("accounts.user_id"), nullable=False)
+45:    role: Mapped[Role] = mapped_column(SQLEnum(Role), nullable=False)
+46:    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+47:
+48:    document: Mapped["Process"] = relationship("Process", back_populates="acl")
+49:    user: Mapped["User"] = relationship("User")
+50:
+51:    __table_args__ = (
+52:        Index("idx_document_user", "process_id", "user_id", unique=True),
+53:    )
+54:
+55:class ShareLink(Base):
+56:    __tablename__ = "share_links"
+57:
+58:    link_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+59:    document_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("documents.process_id"), nullable=False)
+60:    token: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
+61:    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+62:    created_by: Mapped[int] = mapped_column(Integer, ForeignKey("accounts.user_id"), nullable=False)
+63:    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+64:
+(2 more lines below)
+
+
+-------------------------------------------------
+
+[File: C:\Users\alext\PycharmProjects\apiProject1\app\models\revision.py (58 lines total)]
+(8 more lines above)
+9:
+10:class Revision(Base):
+11:    __tablename__ = "revisions"
+12:
+13:    revision_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+14:    document_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("documents.process_id"), nullable=False)
+15:    rev_number: Mapped[int] = mapped_column(Integer, nullable=False)
+16:    device_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("devices.device_id"), nullable=False)
+17:    client_batch_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+18:    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+19:    created_by: Mapped[int] = mapped_column(Integer, ForeignKey("accounts.user_id"), nullable=False)
+20:
+21:    document: Mapped["Process"] = relationship("Process", back_populates="revisions")
+22:    ops: Mapped[List["Operation"]] = relationship("Operation", back_populates="revision", cascade="all, delete-orphan")
+23:    snapshot: Mapped[Optional["RevisionSnapshot"]] = relationship("RevisionSnapshot", back_populates="revision", uselist=False, cascade="all, delete-orphan")
+24:
+25:    __table_args__ = (
+26:        Index("idx_document_rev", "process_id", "rev_number"),
+27:        Index("idx_device_batch", "device_id", "client_batch_id"),
+28:    )
+29:
+30:class OperationType(enum.Enum):
+31:    insert_block = "insert_block"
+(27 more lines below)
+
+
+-------------------------------------------------
+
+[File: C:\Users\alext\PycharmProjects\apiProject1\app\routers\documents.py (148 lines total)]
+(19 more lines above)
+20:    document_id: UUID,
+21:    user_id: UUID,
+22:    required_role: Optional[Role] = None
+23:) -> Process:
+24:    """Check if user has access to document"""
+25:    doc = db.execute(select(Process).filter(Process.process_id == document_id)).scalars().first()
+26:    if not doc:
+27:        raise HTTPException(status_code=404, detail="Process not found")
+28:
+29:    # Owner has full access
+30:    if doc.owner_id == user_id:
+31:        return doc
+32:
+33:    # Check ACL
+34:    acl = db.execute(select(DocumentACL).filter(
+35:        DocumentACL.document_id == document_id,
+
+...
+
+66:    page: int = Query(1, ge=1),
+67:    page_size: int = Query(50, ge=1, le=100),
+68:    include_deleted: bool = False,
+69:    current_user: User = Depends(get_current_user),
+70:    db: Session = Depends(get_db)
+71:):
+72:    # Get documents user owns or has access to
+73:    stmt = select(Process).filter(
+74:        or_(
+75:            Process.owner_id == current_user.user_id,
+76:            Process.process_id.in_(
+77:                select(DocumentACL.document_id).filter(
+78:                    DocumentACL.user_id == current_user.user_id
+79:                )
+80:            )
+81:        )
+(67 more lines below)
+
+
+-------------------------------------------------
+
+[File: C:\Users\alext\PycharmProjects\apiProject1\app\routers\import_export.py (56 lines total)]
+(38 more lines above)
+39:
+40:    # Create blocks
+41:    for block_data in blocks_data:
+42:        block = Block(
+43:            block_id=UUID(block_data["block_id"]),
+44:            document_id=doc.process_id,
+45:            parent_block_id=UUID(block_data["parent_block_id"]) if block_data.get("parent_block_id") else None,
+46:            order_key=block_data["order_key"],
+47:            block_type=BlockType[block_data["block_type"]],
+48:            text=block_data.get("text", ""),
+49:            props=block_data.get("props", {})
+(7 more lines below)
+
+
+-------------------------------------------------
+
+[File: C:\Users\alext\PycharmProjects\apiProject1\app\routers\revisions.py (121 lines total)]
+(9 more lines above)
+10:from app.models.document import Process, Role
+11:from app.schemas import RevisionResponse, RevisionListResponse, DiffResponse
+12:from app.auth import get_current_user
+13:from app.routers.documents import check_document_access
+14:
+15:router = APIRouter(prefix="/documents/{process_id}/revisions", tags=["revisions"])
+16:
+17:@router.get("", response_model=RevisionListResponse)
+18:def list_revisions(
+19:    document_id: UUID,
+20:    page: int = Query(1, ge=1),
+21:    page_size: int = Query(50, ge=1, le=100),
+22:    current_user: User = Depends(get_current_user),
+23:    db: Session = Depends(get_db)
+24:):
+25:    check_document_access(db, document_id, current_user.user_id)
+
+...
+
+77:            ops = db.execute(select(Operation).filter(Operation.revision_id == rev.revision_id)).scalars().all()
+78:            from app.services.commit_service import apply_operations
+79:            from app.schemas import OpData
+80:            op_data_list = [
+81:                OpData(op_type=op.op_type, data=op.data)
+82:                for op in ops
+83:            ]
+84:            apply_operations(db, document_id, op_data_list)
+85:
+86:    # Update document revision
+87:    doc = db.execute(select(Process).filter(Process.process_id == document_id)).scalars().first()
+88:    if doc:
+89:        doc.current_rev_number = rev_number
+90:
+91:    db.commit()
+92:    return {"message": "Process restored", "rev_number": rev_number}
+(29 more lines below)
+
+
+-------------------------------------------------
+
+[File: C:\Users\alext\PycharmProjects\apiProject1\app\routers\search.py (40 lines total)]
+(18 more lines above)
+19:):
+20:    """Search across all accessible documents"""
+21:    results = search_blocks(db, current_user.user_id, q, limit=limit)
+22:    return SearchResponse(results=results, total=len(results))
+23:
+24:document_search_router = APIRouter(prefix="/documents/{process_id}/search", tags=["search"])
+25:
+26:@document_search_router.get("", response_model=SearchResponse)
+27:def search_document(
+28:    document_id: UUID,
+29:    q: str = Query(..., min_length=1),
+(11 more lines below)
+
+
+-------------------------------------------------
+
+[File: C:\Users\alext\PycharmProjects\apiProject1\app\routers\sharing.py (158 lines total)]
+(8 more lines above)
+9:from app.models import User, DocumentACL, ShareLink, Role, Process
+10:from app.schemas import InviteRequest, ACLResponse, ShareLinkResponse, DocumentResponse
+11:from app.auth import get_current_user
+12:from app.routers.documents import check_document_access
+13:
+14:router = APIRouter(prefix="/documents/{process_id}", tags=["sharing"])
+15:
+16:@router.post("/invites", status_code=status.HTTP_201_CREATED)
+17:def invite_user(
+18:    document_id: UUID,
+19:    invite: InviteRequest,
+20:    current_user: User = Depends(get_current_user),
+21:    db: Session = Depends(get_db)
+22:):
+23:    # Only owner can invite
+24:    doc = check_document_access(db, document_id, current_user.user_id)
+
+...
+
+146:    db: Session = Depends(get_db)
+147:):
+148:    link = db.execute(select(ShareLink).filter(ShareLink.token == token)).scalars().first()
+149:    if not link:
+150:        raise HTTPException(status_code=404, detail="Share link not found")
+151:
+152:    # Check expiration
+153:    if link.expires_at and link.expires_at < datetime.utcnow():
+154:        raise HTTPException(status_code=410, detail="Share link expired")
+155:
+156:    doc = db.execute(select(Process).filter(Process.process_id == link.document_id)).scalars().first()
+157:    return doc
+158:
+
+
+-------------------------------------------------
+
+[File: C:\Users\alext\PycharmProjects\apiProject1\app\services\commit_service.py (216 lines total)]
+(136 more lines above)
+137:        )
+138:        db.add(device)
+139:        db.flush()
+140:
+141:    # Get document
+142:    doc = db.execute(select(Process).filter(Process.process_id == document_id)).scalars().first()
+143:    if not doc:
+144:        return False, None, None
+145:
+146:    # Check conflicts
+147:    if base_rev_number < doc.current_rev_number:
+(69 more lines below)
+
+
+-------------------------------------------------
+
+[File: C:\Users\alext\PycharmProjects\apiProject1\app\services\search_service.py (73 lines total)]
+(29 more lines above)
+30:
+31:    # Filter by access rights
+32:    stmt = stmt.filter(
+33:        or_(
+34:            Process.owner_id == user_id,
+35:            Process.process_id.in_(
+36:                select(DocumentACL.document_id).filter(
+37:                    DocumentACL.user_id == user_id
+38:                )
+39:            )
+40:        )
+41:    )
+42:
+43:    # Exclude deleted documents
+44:    stmt = stmt.filter(Process.deleted_at == None)
+45:
+46:    blocks = db.execute(stmt.limit(limit)).scalars().all()
+47:
+48:    # Create results with snippets
+49:    results = []
+50:    for block in blocks:
+51:        # Create snippet (50 chars before/after match)
+52:        text = block.text
+53:        idx = text.lower().find(query.lower())
+54:        if idx >= 0:
+55:            start = max(0, idx - 50)
+56:            end = min(len(text), idx + len(query) + 50)
+57:            snippet = text[start:end]
+58:            if start > 0:
+59:                snippet = "..." + snippet
+60:            if end < len(text):
+61:                snippet = snippet + "..."
+62:        else:
+63:            snippet = text[:100]
+64:
+65:        results.append(SearchResult(
+66:            block_id=block.block_id,
+67:            document_id=block.process_id,
+68:            snippet=snippet,
+69:            block_type=block.block_type
+70:        ))
+71:
+72:    return results
+(1 more lines below)
+
+
+-------------------------------------------------
+
+[File: C:\Users\alext\PycharmProjects\apiProject1\client\cli.py (279 lines total)]
+(25 more lines above)
+26:    # Process commands
+27:    create_parser = subparsers.add_parser("create", help="Create a new document")
+28:    create_parser.add_argument("title")
+29:
+30:    subparsers.add_parser("list", help="List documents")
+31:
+32:    get_parser = subparsers.add_parser("get", help="Get document")
+33:    get_parser.add_argument("process_id")
+34:
+35:    update_parser = subparsers.add_parser("update", help="Update document title")
+36:    update_parser.add_argument("process_id")
+37:    update_parser.add_argument("title")
+38:
+39:    delete_parser = subparsers.add_parser("delete", help="Delete document")
+40:    delete_parser.add_argument("process_id")
+41:
+42:    restore_parser = subparsers.add_parser("restore", help="Restore document")
+43:    restore_parser.add_argument("process_id")
+44:
+45:    # Block commands
+46:    blocks_parser = subparsers.add_parser("blocks", help="Get root blocks")
+47:    blocks_parser.add_argument("process_id")
+48:
+49:    add_parser = subparsers.add_parser("add", help="Add a block")
+50:    add_parser.add_argument("process_id")
+51:    add_parser.add_argument("text")
+52:    add_parser.add_argument("--type", default="paragraph", choices=["paragraph", "heading1", "heading2", "list", "todo", "code", "quote"])
+53:
+54:    edit_parser = subparsers.add_parser("edit", help="Edit block text")
+55:    edit_parser.add_argument("process_id")
+56:    edit_parser.add_argument("block_id")
+57:    edit_parser.add_argument("text")
+58:
+59:    del_block_parser = subparsers.add_parser("delete-block", help="Delete a block")
+60:    del_block_parser.add_argument("process_id")
+61:    del_block_parser.add_argument("block_id")
+62:
+63:    # Revision commands
+64:    revisions_parser = subparsers.add_parser("revisions", help="List revisions")
+65:    revisions_parser.add_argument("process_id")
+66:
+67:    restore_rev_parser = subparsers.add_parser("restore-rev", help="Restore to revision")
+68:    restore_rev_parser.add_argument("process_id")
+69:    restore_rev_parser.add_argument("rev_number", type=int)
+70:
+71:    diff_parser = subparsers.add_parser("diff", help="Get diff between revisions")
+72:    diff_parser.add_argument("process_id")
+73:    diff_parser.add_argument("from_rev", type=int)
+74:    diff_parser.add_argument("to_rev", type=int)
+75:
+76:    # Search commands
+77:    search_parser = subparsers.add_parser("search", help="Search all documents")
+78:    search_parser.add_argument("query")
+79:
+80:    search_doc_parser = subparsers.add_parser("search-doc", help="Search in document")
+81:    search_doc_parser.add_argument("process_id")
+82:    search_doc_parser.add_argument("query")
+83:
+84:    # Import/Export commands
+85:    export_parser = subparsers.add_parser("export", help="Export to Markdown")
+86:    export_parser.add_argument("process_id")
+87:    export_parser.add_argument("--output", "-o", help="Output file")
+88:
+89:    import_parser = subparsers.add_parser("import", help="Import from Markdown")
+90:    import_parser.add_argument("title")
+91:    import_parser.add_argument("file")
+92:
+93:    # Sharing commands
+94:    invite_parser = subparsers.add_parser("invite", help="Invite user")
+95:    invite_parser.add_argument("process_id")
+96:    invite_parser.add_argument("email")
+97:    invite_parser.add_argument("--role", default="viewer", choices=["viewer", "editor"])
+98:
+99:    share_parser = subparsers.add_parser("share", help="Create share link")
+100:    share_parser.add_argument("process_id")
+101:    share_parser.add_argument("--expires", type=int, help="Expires in N days")
+102:
+103:    args = parser.parse_args()
+104:
+105:    if not args.command:
+106:        parser.print_help()
+107:        return
+108:
+109:    # Handle commands
+110:    try:
+111:        if args.command == "register":
+112:            password = getpass("Password: ")
+113:            if client.register(args.username, args.email, password):
+114:                print(f"✓ Registered user: {args.username}")
+115:            else:
+116:                print("✗ Registration failed")
+117:
+118:        elif args.command == "login":
+119:            password = getpass("Password: ")
+120:            if client.login(args.username, password):
+121:                print(f"✓ Logged in as: {args.username}")
+122:            else:
+123:                print("✗ Login failed")
+124:
+125:        elif args.command == "me":
+126:            user = client.get_me()
+127:            if user:
+128:                print(f"User ID: {user['user_id']}")
+129:                print(f"Username: {user['username']}")
+130:                print(f"Email: {user['email']}")
+131:
+132:        elif args.command == "create":
+133:            doc = client.create_document(args.title)
+134:            if doc:
+135:                print(f"✓ Created document: {doc['process_id']}")
+136:                print(f"  Title: {doc['title']}")
+137:
+138:        elif args.command == "list":
+139:            result = client.list_documents()
+140:            if result:
+141:                print(f"Documents ({result['total']}):")
+142:                for doc in result['documents']:
+143:                    print(f"  [{doc['process_id']}] {doc['title']}")
+144:
+145:        elif args.command == "get":
+146:            doc = client.get_document(args.document_id)
+147:            if doc:
+148:                print(f"Process ID: {doc['process_id']}")
+149:                print(f"Title: {doc['title']}")
+150:                print(f"Owner: {doc['owner_id']}")
+151:                print(f"Revision: {doc['current_rev_number']}")
+152:
+153:        elif args.command == "update":
+154:            doc = client.update_document(args.document_id, args.title)
+155:            if doc:
+156:                print(f"✓ Updated: {doc['title']}")
+157:
+158:        elif args.command == "delete":
+
+...
+
+251:                        f.write(markdown)
+252:                    print(f"✓ Exported to {args.output}")
+253:                else:
+254:                    print(markdown)
+255:
+256:        elif args.command == "import":
+257:            with open(args.file, "r") as f:
+258:                markdown = f.read()
+259:            doc = client.import_document(args.title, markdown)
+260:            if doc:
+261:                print(f"✓ Imported as: {doc['process_id']}")
+262:
+263:        elif args.command == "invite":
+264:            if client.invite_user(args.document_id, args.email, args.role):
+265:                print(f"✓ Invited {args.email} as {args.role}")
+266:
+(13 more lines below)
+
+
+-------------------------------------------------
+
+[File: C:\Users\alext\PycharmProjects\apiProject1\example.py (172 lines total)]
+(33 more lines above)
+34:            return
+35:
+36:    # Create a document
+37:    print("\n3. Creating document...")
+38:    doc = client.create_document("My Example Process")
+39:    doc_id = doc["process_id"]
+40:    print(f"   Created: {doc['title']} (ID: {doc_id})")
+41:
+42:    # Add some blocks
+43:    print("\n4. Adding blocks...")
+44:    current_rev = doc["current_rev_number"]
+(128 more lines below)
+
+
+-------------------------------------------------
+
+[File: C:\Users\alext\PycharmProjects\apiProject1\gui_client.py (699 lines total)]
+(30 more lines above)
+31:                "Get Me": {}
+32:            },
+33:            "Documents": {
+34:                "Create Process": {"title": "str"},
+35:                "List Documents": {"page": "int", "page_size": "int"},
+36:                "Get Process": {"process_id": "str"},
+37:                "Update Process": {"process_id": "str", "title": "str"},
+38:                "Delete Process": {"process_id": "str"},
+39:                "Restore Process": {"process_id": "str"}
+40:            },
+41:            "Blocks": {
+42:                "Get Root Blocks": {"process_id": "str"},
+43:                "Get Block Children": {"block_id": "str"},
+44:                "Insert Block": {"process_id": "str", "base_rev": "int", "text": "str", "block_type": "str", "parent_id": "str"},
+45:                "Insert Block Before": {"process_id": "str", "base_rev": "int", "text": "str", "block_type": "str", "before_block_id": "str"},
+46:                "Append Block After": {"process_id": "str", "base_rev": "int", "text": "str", "block_type": "str", "after_block_id": "str"},
+47:                "Update Block Text": {"process_id": "str", "base_rev": "int", "block_id": "str", "text": "str"},
+48:                "Delete Block": {"process_id": "str", "base_rev": "int", "block_id": "str"}
+49:            },
+50:            "Revisions": {
+51:                "List Revisions": {"process_id": "str"},
+52:                "Restore Revision": {"process_id": "str", "rev_number": "int"},
+53:                "Get Diff": {"process_id": "str", "from_rev": "int", "to_rev": "int"}
+54:            },
+55:            "Sharing": {
+56:                "Invite User": {"process_id": "str", "email": "str", "role": "str"},
+57:                "Get ACL": {"process_id": "str"},
+58:                "Revoke Access": {"process_id": "str", "user_id": "str"},
+59:                "Create Share Link": {"process_id": "str", "expires_days": "int"}
+60:            },
+61:            "Search": {
+62:                "Search All": {"query": "str", "limit": "int"},
+63:                "Search Process": {"process_id": "str", "query": "str", "limit": "int"}
+64:            },
+65:            "Export/Import": {
+66:                "Export Process": {"process_id": "str"},
+67:                "Import Process": {"title": "str", "markdown": "str"}
+68:            }
+69:        }
+70:
+71:        self.setup_ui()
+72:
+73:    def setup_ui(self):
+74:        # Main container with two columns
+75:        main_container = ttk.PanedWindow(self.root, orient=tk.HORIZONTAL)
+76:        main_container.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+...
+
+242:
+243:        for param_name, param_type in params.items():
+244:            row = ttk.Frame(self.input_frame)
+245:            row.pack(fill=tk.X, pady=2)
+246:
+247:            ttk.Label(row, text=f"{param_name} ({param_type}):", width=20).pack(side=tk.LEFT)
+248:
+249:            entry = ttk.Entry(row, width=50)
+250:            entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+251:
+252:            # Auto-fill process_id if available
+253:            if param_name == "process_id" and self.selected_document_id:
+254:                entry.insert(0, self.selected_document_id)
+255:
+256:            # Auto-fill block_id if available
+257:            elif param_name == "block_id" and self.selected_block:
+258:                entry.insert(0, str(self.selected_block['block_id']))
+259:
+260:            # Auto-fill before_block_id if available
+261:            elif param_name == "before_block_id" and self.selected_block:
+262:                entry.insert(0, str(self.selected_block['block_id']))
+263:
+
+...
+
+310:                return self.client.login(params['username'], params['password'])
+311:            elif command == "Get Me":
+312:                return self.client.get_me()
+313:
+314:            # Process commands
+315:            elif command == "Create Process":
+316:                return self.client.create_document(params['title'])
+317:            elif command == "List Documents":
+318:                return self.client.list_documents(params.get('page', 1), params.get('page_size', 50))
+319:            elif command == "Get Process":
+320:                return self.client.get_document(params['process_id'])
+321:            elif command == "Update Process":
+322:                return self.client.update_document(params['process_id'], params['title'])
+323:            elif command == "Delete Process":
+324:                return self.client.delete_document(params['process_id'])
+325:            elif command == "Restore Process":
+326:                return self.client.restore_document(params['process_id'])
+327:
+328:            # Block commands
+329:            elif command == "Get Root Blocks":
+330:                return self.client.get_root_blocks(params['process_id'])
+331:            elif command == "Get Block Children":
+332:                return self.client.get_block_children(params['block_id'])
+333:            elif command == "Insert Block":
+334:                return self.client.insert_block(
+335:                    params['process_id'],
+336:                    params['base_rev'],
+337:                    params['text'],
+338:                    params.get('block_type', 'paragraph'),
+339:                    params.get('parent_id')
+340:                )
+341:            elif command == "Insert Block Before":
+342:                return self.insert_block_before(
+343:                    params['process_id'],
+344:                    params['base_rev'],
+345:                    params['text'],
+346:                    params['before_block_id'],
+347:                    params.get('block_type', 'paragraph')
+348:                )
+349:            elif command == "Append Block After":
+350:                return self.append_block_after(
+351:                    params['process_id'],
+352:                    params['base_rev'],
+353:                    params['text'],
+354:                    params['after_block_id'],
+355:                    params.get('block_type', 'paragraph')
+356:                )
+357:            elif command == "Update Block Text":
+358:                return self.client.update_block_text(
+359:                    params['process_id'],
+360:                    params['base_rev'],
+361:                    params['block_id'],
+362:                    params['text']
+363:                )
+364:            elif command == "Delete Block":
+365:                return self.client.delete_block(
+366:                    params['process_id'],
+367:                    params['base_rev'],
+368:                    params['block_id']
+369:                )
+370:
+371:            # Revision commands
+372:            elif command == "List Revisions":
+373:                return self.client.list_revisions(params['process_id'])
+374:            elif command == "Restore Revision":
+375:                return self.client.restore_revision(params['process_id'], params['rev_number'])
+376:            elif command == "Get Diff":
+377:                return self.client.get_diff(params['process_id'], params['from_rev'], params['to_rev'])
+378:
+379:            # Sharing commands
+380:            elif command == "Invite User":
+381:                return self.client.invite_user(params['process_id'], params['email'], params.get('role', 'viewer'))
+382:            elif command == "Get ACL":
+383:                return self.client.get_acl(params['process_id'])
+384:            elif command == "Revoke Access":
+385:                return self.client.revoke_access(params['process_id'], params['user_id'])
+386:            elif command == "Create Share Link":
+387:                return self.client.create_share_link(params['process_id'], params.get('expires_days'))
+388:
+389:            # Search commands
+390:            elif command == "Search All":
+391:                return self.client.search(params['query'], params.get('limit', 50))
+392:            elif command == "Search Process":
+393:                return self.client.search_document(params['process_id'], params['query'], params.get('limit', 50))
+394:
+395:            # Export/Import commands
+396:            elif command == "Export Process":
+397:                return self.client.export_document(params['process_id'])
+398:            elif command == "Import Process":
+399:                return self.client.import_document(params['title'], params['markdown'])
+400:
+401:            else:
+402:                return {"error": f"Unknown command: {command}"}
+403:
+404:        except Exception as e:
+405:            return {"error": str(e)}
+406:
+407:    def display_response(self, result: Any, elapsed_time: float):
+
+...
+
+447:        else:
+448:            self.documents_listbox.insert(tk.END, "(Failed to load documents - check if logged in)")
+449:
+450:    def on_document_select(self, event):
+451:        selection = self.documents_listbox.curselection()
+452:        if not selection:
+453:            return
+454:
+455:        index = selection[0]
+456:        doc = self.documents_data[index]
+457:        self.selected_document_id = str(doc['process_id'])
+458:
+459:        self.load_document_blocks(self.selected_document_id)
+460:
+461:        # Update process_id in currently displayed input fields if any
+462:        if hasattr(self, 'input_widgets') and 'process_id' in self.input_widgets:
+463:            self.input_widgets['process_id'].delete(0, tk.END)
+464:            self.input_widgets['process_id'].insert(0, self.selected_document_id)
+465:
+466:    def load_document_blocks(self, document_id: str):
+467:        """Load all blocks (root and children) in hierarchical order"""
+468:        root_blocks = self.client.get_root_blocks(document_id)
+469:
+(230 more lines below)
+
+
+-------------------------------------------------
+
+[File: C:\Users\alext\PycharmProjects\apiProject1\README.md (547 lines total)]
+(155 more lines above)
+156:# List documents
+157:curl http://localhost:8000/documents \
+158:  -H "Authorization: Bearer <token>"
+159:
+160:# Get document
+161:curl http://localhost:8000/documents/{process_id} \
+162:  -H "Authorization: Bearer <token>"
+163:```
+164:
+165:### Blocks
+166:
+167:```bash
+168:# Get root blocks
+169:curl http://localhost:8000/documents/{process_id}/blocks/root \
+170:  -H "Authorization: Bearer <token>"
+171:
+172:# Commit changes
+173:curl -X POST http://localhost:8000/documents/{process_id}/commit \
+174:  -H "Authorization: Bearer <token>" \
+175:  -H "Content-Type: application/json" \
+176:  -d '{
+177:    "device_id": "...",
+178:    "base_rev_number": 0,
+179:    "client_batch_id": "...",
+180:    "ops": [
+181:      {
+182:        "op_type": "insert_block",
+183:        "data": {
+
+...
+
+241:from client.api_client import NotionClient
+242:
+243:# Initialize client
+244:client = NotionClient("http://localhost:8000")
+245:
+246:# Login
+247:client.login("alice", "password123")
+248:
+249:# Create document
+250:doc = client.create_document("My Process")
+251:doc_id = doc["process_id"]
+252:
+253:# Insert a block
+254:result = client.insert_block(
+255:    doc_id,
+256:    base_rev=0,
+(291 more lines below)
+
+
+-------------------------------------------------
+

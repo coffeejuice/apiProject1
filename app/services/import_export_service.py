@@ -1,16 +1,17 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from typing import List, Dict
 from uuid import UUID, uuid4
-from app.models import Block, BlockType
+from app.models.block import Block, BlockType
 from app.services.block_service import generate_order_key
 import re
 
-def export_to_markdown(db: Session, document_id: UUID) -> str:
+def export_to_markdown(db: Session, process_id: int) -> str:
     """Export document blocks to Markdown"""
-    blocks = db.query(Block).filter(
-        Block.document_id == document_id,
+    blocks = db.execute(select(Block).filter(
+        Block.process_id == process_id,
         Block.parent_block_id == None
-    ).order_by(Block.order_key).all()
+    ).order_by(Block.order_key)).scalars().all()
 
     lines = []
     for block in blocks:
@@ -44,9 +45,9 @@ def _block_to_markdown(block: Block) -> str:
 
 def _export_children(db: Session, parent_id: UUID, indent: int) -> List[str]:
     """Recursively export child blocks"""
-    children = db.query(Block).filter(
+    children = db.execute(select(Block).filter(
         Block.parent_block_id == parent_id
-    ).order_by(Block.order_key).all()
+    ).order_by(Block.order_key)).scalars().all()
 
     lines = []
     for child in children:

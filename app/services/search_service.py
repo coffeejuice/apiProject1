@@ -1,15 +1,16 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, select
 from typing import List, Optional
 from uuid import UUID
-from app.models import Block, Document, DocumentACL, Role
+from app.models.block import Block
+from app.models.process import Process, ProcessACL, Role
 from app.schemas import SearchResult
 
 def search_blocks(
     db: Session,
-    user_id: UUID,
+    user_id: int,
     query: str,
-    document_id: Optional[UUID] = None,
+    document_id: Optional[int] = None,
     limit: int = 50
 ) -> List[SearchResult]:
     """
@@ -17,32 +18,32 @@ def search_blocks(
     Returns blocks user has access to.
     """
     # Build base query
-    q = db.query(Block).join(Document)
+    stmt = select(Block).join(Process)
 
     # Filter by document if specified
     if document_id:
-        q = q.filter(Block.document_id == document_id)
+        stmt = stmt.filter(Block.process_id == document_id)
 
     # Filter by text search
     search_pattern = f"%{query}%"
-    q = q.filter(Block.text.ilike(search_pattern))
+    stmt = stmt.filter(Block.text.ilike(search_pattern))
 
     # Filter by access rights
-    q = q.filter(
+    stmt = stmt.filter(
         or_(
-            Document.owner_id == user_id,
-            Document.document_id.in_(
-                db.query(DocumentACL.document_id).filter(
-                    DocumentACL.user_id == user_id
+            Process.user_id == user_id,
+            Process.process_id.in_(
+                select(ProcessACL.process_id).filter(
+                    ProcessACL.user_id == user_id
                 )
             )
         )
     )
 
     # Exclude deleted documents
-    q = q.filter(Document.deleted_at == None)
+    stmt = stmt.filter(Process.deleted_at == None)
 
-    blocks = q.limit(limit).all()
+    blocks = db.execute(stmt.limit(limit)).scalars().all()
 
     # Create results with snippets
     results = []
@@ -63,7 +64,7 @@ def search_blocks(
 
         results.append(SearchResult(
             block_id=block.block_id,
-            document_id=block.document_id,
+            process_id=block.process_id,
             snippet=snippet,
             block_type=block.block_type
         ))

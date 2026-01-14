@@ -1,45 +1,49 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import select, func, delete
 from typing import List
 from uuid import UUID
 from app.database import get_db
-from app.models import User, Revision, Operation, Block, Document, Role
+from app.models.user import User
+from app.models.revision import Revision, Operation
+from app.models.block import Block
+from app.models.process import Process, Role
 from app.schemas import RevisionResponse, RevisionListResponse, DiffResponse
 from app.auth import get_current_user
-from app.routers.documents import check_document_access
+from app.routers.process import check_process_access
 
-router = APIRouter(prefix="/documents/{document_id}/revisions", tags=["revisions"])
+router = APIRouter(prefix="/documents/{process_id}/revisions", tags=["revisions"])
 
 @router.get("", response_model=RevisionListResponse)
 def list_revisions(
-    document_id: UUID,
+    process_id: int,
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    check_document_access(db, document_id, current_user.user_id)
+    check_process_access(db, process_id, current_user.user_id)
 
-    query = db.query(Revision).filter(Revision.document_id == document_id).order_by(Revision.rev_number.desc())
-    total = query.count()
-    revisions = query.offset((page - 1) * page_size).limit(page_size).all()
+    stmt = select(Revision).filter(Revision.process_id == process_id).order_by(Revision.rev_number.desc())
+    total = db.execute(select(func.count()).select_from(stmt.subquery())).scalar() or 0
+    revisions = db.execute(stmt.offset((page - 1) * page_size).limit(page_size)).scalars().all()
 
-    return RevisionListResponse(revisions=revisions, total=total)
+    return RevisionListResponse(revisions=list(revisions), total=total)
 
 @router.post("/{rev_number}/restore")
 def restore_revision(
-    document_id: UUID,
+    process_id: int,
     rev_number: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    check_document_access(db, document_id, current_user.user_id, Role.editor)
+    check_process_access(db, process_id, current_user.user_id, Role.editor)
 
     # Get target revision
-    revision = db.query(Revision).filter(
-        Revision.document_id == document_id,
+    revision = db.execute(select(Revision).filter(
+        Revision.process_id == process_id,
         Revision.rev_number == rev_number
-    ).first()
+    )).scalars().first()
 
     if not revision:
         raise HTTPException(status_code=404, detail="Revision not found")
@@ -47,12 +51,12 @@ def restore_revision(
     # Check if snapshot exists
     if revision.snapshot:
         # Restore from snapshot
-        db.query(Block).filter(Block.document_id == document_id).delete()
+        db.execute(delete(Block).filter(Block.process_id == process_id))
 
         for block_data in revision.snapshot.blocks_data:
             block = Block(
                 block_id=UUID(block_data["block_id"]),
-                document_id=document_id,
+                process_id=process_id,
                 parent_block_id=UUID(block_data["parent_block_id"]) if block_data["parent_block_id"] else None,
                 order_key=block_data["order_key"],
                 block_type=block_data["block_type"],
@@ -62,46 +66,47 @@ def restore_revision(
             db.add(block)
     else:
         # Replay ops from revision 0 to target
-        db.query(Block).filter(Block.document_id == document_id).delete()
+        db.execute(delete(Block).filter(Block.process_id == process_id))
 
-        revisions = db.query(Revision).filter(
-            Revision.document_id == document_id,
+        revisions = db.execute(select(Revision).filter(
+            Revision.process_id == process_id,
             Revision.rev_number <= rev_number
-        ).order_by(Revision.rev_number).all()
+        ).order_by(Revision.rev_number)).scalars().all()
 
         for rev in revisions:
-            ops = db.query(Operation).filter(Operation.revision_id == rev.revision_id).all()
+            ops = db.execute(select(Operation).filter(Operation.revision_id == rev.revision_id)).scalars().all()
             from app.services.commit_service import apply_operations
             from app.schemas import OpData
             op_data_list = [
                 OpData(op_type=op.op_type, data=op.data)
                 for op in ops
             ]
-            apply_operations(db, document_id, op_data_list)
+            apply_operations(db, process_id, op_data_list)
 
     # Update document revision
-    doc = db.query(Document).filter(Document.document_id == document_id).first()
-    doc.current_rev_number = rev_number
+    doc = db.execute(select(Process).filter(Process.process_id == process_id)).scalars().first()
+    if doc:
+        doc.current_rev_number = rev_number
 
     db.commit()
-    return {"message": "Document restored", "rev_number": rev_number}
+    return {"message": "Process restored", "rev_number": rev_number}
 
 @router.get("/diff", response_model=DiffResponse)
 def get_diff(
-    document_id: UUID,
+    process_id: int,
     from_rev: int = Query(..., alias="from"),
     to_rev: int = Query(..., alias="to"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    check_document_access(db, document_id, current_user.user_id)
+    check_process_access(db, process_id, current_user.user_id)
 
     # Get ops between revisions
-    ops = db.query(Operation).join(Revision).filter(
-        Revision.document_id == document_id,
+    ops = db.execute(select(Operation).join(Revision).filter(
+        Revision.process_id == process_id,
         Revision.rev_number > from_rev,
         Revision.rev_number <= to_rev
-    ).order_by(Revision.rev_number).all()
+    ).order_by(Revision.rev_number)).scalars().all()
 
     changes = [
         {

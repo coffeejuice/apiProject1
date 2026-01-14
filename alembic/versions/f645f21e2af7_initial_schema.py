@@ -39,7 +39,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('device_id')
     )
     op.create_table('documents',
-    sa.Column('document_id', sa.UUID(), nullable=False),
+    sa.Column('process_id', sa.UUID(), nullable=False),
     sa.Column('owner_id', sa.UUID(), nullable=False),
     sa.Column('title', sa.String(length=255), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
@@ -47,11 +47,11 @@ def upgrade() -> None:
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.Column('current_rev_number', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['owner_id'], ['users.user_id'], ),
-    sa.PrimaryKeyConstraint('document_id')
+    sa.PrimaryKeyConstraint('process_id')
     )
     op.create_table('blocks',
     sa.Column('block_id', sa.UUID(), nullable=False),
-    sa.Column('document_id', sa.UUID(), nullable=False),
+    sa.Column('process_id', sa.UUID(), nullable=False),
     sa.Column('parent_block_id', sa.UUID(), nullable=True),
     sa.Column('order_key', sa.String(length=100), nullable=False),
     sa.Column('block_type', sa.Enum('paragraph', 'heading1', 'heading2', 'list', 'todo', 'code', 'quote', 'divider', name='blocktype'), nullable=False),
@@ -59,25 +59,25 @@ def upgrade() -> None:
     sa.Column('props', sa.JSON(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['document_id'], ['documents.document_id'], ),
+    sa.ForeignKeyConstraint(['process_id'], ['documents.process_id'], ),
     sa.PrimaryKeyConstraint('block_id')
     )
-    op.create_index('idx_document_order', 'blocks', ['document_id', 'order_key'], unique=False)
-    op.create_index('idx_document_parent', 'blocks', ['document_id', 'parent_block_id'], unique=False)
+    op.create_index('idx_document_order', 'blocks', ['process_id', 'order_key'], unique=False)
+    op.create_index('idx_document_parent', 'blocks', ['process_id', 'parent_block_id'], unique=False)
     op.create_table('document_acl',
     sa.Column('acl_id', sa.UUID(), nullable=False),
-    sa.Column('document_id', sa.UUID(), nullable=False),
+    sa.Column('process_id', sa.UUID(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('role', sa.Enum('owner', 'editor', 'viewer', name='role'), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['document_id'], ['documents.document_id'], ),
+    sa.ForeignKeyConstraint(['process_id'], ['documents.process_id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ),
     sa.PrimaryKeyConstraint('acl_id')
     )
-    op.create_index('idx_document_user', 'document_acl', ['document_id', 'user_id'], unique=True)
+    op.create_index('idx_document_user', 'document_acl', ['process_id', 'user_id'], unique=True)
     op.create_table('revisions',
     sa.Column('revision_id', sa.UUID(), nullable=False),
-    sa.Column('document_id', sa.UUID(), nullable=False),
+    sa.Column('process_id', sa.UUID(), nullable=False),
     sa.Column('rev_number', sa.Integer(), nullable=False),
     sa.Column('device_id', sa.UUID(), nullable=False),
     sa.Column('client_batch_id', sa.UUID(), nullable=False),
@@ -85,20 +85,20 @@ def upgrade() -> None:
     sa.Column('created_by', sa.UUID(), nullable=False),
     sa.ForeignKeyConstraint(['created_by'], ['users.user_id'], ),
     sa.ForeignKeyConstraint(['device_id'], ['devices.device_id'], ),
-    sa.ForeignKeyConstraint(['document_id'], ['documents.document_id'], ),
+    sa.ForeignKeyConstraint(['process_id'], ['documents.process_id'], ),
     sa.PrimaryKeyConstraint('revision_id')
     )
     op.create_index('idx_device_batch', 'revisions', ['device_id', 'client_batch_id'], unique=False)
-    op.create_index('idx_document_rev', 'revisions', ['document_id', 'rev_number'], unique=False)
+    op.create_index('idx_document_rev', 'revisions', ['process_id', 'rev_number'], unique=False)
     op.create_table('share_links',
     sa.Column('link_id', sa.UUID(), nullable=False),
-    sa.Column('document_id', sa.UUID(), nullable=False),
+    sa.Column('process_id', sa.UUID(), nullable=False),
     sa.Column('token', sa.String(length=100), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('created_by', sa.UUID(), nullable=False),
     sa.Column('expires_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['created_by'], ['users.user_id'], ),
-    sa.ForeignKeyConstraint(['document_id'], ['documents.document_id'], ),
+    sa.ForeignKeyConstraint(['process_id'], ['documents.process_id'], ),
     sa.PrimaryKeyConstraint('link_id')
     )
     op.create_index(op.f('ix_share_links_token'), 'share_links', ['token'], unique=True)

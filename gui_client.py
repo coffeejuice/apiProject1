@@ -31,40 +31,40 @@ class APIClientGUI:
                 "Get Me": {}
             },
             "Documents": {
-                "Create Document": {"title": "str"},
+                "Create Process": {"title": "str"},
                 "List Documents": {"page": "int", "page_size": "int"},
-                "Get Document": {"document_id": "str"},
-                "Update Document": {"document_id": "str", "title": "str"},
-                "Delete Document": {"document_id": "str"},
-                "Restore Document": {"document_id": "str"}
+                "Get Process": {"process_id": "str"},
+                "Update Process": {"process_id": "str", "title": "str"},
+                "Delete Process": {"process_id": "str"},
+                "Restore Process": {"process_id": "str"}
             },
             "Blocks": {
-                "Get Root Blocks": {"document_id": "str"},
+                "Get Root Blocks": {"process_id": "str"},
                 "Get Block Children": {"block_id": "str"},
-                "Insert Block": {"document_id": "str", "base_rev": "int", "text": "str", "block_type": "str", "parent_id": "str"},
-                "Insert Block Before": {"document_id": "str", "base_rev": "int", "text": "str", "block_type": "str", "before_block_id": "str"},
-                "Append Block After": {"document_id": "str", "base_rev": "int", "text": "str", "block_type": "str", "after_block_id": "str"},
-                "Update Block Text": {"document_id": "str", "base_rev": "int", "block_id": "str", "text": "str"},
-                "Delete Block": {"document_id": "str", "base_rev": "int", "block_id": "str"}
+                "Insert Block": {"process_id": "str", "base_rev": "int", "text": "str", "block_type": "str", "parent_id": "str"},
+                "Insert Block Before": {"process_id": "str", "base_rev": "int", "text": "str", "block_type": "str", "before_block_id": "str"},
+                "Append Block After": {"process_id": "str", "base_rev": "int", "text": "str", "block_type": "str", "after_block_id": "str"},
+                "Update Block Text": {"process_id": "str", "base_rev": "int", "block_id": "str", "text": "str"},
+                "Delete Block": {"process_id": "str", "base_rev": "int", "block_id": "str"}
             },
             "Revisions": {
-                "List Revisions": {"document_id": "str"},
-                "Restore Revision": {"document_id": "str", "rev_number": "int"},
-                "Get Diff": {"document_id": "str", "from_rev": "int", "to_rev": "int"}
+                "List Revisions": {"process_id": "str"},
+                "Restore Revision": {"process_id": "str", "rev_number": "int"},
+                "Get Diff": {"process_id": "str", "from_rev": "int", "to_rev": "int"}
             },
             "Sharing": {
-                "Invite User": {"document_id": "str", "email": "str", "role": "str"},
-                "Get ACL": {"document_id": "str"},
-                "Revoke Access": {"document_id": "str", "user_id": "str"},
-                "Create Share Link": {"document_id": "str", "expires_days": "int"}
+                "Invite User": {"process_id": "str", "email": "str", "role": "str"},
+                "Get ACL": {"process_id": "str"},
+                "Revoke Access": {"process_id": "str", "user_id": "str"},
+                "Create Share Link": {"process_id": "str", "expires_days": "int"}
             },
             "Search": {
                 "Search All": {"query": "str", "limit": "int"},
-                "Search Document": {"document_id": "str", "query": "str", "limit": "int"}
+                "Search Process": {"process_id": "str", "query": "str", "limit": "int"}
             },
             "Export/Import": {
-                "Export Document": {"document_id": "str"},
-                "Import Document": {"title": "str", "markdown": "str"}
+                "Export Process": {"process_id": "str"},
+                "Import Process": {"title": "str", "markdown": "str"}
             }
         }
 
@@ -146,8 +146,8 @@ class APIClientGUI:
 
         scrollbar.config(command=self.documents_listbox.yview)
 
-        # Bottom: Document blocks view
-        blocks_frame = ttk.LabelFrame(left_paned, text="Document Blocks", padding=5)
+        # Bottom: Process blocks view
+        blocks_frame = ttk.LabelFrame(left_paned, text="Process Blocks", padding=5)
         left_paned.add(blocks_frame, weight=1)
 
         # Blocks listbox
@@ -249,8 +249,8 @@ class APIClientGUI:
             entry = ttk.Entry(row, width=50)
             entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-            # Auto-fill document_id if available
-            if param_name == "document_id" and self.selected_document_id:
+            # Auto-fill process_id if available
+            if param_name == "process_id" and self.selected_document_id:
                 entry.insert(0, self.selected_document_id)
 
             # Auto-fill block_id if available
@@ -294,7 +294,7 @@ class APIClientGUI:
         self.display_response(result, elapsed_time)
 
         # Refresh documents list if needed
-        if self.current_command in ["Create Document", "Delete Document", "Restore Document", "Login"]:
+        if self.current_command in ["Create Process", "Delete Process", "Restore Process", "Login"]:
             self.refresh_documents()
 
         # Refresh blocks view if current document affected
@@ -311,28 +311,28 @@ class APIClientGUI:
             elif command == "Get Me":
                 return self.client.get_me()
 
-            # Document commands
-            elif command == "Create Document":
+            # Process commands
+            elif command == "Create Process":
                 return self.client.create_document(params['title'])
             elif command == "List Documents":
                 return self.client.list_documents(params.get('page', 1), params.get('page_size', 50))
-            elif command == "Get Document":
-                return self.client.get_document(params['document_id'])
-            elif command == "Update Document":
-                return self.client.update_document(params['document_id'], params['title'])
-            elif command == "Delete Document":
-                return self.client.delete_document(params['document_id'])
-            elif command == "Restore Document":
-                return self.client.restore_document(params['document_id'])
+            elif command == "Get Process":
+                return self.client.get_document(params['process_id'])
+            elif command == "Update Process":
+                return self.client.update_document(params['process_id'], params['title'])
+            elif command == "Delete Process":
+                return self.client.delete_document(params['process_id'])
+            elif command == "Restore Process":
+                return self.client.restore_document(params['process_id'])
 
             # Block commands
             elif command == "Get Root Blocks":
-                return self.client.get_root_blocks(params['document_id'])
+                return self.client.get_root_blocks(params['process_id'])
             elif command == "Get Block Children":
                 return self.client.get_block_children(params['block_id'])
             elif command == "Insert Block":
                 return self.client.insert_block(
-                    params['document_id'],
+                    params['process_id'],
                     params['base_rev'],
                     params['text'],
                     params.get('block_type', 'paragraph'),
@@ -340,7 +340,7 @@ class APIClientGUI:
                 )
             elif command == "Insert Block Before":
                 return self.insert_block_before(
-                    params['document_id'],
+                    params['process_id'],
                     params['base_rev'],
                     params['text'],
                     params['before_block_id'],
@@ -348,7 +348,7 @@ class APIClientGUI:
                 )
             elif command == "Append Block After":
                 return self.append_block_after(
-                    params['document_id'],
+                    params['process_id'],
                     params['base_rev'],
                     params['text'],
                     params['after_block_id'],
@@ -356,46 +356,46 @@ class APIClientGUI:
                 )
             elif command == "Update Block Text":
                 return self.client.update_block_text(
-                    params['document_id'],
+                    params['process_id'],
                     params['base_rev'],
                     params['block_id'],
                     params['text']
                 )
             elif command == "Delete Block":
                 return self.client.delete_block(
-                    params['document_id'],
+                    params['process_id'],
                     params['base_rev'],
                     params['block_id']
                 )
 
             # Revision commands
             elif command == "List Revisions":
-                return self.client.list_revisions(params['document_id'])
+                return self.client.list_revisions(params['process_id'])
             elif command == "Restore Revision":
-                return self.client.restore_revision(params['document_id'], params['rev_number'])
+                return self.client.restore_revision(params['process_id'], params['rev_number'])
             elif command == "Get Diff":
-                return self.client.get_diff(params['document_id'], params['from_rev'], params['to_rev'])
+                return self.client.get_diff(params['process_id'], params['from_rev'], params['to_rev'])
 
             # Sharing commands
             elif command == "Invite User":
-                return self.client.invite_user(params['document_id'], params['email'], params.get('role', 'viewer'))
+                return self.client.invite_user(params['process_id'], params['email'], params.get('role', 'viewer'))
             elif command == "Get ACL":
-                return self.client.get_acl(params['document_id'])
+                return self.client.get_acl(params['process_id'])
             elif command == "Revoke Access":
-                return self.client.revoke_access(params['document_id'], params['user_id'])
+                return self.client.revoke_access(params['process_id'], params['user_id'])
             elif command == "Create Share Link":
-                return self.client.create_share_link(params['document_id'], params.get('expires_days'))
+                return self.client.create_share_link(params['process_id'], params.get('expires_days'))
 
             # Search commands
             elif command == "Search All":
                 return self.client.search(params['query'], params.get('limit', 50))
-            elif command == "Search Document":
-                return self.client.search_document(params['document_id'], params['query'], params.get('limit', 50))
+            elif command == "Search Process":
+                return self.client.search_document(params['process_id'], params['query'], params.get('limit', 50))
 
             # Export/Import commands
-            elif command == "Export Document":
-                return self.client.export_document(params['document_id'])
-            elif command == "Import Document":
+            elif command == "Export Process":
+                return self.client.export_document(params['process_id'])
+            elif command == "Import Process":
                 return self.client.import_document(params['title'], params['markdown'])
 
             else:
@@ -454,14 +454,14 @@ class APIClientGUI:
 
         index = selection[0]
         doc = self.documents_data[index]
-        self.selected_document_id = str(doc['document_id'])
+        self.selected_document_id = str(doc['process_id'])
 
         self.load_document_blocks(self.selected_document_id)
 
-        # Update document_id in currently displayed input fields if any
-        if hasattr(self, 'input_widgets') and 'document_id' in self.input_widgets:
-            self.input_widgets['document_id'].delete(0, tk.END)
-            self.input_widgets['document_id'].insert(0, self.selected_document_id)
+        # Update process_id in currently displayed input fields if any
+        if hasattr(self, 'input_widgets') and 'process_id' in self.input_widgets:
+            self.input_widgets['process_id'].delete(0, tk.END)
+            self.input_widgets['process_id'].insert(0, self.selected_document_id)
 
     def load_document_blocks(self, document_id: str):
         """Load all blocks (root and children) in hierarchical order"""
@@ -666,10 +666,10 @@ class APIClientGUI:
             return
 
         dialog = tk.Toplevel(self.root)
-        dialog.title("Create Document")
+        dialog.title("Create Process")
         dialog.geometry("400x100")
 
-        ttk.Label(dialog, text="Document Title:").pack(pady=10)
+        ttk.Label(dialog, text="Process Title:").pack(pady=10)
         title_entry = ttk.Entry(dialog, width=40)
         title_entry.pack(pady=5)
         title_entry.focus()
@@ -679,7 +679,7 @@ class APIClientGUI:
             if title:
                 result = self.client.create_document(title)
                 if result:
-                    messagebox.showinfo("Success", f"Document created: {result.get('title')}")
+                    messagebox.showinfo("Success", f"Process created: {result.get('title')}")
                     self.refresh_documents()
                     dialog.destroy()
                 else:

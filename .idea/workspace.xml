@@ -4,8 +4,37 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Add GUI client">
+    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="*.xml">
+      <change afterPath="$PROJECT_DIR$/app/models/config.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/die.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/log.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/material.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/post.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/routers/process.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/alembic/env.py" beforeDir="false" afterPath="$PROJECT_DIR$/alembic/env.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/alembic/versions/f645f21e2af7_initial_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/alembic/versions/f645f21e2af7_initial_schema.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/blocks.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/blocks.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/documents.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/import_export.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/import_export.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/revisions.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/revisions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/search.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/sharing.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/sharing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/block_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/block_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/commit_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/commit_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/import_export_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/import_export_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/search_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/search_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/api_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/client/api_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/client/cli.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example.py" beforeDir="false" afterPath="$PROJECT_DIR$/example.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui_client.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -13,8 +42,15 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="51" />
+    <option name="cachedIndexableFilesCount" value="64" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -55,7 +91,7 @@
     &quot;node.js.selected.package.stylelint&quot;: &quot;&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;ml.llm.LLMConfigurable&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;advanced.settings&quot;,
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
@@ -154,7 +190,9 @@
       <workItem from="1768266549075" duration="5000" />
       <workItem from="1768266605051" duration="178000" />
       <workItem from="1768266803373" duration="13243000" />
-      <workItem from="1768290726099" duration="3956000" />
+      <workItem from="1768290726099" duration="4166000" />
+      <workItem from="1768346082120" duration="2000" />
+      <workItem from="1768346101368" duration="14229000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -172,7 +210,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768291570073</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="*.xml">
+      <option name="closed" value="true" />
+      <created>1768297256361</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1768297256361</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -181,7 +227,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="First commit" />
     <MESSAGE value="Add GUI client" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add GUI client" />
+    <MESSAGE value="*.xml" />
+    <option name="LAST_COMMIT_MESSAGE" value="*.xml" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -196,6 +243,6 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/apiProject1$example.coverage" NAME="example Coverage Results" MODIFIED="1768285098953" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/apiProject1$gui_client.coverage" NAME="gui_client Coverage Results" MODIFIED="1768290244157" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/apiProject1$gui_client.coverage" NAME="gui_client Coverage Results" MODIFIED="1768348820079" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
