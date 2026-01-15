@@ -39,22 +39,22 @@ class Token(BaseModel):
 class ProcessCreate(BaseModel):
     user_id: int = 1
     material_id: int = 1
-    heat_no: str
-    lot_no: str
-    finished_size: str
-    standard_customer: str
-    standard_wst: str
-    product_condition: str
-    product_surface: str
-    product_diameter_tolerance: str
+    heat_no: str = ""
+    lot_no: str = ""
+    finished_size: str = ""
+    standard_customer: str = ""
+    standard_wst: str = ""
+    product_condition: str = ""
+    product_surface: str = ""
+    product_diameter_tolerance: str = ""
     product_length_tolerance: Optional[str] = None
-    product_curvature_tolerance: str
-    stock_size: str
-    stock_weight: float
-    stock_no: str
-    material_btt: float
-    material_btt_sym_tolerance: float
-    remarks: str
+    product_curvature_tolerance: str = ""
+    stock_size: str = ""
+    stock_weight: float = 0.0
+    stock_no: str = ""
+    material_btt: float = 0.0
+    material_btt_sym_tolerance: float = 0.0
+    remarks: str = ""
     title: str = Field(min_length=1, max_length=255)
 
 class ProcessUpdate(BaseModel):

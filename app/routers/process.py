@@ -52,13 +52,18 @@ def create_document(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    doc = Process(
-        **doc_data.model_dump()
-    )
-    db.add(doc)
-    db.commit()
-    db.refresh(doc)
-    return doc
+    try:
+        doc = Process(
+            **doc_data.model_dump(exclude={"user_id"}),
+            user_id=current_user.user_id
+        )
+        db.add(doc)
+        db.commit()
+        db.refresh(doc)
+        return doc
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("", response_model=ProcessListResponse)
 def list_documents(

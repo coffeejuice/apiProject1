@@ -33,10 +33,13 @@ def init_db_raw():
     
     with Session(engine) as session:
         # Create default department and language
+        from app.models.library.material import Material
         dept = Department(department_id=1, department_name="Default")
         lang = UiLanguageModel(language_id=1, name="English")
+        mat = Material(material_id=1, material_name="Default Material", material_path="")
         session.add(dept)
         session.add(lang)
+        session.add(mat)
         session.flush() # Get IDs if they are serial
         
         # Create demo_user
