@@ -109,7 +109,7 @@ class ProcessVersion(Base):
 
     process: Mapped[Optional["Process"]] = relationship("Process", back_populates="versions", foreign_keys=[process_id])
     parent_version: Mapped[Optional["ProcessVersion"]] = relationship("ProcessVersion", remote_side=[process_version_id])
-    simulation_server: Mapped[Optional["Server"]] = relationship("Server")
+    simulation_server: Mapped[Optional["Server"]] = relationship("Server", foreign_keys=[simulation_server_id])
 
 class ProcessACL(Base):
     __tablename__ = "document_acl"

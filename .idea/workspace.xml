@@ -4,8 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Add 'parameters' column into 'operations' table">
+    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Add PROJECT_CONTEXT.md fo r initial Codding Agent context">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/document/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document/process.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/document/process.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document/revision.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/document/revision.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document/server_pre_main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/document/server_pre_main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/server.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/revisions.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/revisions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/commit_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/commit_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/api_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/client/api_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui_client.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -171,7 +180,7 @@
       <workItem from="1768346082120" duration="2000" />
       <workItem from="1768346101368" duration="14229000" />
       <workItem from="1768382819017" duration="110000" />
-      <workItem from="1768435031992" duration="10260000" />
+      <workItem from="1768435031992" duration="12183000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -221,7 +230,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768442548087</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Add PROJECT_CONTEXT.md fo r initial Codding Agent context">
+      <option name="closed" value="true" />
+      <created>1768446751848</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1768446751848</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -245,7 +262,8 @@
     <MESSAGE value="SqlAlchemy ORM 2.0, split models, move tables from forgelab" />
     <MESSAGE value="Moved all tables from forgelab" />
     <MESSAGE value="Add 'parameters' column into 'operations' table" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add 'parameters' column into 'operations' table" />
+    <MESSAGE value="Add PROJECT_CONTEXT.md fo r initial Codding Agent context" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add PROJECT_CONTEXT.md fo r initial Codding Agent context" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -260,6 +278,6 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/apiProject1$example.coverage" NAME="example Coverage Results" MODIFIED="1768285098953" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/apiProject1$gui_client.coverage" NAME="gui_client Coverage Results" MODIFIED="1768445020854" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/apiProject1$gui_client.coverage" NAME="gui_client Coverage Results" MODIFIED="1768449331018" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

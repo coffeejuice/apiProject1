@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from typing import List, Dict, Any, Optional, Tuple
 from uuid import UUID
-from app.models import Process, Block, Revision, Operation, OperationType, BlockType, RevisionSnapshot, Device
+from app.models import Process, Block, Revision, LegacyOperation, OperationType, BlockType, RevisionSnapshot, Device
 from app.schemas import OpData, ConflictInfo
 
 def check_duplicate_commit(
@@ -27,13 +27,13 @@ def detect_conflicts(
     conflicts = []
 
     # Get ops since base_rev
-    server_ops = db.execute(select(Operation).join(Revision).filter(
+    server_ops = db.execute(select(LegacyOperation).join(Revision).filter(
         Revision.process_id == process_id,
         Revision.rev_number > base_rev
     )).scalars().all()
 
     # Build map of server changes
-    server_changes: Dict[UUID, List[Operation]] = {}
+    server_changes: Dict[UUID, List[LegacyOperation]] = {}
     for server_op in server_ops:
         block_id = server_op.block_id
         if block_id not in server_changes:
@@ -167,7 +167,7 @@ def commit_operations(
 
         # Store operations
         for op in ops:
-            operation = Operation(
+            operation = LegacyOperation(
                 revision_id=revision.revision_id,
                 op_type=op.op_type,
                 block_id=UUID(op.data["block_id"]),

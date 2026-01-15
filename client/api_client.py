@@ -53,13 +53,13 @@ class NotionClient:
     # Auth methods
     def register(self, username: str, email: str, password: str) -> bool:
         """Register a new user"""
-        data = {"username": username, "email": email, "password": password}
+        data = {"login": username, "email": email, "password": password}
         result = self._request("POST", "/auth/register", json=data)
         return result is not None
 
     def login(self, username: str, password: str) -> bool:
         """Login and store token"""
-        data = {"username": username, "password": password}
+        data = {"login": username, "password": password}
         result = self._request("POST", "/auth/login", json=data)
         if result and "access_token" in result:
             self.token = result["access_token"]

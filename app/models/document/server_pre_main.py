@@ -1,9 +1,9 @@
 from sqlalchemy import String, BigInteger, SmallInteger, Boolean, Float, DateTime, ForeignKey, UniqueConstraint, func, Enum as SQLEnum, Integer
-from sqlalchemy.dialects.postgresql import JSONB, BYTEA, ARRAY
+from sqlalchemy.dialects.postgresql import JSONB, BYTEA, ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 from typing import Optional, TYPE_CHECKING, List
-import enum
+import uuid
 from app.database import Base
 
 if TYPE_CHECKING:
@@ -31,7 +31,7 @@ class ServerPreMain(Base):
 
     # ********************************* NOT NULL FOREIGN KEYs **********************************
 
-    operation_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("ops.id", ondelete="CASCADE"), nullable=True)
+    operation_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("ops.op_id", ondelete="CASCADE"), nullable=True)
     process_version_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("process_versions.process_version_id", ondelete="CASCADE"), nullable=True)
     type_id: Mapped[Optional[int]] = mapped_column(SmallInteger, ForeignKey("operations_library.type_id", onupdate="CASCADE", ondelete="CASCADE"), nullable=True)  # Type of the operation
     material_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("material.material_id", ondelete="SET DEFAULT"), nullable=True)  # Material ID, Foreign key
@@ -65,7 +65,7 @@ class ServerPreMain(Base):
     plus_y_die_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("die.id", ondelete="SET DEFAULT"), nullable=True, default=None)  # Die +Y ID
     minus_y_die_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("die.id", ondelete="SET DEFAULT"), nullable=True, default=None)  # Die -Y ID
 
-    feed_direction_id: Mapped[Optional[int]] = mapped_column(SmallInteger, ForeignKey("feed_direction.feed_direction_id", ondelete="SET DEFAULT"), nullable=True, default=None)  # Feed direction ID
+    feed_direction_id: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True, default=None)  # Feed direction ID
     feed_direction_name: Mapped[str] = mapped_column(String(1023), default='', nullable=True)  # ==>, <== (<==> - is not allowed) 
     feed_type_id: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True, default=None)  # type_id of used Feed operation
 
@@ -243,7 +243,7 @@ class ServerPreMain(Base):
 
     # *********************************** RELATIONSHIPS ******************************************
 
-    operation: Mapped[Optional["Operation"]] = relationship("Operation")
+    operation: Mapped[Optional["LegacyOperation"]] = relationship("LegacyOperation")
     process_version: Mapped[Optional["ProcessVersion"]] = relationship("ProcessVersion")
     library: Mapped[Optional["OperationsLibrary"]] = relationship("OperationsLibrary")
     material: Mapped[Optional["Material"]] = relationship("Material")
@@ -253,6 +253,8 @@ class ServerPreMain(Base):
     die_assembly: Mapped[Optional["DieAssembly"]] = relationship("DieAssembly")
     top_die: Mapped[Optional["Die"]] = relationship("Die", foreign_keys=[top_die_id])
     bottom_die: Mapped[Optional["Die"]] = relationship("Die", foreign_keys=[bottom_die_id])
+    plus_y_die: Mapped[Optional["Die"]] = relationship("Die", foreign_keys=[plus_y_die_id])
+    minus_y_die: Mapped[Optional["Die"]] = relationship("Die", foreign_keys=[minus_y_die_id])
 
     post_operation: Mapped[Optional["PostOperation"]] = relationship("PostOperation", back_populates="execution")
     bites: Mapped[List["Bite"]] = relationship("Bite", back_populates="execution", cascade="all, delete-orphan")

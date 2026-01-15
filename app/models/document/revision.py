@@ -19,7 +19,7 @@ class Revision(Base):
     created_by: Mapped[int] = mapped_column(Integer, ForeignKey("accounts.user_id"), nullable=False)
 
     document: Mapped["Process"] = relationship("Process", back_populates="revisions")
-    ops: Mapped[List["Operation"]] = relationship("Operation", back_populates="revision", cascade="all, delete-orphan")
+    ops: Mapped[List["LegacyOperation"]] = relationship("LegacyOperation", back_populates="revision", cascade="all, delete-orphan")
     snapshot: Mapped[Optional["RevisionSnapshot"]] = relationship("RevisionSnapshot", back_populates="revision", uselist=False, cascade="all, delete-orphan")
 
     __table_args__ = (
@@ -34,7 +34,7 @@ class OperationType(enum.Enum):
     update_text = "update_text"
     update_props = "update_props"
 
-class Operation(Base):
+class LegacyOperation(Base):
     __tablename__ = "ops"
 
     op_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

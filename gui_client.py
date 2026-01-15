@@ -26,8 +26,8 @@ class APIClientGUI:
         # API Commands structure
         self.api_commands = {
             "Auth": {
-                "Register": {"username": "str", "email": "str", "password": "str"},
-                "Login": {"username": "str", "password": "str"},
+                "Register": {"login": "str", "email": "str", "password": "str"},
+                "Login": {"login": "str", "password": "str"},
                 "Get Me": {}
             },
             "Documents": {

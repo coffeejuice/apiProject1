@@ -5,7 +5,7 @@ from typing import List
 from uuid import UUID
 from app.database import get_db
 from app.models.user import User
-from app.models.document.revision import Revision, Operation
+from app.models.document.revision import Revision, LegacyOperation
 from app.models.document.block import Block
 from app.models.document.process import Process, Role
 from app.schemas import RevisionResponse, RevisionListResponse, DiffResponse
@@ -74,7 +74,7 @@ def restore_revision(
         ).order_by(Revision.rev_number)).scalars().all()
 
         for rev in revisions:
-            ops = db.execute(select(Operation).filter(Operation.revision_id == rev.revision_id)).scalars().all()
+            ops = db.execute(select(LegacyOperation).filter(LegacyOperation.revision_id == rev.revision_id)).scalars().all()
             from app.services.commit_service import apply_operations
             from app.schemas import OpData
             op_data_list = [
@@ -102,7 +102,7 @@ def get_diff(
     check_process_access(db, process_id, current_user.user_id)
 
     # Get ops between revisions
-    ops = db.execute(select(Operation).join(Revision).filter(
+    ops = db.execute(select(LegacyOperation).join(Revision).filter(
         Revision.process_id == process_id,
         Revision.rev_number > from_rev,
         Revision.rev_number <= to_rev

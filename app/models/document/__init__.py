@@ -1,7 +1,7 @@
 from app.models.document.process import Process, ProcessACL, ShareLink, Role, ProcessVersion, SimulationStatus, Status
 from app.models.document.block import Block, BlockType, IngotSide, FeedDirection, DeformationType
 from app.models.document.operation import Operation
-from app.models.document.revision import Revision, Operation as LegacyOperation, OperationType, RevisionSnapshot
+from app.models.document.revision import Revision, LegacyOperation, OperationType, RevisionSnapshot
 from app.models.document.bite import Bite
 from app.models.document.post import PostOperation, PostStatus
 
