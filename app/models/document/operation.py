@@ -1,4 +1,5 @@
 from sqlalchemy import ForeignKey, BigInteger, Integer, SmallInteger
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Optional, TYPE_CHECKING
 from app.database import Base
@@ -15,6 +16,7 @@ class Operation(Base):
     type_id: Mapped[int] = mapped_column(SmallInteger, ForeignKey("operations_library.type_id", ondelete="RESTRICT"), nullable=False)
     row: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     process_version_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("process_versions.process_version_id", ondelete="CASCADE"), nullable=False)
+    parameters: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
 
     # Relationships
     parent: Mapped[Optional["Operation"]] = relationship("Operation", remote_side=[id])
