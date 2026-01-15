@@ -1,0 +1,17 @@
+settings:
+  - domain: svc
+    key: worker.pool_size
+    value: 5
+    scope: global
+  - domain: svc
+    key: timeout_seconds
+    value: 30
+    scope: global
+  - domain: ui
+    key: theme
+    value: dark
+    scope: global
+  - domain: calc
+    key: precision
+    value: 4
+    scope: global

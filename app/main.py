@@ -29,6 +29,8 @@ app.include_router(share_router)
 app.include_router(search.router)
 app.include_router(document_search_router)
 app.include_router(import_export.router)
+from app.routers import settings
+app.include_router(settings.router)
 
 @app.get("/")
 def root():

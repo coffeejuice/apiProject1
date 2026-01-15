@@ -214,3 +214,44 @@ class NotionClient:
             }
         }]
         return self.commit(document_id, base_rev, ops)
+
+    # Settings methods
+    def list_settings(self, scope: Optional[str] = None, domain: Optional[str] = None, key_like: Optional[str] = None) -> Optional[List[Dict]]:
+        """List settings"""
+        params = []
+        if scope: params.append(f"scope={scope}")
+        if domain: params.append(f"domain={domain}")
+        if key_like: params.append(f"key_like={key_like}")
+        query = f"?{'&'.join(params)}" if params else ""
+        return self._request("GET", f"/settings/{query}")
+
+    def upsert_setting(self, key: str, value: Any, domain: str = "default", scope: str = "global", 
+                       tenant_id: Optional[int] = None, user_id: Optional[int] = None) -> Optional[Dict]:
+        """Create or update a setting"""
+        data = {
+            "key": key,
+            "value": value,
+            "domain": domain,
+            "scope": scope,
+            "tenant_id": tenant_id,
+            "user_id": user_id
+        }
+        return self._request("POST", "/settings/", json=data)
+
+    def delete_setting(self, setting_id: int) -> bool:
+        """Delete a setting"""
+        result = self._request("DELETE", f"/settings/{setting_id}")
+        return result is not None
+
+    def resolve_setting(self, key: str, domain: str = "default") -> Optional[Dict]:
+        """Resolve a setting value"""
+        return self._request("GET", f"/settings/resolve/{key}?domain={domain}")
+
+    # Provisioning methods
+    def apply_provisions(self, only_missing: bool = False) -> Optional[Dict]:
+        """Apply all settings seeds"""
+        return self._request("POST", f"/settings/provision/apply?only_missing={only_missing}")
+
+    def apply_provision_file(self, filename: str, only_missing: bool = False) -> Optional[Dict]:
+        """Apply a specific settings seed file"""
+        return self._request("POST", f"/settings/provision/file/{filename}?only_missing={only_missing}")

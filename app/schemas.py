@@ -236,3 +236,26 @@ class DiffResponse(BaseModel):
     from_rev: int
     to_rev: int
     changes: List[Dict[str, Any]]
+
+# Setting schemas
+from app.models.settings import SettingScope
+
+class SettingBase(BaseModel):
+    domain: str = Field("default", min_length=1, max_length=255)
+    key: str = Field(min_length=1, max_length=255)
+    value: Any
+    scope: SettingScope = SettingScope.GLOBAL
+    tenant_id: Optional[int] = None
+    user_id: Optional[int] = None
+
+class SettingCreate(SettingBase):
+    pass
+
+class SettingUpdate(BaseModel):
+    value: Any
+
+class SettingResponse(SettingBase):
+    setting_id: int
+
+    class Config:
+        from_attributes = True

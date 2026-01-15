@@ -65,6 +65,16 @@ class APIClientGUI:
             "Export/Import": {
                 "Export Process": {"process_id": "str"},
                 "Import Process": {"title": "str", "markdown": "str"}
+            },
+            "Settings": {
+                "List Settings": {"scope": "str", "domain": "str", "key_like": "str"},
+                "Upsert Setting": {"domain": "str", "key": "str", "value": "json", "scope": "str", "tenant_id": "int", "user_id": "int"},
+                "Delete Setting": {"setting_id": "int"},
+                "Resolve Setting": {"key": "str", "domain": "str"}
+            },
+            "Provisioning": {
+                "Apply All Provisions": {"only_missing": "bool"},
+                "Apply Provision File": {"filename": "str", "only_missing": "bool"}
             }
         }
 
@@ -397,6 +407,29 @@ class APIClientGUI:
                 return self.client.export_document(params['process_id'])
             elif command == "Import Process":
                 return self.client.import_document(params['title'], params['markdown'])
+
+            # Settings commands
+            elif command == "List Settings":
+                return self.client.list_settings(params.get('scope'), params.get('domain'), params.get('key_like'))
+            elif command == "Upsert Setting":
+                return self.client.upsert_setting(
+                    params['key'], 
+                    params['value'], 
+                    params.get('domain', 'default'),
+                    params.get('scope', 'global'),
+                    params.get('tenant_id'),
+                    params.get('user_id')
+                )
+            elif command == "Delete Setting":
+                return self.client.delete_setting(params['setting_id'])
+            elif command == "Resolve Setting":
+                return self.client.resolve_setting(params['key'], params.get('domain', 'default'))
+
+            # Provisioning commands
+            elif command == "Apply All Provisions":
+                return self.client.apply_provisions(params.get('only_missing', False))
+            elif command == "Apply Provision File":
+                return self.client.apply_provision_file(params['filename'], params.get('only_missing', False))
 
             else:
                 return {"error": f"Unknown command: {command}"}
