@@ -2,7 +2,13 @@ from sqlalchemy import String, Integer, DateTime, ForeignKey, Index, Enum as SQL
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
+if TYPE_CHECKING:
+    from app.models.user import User
+    from app.models.document.block import Block
+    from app.models.document.revision import Revision
+    from app.models.server import Server
+    from app.models.library import Material
 import uuid
 import enum
 from app.database import Base
@@ -80,7 +86,7 @@ class ProcessVersion(Base):
     simulation_expected_duration_days: Mapped[Optional[float]] = mapped_column(Float, default=0, nullable=True)
     simulation_percent: Mapped[Optional[int]] = mapped_column(SmallInteger, default=0, nullable=True)
 
-    simulation_server_id: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True, default=None)
+    simulation_server_id: Mapped[Optional[int]] = mapped_column(SmallInteger, ForeignKey("servers.id", onupdate="CASCADE", ondelete="SET DEFAULT"), nullable=True, default=None)
     db_path_name: Mapped[Optional[str]] = mapped_column(String(2047), nullable=True, default=None)
 
     name: Mapped[str] = mapped_column(String(2047), nullable=False)
@@ -103,6 +109,7 @@ class ProcessVersion(Base):
 
     process: Mapped[Optional["Process"]] = relationship("Process", back_populates="versions", foreign_keys=[process_id])
     parent_version: Mapped[Optional["ProcessVersion"]] = relationship("ProcessVersion", remote_side=[process_version_id])
+    simulation_server: Mapped[Optional["Server"]] = relationship("Server")
 
 class ProcessACL(Base):
     __tablename__ = "document_acl"

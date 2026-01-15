@@ -2,8 +2,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_, select
 from typing import List, Optional
 from uuid import UUID
-from app.models.block import Block
-from app.models.process import Process, ProcessACL, Role
+from app.models.document.block import Block
+from app.models.document.process import Process, ProcessACL, Role
 from app.schemas import SearchResult
 
 def search_blocks(

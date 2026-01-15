@@ -32,6 +32,12 @@ class IngotSide(enum.Enum):
     bottom = "bottom"
 
 
+class FeedDirection(enum.Enum):
+    left = "Left"  # -X direction
+    right = "Right"  # +X direction
+    alternating = "Alternating"  # -X first, then reverse
+
+
 class Block(Base):
     __tablename__ = "blocks"
 

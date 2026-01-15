@@ -42,7 +42,7 @@ class User(Base):
     language_id: Mapped[int] = mapped_column(SmallInteger, ForeignKey("ui_language.language_id", ondelete="SET DEFAULT"), nullable=False, default=1)
     editor_append_mode_id: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=1)
     user_settings: Mapped[Optional[str]] = mapped_column(String(32767), nullable=True, default=None)
-    process_version_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True, default=None)
+    process_version_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("process_versions.process_version_id", ondelete="SET DEFAULT"), nullable=True, default=None)
     user_priority_enum: Mapped[UserPriority] = mapped_column(SQLEnum(UserPriority, name="priority_enum"), nullable=False, default=UserPriority.normal)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 

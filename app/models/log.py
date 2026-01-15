@@ -6,7 +6,7 @@ from typing import Optional
 import uuid
 import enum
 from app.database import Base
-from app.models.config import ServerType
+from app.models.server import ServerType
 
 
 class LogLevel(enum.Enum):

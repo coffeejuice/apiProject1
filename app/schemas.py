@@ -2,11 +2,17 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from uuid import UUID
-from app.models.block import BlockType
-from app.models.process import Role, Status
-from app.models.revision import OperationType
+from app.models.document.block import BlockType, FeedDirection
+from pydantic import RootModel
+from app.models.document.process import Role, Status
+from app.models.document.revision import OperationType
 
 # Auth schemas
+class FeedDirectionInfo(RootModel):
+    root: FeedDirection = Field(
+        description="Left: -X direction, Right: +X direction, Alternating: -X first, then reverse"
+    )
+
 class UserRegister(BaseModel):
     login: str = Field(min_length=3, max_length=50)
     email: EmailStr

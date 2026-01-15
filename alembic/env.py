@@ -16,9 +16,9 @@ load_dotenv()
 # Import models
 from app.database import Base
 from app.models.user import User
-from app.models.process import Process
-from app.models.block import Block
-from app.models.revision import Revision
+from app.models.document.process import Process
+from app.models.document.block import Block
+from app.models.document.revision import Revision
 
 # this is the Alembic Config object
 config = context.config

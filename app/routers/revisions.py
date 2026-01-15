@@ -5,9 +5,9 @@ from typing import List
 from uuid import UUID
 from app.database import get_db
 from app.models.user import User
-from app.models.revision import Revision, Operation
-from app.models.block import Block
-from app.models.process import Process, Role
+from app.models.document.revision import Revision, Operation
+from app.models.document.block import Block
+from app.models.document.process import Process, Role
 from app.schemas import RevisionResponse, RevisionListResponse, DiffResponse
 from app.auth import get_current_user
 from app.routers.process import check_process_access

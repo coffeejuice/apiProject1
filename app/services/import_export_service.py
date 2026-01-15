@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from typing import List, Dict
 from uuid import UUID, uuid4
-from app.models.block import Block, BlockType
+from app.models.document.block import Block, BlockType
 from app.services.block_service import generate_order_key
 import re
 

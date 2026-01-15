@@ -4,37 +4,30 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="*.xml">
-      <change afterPath="$PROJECT_DIR$/app/models/config.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/models/die.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/models/log.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/models/material.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/models/post.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/routers/process.py" afterDir="false" />
+    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="SqlAlchemy ORM 2.0, split models, move tables from forgelab">
+      <change afterPath="$PROJECT_DIR$/.idea/sqldialects.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/server.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/alembic/env.py" beforeDir="false" afterPath="$PROJECT_DIR$/alembic/env.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/alembic/versions/f645f21e2af7_initial_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/alembic/versions/f645f21e2af7_initial_schema.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/routers/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/routers/blocks.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/blocks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/routers/documents.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/routers/import_export.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/import_export.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/block.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/die.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/furnace.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/library.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/log.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/material.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/post.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/process.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/revision.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/simulation.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/document/simulation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/process.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/process.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/routers/revisions.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/revisions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/routers/search.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/search.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/routers/sharing.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/sharing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/services/block_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/block_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/services/commit_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/commit_service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/services/import_export_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/import_export_service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/services/search_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/search_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/api_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/client/api_client.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/client/cli.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/example.py" beforeDir="false" afterPath="$PROJECT_DIR$/example.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui_client.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -42,7 +35,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="64" />
+    <option name="cachedIndexableFilesCount" value="65" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="FileTemplateManagerImpl">
@@ -67,35 +60,36 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.example.executor&quot;: &quot;Run&quot;,
-    &quot;Python.gui_client.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;ai.playground.ignore.import.keys.banner.in.settings&quot;: &quot;true&quot;,
-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.stylelint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.stylelint&quot;: &quot;&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;advanced.settings&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.example.executor": "Run",
+    "Python.gui_client.executor": "Run",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "ai.playground.ignore.import.keys.banner.in.settings": "true",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "C:/Users/alext/PycharmProjects/apiProject1",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.stylelint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.stylelint": "",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "coverage",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
       <console-settings module-name="apiProject1" is-module-sdk="true">
@@ -113,6 +107,11 @@
   </component>
   <component name="RecapUselessUpdatesCounter">
     <option name="suspendCountdown" value="0" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\alext\PycharmProjects\apiProject1\app\models\document" />
+    </key>
   </component>
   <component name="RunManager" selected="Python.gui_client">
     <configuration name="example" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -193,6 +192,8 @@
       <workItem from="1768290726099" duration="4166000" />
       <workItem from="1768346082120" duration="2000" />
       <workItem from="1768346101368" duration="14229000" />
+      <workItem from="1768382819017" duration="110000" />
+      <workItem from="1768435031992" duration="7182000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -218,17 +219,37 @@
       <option name="project" value="LOCAL" />
       <updated>1768297256361</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="SqlAlchemy ORM 2.0, split models, move tables from forgelab">
+      <option name="closed" value="true" />
+      <created>1768382899842</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1768382899842</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="First commit" />
     <MESSAGE value="Add GUI client" />
     <MESSAGE value="*.xml" />
-    <option name="LAST_COMMIT_MESSAGE" value="*.xml" />
+    <MESSAGE value="SqlAlchemy ORM 2.0, split models, move tables from forgelab" />
+    <option name="LAST_COMMIT_MESSAGE" value="SqlAlchemy ORM 2.0, split models, move tables from forgelab" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

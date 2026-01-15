@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from typing import List, Optional
 from uuid import UUID
-from app.models.block import Block, BlockType
+from app.models.document.block import Block, BlockType
 
 def get_root_blocks(db: Session, process_id: int) -> List[Block]:
     return list(db.execute(select(Block).filter(

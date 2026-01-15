@@ -5,7 +5,7 @@ from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
 from app.database import get_db
-from app.models.process import Process, ProcessACL, Role
+from app.models.document.process import Process, ProcessACL, Role
 from app.models.user import User
 from app.schemas import (
     ProcessCreate, ProcessUpdate, ProcessResponse,

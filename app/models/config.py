@@ -5,15 +5,6 @@ import enum
 from app.database import Base
 
 
-class ServerType(enum.Enum):
-    pre = "pre"
-    post = "post"
-    simulation = "simulation"
-    sql = "sql"
-    client = "client"
-    file_server = "file_server"
-
-
 class UiLanguage(enum.Enum):
     en = "en"
     ru = "ru"
@@ -23,6 +14,7 @@ class UiLanguage(enum.Enum):
 class Config(Base):
     __tablename__ = "config"
 
+    from app.models.server import ServerType
     server_type: Mapped[ServerType] = mapped_column(
         SQLEnum(ServerType, native_enum=False),
         primary_key=True
