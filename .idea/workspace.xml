@@ -4,13 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Fix problem: create new document">
+    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Add API for settings and GUI commands">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/alembic/env.py" beforeDir="false" afterPath="$PROJECT_DIR$/alembic/env.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/settings.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/provisioning_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/provisioning_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/settings_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/settings_service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/api_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/client/api_client.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gui_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/seed/v0003_settings.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/seed/v0003_settings.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_provisioning.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_provisioning.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_settings.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -92,6 +98,9 @@
     <option name="suspendCountdown" value="0" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\alext\PycharmProjects\apiProject1" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\alext\PycharmProjects\apiProject1\app\models\document" />
     </key>
@@ -177,7 +186,7 @@
       <workItem from="1768346101368" duration="14229000" />
       <workItem from="1768382819017" duration="110000" />
       <workItem from="1768435031992" duration="14425000" />
-      <workItem from="1768454983708" duration="3945000" />
+      <workItem from="1768454983708" duration="6828000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -251,7 +260,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768451096118</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Add API for settings and GUI commands">
+      <option name="closed" value="true" />
+      <created>1768466582644</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1768466582644</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -278,7 +295,8 @@
     <MESSAGE value="Add PROJECT_CONTEXT.md fo r initial Codding Agent context" />
     <MESSAGE value="Fix username -&gt; login column rename in User" />
     <MESSAGE value="Fix problem: create new document" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix problem: create new document" />
+    <MESSAGE value="Add API for settings and GUI commands" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add API for settings and GUI commands" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -293,6 +311,6 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/apiProject1$example.coverage" NAME="example Coverage Results" MODIFIED="1768285098953" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/apiProject1$gui_client.coverage" NAME="gui_client Coverage Results" MODIFIED="1768466460514" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/apiProject1$gui_client.coverage" NAME="gui_client Coverage Results" MODIFIED="1768468851893" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

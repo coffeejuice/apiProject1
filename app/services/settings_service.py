@@ -7,89 +7,76 @@ from app.models.settings import Setting, SettingScope
 T = TypeVar("T")
 
 class SettingsService:
-    def __init__(self, ttl_seconds: int = 60):
-        self._cache: Dict[str, Dict[str, Any]] = {}  # {cache_key: {"value": val, "expires_at": ts}}
-        self._ttl = ttl_seconds
+    def __init__(self, ttl: int = 60):
+        self._cache: Dict[str, tuple[Any, float]] = {}  # {cache_key: (value, expires_at)}
+        self._ttl = ttl
 
-    def _get_cache_key(self, domain: str, key: str, scope_ids: Dict[str, Optional[int]]) -> str:
-        tenant_id = scope_ids.get("tenant_id")
-        user_id = scope_ids.get("user_id")
-        return f"{domain}:{key}:{tenant_id}:{user_id}"
+    def _get_cache_key(self, key: str, user_id: Optional[int] = None) -> str:
+        return f"{key}:{user_id or 'none'}"
 
-    def get(self, db: Session, key: str, domain: str = "default", user_id: Optional[int] = None, tenant_id: Optional[int] = None, default: Any = None) -> Any:
-        scope_ids = {"user_id": user_id, "tenant_id": tenant_id}
-        cache_key = self._get_cache_key(domain, key, scope_ids)
+    def get(self, db: Session, key: str, user_id: Optional[int] = None, default: Any = None) -> Any:
+        cache_key = self._get_cache_key(key, user_id)
         
         # Check cache
         cached = self._cache.get(cache_key)
-        if cached and cached["expires_at"] > time.time():
-            return cached["value"]
+        if cached and cached[1] > time.time():
+            return cached[0]
 
-        # Resolution priority: User -> Tenant -> Global -> Default
-        stmt = select(Setting).where(
-            and_(
-                Setting.domain == domain,
+        # Priority 1: User Override
+        if user_id:
+            stmt = select(Setting.value).where(
                 Setting.key == key,
-                or_(
-                    Setting.scope == SettingScope.GLOBAL,
-                    and_(Setting.scope == SettingScope.TENANT, Setting.tenant_id == tenant_id),
-                    and_(Setting.scope == SettingScope.USER, Setting.user_id == user_id)
-                )
+                Setting.scope == SettingScope.USER,
+                Setting.user_id == user_id
             )
+            val = db.execute(stmt).scalar()
+            if val is not None:
+                self._cache[cache_key] = (val, time.time() + self._ttl)
+                return val
+
+        # Priority 2: Global Default
+        stmt = select(Setting.value).where(
+            Setting.key == key,
+            Setting.scope == SettingScope.GLOBAL
         )
-        results = db.execute(stmt).scalars().all()
+        val = db.execute(stmt).scalar()
         
-        # Priority mapping
-        value = default
-        if results:
-            priority_map = {SettingScope.USER: 2, SettingScope.TENANT: 1, SettingScope.GLOBAL: 0}
-            sorted_settings = sorted(results, key=lambda s: priority_map.get(s.scope, -1), reverse=True)
-            value = sorted_settings[0].value
+        if val is None:
+            val = default
+            
+        self._cache[cache_key] = (val, time.time() + self._ttl)
+        return val
 
-        # Update cache
-        self._cache[cache_key] = {
-            "value": value,
-            "expires_at": time.time() + self._ttl
-        }
-        return value
+    def get_bool(self, db: Session, key: str, user_id: Optional[int] = None, default: bool = False) -> bool:
+        val = self.get(db, key, user_id, default)
+        return bool(val)
 
-    def get_bool(self, db: Session, key: str, domain: str = "default", **kwargs) -> bool:
-        val = self.get(db, key, domain=domain, **kwargs)
-        try:
-            return bool(val)
-        except (ValueError, TypeError):
-            return bool(kwargs.get("default", False))
+    def get_int(self, db: Session, key: str, user_id: Optional[int] = None, default: int = 0) -> int:
+        val = self.get(db, key, user_id, default)
+        return int(val)
 
-    def get_int(self, db: Session, key: str, domain: str = "default", **kwargs) -> int:
-        val = self.get(db, key, domain=domain, **kwargs)
-        try:
-            return int(val)
-        except (ValueError, TypeError):
-            return int(kwargs.get("default", 0))
+    def get_float(self, db: Session, key: str, user_id: Optional[int] = None, default: float = 0.0) -> float:
+        val = self.get(db, key, user_id, default)
+        return float(val)
 
-    def get_float(self, db: Session, key: str, domain: str = "default", **kwargs) -> float:
-        val = self.get(db, key, domain=domain, **kwargs)
-        try:
-            return float(val)
-        except (ValueError, TypeError):
-            return float(kwargs.get("default", 0.0))
+    def get_string(self, db: Session, key: str, user_id: Optional[int] = None, default: str = "") -> str:
+        val = self.get(db, key, user_id, default)
+        return str(val)
 
-    def get_string(self, db: Session, key: str, domain: str = "default", **kwargs) -> str:
-        val = self.get(db, key, domain=domain, **kwargs)
-        return str(val) if val is not None else str(kwargs.get("default", ""))
+    def get_json(self, db: Session, key: str, user_id: Optional[int] = None, default: Any = None) -> Any:
+        return self.get(db, key, user_id, default)
 
-    def get_json(self, db: Session, key: str, domain: str = "default", **kwargs) -> Any:
-        return self.get(db, key, domain=domain, **kwargs)
-
-    def set_setting(self, db: Session, key: str, value: Any, domain: str = "default", scope: SettingScope = SettingScope.GLOBAL, 
-                    tenant_id: Optional[int] = None, user_id: Optional[int] = None):
+    def set_setting(self, db: Session, key: str, value: Any, scope: SettingScope = SettingScope.GLOBAL, 
+                    user_id: Optional[int] = None):
+        # Enforce scope rules
+        if scope == SettingScope.GLOBAL:
+            user_id = None
+        
         # Find existing or create new
         stmt = select(Setting).where(
             and_(
-                Setting.domain == domain,
                 Setting.key == key,
                 Setting.scope == scope,
-                Setting.tenant_id == tenant_id,
                 Setting.user_id == user_id
             )
         )
@@ -98,14 +85,14 @@ class SettingsService:
         if setting:
             setting.value = value
         else:
-            setting = Setting(domain=domain, key=key, value=value, scope=scope, tenant_id=tenant_id, user_id=user_id)
+            setting = Setting(key=key, value=value, scope=scope, user_id=user_id)
             db.add(setting)
         
         db.commit()
         db.refresh(setting)
         
         # Invalidate related cache entries
-        keys_to_delete = [ck for ck in self._cache if ck.startswith(f"{domain}:{key}:")]
+        keys_to_delete = [ck for ck in self._cache if ck.startswith(f"{key}:")]
         for ck in keys_to_delete:
             del self._cache[ck]
             
@@ -114,13 +101,12 @@ class SettingsService:
     def delete_setting(self, db: Session, setting_id: int):
         setting = db.get(Setting, setting_id)
         if setting:
-            domain = setting.domain
             key = setting.key
             db.delete(setting)
             db.commit()
             
             # Invalidate cache
-            keys_to_delete = [ck for ck in self._cache if ck.startswith(f"{domain}:{key}:")]
+            keys_to_delete = [ck for ck in self._cache if ck.startswith(f"{key}:")]
             for ck in keys_to_delete:
                 del self._cache[ck]
             return True

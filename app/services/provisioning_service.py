@@ -23,35 +23,39 @@ class ProvisioningService:
         with open(filepath, "r") as f:
             data = yaml.safe_load(f)
 
-        settings_list = data.get("settings", [])
+        if not isinstance(data, dict):
+            # The tree format must be a dict
+            return {"applied": 0, "skipped": 0, "error": "Invalid format: Expected dict for tree structure"}
+
         applied_count = 0
         skipped_count = 0
 
-        for s in settings_list:
-            domain = s.get("domain", "default")
-            key = s.get("key")
-            value = s.get("value")
-            scope = self._parse_scope(s.get("scope", "global"))
-            tenant_id = s.get("tenant_id")
-            user_id = s.get("user_id")
+        def process_node(node, prefix=""):
+            nonlocal applied_count, skipped_count
+            
+            for key, value in node.items():
+                current_key = f"{prefix}{key}"
+                
+                if isinstance(value, dict):
+                    # Recurse
+                    process_node(value, f"{current_key}.")
+                else:
+                    # Leaf node - this is a setting
+                    if only_missing:
+                        existing = settings_service.get(db, current_key)
+                        if existing is not None:
+                            skipped_count += 1
+                            continue
 
-            if only_missing:
-                # Check if it exists
-                existing = settings_service.get(db, key, domain=domain, user_id=user_id, tenant_id=tenant_id)
-                if existing is not None:
-                    skipped_count += 1
-                    continue
+                    settings_service.set_setting(
+                        db, 
+                        key=current_key, 
+                        value=value, 
+                        scope=SettingScope.GLOBAL
+                    )
+                    applied_count += 1
 
-            settings_service.set_setting(
-                db, 
-                key=key, 
-                value=value, 
-                domain=domain, 
-                scope=scope, 
-                tenant_id=tenant_id, 
-                user_id=user_id
-            )
-            applied_count += 1
+        process_node(data)
 
         return {"applied": applied_count, "skipped": skipped_count}
 

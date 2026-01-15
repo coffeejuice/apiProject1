@@ -22,7 +22,7 @@ def test_provisioning():
         print(f"Provisioning results: {results}")
         
         # Verify specific setting from v0003_settings.yaml
-        stmt = select(Setting).where(Setting.domain == "svc", Setting.key == "worker.pool_size")
+        stmt = select(Setting).where(Setting.key == "worker.pool_size")
         setting = db.execute(stmt).scalar_one_or_none()
         assert setting is not None
         assert setting.value == 5

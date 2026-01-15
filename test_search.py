@@ -23,7 +23,7 @@ def test_key_like_search():
     
     print(f"Found {len(settings)} settings matching 'worker.%':")
     for s in settings:
-        print(f" - {s['domain']}:{s['key']} = {s['value']}")
+        print(f" - {s['key']} = {s['value']}")
         assert "worker." in s['key']
 
     print("✓ key_like search verified successfully!")

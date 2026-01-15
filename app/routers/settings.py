@@ -16,7 +16,6 @@ def list_settings(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     scope: Optional[SettingScope] = None,
-    domain: Optional[str] = None,
     key_like: Optional[str] = None
 ):
     # Simple check: only users with supervisor_id == 1 can list all settings
@@ -26,14 +25,11 @@ def list_settings(
         # Restricted view for non-admins
         stmt = stmt.where(
             (Setting.scope == SettingScope.GLOBAL) |
-            ((Setting.scope == SettingScope.USER) & (Setting.user_id == current_user.user_id)) |
-            ((Setting.scope == SettingScope.TENANT) & (Setting.tenant_id == current_user.department_id))
+            ((Setting.scope == SettingScope.USER) & (Setting.user_id == current_user.user_id))
         )
     
     if scope:
         stmt = stmt.where(Setting.scope == scope)
-    if domain:
-        stmt = stmt.where(Setting.domain == domain)
     if key_like:
         stmt = stmt.where(Setting.key.like(key_like))
         
@@ -45,25 +41,25 @@ def create_or_update_setting(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if current_user.supervisor_id != 1 and setting_in.scope != SettingScope.USER:
+    # Authorization: only admins can set GLOBAL scope
+    if setting_in.scope == SettingScope.GLOBAL and current_user.supervisor_id != 1:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only administrators can create non-user scoped settings"
+            detail="Only administrators can set global settings"
         )
     
-    if setting_in.scope == SettingScope.USER and setting_in.user_id != current_user.user_id and current_user.supervisor_id != 1:
-         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Cannot set settings for another user"
-        )
+    # If USER scope, enforce current_user.user_id unless admin
+    if setting_in.scope == SettingScope.USER:
+        if current_user.supervisor_id != 1:
+            setting_in.user_id = current_user.user_id
+        elif setting_in.user_id is None:
+            setting_in.user_id = current_user.user_id
 
     return settings_service.set_setting(
         db, 
         key=setting_in.key, 
         value=setting_in.value, 
-        domain=setting_in.domain,
         scope=setting_in.scope,
-        tenant_id=setting_in.tenant_id,
         user_id=setting_in.user_id
     )
 
@@ -90,7 +86,6 @@ def delete_setting(
 @router.get("/resolve/{key}")
 def resolve_setting(
     key: str,
-    domain: str = "default",
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -98,11 +93,9 @@ def resolve_setting(
     value = settings_service.get(
         db, 
         key=key, 
-        domain=domain,
-        user_id=current_user.user_id, 
-        tenant_id=current_user.department_id
+        user_id=current_user.user_id
     )
-    return {"key": key, "domain": domain, "resolved_value": value}
+    return {"key": key, "resolved_value": value}
 
 @router.post("/provision/apply")
 def apply_all_provisions(
