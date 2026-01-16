@@ -1,54 +1,61 @@
-# 🤖 Project Context: Techno-Notion API
+# 🤖 PROJECT_CONTEXT: Techno-Notion API
 
-High-density technical blueprint for industrial process management and simulation.
+## 🏛 Systems Overview
+Industrial-grade process management API. Notion-style block architecture focused on versioned simulation data.
 
-## 🛠 Tech Stack & Constraints
-- **Core**: Python 3.10+, FastAPI 0.128.0+, SQLAlchemy 2.0 (Sync/Mapped).
-- **DB**: PostgreSQL (Alembic for migrations).
-- **Auth**: JWT (OAuth2 Password flow), Bcrypt hashing.
-- **Validation**: Pydantic v2 (Schemas in `app/schemas.py`).
-- **Dev Tools**: Uvicorn (standard), Requests (for testing).
+## 🛠 Tech Stack
+- **Runtime**: Python 3.10+ | FastAPI 0.128+
+- **Database**: PostgreSQL | SQLAlchemy 2.0 (Sync/Mapped) | Alembic Migrations
+- **Auth**: JWT (OAuth2 Password flow) | Bcrypt
+- **Modeling**: Pydantic v2 (Schemas in `app/schemas.py`)
+- **Transport**: Uvicorn | Port 8001 (Port 8000 is reserved on Windows systems)
+- **GUI**: PySide6 6.10+ | Qt Quick (QML)
 
-## 📐 Architecture & Logic
-- **Pattern**: `Router` (entry) -> `Service` (logic) -> `Model/Schema` (data).
-- **Document Model**: 
-    - `Process` (table: `documents`): The root entity.
-    - `Block` (table: `blocks`): Polymorphic-like records. Type-specific data stored in `props` JSON field.
-    - `Revision`: Immutable change history for all block/document mutations.
-    - `ProcessVersion`: Point-in-time snapshots for simulation and release management.
-- **Order Mechanism**: Blocks use `order_key` for lexicographical sorting (allows O(1) inserts between blocks).
+## 🏢 Core Mental Model
+1. **Processes** (Table: `documents`): The root entity or "Page".
+2. **Blocks** (Table: `blocks`): Polymorphic components (Text, Table, Image, etc.).
+   - **Ordering**: Lexicographical `order_key` (allows O(1) inserts/moves).
+   - **Props**: Type-specific data in JSON `props` field.
+3. **Revisions** (Table: `revisions`): Immutable change history.
+4. **Library**: Industrial assets like `material`, `die`, `press`.
 
-## 📂 Source Map
-- `app/models/document/`: Core domain logic (`process.py`, `block.py`).
-- `app/models/library/`: Industrial assets (`material.py`, `die.py`).
-- `app/routers/`: Resource endpoints (auth, sharing, process, search).
-- `app/services/`: Reusable business logic/orchestration.
-- `gui_client.py`: Primary Desktop GUI application for end-users.
-- `client/`: CLI implementation for automation and integration testing.
+## 📂 Architecture Map
+### `/app` (Core logic)
+- `models/document/`: `process.py` (Root), `block.py` (Atomic elements).
+- `models/library/`: `material.py`, `die.py`, `press.py` (Industrial entities).
+- `services/`: `commit_service.py` (Revision management logic), `block_service.py`.
+- `routers/`: Resource endpoints (auth, sharing, process, search).
 
-## 🕹 Standard Operating Procedures (SOPs)
+### `/gui_client_v2` (Modern Client)
+- **Architecture**: MVVM+S (Model-View-ViewModel-Service).
+- **Core Logic**: `app/viewmodels/` (Process, Block, List), `app/core/registry.py` (Dynamic block loading).
+- **UI**: `resources/qml/` (Main, Sidebar, modular Blocks).
 
-### Server & UI Startup
+### `/client` & Root
+- `gui_client.py`: Legacy PySide6/PyQt Desktop UI.
+- `run.py`: Entry point (Uvicorn on :8001).
+- `example.py`: Full lifecycle demonstration script.
+
+## ⚙️ Networking & Environment
+- **API_URL**: `http://localhost:8001`
+- **Port Note**: CRITICAL - Always use 8001. Port 8000 often conflicts with Windows services.
+- **Database**: Configured via `.env` (PostgreSQL).
+
+## ⚠️ Implementation Guardrails
+1. **Soft Deletes**: Always filter for `deleted_at IS NULL` on read.
+2. **Schema-First**: Update `app/schemas.py` synchronously with model changes.
+3. **Migrate**: Use `alembic revision --autogenerate` for any DB schema changes.
+4. **Access Control**: Verify `ProcessACL` or `ShareLink` for mutations.
+5. **JSON Props**: Follow `BlockType` enum definitions in `block.py` strictly.
+
+## 🚀 Common Commands
 ```powershell
-# 1. Start Backend API
+# Start API
 python run.py
 
-# 2. Start GUI Client (Primary User Interface)
-python gui_client.py
+# Start GUI (v2)
+cd gui_client_v2; python main.py
+
+# Migration
+alembic upgrade head
 ```
-
-### Scripting & CLI Testing
-```powershell
-# Run Demo Flow
-python example.py
-
-# CLI Testing (Secondary/Automation)
-python -m client.cli login <username>
-```
-
-## 📝 Agent Guidelines
-1. **Schema Consistency**: Always update `app/schemas.py` when modifying models.
-2. **Migration Discipline**: Ensure every DB change has an accompanying Alembic file.
-3. **Implicit Filtering**: Many queries should filter by `deleted_at IS NULL` (soft-delete support).
-4. **Permissions**: Always check `ProcessACL` or `ShareLink` before modifying data.
-5. **Block Typing**: Follow `BlockType` enum in `app/models/document/block.py` strictly.

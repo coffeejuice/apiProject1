@@ -24,3 +24,6 @@ uuid7
 python-dotenv
 requests==2.32.5
 types-requests
+
+# GUI
+PySide6==6.10.1
