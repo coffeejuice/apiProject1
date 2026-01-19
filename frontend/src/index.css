@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .tiptap {
+    @apply outline-none min-h-[400px];
+  }
+
+  .tiptap p.is-editor-empty:first-child::before {
+    color: #adb5bd;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+
+  .tiptap-toolbar {
+    @apply flex gap-1 p-2 border-b border-gray-200 bg-white flex-wrap;
+  }
+
+  .tiptap-toolbar button {
+    @apply px-3 py-1.5 text-sm rounded hover:bg-gray-100 border border-gray-300;
+  }
+
+  .tiptap-toolbar button.is-active {
+    @apply bg-gray-200;
+  }
+}

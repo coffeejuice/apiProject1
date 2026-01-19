@@ -6,6 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+# For monorepo
+.idea/*
+!.idea/runConfigurations/
+!.idea/codeStyles/
+!.idea/inspectionProfiles/
+
 # Distribution / packaging
 .Python
 build/
@@ -135,7 +141,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+backend/.env
 .envrc
 .venv
 env/

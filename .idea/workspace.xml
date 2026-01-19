@@ -1,14 +1,230 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AIDiffSettings">
+    <option name="showAIDiff" value="true" />
+  </component>
+  <component name="AIDiffStorage" id="1">
+    <groups>
+      <group changeListId="794eba2f-2ffe-4d11-a0e7-cf424c8a540a" id="1" name="Update IntelliJ IDEA module type from 'PYTHON_MODULE' to 'WEB_MODULE'" description="Change IntelliJ IDEA project module type to 'WEB_MODULE' and remove Python-specific configurations." importance="0.8">
+        <files>
+          <file summary="Changes the module type from 'PYTHON_MODULE' to 'WEB_MODULE' and removes Python SDK and documentation settings in `apiProject1.iml`." importance="0.8" isPending="false">
+            <change beforePath="$PROJECT_DIR$/.idea/apiProject1.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/apiProject1.iml" afterDir="false" />
+            <ranges>
+              <range afterLine1="1" afterLine2="2" beforeLine1="1" beforeLine2="2" groupId="1" />
+              <range afterLine1="3" afterLine2="5" beforeLine1="3" beforeLine2="7" groupId="1" />
+              <range afterLine1="7" afterLine2="7" beforeLine1="9" beforeLine2="13" groupId="1" />
+            </ranges>
+          </file>
+        </files>
+      </group>
+      <group changeListId="5b491188-96a0-42ae-baa6-cfaaa9ea0bc8" id="2" name="Update IntelliJ IDEA workspace commit history and 'LAST_COMMIT_MESSAGE'" description="Update IntelliJ IDEA workspace to reflect new commit message and local task count." importance="0.6">
+        <files>
+          <file summary="Updates the `workspace.xml` to change the `comment` and `LAST_COMMIT_MESSAGE` to 'Add Qt Quick QML client' and increments `localTasksCounter`." importance="0.6" isPending="false">
+            <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+            <ranges>
+              <range afterLine1="6" afterLine2="7" beforeLine1="6" beforeLine2="12" groupId="2" />
+              <range afterLine1="38" afterLine2="67" beforeLine1="43" beforeLine2="72" groupId="2" />
+              <range afterLine1="68" afterLine2="69" beforeLine1="73" beforeLine2="74" groupId="2" />
+              <range afterLine1="95" afterLine2="96" beforeLine1="100" beforeLine2="101" groupId="2" />
+              <range afterLine1="168" afterLine2="168" beforeLine1="173" beforeLine2="180" groupId="2" />
+              <range afterLine1="195" afterLine2="196" beforeLine1="207" beforeLine2="208" groupId="2" />
+              <range afterLine1="285" afterLine2="294" beforeLine1="297" beforeLine2="298" groupId="2" />
+              <range afterLine1="322" afterLine2="324" beforeLine1="326" beforeLine2="327" groupId="2" />
+            </ranges>
+          </file>
+        </files>
+      </group>
+    </groups>
+  </component>
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Convert 'operations.json' to 'operations.yaml'">
-      <change afterPath="$PROJECT_DIR$/CLIENT_CONTEXT.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Add Qt Quick QML client">
+      <change afterPath="$PROJECT_DIR$/frontend_obsolete/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend_obsolete/client/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sqldialects.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sqldialects.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.output.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CHANGELOG.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/CHANGELOG.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CLIENT_CONTEXT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/GUI_CLIENT_V2_CONTEXT.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/GUI_CLIENT_V2_CONTEXT.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/IMPORTANT_PORT_8001.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PORT_CHANGE.md" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/PROJECT_CONTEXT.md" beforeDir="false" afterPath="$PROJECT_DIR$/PROJECT_CONTEXT.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/QUICKSTART_WINDOWS.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/QUICKSTART_WINDOWS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SETUP.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/SETUP.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/START_HERE.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/START_HERE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UPDATE_SUMMARY.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/UPDATE_SUMMARY.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/alembic.ini" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/alembic/env.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/env.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/alembic/script.py.mako" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/script.py.mako" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/alembic/versions/.gitkeep" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/versions/.gitkeep" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/alembic/versions/8d67e350b825_industrial_schema_sync.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/versions/8d67e350b825_industrial_schema_sync.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/alembic/versions/f645f21e2af7_initial_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/versions/f645f21e2af7_initial_schema.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document/bite.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/bite.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document/block.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document/operation.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/operation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document/post.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/post.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document/process.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/process.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document/revision.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/revision.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document/server_pre_main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/server_pre_main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document/simulation.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/simulation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/library/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/library/die.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/die.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/library/furnace.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/furnace.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/library/library.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/library.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/library/material.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/material.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/library/press.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/press.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/log.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/server.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/blocks.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/blocks.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/import_export.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/import_export.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/process.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/process.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/revisions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/revisions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/search.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/sharing.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/sharing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/block_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/block_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/commit_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/commit_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/import_export_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/import_export_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/provisioning_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/provisioning_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/search_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/search_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/settings_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/settings_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/check_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/check_schema.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/check_user.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/check_user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/check_users_content.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/check_users_content.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/INITIAL_TASK.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/api_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/client/api_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/client/cli.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/convert_operations.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/convert_operations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/example.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gui_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/CLIENT_CONTEXT.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/CLIENT_CONTEXT.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/CMakeLists.txt.user" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/CMakeLists.txt.user" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/CardView.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/CardView.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/Cell.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/Cell.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/Draw.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/Draw.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/EditText.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/EditText.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/Main.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/Main.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/blocktype_unknown_red.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/blocktype_unknown_red.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/blocktype_unknown_yellow_inkspace.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/blocktype_unknown_yellow_inkspace.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/check_list_bw.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/check_list_bw.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/document.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/document.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/dots.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/dots.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/edit.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/edit.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/feather.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/feather.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/find_in_folder.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/find_in_folder.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/fire.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/fire.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/folder.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/folder.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/folder_search.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/folder_search.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/house.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/house.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/image0.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/image0.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/image1.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/image1.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/image2.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/image2.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/image3.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/image3.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/image4.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/image4.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/image5.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/image5.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/image6.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/image6.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/image7.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/image7.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/image8.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/image8.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/image9.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/image9.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/octagon_off.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/octagon_off.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/octagon_on.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/octagon_on.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/pencil.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/pencil.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/plus.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/plus.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/polygon16_off.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/polygon16_off.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/polygon16_on.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/polygon16_on.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/rectangle_off.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/rectangle_off.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/rectangle_on.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/rectangle_on.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/red_danger.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/red_danger.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/round_off.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/round_off.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/round_on.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/round_on.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/square_chamfers_different_off.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/square_chamfers_different_off.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/square_chamfers_different_on.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/square_chamfers_different_on.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/square_chamfers_equal_off.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/square_chamfers_equal_off.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/square_chamfers_equal_on.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/square_chamfers_equal_on.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/square_chamfers_sharp_off.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/square_chamfers_sharp_off.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/square_chamfers_sharp_on.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/square_chamfers_sharp_on.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/square_off.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/square_off.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/assets/square_on.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/assets/square_on.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/basecard.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/basecard.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/basecard.h" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/basecard.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/card_delegates/Card_BaseLayout.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/card_delegates/Card_BaseLayout.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/card_delegates/Card_Block.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/card_delegates/Card_Block.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/card_delegates/Card_Document.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/card_delegates/Card_Document.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/card_delegates/Card_Draw.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/card_delegates/Card_Draw.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/card_delegates/Card_Footer.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/card_delegates/Card_Footer.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/card_delegates/Card_Header.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/card_delegates/Card_Header.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/card_delegates/Card_Heat.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/card_delegates/Card_Heat.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/card_delegates/Card_Unknown.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/card_delegates/Card_Unknown.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/card_delegates/Card_Upset.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/card_delegates/Card_Upset.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/cardmodel.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/cardmodel.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/cardmodel.h" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/cardmodel.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/cellmodel.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/cellmodel.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/cellmodel.h" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/cellmodel.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_example_cpp/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_example_cpp/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/app/api/client.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/app/api/client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/app/core/registry.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/app/core/registry.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/app/viewmodels/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/app/viewmodels/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/app/viewmodels/block.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/app/viewmodels/block.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/app/viewmodels/cell.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/app/viewmodels/cell.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/app/viewmodels/list.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/app/viewmodels/list.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/app/viewmodels/process.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/app/viewmodels/process.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/resources/qml/Main.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/resources/qml/Main.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/resources/qml/Theme.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/resources/qml/Theme.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/resources/qml/blocks/TextBlock.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/resources/qml/blocks/TextBlock.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/resources/qml/blocks/UnknownBlock.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/resources/qml/blocks/UnknownBlock.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/resources/qml/components/CardView.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/resources/qml/components/CardView.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/resources/qml/components/Cell.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/resources/qml/components/Cell.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/resources/qml/components/Draw.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/resources/qml/components/Draw.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/resources/qml/components/EditText.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/resources/qml/components/EditText.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/resources/qml/components/LoginPane.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/resources/qml/components/LoginPane.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/resources/qml/components/Sidebar.qml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/resources/qml/components/Sidebar.qml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/resources/qml/qmldir" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/resources/qml/qmldir" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_client_v2/utils_to_delete/seed_docs.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/gui_client_v2/utils_to_delete/seed_docs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/list_all_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/list_all_tables.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/list_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/list_tables.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/operations.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/operations.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/operations.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/operations.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/recreate_settings_table.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/recreate_settings_table.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reinit_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/reinit_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/run.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/seed/v0003_settings.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/seed/v0003_settings.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup_database.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/setup_database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_login.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test_login.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_provisioning.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test_provisioning.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_register.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test_register.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test_settings.py" afterDir="false" />
+    </list>
+    <list id="794eba2f-2ffe-4d11-a0e7-cf424c8a540a" name="Update IntelliJ IDEA module type from 'PYTHON_MODULE' to 'WEB_MODULE'" comment="Change IntelliJ IDEA project module type to 'WEB_MODULE' and remove Python-specific configurations.">
+      <change beforePath="$PROJECT_DIR$/.idea/apiProject1.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/apiProject1.iml" afterDir="false" />
+    </list>
+    <list id="5b491188-96a0-42ae-baa6-cfaaa9ea0bc8" name="Update IntelliJ IDEA workspace commit history and 'LAST_COMMIT_MESSAGE'" comment="Update IntelliJ IDEA workspace to reflect new commit message and local task count.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -16,7 +232,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="183" />
+    <option name="cachedIndexableFilesCount" value="215" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="FileTemplateManagerImpl">
@@ -41,37 +257,40 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.example.executor": "Run",
-    "Python.gui_client.executor": "Run",
-    "Python.main.executor": "Run",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "ai.playground.ignore.import.keys.banner.in.settings": "true",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "junie.onboarding.icon.badge.shown": "true",
-    "last_opened_file_path": "C:/Users/alext/PycharmProjects/apiProject1",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.stylelint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.stylelint": "",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "ml.llm.LLMAIWorkflowsConfigurable",
-    "to.speed.mode.migration.done": "true",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.Backend Server.executor&quot;: &quot;Run&quot;,
+    &quot;Python.example.executor&quot;: &quot;Run&quot;,
+    &quot;Python.gui_client.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;ai.playground.ignore.import.keys.banner.in.settings&quot;: &quot;true&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/alext/PycharmProjects/apiProject1&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.stylelint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.stylelint&quot;: &quot;&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\alext\\PycharmProjects\\apiProject1\\frontend\\node_modules\\typescript\\lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
       <console-settings module-name="apiProject1" is-module-sdk="true">
@@ -95,11 +314,13 @@
       <recent name="C:\Users\alext\PycharmProjects\apiProject1" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\alext\PycharmProjects\apiProject1\backend" />
+      <recent name="C:\Users\alext\PycharmProjects\apiProject1\frontend_obsolete" />
       <recent name="C:\Users\alext\PycharmProjects\apiProject1\app\models\document" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.main">
-    <configuration name="example" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+  <component name="RunManager">
+    <configuration name="Backend Server" type="PythonConfigurationType" factoryName="Python">
       <module name="apiProject1" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -108,13 +329,13 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
+      <option name="WORKING_DIRECTORY" value="C:\Users\alext\PycharmProjects\apiProject1\backend" />
+      <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/example.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/backend/run.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -123,67 +344,11 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="gui_client" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="apiProject1" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/gui_client.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="apiProject1" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/gui_client_v2" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/gui_client_v2/main.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Python.main" />
-        <item itemvalue="Python.gui_client" />
-        <item itemvalue="Python.example" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PY-253.29346.308" />
-        <option value="bundled-python-sdk-ca5e2b39c7df-6e1f45a539f7-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.29346.308" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-WS-253.29346.242" />
       </set>
     </attachedChunks>
   </component>
@@ -205,7 +370,10 @@
       <workItem from="1768382819017" duration="110000" />
       <workItem from="1768435031992" duration="14425000" />
       <workItem from="1768454983708" duration="6889000" />
-      <workItem from="1768522338552" duration="19690000" />
+      <workItem from="1768522338552" duration="19733000" />
+      <workItem from="1768803634447" duration="62000" />
+      <workItem from="1768803706140" duration="7121000" />
+      <workItem from="1768814123746" duration="5879000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -295,7 +463,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768473561072</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Add Qt Quick QML client">
+      <option name="closed" value="true" />
+      <created>1768555373795</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1768555373795</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -324,20 +500,11 @@
     <MESSAGE value="Fix problem: create new document" />
     <MESSAGE value="Add API for settings and GUI commands" />
     <MESSAGE value="Convert 'operations.json' to 'operations.yaml'" />
-    <option name="LAST_COMMIT_MESSAGE" value="Convert 'operations.json' to 'operations.yaml'" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
-          <line>8</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="Add Qt Quick QML client" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add Qt Quick QML client" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/apiProject1$Backend_Server.coverage" NAME="Backend Server Coverage Results" MODIFIED="1768818640539" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:\Users\alext\PycharmProjects\apiProject1\backend" />
     <SUITE FILE_PATH="coverage/apiProject1$main.coverage" NAME="main Coverage Results" MODIFIED="1768523636270" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/gui_client_v2" />
     <SUITE FILE_PATH="coverage/apiProject1$example.coverage" NAME="example Coverage Results" MODIFIED="1768285098953" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/apiProject1$gui_client.coverage" NAME="gui_client Coverage Results" MODIFIED="1768468851893" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
