@@ -1,15 +1,22 @@
 import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useSessionStore } from './stores/useSessionStore'
+import { apiClient } from './lib/apiClient'
 import LoginPage from './pages/LoginPage'
 import AppPage from './pages/AppPage'
 
 function App() {
-  const { isAuthenticated, initialize } = useSessionStore()
+  const { isAuthenticated, initialize, logout } = useSessionStore()
 
   useEffect(() => {
     initialize()
-  }, [initialize])
+
+    // Set up global authentication error handler
+    apiClient.setOnUnauthenticated(() => {
+      logout()
+      // The Navigate will happen automatically due to isAuthenticated changing
+    })
+  }, [initialize, logout])
 
   return (
     <Routes>

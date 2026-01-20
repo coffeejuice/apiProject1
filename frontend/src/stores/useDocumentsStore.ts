@@ -13,6 +13,8 @@ interface DocumentsState {
   currentDoc: Document | null
   isLoading: boolean
   error: string | null
+  showDeleted: boolean
+  selectedDocIds: Set<string>
 
   fetchDocuments: () => Promise<void>
   createDocument: (title: string) => Promise<Document | null>
@@ -20,6 +22,12 @@ interface DocumentsState {
   setCurrentDoc: (id: string | null) => void
   updateLocalDoc: (id: string, updates: Partial<Document>) => void
   updateDocument: (id: string | number, updates: Partial<Document>) => Promise<boolean>
+  deleteDocument: (id: string | number) => Promise<boolean>
+  deleteMultipleDocuments: (ids: string[]) => Promise<void>
+  setShowDeleted: (show: boolean) => void
+  toggleDocSelection: (id: string) => void
+  clearSelection: () => void
+  selectAll: (docIds: string[]) => void
 }
 
 export const useDocumentsStore = create<DocumentsState>((set, get) => ({
@@ -28,12 +36,19 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
   currentDoc: null,
   isLoading: false,
   error: null,
+  showDeleted: false,
+  selectedDocIds: new Set<string>(),
 
   fetchDocuments: async () => {
     set({ isLoading: true, error: null })
 
+    const { showDeleted } = get()
+
     const response = await apiClient.get<DocumentListResponse>('/documents', {
-      params: { limit: 100 },
+      params: {
+        limit: 100,
+        include_deleted: showDeleted,
+      },
     })
 
     if (!response.ok) {
@@ -175,5 +190,77 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
     }))
 
     return true
+  },
+
+  deleteDocument: async (id: string | number) => {
+    const response = await apiClient.delete(`/documents/${id}`)
+
+    if (!response.ok) {
+      console.error('Failed to delete document:', response.errorMessage)
+      return false
+    }
+
+    // Clear current doc if it was deleted
+    const state = get()
+    if (state.currentDocId === String(id)) {
+      set({ currentDoc: null, currentDocId: null })
+    }
+
+    // Refetch documents from backend
+    await get().fetchDocuments()
+
+    return true
+  },
+
+  setShowDeleted: (show: boolean) => {
+    set({ showDeleted: show })
+    // Refetch documents with new filter
+    get().fetchDocuments()
+  },
+
+  deleteMultipleDocuments: async (ids: string[]) => {
+    // Send all delete requests
+    const promises = ids.map((id) =>
+      apiClient.delete(`/documents/${id}`)
+    )
+    const results = await Promise.all(promises)
+
+    // Check if all succeeded
+    const allSucceeded = results.every((r) => r.ok)
+    if (!allSucceeded) {
+      console.error('Some documents failed to delete')
+    }
+
+    // Clear selection
+    set({ selectedDocIds: new Set<string>() })
+
+    // Clear current doc if it was deleted
+    const state = get()
+    if (state.currentDocId && ids.includes(String(state.currentDocId))) {
+      set({ currentDoc: null, currentDocId: null })
+    }
+
+    // Refetch documents from backend
+    await get().fetchDocuments()
+  },
+
+  toggleDocSelection: (id: string) => {
+    set((state) => {
+      const newSelection = new Set(state.selectedDocIds)
+      if (newSelection.has(id)) {
+        newSelection.delete(id)
+      } else {
+        newSelection.add(id)
+      }
+      return { selectedDocIds: newSelection }
+    })
+  },
+
+  clearSelection: () => {
+    set({ selectedDocIds: new Set<string>() })
+  },
+
+  selectAll: (docIds: string[]) => {
+    set({ selectedDocIds: new Set(docIds) })
   },
 }))

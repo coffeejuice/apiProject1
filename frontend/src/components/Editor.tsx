@@ -24,6 +24,7 @@ export default function Editor() {
     saveStatus,
     lastSavedRevNumber,
     setLastSavedRevNumber,
+    loadBlocksFromBackend,
     reset,
   } = useEditorStore()
 
@@ -52,33 +53,40 @@ export default function Editor() {
       return
     }
 
-    setTitle(currentDoc.title || '')
+    const loadDocument = async () => {
+      setTitle(currentDoc.title || '')
 
-    // Load content - try localStorage first, then backend data
-    let docContent
-    try {
-      const savedContent = localStorage.getItem(`doc_${currentDoc.id}_content`)
-      if (savedContent) {
-        docContent = JSON.parse(savedContent)
+      // Load blocks from backend to track IDs
+      await loadBlocksFromBackend(currentDoc.id.toString())
+
+      // Load content - try localStorage first, then backend data
+      let docContent
+      try {
+        const savedContent = localStorage.getItem(`doc_${currentDoc.id}_content`)
+        if (savedContent) {
+          docContent = JSON.parse(savedContent)
+        }
+      } catch (e) {
+        // Ignore parse errors
       }
-    } catch (e) {
-      // Ignore parse errors
+
+      if (!docContent) {
+        docContent = currentDoc.content || {
+          type: 'doc',
+          content: [{ type: 'paragraph' }],
+        }
+      }
+
+      editor?.commands.setContent(docContent)
+      setContent(docContent)
+
+      // Set revision number
+      const revNumber = currentDoc.rev_number || 0
+      setLastSavedRevNumber(revNumber)
     }
 
-    if (!docContent) {
-      docContent = currentDoc.content || {
-        type: 'doc',
-        content: [{ type: 'paragraph' }],
-      }
-    }
-
-    editor?.commands.setContent(docContent)
-    setContent(docContent)
-
-    // Set revision number
-    const revNumber = currentDoc.rev_number || 0
-    setLastSavedRevNumber(revNumber)
-  }, [currentDoc, editor, reset, setContent, setLastSavedRevNumber])
+    loadDocument()
+  }, [currentDoc, editor, reset, setContent, setLastSavedRevNumber, loadBlocksFromBackend])
 
   // Autosave logic
   useEffect(() => {
@@ -151,8 +159,8 @@ export default function Editor() {
                 <span className="text-blue-600">Saving...</span>
               )}
               {saveStatus === 'saved' && (
-                <span className="text-green-600" title="Saved to browser localStorage">
-                  Saved (Local)
+                <span className="text-green-600" title="Saved to database">
+                  Saved
                 </span>
               )}
               {saveStatus === 'error' && (
@@ -187,8 +195,8 @@ export default function Editor() {
       <EditorToolbar editor={editor} />
 
       {/* Editor Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto p-8">
+      <div className="flex-1 overflow-y-auto bg-gray-100">
+        <div className="max-w-4xl mx-auto py-8">
           <EditorContent editor={editor} className="tiptap prose max-w-none" />
         </div>
       </div>

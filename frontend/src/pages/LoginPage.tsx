@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 
 export default function LoginPage() {
-  const [loginUsername, setLoginUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const [loginUsername, setLoginUsername] = useState('demo_user')
+  const [password, setPassword] = useState('password123')
   const [showSettings, setShowSettings] = useState(false)
   const [customBaseUrl, setCustomBaseUrl] = useState('')
 
