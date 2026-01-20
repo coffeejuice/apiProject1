@@ -39,71 +39,22 @@ class Token(BaseModel):
 class ProcessCreate(BaseModel):
     user_id: int = 1
     material_id: int = 1
-    heat_no: str = ""
-    lot_no: str = ""
-    finished_size: str = ""
-    standard_customer: str = ""
-    standard_wst: str = ""
-    product_condition: str = ""
-    product_surface: str = ""
-    product_diameter_tolerance: str = ""
-    product_length_tolerance: Optional[str] = None
-    product_curvature_tolerance: str = ""
-    stock_size: str = ""
-    stock_weight: float = 0.0
-    stock_no: str = ""
-    material_btt: float = 0.0
-    material_btt_sym_tolerance: float = 0.0
-    remarks: str = ""
-    title: str = Field(min_length=1, max_length=255)
+    title: str = Field(min_length=1, max_length=1024)
 
 class ProcessUpdate(BaseModel):
     user_id: Optional[int] = None
     material_id: Optional[int] = None
-    heat_no: Optional[str] = None
-    lot_no: Optional[str] = None
-    finished_size: Optional[str] = None
-    standard_customer: Optional[str] = None
-    standard_wst: Optional[str] = None
-    product_condition: Optional[str] = None
-    product_surface: Optional[str] = None
-    product_diameter_tolerance: Optional[str] = None
-    product_length_tolerance: Optional[str] = None
-    product_curvature_tolerance: Optional[str] = None
-    stock_size: Optional[str] = None
-    stock_weight: Optional[float] = None
-    stock_no: Optional[str] = None
-    material_btt: Optional[float] = None
-    material_btt_sym_tolerance: Optional[float] = None
-    remarks: Optional[str] = None
-    title: Optional[str] = Field(None, min_length=1, max_length=255)
+    title: Optional[str] = Field(None, min_length=1, max_length=1024)
 
 class ProcessResponse(BaseModel):
     process_id: int
     user_id: int
     material_id: int
-    heat_no: str
-    lot_no: str
-    finished_size: str
-    standard_customer: str
-    standard_wst: str
-    product_condition: str
-    product_surface: str
-    product_diameter_tolerance: str
-    product_length_tolerance: Optional[str]
-    product_curvature_tolerance: str
-    stock_size: str
-    stock_weight: float
-    stock_no: str
-    material_btt: float
-    material_btt_sym_tolerance: float
-    remarks: str
     title: str
     created_at: datetime
     last_edit_at: datetime
     deleted_at: Optional[datetime]
     current_rev_number: int
-    preview_status: Status
 
     class Config:
         from_attributes = True

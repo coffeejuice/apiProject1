@@ -8,6 +8,7 @@ import enum
 from app.database import Base
 
 class BlockType(enum.Enum):
+    # Old block types (keep for backward compatibility during migration)
     paragraph = "paragraph"
     heading1 = "heading1"
     heading2 = "heading2"
@@ -16,6 +17,10 @@ class BlockType(enum.Enum):
     code = "code"
     quote = "quote"
     divider = "divider"
+
+    # System blocks (non-removable, auto-created)
+    process_heading = "process_heading"
+    input_workpiece = "input_workpiece"
 
 class DeformationType(enum.Enum):
     """'upsetting', 'axial_prolongation', 'radial_prolongation', 'full_die', 'hot_cutting', 'cold_sawing'"""
@@ -50,6 +55,11 @@ class Block(Base):
     props: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # System block metadata
+    is_system: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_removable: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    fixed_position: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
 
     document: Mapped["Process"] = relationship("Process", back_populates="blocks")
 

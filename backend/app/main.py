@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, process, blocks, revisions, sharing, search, import_export
+from app.routers import auth, process, blocks, revisions, sharing, search, import_export, migration
 from app.routers.sharing import share_router
 from app.routers.search import document_search_router
 
@@ -31,6 +31,7 @@ app.include_router(document_search_router)
 app.include_router(import_export.router)
 from app.routers import settings
 app.include_router(settings.router)
+app.include_router(migration.router)
 
 @app.get("/")
 def root():

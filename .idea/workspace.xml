@@ -7,17 +7,34 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Refactor mono repo: +backend, + frontend. Add React frontend.">
+    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Add two blocks: Process Heading and Input Workpiece">
+      <change afterPath="$PROJECT_DIR$/BLOCK_SYSTEM_REFACTOR.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/alembic/versions/a1b2c3d4e5f6_move_fields_to_block_props.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/base.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/input_workpiece.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/process_heading.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/routers/migration.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/block_type_service.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/migrations/002_add_system_blocks.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/migrations/002_add_system_blocks_rollback.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/migrations/002_add_system_blocks_safe.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/run_migration.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/BlockEditor.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/blocks/BlockRegistry.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/blocks/InputWorkpieceBlock.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/blocks/ProcessHeadingBlock.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/blocks/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Editor.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Editor.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Sidebar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/index.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/main.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/LoginPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/LoginPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/stores/useDocumentsStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/stores/useDocumentsStore.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/stores/useEditorStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/stores/useEditorStore.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/types/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/types/api.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/document/process.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/process.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/routers/blocks.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/blocks.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/routers/import_export.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/import_export.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/routers/process.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/process.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/commit_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/commit_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/AppPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AppPage.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -167,7 +184,7 @@
       <workItem from="1768803634447" duration="62000" />
       <workItem from="1768803706140" duration="7121000" />
       <workItem from="1768814123746" duration="6094000" />
-      <workItem from="1768872553283" duration="12205000" />
+      <workItem from="1768872553283" duration="23261000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -265,7 +282,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768555373795</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Fix minor problems (visual and DB connection)">
+      <option name="closed" value="true" />
+      <created>1768887169229</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1768887169229</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -296,10 +321,12 @@
     <MESSAGE value="Convert 'operations.json' to 'operations.yaml'" />
     <MESSAGE value="Add Qt Quick QML client" />
     <MESSAGE value="Refactor mono repo: +backend, + frontend. Add React frontend." />
-    <option name="LAST_COMMIT_MESSAGE" value="Refactor mono repo: +backend, + frontend. Add React frontend." />
+    <MESSAGE value="Fix minor problems (visual and DB connection)" />
+    <MESSAGE value="Add two blocks: Process Heading and Input Workpiece" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add two blocks: Process Heading and Input Workpiece" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/apiProject1$Backend_Server.coverage" NAME="Backend Server Coverage Results" MODIFIED="1768873263153" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:\Users\alext\PycharmProjects\apiProject1\backend" />
+    <SUITE FILE_PATH="coverage/apiProject1$Backend_Server.coverage" NAME="Backend Server Coverage Results" MODIFIED="1768890402437" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:\Users\alext\PycharmProjects\apiProject1\backend" />
     <SUITE FILE_PATH="coverage/apiProject1$main.coverage" NAME="main Coverage Results" MODIFIED="1768523636270" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/gui_client_v2" />
     <SUITE FILE_PATH="coverage/apiProject1$example.coverage" NAME="example Coverage Results" MODIFIED="1768285098953" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/apiProject1$gui_client.coverage" NAME="gui_client Coverage Results" MODIFIED="1768468851893" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

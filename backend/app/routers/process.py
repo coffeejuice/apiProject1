@@ -58,11 +58,20 @@ def create_document(
             user_id=current_user.user_id
         )
         db.add(doc)
+        db.flush()  # Get process_id before creating blocks
+
+        # Auto-create system blocks
+        from app.services.block_type_service import initialize_system_blocks
+        initialize_system_blocks(db, doc.process_id)
+
         db.commit()
         db.refresh(doc)
         return doc
     except Exception as e:
         db.rollback()
+        import traceback
+        print(f"Error creating document: {e}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("", response_model=ProcessListResponse)

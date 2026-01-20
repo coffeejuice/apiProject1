@@ -27,26 +27,10 @@ def import_document(
     db: Session = Depends(get_db)
 ):
     # Create new document
-    # Note: We need to provide dummy values for the new required fields
     doc = Process(
         user_id=current_user.user_id,
         title=import_data.title,
-        material_id=1,
-        heat_no="imported",
-        lot_no="imported",
-        finished_size="imported",
-        standard_customer="imported",
-        standard_wst="imported",
-        product_condition="unknown",
-        product_surface="imported",
-        product_diameter_tolerance="imported",
-        product_curvature_tolerance="imported",
-        stock_size="imported",
-        stock_weight=0.0,
-        stock_no="imported",
-        material_btt=0.0,
-        material_btt_sym_tolerance=0.0,
-        remarks="imported from markdown"
+        material_id=1
     )
     db.add(doc)
     db.flush()

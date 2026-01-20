@@ -49,6 +49,13 @@ def detect_conflicts(
         if block_id not in server_changes:
             continue
 
+        # Check if this is a system block - skip conflict detection for system blocks
+        # System blocks update main database tables, so operation-based conflict detection doesn't apply
+        block_obj = db.execute(select(Block).filter(Block.block_id == block_id)).scalars().first()
+        if block_obj and block_obj.is_system:
+            print(f"Skipping conflict detection for system block {block_id}")
+            continue
+
         # Simple conflict detection: same block modified
         for server_op in server_changes[block_id]:
             if client_op.op_type == OperationType.update_text and server_op.op_type == OperationType.update_text:
@@ -74,29 +81,60 @@ def apply_operations(
     ops: List[OpData]
 ) -> None:
     """Apply operations to document blocks"""
+    from app.services.block_type_service import (
+        can_delete_block,
+        can_reorder_block,
+        validate_block_constraints,
+        get_block_type_handler
+    )
+
     for op in ops:
         if op.op_type == OperationType.insert_block:
+            block_type = BlockType[op.data["block_type"]]
+
+            # Validate constraints (e.g., single instance check)
+            if not validate_block_constraints(db, process_id, block_type):
+                raise ValueError(f"Cannot create block of type {block_type.value}: constraints violated")
+
             block = Block(
                 block_id=UUID(op.data["block_id"]),
                 process_id=process_id,
                 parent_block_id=UUID(op.data["parent_block_id"]) if op.data.get("parent_block_id") else None,
                 order_key=op.data["order_key"],
-                block_type=BlockType[op.data["block_type"]],
+                block_type=block_type,
                 text=op.data.get("text", ""),
                 props=op.data.get("props", {})
             )
             db.add(block)
 
         elif op.op_type == OperationType.delete_block:
-            block_obj = db.execute(select(Block).filter(Block.block_id == UUID(op.data["block_id"]))).scalars().first()
+            block_id = UUID(op.data["block_id"])
+
+            # Check if block can be deleted
+            if not can_delete_block(db, block_id):
+                raise ValueError(f"Cannot delete block {block_id}: block is not removable")
+
+            block_obj = db.execute(select(Block).filter(Block.block_id == block_id)).scalars().first()
             if block_obj:
+                # Call handler's on_delete hook
+                handler = get_block_type_handler(block_obj.block_type.value)
+                if handler:
+                    handler.on_delete(db, block_id, block_obj.process_id)
+
                 db.delete(block_obj)
 
         elif op.op_type == OperationType.move_block:
-            block_obj = db.execute(select(Block).filter(Block.block_id == UUID(op.data["block_id"]))).scalars().first()
+            block_id = UUID(op.data["block_id"])
+            new_order_key = op.data["order_key"]
+
+            # Check if block can be reordered
+            if not can_reorder_block(db, block_id, new_order_key):
+                raise ValueError(f"Cannot reorder block {block_id}: block has fixed position")
+
+            block_obj = db.execute(select(Block).filter(Block.block_id == block_id)).scalars().first()
             if block_obj:
                 block_obj.parent_block_id = UUID(op.data["parent_block_id"]) if op.data.get("parent_block_id") else None
-                block_obj.order_key = op.data["order_key"]
+                block_obj.order_key = new_order_key
 
         elif op.op_type == OperationType.update_text:
             block_obj = db.execute(select(Block).filter(Block.block_id == UUID(op.data["block_id"]))).scalars().first()
@@ -104,9 +142,21 @@ def apply_operations(
                 block_obj.text = op.data["text"]
 
         elif op.op_type == OperationType.update_props:
-            block_obj = db.execute(select(Block).filter(Block.block_id == UUID(op.data["block_id"]))).scalars().first()
+            block_id = UUID(op.data["block_id"])
+            block_obj = db.execute(select(Block).filter(Block.block_id == block_id)).scalars().first()
             if block_obj:
                 block_obj.props = op.data["props"]
+
+                # Call handler's on_update hook
+                handler = get_block_type_handler(block_obj.block_type.value)
+                if handler:
+                    try:
+                        handler.on_update(db, block_id, block_obj.process_id, block_obj.props)
+                    except Exception as e:
+                        print(f"Error in block handler on_update for {block_obj.block_type.value}: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        raise ValueError(f"Failed to update {block_obj.block_type.value} block: {str(e)}")
 
 def commit_operations(
     db: Session,
