@@ -2,7 +2,7 @@ from sqlalchemy import text
 from app.database import engine
 
 with engine.connect() as connection:
-    result = connection.execute(text("SELECT login, password_hashed FROM accounts WHERE login = 'demo_user'")).first()
+    result = connection.execute(text("SELECT login, password_hashed FROM users WHERE login = 'demo_user'")).first()
     if result:
         login, password_hashed = result
         print(f"User found: {login}")

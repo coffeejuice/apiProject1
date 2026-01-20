@@ -16,7 +16,7 @@ class Revision(Base):
     device_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("devices.device_id"), nullable=False)
     client_batch_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    created_by: Mapped[int] = mapped_column(Integer, ForeignKey("accounts.user_id"), nullable=False)
+    created_by: Mapped[int] = mapped_column(Integer, ForeignKey("users.user_id"), nullable=False)
 
     document: Mapped["Process"] = relationship("Process", back_populates="revisions")
     ops: Mapped[List["LegacyOperation"]] = relationship("LegacyOperation", back_populates="revision", cascade="all, delete-orphan")

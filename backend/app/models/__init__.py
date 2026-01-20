@@ -1,4 +1,4 @@
-from app.models.user import User, Device, Department, UserPriority, UiLanguageModel
+from app.models.user import User, Device, UserPriority
 from app.models.document import (
     Process, ProcessACL, ShareLink, Role, ProcessVersion, SimulationStatus, Status,
     Block, BlockType, IngotSide, FeedDirection, DeformationType,
@@ -14,9 +14,7 @@ from app.models.document.server_pre_main import ServerPreMain
 __all__ = [
     "User",
     "Device",
-    "Department",
     "UserPriority",
-    "UiLanguageModel",
     "ServerType",
     "Process",
     "ProcessACL",

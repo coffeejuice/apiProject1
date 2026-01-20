@@ -7,34 +7,28 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Add two blocks: Process Heading and Input Workpiece">
-      <change afterPath="$PROJECT_DIR$/BLOCK_SYSTEM_REFACTOR.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/alembic/versions/a1b2c3d4e5f6_move_fields_to_block_props.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/base.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/input_workpiece.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/process_heading.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/routers/migration.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/services/block_type_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/migrations/002_add_system_blocks.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/migrations/002_add_system_blocks_rollback.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/migrations/002_add_system_blocks_safe.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/run_migration.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/BlockEditor.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/blocks/BlockRegistry.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/blocks/InputWorkpieceBlock.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/blocks/ProcessHeadingBlock.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/blocks/index.ts" afterDir="false" />
+    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Convert 'operations.json' to 'operations.yaml'">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/QUICKSTART_WINDOWS.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/QUICKSTART_WINDOWS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/08fa433142ab_rename_documents_table_to_processes.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/23f1d034f8bb_remove_explicit_nullable_from_product_.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/2408d18b1a5e_make_process_fields_nullable.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/79bc69ceff26_rename_document_acl_to_process_acl.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/8d67e350b825_industrial_schema_sync.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/a1b2c3d4e5f6_move_fields_to_block_props.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/f645f21e2af7_initial_schema.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/models/document/process.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/process.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/blocks.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/blocks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/import_export.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/import_export.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/process.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/process.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/commit_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/commit_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/AppPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AppPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/document/revision.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/revision.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/check_user.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/check_user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/reinit_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/reinit_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/setup_database.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/setup_database.py" afterDir="false" />
+    </list>
+    <list id="ecaa8136-9ec7-41d3-bc5d-9d4a783667ff" name="Adjust IntelliJ IDEA run configurations and 'LAST_COMMIT_MESSAGE'" comment="Modify run configurations, remove obsolete settings, and update the last commit message." />
+    <list id="6adf8609-c906-4818-a23b-8c409b744aa5" name="Set module type to 'PYTHON_MODULE' in 'apiProject1.iml'" comment="Change IntelliJ IDEA module type to 'PYTHON_MODULE' and add Python-specific configurations.">
+      <change beforePath="$PROJECT_DIR$/.idea/apiProject1.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/apiProject1.iml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -42,7 +36,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="223" />
+    <option name="cachedIndexableFilesCount" value="244" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="FileTemplateManagerImpl">
@@ -85,7 +79,6 @@
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/alext/PycharmProjects/apiProject1&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -97,7 +90,6 @@
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\alext\\PycharmProjects\\apiProject1\\frontend\\node_modules\\typescript\\lib&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
@@ -124,8 +116,6 @@
       <recent name="C:\Users\alext\PycharmProjects\apiProject1" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\alext\PycharmProjects\apiProject1\backend" />
-      <recent name="C:\Users\alext\PycharmProjects\apiProject1\frontend_obsolete" />
       <recent name="C:\Users\alext\PycharmProjects\apiProject1\app\models\document" />
     </key>
   </component>
@@ -180,11 +170,12 @@
       <workItem from="1768382819017" duration="110000" />
       <workItem from="1768435031992" duration="14425000" />
       <workItem from="1768454983708" duration="6889000" />
-      <workItem from="1768522338552" duration="19733000" />
-      <workItem from="1768803634447" duration="62000" />
-      <workItem from="1768803706140" duration="7121000" />
-      <workItem from="1768814123746" duration="6094000" />
-      <workItem from="1768872553283" duration="23261000" />
+      <workItem from="1768522338552" duration="19690000" />
+      <workItem from="1768749900914" duration="1651000" />
+      <workItem from="1768752880756" duration="493000" />
+      <workItem from="1768827437023" duration="435000" />
+      <workItem from="1768827911427" duration="2513000" />
+      <workItem from="1768916022994" duration="1836000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -274,23 +265,7 @@
       <option name="project" value="LOCAL" />
       <updated>1768473561072</updated>
     </task>
-    <task id="LOCAL-00012" summary="Add Qt Quick QML client">
-      <option name="closed" value="true" />
-      <created>1768555373795</created>
-      <option name="number" value="00012" />
-      <option name="presentableId" value="LOCAL-00012" />
-      <option name="project" value="LOCAL" />
-      <updated>1768555373795</updated>
-    </task>
-    <task id="LOCAL-00013" summary="Fix minor problems (visual and DB connection)">
-      <option name="closed" value="true" />
-      <created>1768887169229</created>
-      <option name="number" value="00013" />
-      <option name="presentableId" value="LOCAL-00013" />
-      <option name="project" value="LOCAL" />
-      <updated>1768887169229</updated>
-    </task>
-    <option name="localTasksCounter" value="14" />
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -319,14 +294,10 @@
     <MESSAGE value="Fix problem: create new document" />
     <MESSAGE value="Add API for settings and GUI commands" />
     <MESSAGE value="Convert 'operations.json' to 'operations.yaml'" />
-    <MESSAGE value="Add Qt Quick QML client" />
-    <MESSAGE value="Refactor mono repo: +backend, + frontend. Add React frontend." />
-    <MESSAGE value="Fix minor problems (visual and DB connection)" />
-    <MESSAGE value="Add two blocks: Process Heading and Input Workpiece" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add two blocks: Process Heading and Input Workpiece" />
+    <option name="LAST_COMMIT_MESSAGE" value="Convert 'operations.json' to 'operations.yaml'" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/apiProject1$Backend_Server.coverage" NAME="Backend Server Coverage Results" MODIFIED="1768890402437" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:\Users\alext\PycharmProjects\apiProject1\backend" />
+    <SUITE FILE_PATH="coverage/apiProject1$Backend_Server.coverage" NAME="Backend Server Coverage Results" MODIFIED="1768916587078" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:\Users\alext\PycharmProjects\apiProject1\backend" />
     <SUITE FILE_PATH="coverage/apiProject1$main.coverage" NAME="main Coverage Results" MODIFIED="1768523636270" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/gui_client_v2" />
     <SUITE FILE_PATH="coverage/apiProject1$example.coverage" NAME="example Coverage Results" MODIFIED="1768285098953" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/apiProject1$gui_client.coverage" NAME="gui_client Coverage Results" MODIFIED="1768468851893" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

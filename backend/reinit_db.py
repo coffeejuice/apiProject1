@@ -29,31 +29,26 @@ def init_db_raw():
     print("Created all tables from models.")
 
     from sqlalchemy.orm import Session
-    from app.models import User, Department, UiLanguageModel
-    
+    from app.models import User
+
     with Session(engine) as session:
-        # Create default department and language
+        # Create default material
         from app.models.library.material import Material
-        dept = Department(department_id=1, department_name="Default")
-        lang = UiLanguageModel(language_id=1, name="English")
         mat = Material(material_id=1, material_name="Default Material", material_path="")
-        session.add(dept)
-        session.add(lang)
         session.add(mat)
         session.flush() # Get IDs if they are serial
-        
+
         # Create demo_user
         password = "password123"
         hashed_password = get_password_hash(password)
         if isinstance(hashed_password, str):
             hashed_password = hashed_password.encode('utf-8')
-            
+
         user = User(
             login="demo_user",
             email="demo@example.com",
             password_hashed=hashed_password,
-            department_id=dept.department_id,
-            language_id=lang.language_id,
+            language_code="en",
             full_name="Demo User"
         )
         session.add(user)

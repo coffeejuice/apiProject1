@@ -35,7 +35,7 @@ class Process(Base):
     __tablename__ = "processes"
 
     process_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    user_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("accounts.user_id", name="fk_process_user_id_accounts_user_id", ondelete="SET DEFAULT"), default=1)
+    user_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.user_id", name="fk_process_user_id_users_user_id", ondelete="SET DEFAULT"), default=1)
     material_id: Mapped[Optional[int]] = mapped_column(SmallInteger, ForeignKey("material.material_id", name="fk_process_material_id_material_material_id", ondelete="SET DEFAULT"), default=1)
     title: Mapped[str] = mapped_column(String(1024), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
@@ -43,7 +43,7 @@ class Process(Base):
     deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     current_rev_number: Mapped[Optional[int]] = mapped_column(Integer, default=0)
 
-    owner: Mapped["User"] = relationship("User", back_populates="documents")
+    owner: Mapped["User"] = relationship("User", back_populates="process_owner")
     blocks: Mapped[List["Block"]] = relationship("Block", back_populates="document", cascade="all, delete-orphan")
     revisions: Mapped[List["Revision"]] = relationship("Revision", back_populates="document", cascade="all, delete-orphan")
     versions: Mapped[List["ProcessVersion"]] = relationship("ProcessVersion", back_populates="process", foreign_keys="[ProcessVersion.process_id]", cascade="all, delete-orphan")
@@ -98,7 +98,7 @@ class ProcessACL(Base):
 
     acl_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     process_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("processes.process_id"), nullable=False)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("accounts.user_id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.user_id"), nullable=False)
     role: Mapped[Role] = mapped_column(SQLEnum(Role), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
@@ -116,7 +116,7 @@ class ShareLink(Base):
     process_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("processes.process_id"), nullable=False)
     token: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    created_by: Mapped[int] = mapped_column(Integer, ForeignKey("accounts.user_id"), nullable=False)
+    created_by: Mapped[int] = mapped_column(Integer, ForeignKey("users.user_id"), nullable=False)
     expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     document: Mapped["Process"] = relationship("Process", back_populates="share_links")

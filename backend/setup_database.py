@@ -9,7 +9,7 @@ import sys
 
 # PostgreSQL connection details
 PG_USER = "postgres"
-PG_PASSWORD = "SIQ3PAGDL8pa"
+PG_PASSWORD = "Pos8back1"
 PG_HOST = "localhost"
 PG_PORT = "5432"
 DB_NAME = "notion_db"

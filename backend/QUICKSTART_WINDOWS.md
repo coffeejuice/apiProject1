@@ -1,4 +1,4 @@
-# Quick Start Guide for Windows
+c# Quick Start Guide for Windows
 
 This guide will help you set up and run the Notion-style Block Editor on Windows with local PostgreSQL.
 
@@ -20,9 +20,23 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-### 2. Setup Database
+### 2. Configure Environment
 
-The `.env` file is already configured with your PostgreSQL credentials.
+Create a `.env` file in the `backend` directory with your PostgreSQL credentials:
+
+```env
+DATABASE_URL=postgresql+psycopg://postgres:your_password@localhost:5432/notion_db
+SECRET_KEY=your-secret-key-here-change-in-production
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
+
+**Generate a secure SECRET_KEY:**
+```cmd
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+### 3. Setup Database
 
 Create the database:
 
@@ -35,25 +49,27 @@ This will:
 - Create the `notion_db` database
 - Test the connection
 
-### 3. Run Database Migrations
+### 4. Run Database Migrations
 
 ```cmd
 alembic upgrade head
 ```
 
-This creates all necessary tables (users, documents, blocks, revisions, etc.)
+This creates all necessary tables (users, processes, blocks, revisions, etc.)
 
-### 4. Start the Server
+### 5. Start the Server
 
 ```cmd
 python run.py
 ```
 
-The API will be available at: http://localhost:8000
+The API will be available at: http://localhost:8001
 
-Interactive docs at: http://localhost:8000/docs
+Interactive docs at: http://localhost:8001/docs
 
-### 5. Test the Installation
+**Note:** Port 8001 is used instead of 8000 to avoid conflicts with Windows services.
+
+### 6. Test the Installation
 
 Open a new terminal window and run the example:
 
@@ -219,27 +235,34 @@ apiProject1/
 
 ## API Endpoints
 
-All endpoints documented at: http://localhost:8000/docs
+All endpoints documented at: http://localhost:8001/docs
 
 Key endpoints:
 - `POST /auth/register` - Register user
 - `POST /auth/login` - Login
-- `POST /documents` - Create document
-- `GET /documents` - List documents
+- `POST /documents` - Create process/document
+- `GET /documents` - List processes
 - `POST /documents/{id}/commit` - Commit changes
 - `GET /documents/{id}/blocks/root` - Get blocks
 - `GET /search` - Search
 - `GET /documents/{id}/export` - Export to Markdown
 
+**Note:** The API uses `/documents` endpoints but the database table is `processes` for internal consistency.
+
 ## Configuration
 
-Edit `.env` to change settings:
+Edit `backend/.env` to change settings:
 
 ```env
-DATABASE_URL=postgresql://postgres:SIQ3PAGDL8pa@localhost:5432/notion_db
-SECRET_KEY=<your-secret-key>
+DATABASE_URL=postgresql+psycopg://postgres:your_password@localhost:5432/notion_db
+SECRET_KEY=your-generated-secret-key
+ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
+
+**Important:**
+- Use `postgresql+psycopg://` (not `postgresql://`) for the DATABASE_URL
+- Generate a secure SECRET_KEY using: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
 
 ## Next Steps
 

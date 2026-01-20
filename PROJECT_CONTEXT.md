@@ -36,48 +36,72 @@ Industrial-grade process management API. Notion-style block architecture focused
 - **Obsolete Clients**: PySide6 6.10+ | Qt Quick (QML) - See `frontend_obsolete/`
 
 ## 🏢 Core Mental Model
-1. **Processes** (Table: `documents`): The root entity or "Page".
+1. **Processes** (Table: `processes`): The root entity or "Page". Also called "documents" in API endpoints.
 2. **Blocks** (Table: `blocks`): Polymorphic components (Text, Table, Image, etc.).
    - **Ordering**: Lexicographical `order_key` (allows O(1) inserts/moves).
    - **Props**: Type-specific data in JSON `props` field.
 3. **Revisions** (Table: `revisions`): Immutable change history.
-4. **Library**: Industrial assets like `material`, `die`, `press`.
+4. **Users** (Table: `users`): User accounts with authentication.
+5. **Library**: Industrial assets like `material`, `die`, `press`.
 
 ## 📂 Backend Architecture Map
 ### `/backend/app` (Core logic)
-- `models/document/`: `process.py` (Root), `block.py` (Atomic elements).
+- `models/user.py`: User accounts, devices, authentication.
+- `models/document/`: `process.py` (Root), `block.py` (Atomic elements), `revision.py`.
 - `models/library/`: `material.py`, `die.py`, `press.py` (Industrial entities).
 - `services/`: `commit_service.py` (Revision management logic), `block_service.py`.
 - `routers/`: Resource endpoints (auth, sharing, process, search).
+- `schemas.py`: Pydantic models for API validation.
 
 ### `/backend` (Entry points & config)
 - `run.py`: API server entry point (Uvicorn on :8001).
-- `example.py`: Full lifecycle demonstration script.
+- `setup_database.py`: Database creation script (PostgreSQL).
+- `reinit_db.py`: Database reset/initialization script.
 - `requirements.txt`: Python dependencies.
-- `alembic/`: Database migrations.
+- `alembic/`: Database migrations (single consolidated migration).
+- `.env`: Environment configuration (DATABASE_URL, SECRET_KEY, etc.).
 - `.venv/`: Python virtual environment (backend-specific).
 
 ## ⚙️ Networking & Environment
 - **API_URL**: `http://localhost:8001`
 - **Port Note**: CRITICAL - Always use 8001. Port 8000 often conflicts with Windows services.
-- **Database**: Configured via `.env` (PostgreSQL).
+- **Database**: PostgreSQL configured via `backend/.env`
+  - Format: `postgresql+psycopg://user:password@localhost:5432/notion_db`
+  - Driver: `psycopg` (v3, pure Python implementation)
+- **Environment Variables**:
+  - `DATABASE_URL`: PostgreSQL connection string
+  - `SECRET_KEY`: JWT signing key (generate with `secrets.token_urlsafe(32)`)
+  - `ALGORITHM`: JWT algorithm (default: HS256)
+  - `ACCESS_TOKEN_EXPIRE_MINUTES`: Token expiration (default: 30)
 
 ## ⚠️ Implementation Guardrails
 1. **Soft Deletes**: Always filter for `deleted_at IS NULL` on read.
 2. **Schema-First**: Update `app/schemas.py` synchronously with model changes.
-3. **Migrate**: Use `alembic revision --autogenerate` for any DB schema changes.
+3. **Migrate**: For DB schema changes, modify models then regenerate the single migration:
+   - Delete `backend/alembic/versions/*.py` (backup first)
+   - Create new: `alembic revision -m "Schema update"`
+   - Use `Base.metadata.create_all()` in upgrade function
 4. **Access Control**: Verify `ProcessACL` or `ShareLink` for mutations.
 5. **JSON Props**: Follow `BlockType` enum definitions in `block.py` strictly.
+6. **User Model**: Table is `users` (not `accounts`), removed `department_id`, `language_id` → `language_code`.
 
 ## 🚀 Common Commands
 ```powershell
-# Backend: Start API server
+# Backend: Initial Setup
 cd backend
-.venv\Scripts\python run.py
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
 
-# Backend: Database migrations
-cd backend
-alembic upgrade head
+# Create .env file with DATABASE_URL and SECRET_KEY
+python -c "import secrets; print(secrets.token_urlsafe(32))"  # Generate SECRET_KEY
+
+# Setup database
+python setup_database.py  # Creates empty database
+alembic upgrade head       # Runs migrations
+
+# Backend: Start API server
+.venv\Scripts\python run.py
 
 # Frontend: Start development server
 cd frontend
@@ -107,9 +131,16 @@ npm run preview
 
 ### Critical Implementation Details
 1. **API Endpoints use `/documents`** - Database table is `processes`, but API routes remain `/documents/*`
-2. **Backend Commit System** - Frontend does NOT implement operational transform pattern (insert_block, update_text, etc.)
-3. **Field Normalization** - Backend returns `process_id` (integer), frontend maps to `id` (string)
-4. **Port 8001 is Critical** - Port 8000 often conflicts with Windows services
+2. **User Table is `users`** - Changed from `accounts` to `users` throughout the project
+3. **Backend Commit System** - Frontend does NOT implement operational transform pattern (insert_block, update_text, etc.)
+4. **Field Normalization** - Backend returns `process_id` (integer), frontend maps to `id` (string)
+5. **Port 8001 is Critical** - Port 8000 often conflicts with Windows services
+6. **Database Schema Changes**:
+   - Table `accounts` → `users`
+   - Removed `department_id` column and `departments` table
+   - Changed `language_id` (SMALLINT) → `language_code` (VARCHAR(8))
+   - Removed `editor_append_mode_id` and `process_version_id` from users table
+   - Changed `user_settings` from VARCHAR(32767) → TEXT
 
 ### Documentation
 - Backend: See individual files in `backend/` for API documentation
