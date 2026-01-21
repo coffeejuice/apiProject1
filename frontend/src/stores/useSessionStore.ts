@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { apiClient } from '../lib/apiClient'
-import type { User, LoginRequest, LoginResponse } from '../types/api'
+import type { User, LoginRequest, LoginResponse, RegisterRequest } from '../types/api'
 import { extractField } from '../lib/utils'
 
 interface SessionState {
@@ -13,6 +13,7 @@ interface SessionState {
 
   setBaseUrl: (url: string) => void
   login: (credentials: LoginRequest) => Promise<boolean>
+  register: (data: RegisterRequest) => Promise<boolean>
   logout: () => void
   fetchMe: () => Promise<boolean>
   initialize: () => void
@@ -73,6 +74,26 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const success = await get().fetchMe()
     set({ isLoading: false })
     return success
+  },
+
+  register: async (data: RegisterRequest) => {
+    set({ isLoading: true, error: null })
+
+    const response = await apiClient.post<User>('/auth/register', {
+      body: data,
+    })
+
+    if (!response.ok) {
+      set({
+        isLoading: false,
+        error: response.errorMessage || 'Registration failed',
+      })
+      return false
+    }
+
+    // After successful registration, automatically log in
+    set({ isLoading: false })
+    return get().login({ login: data.login, password: data.password })
   },
 
   logout: () => {

@@ -3,15 +3,21 @@ import { useSessionStore } from '../stores/useSessionStore'
 
 export default function LoginPage() {
   const [loginUsername, setLoginUsername] = useState('demo_user')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('password123')
+  const [isRegisterMode, setIsRegisterMode] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [customBaseUrl, setCustomBaseUrl] = useState('')
 
-  const { login, isLoading, error, baseUrl, setBaseUrl } = useSessionStore()
+  const { login, register, isLoading, error, baseUrl, setBaseUrl } = useSessionStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await login({ login: loginUsername, password })
+    if (isRegisterMode) {
+      await register({ login: loginUsername, email, password })
+    } else {
+      await login({ login: loginUsername, password })
+    }
   }
 
   const handleSaveSettings = () => {
@@ -27,7 +33,9 @@ export default function LoginPage() {
         <div className="bg-white rounded-lg shadow-xl p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Techno-Notion</h1>
-            <p className="text-gray-600 mt-2">Sign in to your account</p>
+            <p className="text-gray-600 mt-2">
+              {isRegisterMode ? 'Create your account' : 'Sign in to your account'}
+            </p>
           </div>
 
           {error && (
@@ -55,6 +63,26 @@ export default function LoginPage() {
               />
             </div>
 
+            {isRegisterMode && (
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            )}
+
             <div>
               <label
                 htmlFor="password"
@@ -78,9 +106,22 @@ export default function LoginPage() {
               disabled={isLoading}
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading
+                ? (isRegisterMode ? 'Creating account...' : 'Signing in...')
+                : (isRegisterMode ? 'Register' : 'Sign in')}
             </button>
           </form>
+
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setIsRegisterMode(!isRegisterMode)}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              {isRegisterMode
+                ? 'Already have an account? Sign in'
+                : "Don't have an account? Register"}
+            </button>
+          </div>
 
           <div className="mt-6 pt-6 border-t border-gray-200">
             <button

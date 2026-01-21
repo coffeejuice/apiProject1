@@ -37,8 +37,8 @@ class Token(BaseModel):
 
 # Process schemas
 class ProcessCreate(BaseModel):
-    user_id: int = 1
-    material_id: int = 1
+    user_id: Optional[int] = None
+    material_id: Optional[int] = None
     title: str = Field(min_length=1, max_length=1024)
 
 class ProcessUpdate(BaseModel):
@@ -48,8 +48,8 @@ class ProcessUpdate(BaseModel):
 
 class ProcessResponse(BaseModel):
     process_id: int
-    user_id: int
-    material_id: int
+    user_id: Optional[int]
+    material_id: Optional[int]
     title: str
     created_at: datetime
     last_edit_at: datetime

@@ -6,13 +6,25 @@ Creates the notion_db database if it doesn't exist
 import psycopg
 from psycopg import sql
 import sys
+import os
+from dotenv import load_dotenv
+from urllib.parse import urlparse
 
-# PostgreSQL connection details
-PG_USER = "postgres"
-PG_PASSWORD = "Pos8back1"
-PG_HOST = "localhost"
-PG_PORT = "5432"
-DB_NAME = "notion_db"
+# Load environment variables
+load_dotenv()
+
+# Parse DATABASE_URL from .env
+database_url = os.getenv("DATABASE_URL")
+if not database_url:
+    print("✗ DATABASE_URL not found in .env file")
+    sys.exit(1)
+
+parsed = urlparse(database_url)
+PG_USER = parsed.username or "postgres"
+PG_PASSWORD = parsed.password or ""
+PG_HOST = parsed.hostname or "localhost"
+PG_PORT = parsed.port or 5432
+DB_NAME = parsed.path.lstrip('/') or "notion_db"
 
 def create_database():
     """Create the notion_db database"""
@@ -47,7 +59,7 @@ def create_database():
                 conn.close()
                 return True
 
-        if not exists or response.lower() == 'y':
+        if not exists:
             print(f"Creating database '{DB_NAME}'...")
             cursor.execute(sql.SQL("CREATE DATABASE {}").format(
                 sql.Identifier(DB_NAME)

@@ -19,6 +19,12 @@ export interface LoginResponse {
   accessToken?: string
 }
 
+export interface RegisterRequest {
+  login: string
+  email: string
+  password: string
+}
+
 export interface User {
   id: string
   username?: string

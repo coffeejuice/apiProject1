@@ -1,0 +1,11 @@
+Let's do big update. Add two more block types. Both blocks are similar to  "process_heading" and "input_workpiece" types regarding that blocks are:
+a) only one instance of every type per document;
+b) block order in the document is fixed and can't be reordered;
+c) blocks are created automatically when a user creates new document;
+d) blocks can't be removed from the document;
+
+1) First new block type is 'material'. It allows setting up material properties for input workpiece.
+1.1) It has two mandatory input controls, both are a drop-down menu.
+1.2) First drop-down list is a list of material categories.
+1.3) Second drop-down list is a list of materials, belongs to the selected category.
+1.4) The list of categories is: : Aluminum, Beta materials, Die materials, Steel, Stainless steel, Steel (extended), Superalloy, Titanium, Tool material (default is Superalloy).

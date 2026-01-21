@@ -35,8 +35,8 @@ class Process(Base):
     __tablename__ = "processes"
 
     process_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    user_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.user_id", name="fk_process_user_id_users_user_id", ondelete="SET DEFAULT"), default=1)
-    material_id: Mapped[Optional[int]] = mapped_column(SmallInteger, ForeignKey("material.material_id", name="fk_process_material_id_material_material_id", ondelete="SET DEFAULT"), default=1)
+    user_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.user_id", name="fk_process_user_id_users_user_id", ondelete="SET DEFAULT"), nullable=True)
+    material_id: Mapped[Optional[int]] = mapped_column(SmallInteger, ForeignKey("material.material_id", name="fk_process_material_id_material_material_id", ondelete="SET DEFAULT"), nullable=True)
     title: Mapped[str] = mapped_column(String(1024), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     last_edit_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
