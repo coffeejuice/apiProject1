@@ -1,4 +1,4 @@
-from app.models.document.process import Process, ProcessACL, ShareLink, Role, ProcessVersion, SimulationStatus, Status
+from app.models.document.document import Document, DocumentACL, ShareLink, Role, DocumentVersion, SimulationStatus, Status
 from app.models.document.block import Block, BlockType, IngotSide, FeedDirection, DeformationType
 from app.models.document.operation import Operation
 from app.models.document.revision import Revision, LegacyOperation, OperationType, RevisionSnapshot
@@ -6,9 +6,9 @@ from app.models.document.bite import Bite
 from app.models.document.post import PostOperation, PostStatus
 
 __all__ = [
-    "Process",
-    "ProcessACL",
-    "ProcessVersion",
+    "Document",
+    "DocumentACL",
+    "DocumentVersion",
     "SimulationStatus",
     "Status",
     "ShareLink",

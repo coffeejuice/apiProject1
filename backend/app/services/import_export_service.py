@@ -1,15 +1,15 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from typing import List, Dict
+from typing import List, Dict, Any, Optional
 from uuid import UUID, uuid4
 from app.models.document.block import Block, BlockType
 from app.services.block_service import generate_order_key
 import re
 
-def export_to_markdown(db: Session, process_id: int) -> str:
+def export_to_markdown(db: Session, document_id: int) -> str:
     """Export document blocks to Markdown"""
     blocks = db.execute(select(Block).filter(
-        Block.process_id == process_id,
+        Block.document_id == document_id,
         Block.parent_block_id == None
     ).order_by(Block.order_key)).scalars().all()
 
@@ -68,7 +68,7 @@ def import_from_markdown(markdown: str) -> List[Dict]:
     lines = markdown.split("\n")
     blocks = []
     current_code_block = None
-    code_lines = []
+    code_lines: List[str] = []
 
     for line in lines:
         # Handle code blocks
@@ -102,7 +102,7 @@ def import_from_markdown(markdown: str) -> List[Dict]:
             continue
 
         # Parse different block types
-        block = None
+        block: Optional[Dict[str, Any]] = None
 
         # Heading 1
         if line.startswith("# "):

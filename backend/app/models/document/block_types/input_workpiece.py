@@ -118,7 +118,7 @@ class InputWorkpieceHandler(BlockTypeHandler):
 
     @property
     def fixed_position(self) -> int:
-        return 1  # Always second block (after process_heading)
+        return 1  # Always second block (after document_heading)
 
     @property
     def allow_multiple_instances(self) -> bool:
@@ -139,7 +139,7 @@ class InputWorkpieceHandler(BlockTypeHandler):
             return "Input Workpiece"
 
         geom_type = GEOMETRY_TYPES[geometry_type_id]
-        process_name = geom_type["process_name"]
+        process_name = str(geom_type["process_name"])
 
         # Get attribute values in order
         values = []
@@ -151,7 +151,7 @@ class InputWorkpieceHandler(BlockTypeHandler):
         try:
             title = process_name.format(*values)
         except (IndexError, KeyError):
-            title = geom_type["library_name"]
+            title = str(geom_type["library_name"])
 
         return title
 
@@ -186,7 +186,7 @@ class InputWorkpieceHandler(BlockTypeHandler):
 
         return True
 
-    def serialize_for_frontend(self, db: Session, block_id: UUID, process_id: int, props: Dict[str, Any]) -> Dict[str, Any]:
+    def serialize_for_frontend(self, db: Session, block_id: UUID, document_id: int, props: Dict[str, Any]) -> Dict[str, Any]:
         """
         Return props for frontend rendering with geometry type metadata.
         """
@@ -225,9 +225,9 @@ class InputWorkpieceHandler(BlockTypeHandler):
 
         return result
 
-    def on_update(self, db: Session, block_id: UUID, process_id: int, props: Dict[str, Any]) -> None:
+    def on_update(self, db: Session, block_id: UUID, document_id: int, props: Dict[str, Any]) -> None:
         """
-        Validate and process updates to input workpiece.
+        Validate and handle updates to input workpiece.
         Could be extended to trigger recalculations or validations.
         """
         if not self.validate_props(props):

@@ -2,10 +2,13 @@ from sqlalchemy import String, DateTime, ForeignKey, SmallInteger, Integer, Bool
 from sqlalchemy.dialects.postgresql import UUID, BYTEA
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 import uuid
 import enum
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.document.document import Document
 
 
 class UserPriority(enum.Enum):
@@ -30,7 +33,7 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
     devices: Mapped[List["Device"]] = relationship("Device", back_populates="user")
-    process_owner: Mapped[List["Process"]] = relationship("Process", back_populates="owner", foreign_keys="[Process.user_id]")
+    document_owner: Mapped[List["Document"]] = relationship("Document", back_populates="owner", foreign_keys="[Document.user_id]")
 
 
 class Device(Base):

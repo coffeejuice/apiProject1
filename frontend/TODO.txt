@@ -1,4 +1,4 @@
-Let's do big update. Add two more block types. Both blocks are similar to  "process_heading" and "input_workpiece" types regarding that blocks are:
+Let's do big update. Add two more block types. Both blocks are similar to  "document_heading" and "input_workpiece" types regarding that blocks are:
 a) only one instance of every type per document;
 b) block order in the document is fixed and can't be reordered;
 c) blocks are created automatically when a user creates new document;

@@ -1,6 +1,6 @@
 from app.models.user import User, Device, UserPriority
 from app.models.document import (
-    Process, ProcessACL, ShareLink, Role, ProcessVersion, SimulationStatus, Status,
+    Document, DocumentACL, ShareLink, Role, DocumentVersion, SimulationStatus, Status,
     Block, BlockType, IngotSide, FeedDirection, DeformationType,
     Operation, LegacyOperation, Revision, OperationType, RevisionSnapshot,
     Bite, PostOperation, PostStatus
@@ -16,9 +16,9 @@ __all__ = [
     "Device",
     "UserPriority",
     "ServerType",
-    "Process",
-    "ProcessACL",
-    "ProcessVersion",
+    "Document",
+    "DocumentACL",
+    "DocumentVersion",
     "SimulationStatus",
     "Status",
     "ShareLink",

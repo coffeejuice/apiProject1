@@ -41,7 +41,7 @@ export default function Sidebar() {
     if (doc) {
       setNewDocTitle('')
       setShowNewDocModal(false)
-      setCurrentDoc(doc.id)
+      setCurrentDoc(String(doc.id))
     }
   }
 
@@ -182,9 +182,9 @@ export default function Sidebar() {
               const isSelected = selectedDocIds.has(docId)
               return (
                 <div
-                  key={doc.id}
+                  key={docId}
                   className={`flex items-center gap-2 px-4 py-3 hover:bg-gray-50 border-l-4 transition-colors ${
-                    currentDocId === doc.id
+                    currentDocId === docId
                       ? 'border-blue-600 bg-blue-50'
                       : 'border-transparent'
                   } ${doc.deleted_at ? 'opacity-50' : ''}`}
@@ -199,7 +199,7 @@ export default function Sidebar() {
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
                   />
                   <button
-                    onClick={() => setCurrentDoc(doc.id)}
+                    onClick={() => setCurrentDoc(docId)}
                     className="flex-1 text-left"
                   >
                     <div className="font-medium text-gray-900 truncate">

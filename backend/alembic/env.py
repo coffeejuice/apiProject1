@@ -16,7 +16,7 @@ load_dotenv()
 # Import models
 from app.database import Base
 from app.models.user import User
-from app.models.document.process import Process
+from app.models.document.document import Document
 from app.models.document.block import Block
 from app.models.document.revision import Revision
 from app.models.settings import Setting

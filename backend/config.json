@@ -8,7 +8,7 @@
     "version": "v3.0.1",
     "is_allow_restart": false,
     "is_development_mode": false,
-    "process_version_name_prefix_for_development_mode": "[DEV]",
+    "document_version_name_prefix_for_development_mode": "[DEV]",
     "notify_timeout": 0.1,
     "timeout_query_missed_tasks": 5.0,
     "timeout_counter": 0,

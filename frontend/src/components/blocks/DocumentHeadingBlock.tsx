@@ -1,12 +1,12 @@
 /**
- * Process Heading Block Component
- * Displays process metadata in a table format mimicking a title page
+ * Document Heading Block Component
+ * Displays document metadata in a table format mimicking a title page
  */
 
 import { useState, useEffect } from 'react'
 import type { BlockComponentProps } from './BlockRegistry'
 
-export default function ProcessHeadingBlock({
+export default function DocumentHeadingBlock({
   block,
   onUpdate,
   isReadOnly = false,
@@ -45,7 +45,7 @@ export default function ProcessHeadingBlock({
     remarks: 4095,
   }
 
-  const renderField = (label: string, field: string, value: any) => {
+  const renderField = (field: string, value: any) => {
     if (isEditing && !isReadOnly) {
       const currentValue = editedData[field] ?? value ?? ''
       const maxLength = fieldLimits[field]
@@ -77,7 +77,7 @@ export default function ProcessHeadingBlock({
     return <span className="text-gray-900">{value ?? ''}</span>
   }
 
-  const renderNumberField = (label: string, field: string, value: any) => {
+  const renderNumberField = (field: string, value: any) => {
     if (isEditing && !isReadOnly) {
       return (
         <input
@@ -103,10 +103,10 @@ export default function ProcessHeadingBlock({
               value={editedData.title ?? block.props.title ?? ''}
               onChange={(e) => handleFieldChange('title', e.target.value)}
               className="w-full text-center px-2 py-1 border border-gray-300 rounded"
-              placeholder="Process Title"
+              placeholder="Document Title"
             />
           ) : (
-            block.props.title || 'Untitled Process'
+            block.props.title || 'Untitled Document'
           )}
         </h1>
         <div className="text-sm text-gray-500 mt-2">
@@ -143,29 +143,29 @@ export default function ProcessHeadingBlock({
         </div>
       )}
 
-      {/* Process Information Table */}
+      {/* Document Information Table */}
       <table className="w-full border-collapse">
         <tbody>
           <tr className="border-b">
             <td className="py-2 px-4 font-semibold bg-gray-50 w-1/3">Heat No:</td>
-            <td className="py-2 px-4">{renderField('Heat No', 'heat_no', block.props.heat_no)}</td>
+            <td className="py-2 px-4">{renderField('heat_no', block.props.heat_no)}</td>
           </tr>
           <tr className="border-b">
             <td className="py-2 px-4 font-semibold bg-gray-50">Finished Size:</td>
             <td className="py-2 px-4">
-              {renderField('Finished Size', 'finished_size', block.props.finished_size)}
+              {renderField('finished_size', block.props.finished_size)}
             </td>
           </tr>
           <tr className="border-b">
             <td className="py-2 px-4 font-semibold bg-gray-50">Stock Size:</td>
             <td className="py-2 px-4">
-              {renderField('Stock Size', 'stock_size', block.props.stock_size)}
+              {renderField('stock_size', block.props.stock_size)}
             </td>
           </tr>
           <tr className="border-b">
             <td className="py-2 px-4 font-semibold bg-gray-50">Stock Weight [kg]:</td>
             <td className="py-2 px-4">
-              {renderNumberField('Stock Weight', 'stock_weight', block.props.stock_weight)}
+              {renderNumberField('stock_weight', block.props.stock_weight)}
             </td>
           </tr>
           <tr className="border-b">

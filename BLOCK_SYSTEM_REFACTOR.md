@@ -1,7 +1,7 @@
 # Block System Refactoring - Implementation Summary
 
 ## Overview
-Complete refactoring of the document/process system to support modular, extensible block types with special system blocks.
+Complete refactoring of the document system to support modular, extensible block types with special system blocks.
 
 ## Architecture Changes
 
@@ -9,7 +9,7 @@ Complete refactoring of the document/process system to support modular, extensib
 
 #### 1. Block Model Updates (`backend/app/models/document/block.py`)
 - **Removed old block types**: `paragraph`, `heading1`, `heading2`, `list`, `todo`, `code`, `quote`, `divider`
-- **Added new block types**: `process_heading`, `input_workpiece`
+- **Added new block types**: `document_heading`, `input_workpiece`
 - **New fields**:
   - `is_system`: Boolean flag for system blocks
   - `is_removable`: Boolean flag indicating if block can be deleted
@@ -19,7 +19,7 @@ Complete refactoring of the document/process system to support modular, extensib
 **New files created:**
 - `backend/app/models/document/block_types/base.py` - Abstract base class for block handlers
 - `backend/app/models/document/block_types/__init__.py` - Block type registry
-- `backend/app/models/document/block_types/process_heading.py` - ProcessHeading handler
+- `backend/app/models/document/block_types/document_heading.py` - DocumentHeading handler
 - `backend/app/models/document/block_types/input_workpiece.py` - InputWorkpiece handler
 
 **Key Features:**
@@ -42,7 +42,7 @@ Complete refactoring of the document/process system to support modular, extensib
 - `enrich_block_data_for_frontend()` - Serialize blocks with handler-specific data
 
 #### 4. Updated Services
-- **`routers/process.py`**: Auto-creates system blocks when creating new document
+- **`routers/document.py`**: Auto-creates system blocks when creating new document
 - **`routers/blocks.py`**: Returns enriched block data using handlers
 - **`services/commit_service.py`**: Enforces block constraints and calls handler hooks
 
@@ -51,7 +51,7 @@ Complete refactoring of the document/process system to support modular, extensib
 #### 1. Block Component System
 **New files created:**
 - `frontend/src/components/blocks/BlockRegistry.ts` - Component registry
-- `frontend/src/components/blocks/ProcessHeadingBlock.tsx` - ProcessHeading component
+- `frontend/src/components/blocks/DocumentHeadingBlock.tsx` - DocumentHeading component
 - `frontend/src/components/blocks/InputWorkpieceBlock.tsx` - InputWorkpiece component
 - `frontend/src/components/blocks/index.ts` - Registration and exports
 
@@ -78,7 +78,7 @@ Complete refactoring of the document/process system to support modular, extensib
 1. Adds new columns: `is_system`, `is_removable`, `fixed_position`
 2. Updates `BlockType` enum (removes old types, adds new ones)
 3. Creates `initialize_system_blocks()` PostgreSQL function
-4. Initializes system blocks for existing processes
+4. Initializes system blocks for existing documents
 5. **WARNING**: Deletes all existing blocks (development only)
 
 #### Rollback File: `backend/migrations/002_add_system_blocks_rollback.sql`
@@ -88,16 +88,16 @@ Complete refactoring of the document/process system to support modular, extensib
 
 ## System Block Definitions
 
-### 1. ProcessHeading Block
+### 1. DocumentHeading Block
 **Properties:**
-- Block type: `process_heading`
+- Block type: `document_heading`
 - Position: 0 (always first)
 - Removable: No
 - Multiple instances: No
-- Data source: `processes` and `process_versions` tables
+- Data source: `documents` and `document_versions` tables
 
 **Fields displayed:**
-- Title (editable, also updates process.title)
+- Title (editable, also updates document.title)
 - Heat No, Lot No, Finished Size
 - Standards (Customer, WST)
 - Product specifications (Condition, Surface, Tolerances)
@@ -108,7 +108,7 @@ Complete refactoring of the document/process system to support modular, extensib
 - Version information (if exists)
 
 **Visual appearance:**
-- Table format mimicking industrial process report title page
+- Table format mimicking industrial document report title page
 - Large title at top
 - Edit/Save buttons
 - Field labels and values in two-column layout
@@ -171,12 +171,12 @@ Complete refactoring of the document/process system to support modular, extensib
 1. **Run migration**: Execute `002_add_system_blocks.sql`
 2. **Start backend**: System will auto-create blocks on new document creation
 3. **Start frontend**: BlockEditor will render system blocks
-4. **Create new document**: Should automatically have ProcessHeading and InputWorkpiece blocks
+4. **Create new document**: Should automatically have DocumentHeading and InputWorkpiece blocks
 5. **Edit blocks**: Click Edit button, modify fields, Save
 6. **Verify persistence**: Reload page, changes should persist
 
 ### Test Constraints:
-- Try to delete ProcessHeading block → Should be blocked
+- Try to delete DocumentHeading block → Should be blocked
 - Try to create duplicate InputWorkpiece block → Should be blocked
 - Try to reorder system blocks → Should be blocked
 
@@ -210,7 +210,7 @@ Complete refactoring of the document/process system to support modular, extensib
 - Migrations: 2 SQL files
 
 ### Modified Files:
-- Backend: `models/document/block.py`, `routers/process.py`, `routers/blocks.py`, `services/commit_service.py`
+- Backend: `models/document/block.py`, `routers/document.py`, `routers/blocks.py`, `services/commit_service.py`
 - Frontend: `pages/AppPage.tsx`
 
 ### Obsolete Files (can be removed):

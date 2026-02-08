@@ -8,13 +8,14 @@ from app.database import Base
 
 if TYPE_CHECKING:
     from app.models.document.operation import Operation
-    from app.models.document.process import ProcessVersion
+    from app.models.document.document import DocumentVersion
+    from app.models.document.revision import LegacyOperation
     from app.models.library import OperationsLibrary, Material, FurnaceClass, Press, PressMode, Die, DieAssembly
     from app.models.document.block import FeedDirection
     from app.models.document.post import PostOperation
     from app.models.document.bite import Bite
 
-from app.models.document.process import SimulationStatus
+from app.models.document.document import SimulationStatus
 from app.models.document.post import PostStatus
 from app.models.document.block import DeformationType
 
@@ -32,7 +33,7 @@ class ServerPreMain(Base):
     # ********************************* NOT NULL FOREIGN KEYs **********************************
 
     operation_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("ops.op_id", ondelete="CASCADE"), nullable=True)
-    process_version_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("process_versions.process_version_id", ondelete="CASCADE"), nullable=True)
+    document_version_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("document_versions.document_version_id", ondelete="CASCADE"), nullable=True)
     type_id: Mapped[Optional[int]] = mapped_column(SmallInteger, ForeignKey("operations_library.type_id", onupdate="CASCADE", ondelete="CASCADE"), nullable=True)  # Type of the operation
     material_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("material.material_id", ondelete="SET DEFAULT"), nullable=True)  # Material ID, Foreign key
 
@@ -98,9 +99,9 @@ class ServerPreMain(Base):
                                                          # Automatic mode: first feed is manual controlled, 
                                                          # then next feeds are automatic controlled except last feed 
 
-    feed_first: Mapped[Optional[float]] = mapped_column(Float, default=None, nullable=True)  # Nominal Feed first, entered by User for whole process
-    feed_middle: Mapped[Optional[float]] = mapped_column(Float, default=None, nullable=True)  # Nominal Feed middle, entered by User for whole process
-    feed_last: Mapped[Optional[float]] = mapped_column(Float, default=None, nullable=True)  # Nominal Feed last, entered by User for whole process
+    feed_first: Mapped[Optional[float]] = mapped_column(Float, default=None, nullable=True)  # Nominal Feed first, entered by User for whole document
+    feed_middle: Mapped[Optional[float]] = mapped_column(Float, default=None, nullable=True)  # Nominal Feed middle, entered by User for whole document
+    feed_last: Mapped[Optional[float]] = mapped_column(Float, default=None, nullable=True)  # Nominal Feed last, entered by User for whole document
     
     # Feed length and feed count calculated by Pre Server.
     # It is based on user input (feed_first, ..., feed_last) and actual circumstances,
@@ -237,14 +238,14 @@ class ServerPreMain(Base):
     # *********************************** UNIQUE KEYS *******************************************
 
     __table_args__ = (
-        UniqueConstraint('process_version_id', 'execution_order', name='uk_server_pre_main_1'),
+        UniqueConstraint('document_version_id', 'execution_order', name='uk_server_pre_main_1'),
         UniqueConstraint('operation_id', name='uk_server_pre_main_2'),
     )
 
     # *********************************** RELATIONSHIPS ******************************************
 
     operation: Mapped[Optional["LegacyOperation"]] = relationship("LegacyOperation")
-    process_version: Mapped[Optional["ProcessVersion"]] = relationship("ProcessVersion")
+    document_version: Mapped[Optional["DocumentVersion"]] = relationship("DocumentVersion")
     library: Mapped[Optional["OperationsLibrary"]] = relationship("OperationsLibrary")
     material: Mapped[Optional["Material"]] = relationship("Material")
     furnace_class: Mapped[Optional["FurnaceClass"]] = relationship("FurnaceClass")

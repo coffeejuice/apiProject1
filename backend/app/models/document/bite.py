@@ -3,7 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 from typing import Optional, TYPE_CHECKING
 from app.database import Base
-from app.models.document.process import SimulationStatus
+from app.models.document.document import SimulationStatus
 
 if TYPE_CHECKING:
     from app.models.document.server_pre_main import ServerPreMain
@@ -98,7 +98,7 @@ class Bite(Base):
 
     simulation_status: Mapped[SimulationStatus] = mapped_column(SQLEnum(SimulationStatus, name="simulation_status_enum"), default=SimulationStatus.stop, nullable=True)
     simulation_server_retry_count: Mapped[int] = mapped_column(Integer, default=0, nullable=True)
-    simulation_server_worker_id: Mapped[int] = mapped_column(BigInteger, default=0, nullable=True) # Worker GenerateImagesProcess PID 
+    simulation_server_worker_id: Mapped[int] = mapped_column(BigInteger, default=0, nullable=True) # Worker PID for image generation
     simulation_path: Mapped[Optional[str]] = mapped_column(String(2047), default=None, nullable=True)
     simulation_time_started: Mapped[Optional[datetime]] = mapped_column(DateTime, default=None, nullable=True)
     simulation_time_finished: Mapped[Optional[datetime]] = mapped_column(DateTime, default=None, nullable=True)
@@ -108,7 +108,7 @@ class Bite(Base):
 
     print_status: Mapped[SimulationStatus] = mapped_column(SQLEnum(SimulationStatus, name="simulation_status_enum"), default=SimulationStatus.stop, nullable=True)
     print_server_retry_count: Mapped[int] = mapped_column(Integer, default=0, nullable=True)
-    print_server_worker_id: Mapped[Optional[int]] = mapped_column(BigInteger, default=None, nullable=True) # Worker GeneratePptProcess PID 
+    print_server_worker_id: Mapped[Optional[int]] = mapped_column(BigInteger, default=None, nullable=True) # Worker PID for PPT generation
     print_path: Mapped[Optional[str]] = mapped_column(String(2047), default=None, nullable=True)
     print_time_started: Mapped[Optional[datetime]] = mapped_column(DateTime, default=None, nullable=True)
     print_time_finished: Mapped[Optional[datetime]] = mapped_column(DateTime, default=None, nullable=True)

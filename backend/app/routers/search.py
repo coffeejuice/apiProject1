@@ -21,19 +21,19 @@ def search_all(
     results = search_blocks(db, current_user.user_id, q, limit=limit)
     return SearchResponse(results=results, total=len(results))
 
-document_search_router = APIRouter(prefix="/documents/{process_id}/search", tags=["search"])
+document_search_router = APIRouter(prefix="/documents/{document_id}/search", tags=["search"])
 
 @document_search_router.get("", response_model=SearchResponse)
 def search_document(
-    process_id: int,
+    document_id: int,
     q: str = Query(..., min_length=1),
     limit: int = Query(50, ge=1, le=100),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Search within a specific document"""
-    from app.routers.process import check_process_access
-    check_process_access(db, process_id, current_user.user_id)
+    from app.routers.document import check_document_access
+    check_document_access(db, document_id, current_user.user_id)
 
-    results = search_blocks(db, current_user.user_id, q, document_id=process_id, limit=limit)
+    results = search_blocks(db, current_user.user_id, q, document_id=document_id, limit=limit)
     return SearchResponse(results=results, total=len(results))

@@ -27,7 +27,7 @@ class Log(Base):
     msg: Mapped[str] = mapped_column(Text, nullable=False)
     logger_time: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     sql_time: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    process_version_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    document_version_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
     user_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     hostname: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     ip: Mapped[Optional[str]] = mapped_column(INET, nullable=True)

@@ -13,7 +13,7 @@ export default function Editor() {
   const [title, setTitle] = useState('')
   const [showHistory, setShowHistory] = useState(false)
   const [showImportExport, setShowImportExport] = useState(false)
-  const [titleSaveTimeout, setTitleSaveTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [titleSaveTimeout, setTitleSaveTimeout] = useState<ReturnType<typeof setTimeout> | null>(null)
 
   const { currentDoc, updateLocalDoc, updateDocument } = useDocumentsStore()
   const {
@@ -92,11 +92,11 @@ export default function Editor() {
   useEffect(() => {
     if (!currentDoc) return
 
-    let saveTimeout: NodeJS.Timeout
-    let intervalTimeout: NodeJS.Timeout
+    let saveTimeout: ReturnType<typeof setTimeout>
+    let intervalTimeout: ReturnType<typeof setInterval>
 
     const performSave = async () => {
-      await save(currentDoc.id)
+      await save(String(currentDoc.id))
     }
 
     // Debounced save after 800ms idle
@@ -118,7 +118,7 @@ export default function Editor() {
   const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle)
     if (currentDoc) {
-      updateLocalDoc(currentDoc.id, { title: newTitle })
+      updateLocalDoc(String(currentDoc.id), { title: newTitle })
 
       // Clear any pending save
       if (titleSaveTimeout) {
@@ -127,7 +127,7 @@ export default function Editor() {
 
       // Debounce backend update
       const timeoutId = setTimeout(async () => {
-        await updateDocument(currentDoc.id, { title: newTitle })
+        await updateDocument(String(currentDoc.id), { title: newTitle })
         setTitleSaveTimeout(null)
       }, 1000)
 
@@ -204,14 +204,14 @@ export default function Editor() {
       {/* Modals */}
       {showHistory && (
         <RevisionHistory
-          documentId={currentDoc.id}
+          documentId={String(currentDoc.id)}
           onClose={() => setShowHistory(false)}
         />
       )}
 
       {showImportExport && (
         <ImportExport
-          documentId={currentDoc.id}
+          documentId={String(currentDoc.id)}
           onClose={() => setShowImportExport(false)}
         />
       )}

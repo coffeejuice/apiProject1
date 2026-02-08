@@ -1,7 +1,7 @@
 -- Migration: Add system block support
 -- This migration:
 -- 1. Removes old block types from BlockType enum
--- 2. Adds new system block types (process_heading, input_workpiece)
+-- 2. Adds new system block types (document_heading, input_workpiece)
 -- 3. Adds system block metadata columns to blocks table
 
 -- Step 1: Add new columns to blocks table
@@ -16,7 +16,7 @@ ADD COLUMN IF NOT EXISTS fixed_position SMALLINT NULL;
 
 -- Create new enum type with only system blocks
 CREATE TYPE blocktype_new AS ENUM (
-    'process_heading',
+    'document_heading',
     'input_workpiece'
 );
 
@@ -38,8 +38,8 @@ DROP TYPE IF EXISTS blocktype CASCADE;
 -- Rename new enum to blocktype
 ALTER TYPE blocktype_new RENAME TO blocktype;
 
--- Step 3: Create function to initialize system blocks for a process
-CREATE OR REPLACE FUNCTION initialize_system_blocks(p_process_id BIGINT)
+-- Step 3: Create function to initialize system blocks for a document
+CREATE OR REPLACE FUNCTION initialize_system_blocks(p_document_id BIGINT)
 RETURNS VOID AS $$
 DECLARE
     v_order_key_1 VARCHAR(100);
@@ -49,10 +49,10 @@ BEGIN
     v_order_key_1 := lpad('0', 20, '0') || '-1000';
     v_order_key_2 := lpad(1000000000000000000::TEXT, 20, '0') || '-1000';
 
-    -- Insert process_heading block (position 0)
+    -- Insert document_heading block (position 0)
     INSERT INTO blocks (
         block_id,
-        process_id,
+        document_id,
         parent_block_id,
         order_key,
         block_type,
@@ -64,10 +64,10 @@ BEGIN
     )
     VALUES (
         gen_random_uuid(),
-        p_process_id,
+        p_document_id,
         NULL,
         v_order_key_1,
-        'process_heading',
+        'document_heading',
         '',
         '{}',
         TRUE,
@@ -78,7 +78,7 @@ BEGIN
     -- Insert input_workpiece block (position 1)
     INSERT INTO blocks (
         block_id,
-        process_id,
+        document_id,
         parent_block_id,
         order_key,
         block_type,
@@ -90,7 +90,7 @@ BEGIN
     )
     VALUES (
         gen_random_uuid(),
-        p_process_id,
+        p_document_id,
         NULL,
         v_order_key_2,
         'input_workpiece',
@@ -103,13 +103,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Step 4: Initialize system blocks for existing processes
+-- Step 4: Initialize system blocks for existing documents
 DO $$
 DECLARE
     proc_record RECORD;
 BEGIN
-    FOR proc_record IN SELECT process_id FROM processes LOOP
-        PERFORM initialize_system_blocks(proc_record.process_id);
+    FOR proc_record IN SELECT document_id FROM documents LOOP
+        PERFORM initialize_system_blocks(proc_record.document_id);
     END LOOP;
 END $$;
 
@@ -117,4 +117,4 @@ END $$;
 COMMENT ON COLUMN blocks.is_system IS 'Indicates if this is a system block';
 COMMENT ON COLUMN blocks.is_removable IS 'Indicates if this block can be deleted by users';
 COMMENT ON COLUMN blocks.fixed_position IS 'Fixed position in document (0-based), NULL if reorderable';
-COMMENT ON FUNCTION initialize_system_blocks IS 'Initialize required system blocks for a process';
+COMMENT ON FUNCTION initialize_system_blocks IS 'Initialize required system blocks for a document';

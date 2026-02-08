@@ -45,16 +45,16 @@ export default function SearchBar() {
     return () => clearTimeout(timeoutId)
   }
 
-  const handleSelectResult = (processId: number) => {
-    setCurrentDoc(String(processId))
+  const handleSelectResult = (documentId: number) => {
+    setCurrentDoc(String(documentId))
     setShowResults(false)
     setQuery('')
     setResults([])
   }
 
-  const getDocumentTitle = (processId: number): string => {
-    const doc = documents.find((d) => d.id === String(processId))
-    return doc?.title || `Document #${processId}`
+  const getDocumentTitle = (documentId: number): string => {
+    const doc = documents.find((d) => d.id === String(documentId))
+    return doc?.title || `Document #${documentId}`
   }
 
   return (
@@ -93,11 +93,11 @@ export default function SearchBar() {
           {results.map((result) => (
             <button
               key={result.block_id}
-              onClick={() => handleSelectResult(result.process_id)}
+              onClick={() => handleSelectResult(result.document_id)}
               className="w-full text-left px-3 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
             >
               <div className="font-medium text-sm text-gray-900">
-                {getDocumentTitle(result.process_id)}
+                {getDocumentTitle(result.document_id)}
               </div>
               <div className="text-xs text-gray-500 mt-1 line-clamp-2">
                 {result.snippet}

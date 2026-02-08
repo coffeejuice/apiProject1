@@ -4,7 +4,7 @@ from datetime import datetime
 from uuid import UUID
 from app.models.document.block import BlockType, FeedDirection
 from pydantic import RootModel
-from app.models.document.process import Role, Status
+from app.models.document.document import Role, Status
 from app.models.document.revision import OperationType
 
 # Auth schemas
@@ -35,19 +35,19 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-# Process schemas
-class ProcessCreate(BaseModel):
+# Document schemas
+class DocumentCreate(BaseModel):
     user_id: Optional[int] = None
     material_id: Optional[int] = None
     title: str = Field(min_length=1, max_length=1024)
 
-class ProcessUpdate(BaseModel):
+class DocumentUpdate(BaseModel):
     user_id: Optional[int] = None
     material_id: Optional[int] = None
     title: Optional[str] = Field(None, min_length=1, max_length=1024)
 
-class ProcessResponse(BaseModel):
-    process_id: int
+class DocumentResponse(BaseModel):
+    document_id: int
     user_id: Optional[int]
     material_id: Optional[int]
     title: str
@@ -59,8 +59,8 @@ class ProcessResponse(BaseModel):
     class Config:
         from_attributes = True
 
-class ProcessListResponse(BaseModel):
-    documents: List[ProcessResponse]
+class DocumentListResponse(BaseModel):
+    documents: List[DocumentResponse]
     total: int
     page: int
     page_size: int
@@ -68,7 +68,7 @@ class ProcessListResponse(BaseModel):
 # Block schemas
 class BlockResponse(BaseModel):
     block_id: UUID
-    process_id: int
+    document_id: int
     parent_block_id: Optional[UUID]
     order_key: str
     block_type: BlockType
@@ -129,7 +129,7 @@ class CommitResponse(BaseModel):
 # Revision schemas
 class RevisionResponse(BaseModel):
     revision_id: UUID
-    process_id: int
+    document_id: int
     rev_number: int
     created_at: datetime
     created_by: int
@@ -167,7 +167,7 @@ class ShareLinkResponse(BaseModel):
 # Search schemas
 class SearchResult(BaseModel):
     block_id: UUID
-    process_id: int
+    document_id: int
     snippet: str
     block_type: BlockType
 

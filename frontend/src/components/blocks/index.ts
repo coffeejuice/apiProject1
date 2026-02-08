@@ -4,13 +4,13 @@
  */
 
 import { registerBlockType } from './BlockRegistry'
-import ProcessHeadingBlock from './ProcessHeadingBlock'
+import DocumentHeadingBlock from './DocumentHeadingBlock'
 import InputWorkpieceBlock from './InputWorkpieceBlock'
 
 // Register system blocks
-registerBlockType('process_heading', ProcessHeadingBlock)
+registerBlockType('document_heading', DocumentHeadingBlock)
 registerBlockType('input_workpiece', InputWorkpieceBlock)
 
 // Export for convenience
-export { ProcessHeadingBlock, InputWorkpieceBlock }
+export { DocumentHeadingBlock, InputWorkpieceBlock }
 export * from './BlockRegistry'

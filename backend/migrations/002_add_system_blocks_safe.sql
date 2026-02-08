@@ -12,11 +12,11 @@ ADD COLUMN IF NOT EXISTS fixed_position SMALLINT NULL;
 
 -- Step 2: Add new enum values to existing enum
 -- Note: PostgreSQL allows adding enum values but not removing them easily
-ALTER TYPE blocktype ADD VALUE IF NOT EXISTS 'process_heading';
+ALTER TYPE blocktype ADD VALUE IF NOT EXISTS 'document_heading';
 ALTER TYPE blocktype ADD VALUE IF NOT EXISTS 'input_workpiece';
 
--- Step 3: Create function to initialize system blocks for a process
-CREATE OR REPLACE FUNCTION initialize_system_blocks(p_process_id BIGINT)
+-- Step 3: Create function to initialize system blocks for a document
+CREATE OR REPLACE FUNCTION initialize_system_blocks(p_document_id BIGINT)
 RETURNS VOID AS $$
 DECLARE
     v_order_key_1 VARCHAR(100);
@@ -27,21 +27,21 @@ BEGIN
     -- Check if system blocks already exist
     SELECT COUNT(*) INTO v_exists_heading
     FROM blocks
-    WHERE process_id = p_process_id AND block_type = 'process_heading';
+    WHERE document_id = p_document_id AND block_type = 'document_heading';
 
     SELECT COUNT(*) INTO v_exists_workpiece
     FROM blocks
-    WHERE process_id = p_process_id AND block_type = 'input_workpiece';
+    WHERE document_id = p_document_id AND block_type = 'input_workpiece';
 
     -- Generate order keys for fixed positions
     v_order_key_1 := lpad('0', 20, '0') || '-1000';
     v_order_key_2 := lpad('1000000000000000000', 20, '0') || '-1000';
 
-    -- Insert process_heading block if not exists (position 0)
+    -- Insert document_heading block if not exists (position 0)
     IF v_exists_heading = 0 THEN
         INSERT INTO blocks (
             block_id,
-            process_id,
+            document_id,
             parent_block_id,
             order_key,
             block_type,
@@ -53,10 +53,10 @@ BEGIN
         )
         VALUES (
             gen_random_uuid(),
-            p_process_id,
+            p_document_id,
             NULL,
             v_order_key_1,
-            'process_heading',
+            'document_heading',
             '',
             '{}',
             TRUE,
@@ -69,7 +69,7 @@ BEGIN
     IF v_exists_workpiece = 0 THEN
         INSERT INTO blocks (
             block_id,
-            process_id,
+            document_id,
             parent_block_id,
             order_key,
             block_type,
@@ -81,7 +81,7 @@ BEGIN
         )
         VALUES (
             gen_random_uuid(),
-            p_process_id,
+            p_document_id,
             NULL,
             v_order_key_2,
             'input_workpiece',
@@ -95,13 +95,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Step 4: Initialize system blocks for existing processes (only if they don't exist)
+-- Step 4: Initialize system blocks for existing documents (only if they don't exist)
 DO $$
 DECLARE
     proc_record RECORD;
 BEGIN
-    FOR proc_record IN SELECT process_id FROM processes LOOP
-        PERFORM initialize_system_blocks(proc_record.process_id);
+    FOR proc_record IN SELECT document_id FROM documents LOOP
+        PERFORM initialize_system_blocks(proc_record.document_id);
     END LOOP;
 END $$;
 
@@ -109,4 +109,4 @@ END $$;
 COMMENT ON COLUMN blocks.is_system IS 'Indicates if this is a system block';
 COMMENT ON COLUMN blocks.is_removable IS 'Indicates if this block can be deleted by users';
 COMMENT ON COLUMN blocks.fixed_position IS 'Fixed position in document (0-based), NULL if reorderable';
-COMMENT ON FUNCTION initialize_system_blocks IS 'Initialize required system blocks for a process (idempotent)';
+COMMENT ON FUNCTION initialize_system_blocks IS 'Initialize required system blocks for a document (idempotent)';

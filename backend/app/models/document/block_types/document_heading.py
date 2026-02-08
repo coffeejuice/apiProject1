@@ -1,4 +1,4 @@
-"""Process Heading block type handler"""
+"""Document Heading block type handler"""
 from typing import Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -6,18 +6,18 @@ from uuid import UUID
 from .base import BlockTypeHandler
 
 
-class ProcessHeadingHandler(BlockTypeHandler):
+class DocumentHeadingHandler(BlockTypeHandler):
     """
-    Handler for Process Heading block.
+    Handler for Document Heading block.
 
-    This system block displays process metadata in a table format,
-    mimicking an industrial process report title page.
-    Data is stored in the 'processes' and 'process_versions' tables.
+    This system block displays document metadata in a table format,
+    mimicking an industrial document report title page.
+    Data is stored in the 'documents' and 'document_versions' tables.
     """
 
     @property
     def block_type_name(self) -> str:
-        return "process_heading"
+        return "document_heading"
 
     @property
     def is_system_block(self) -> bool:
@@ -36,7 +36,7 @@ class ProcessHeadingHandler(BlockTypeHandler):
         return False  # Only one instance per document
 
     def get_default_props(self) -> Dict[str, Any]:
-        """Default props for process heading block - all fields are strings"""
+        """Default props for document heading block - all fields are strings"""
         return {
             "heat_no": "",
             "finished_size": "",
@@ -47,46 +47,46 @@ class ProcessHeadingHandler(BlockTypeHandler):
         }
 
     def validate_props(self, props: Dict[str, Any]) -> bool:
-        """Process heading props are read-only"""
+        """Document heading props are read-only"""
         return True
 
-    def serialize_for_frontend(self, db: Session, block_id: UUID, process_id: int, props: Dict[str, Any]) -> Dict[str, Any]:
+    def serialize_for_frontend(self, db: Session, block_id: UUID, document_id: int, props: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Return block props merged with process metadata.
-        Data is stored in block props, but we also include process table metadata.
+        Return block props merged with document metadata.
+        Data is stored in block props, but we also include document table metadata.
         """
-        from app.models.document.process import Process, ProcessVersion
+        from app.models.document.document import Document, DocumentVersion
 
-        # Get process data for metadata only
-        process = db.execute(
-            select(Process).filter(Process.process_id == process_id)
+        # Get document data for metadata only
+        document = db.execute(
+            select(Document).filter(Document.document_id == document_id)
         ).scalars().first()
 
-        if not process:
+        if not document:
             return props
 
         # Start with props data
         data = dict(props)
 
-        # Add process metadata
-        data["title"] = process.title
-        data["user_id"] = process.user_id
-        data["material_id"] = process.material_id
-        data["created_at"] = process.created_at.isoformat() if process.created_at else None
-        data["last_edit_at"] = process.last_edit_at.isoformat() if process.last_edit_at else None
-        data["current_rev_number"] = process.current_rev_number
+        # Add document metadata
+        data["title"] = document.title
+        data["user_id"] = document.user_id
+        data["material_id"] = document.material_id
+        data["created_at"] = document.created_at.isoformat() if document.created_at else None
+        data["last_edit_at"] = document.last_edit_at.isoformat() if document.last_edit_at else None
+        data["current_rev_number"] = document.current_rev_number
 
-        # Get latest process version (if exists)
+        # Get latest document version (if exists)
         version = db.execute(
-            select(ProcessVersion)
-            .filter(ProcessVersion.process_id == process_id)
-            .order_by(ProcessVersion.process_version_id.desc())
+            select(DocumentVersion)
+            .filter(DocumentVersion.document_id == document_id)
+            .order_by(DocumentVersion.document_version_id.desc())
         ).scalars().first()
 
         # Add version data if exists
         if version:
             data["version"] = {
-                "process_version_id": version.process_version_id,
+                "document_version_id": version.document_version_id,
                 "name": version.name,
                 "is_editable": version.is_editable,
                 "execution_order": version.execution_order,
@@ -97,12 +97,12 @@ class ProcessHeadingHandler(BlockTypeHandler):
 
         return data
 
-    def on_update(self, db: Session, block_id: UUID, process_id: int, props: Dict[str, Any]) -> None:
+    def on_update(self, db: Session, block_id: UUID, document_id: int, props: Dict[str, Any]) -> None:
         """
-        Validate and update block props. Also update process title if provided.
+        Validate and update block props. Also update document title if provided.
         Data is now stored in block props only.
         """
-        from app.models.document.process import Process, ProcessVersion
+        from app.models.document.document import Document, DocumentVersion
 
         # Validate field lengths before updating (all fields are strings)
         field_limits = {
@@ -126,14 +126,14 @@ class ProcessHeadingHandler(BlockTypeHandler):
         if validation_errors:
             raise ValueError("Validation failed:\n" + "\n".join(validation_errors))
 
-        # Update process title if provided (keep title in process table)
+        # Update document title if provided (keep title in document table)
         if "title" in props:
-            process = db.execute(
-                select(Process).filter(Process.process_id == process_id)
+            document = db.execute(
+                select(Document).filter(Document.document_id == document_id)
             ).scalars().first()
 
-            if process:
-                process.title = props["title"]
+            if document:
+                document.title = props["title"]
 
         # Update version fields if provided
         if "version" in props and isinstance(props["version"], dict):
@@ -141,9 +141,9 @@ class ProcessHeadingHandler(BlockTypeHandler):
 
             # Get latest version
             version = db.execute(
-                select(ProcessVersion)
-                .filter(ProcessVersion.process_id == process_id)
-                .order_by(ProcessVersion.process_version_id.desc())
+                select(DocumentVersion)
+                .filter(DocumentVersion.document_id == document_id)
+                .order_by(DocumentVersion.document_version_id.desc())
             ).scalars().first()
 
             if version:

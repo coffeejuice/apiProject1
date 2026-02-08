@@ -1,12 +1,12 @@
 """Service for managing block types and system blocks"""
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 import uuid
 from app.models.document.block import Block, BlockType
 from app.models.document.block_types import get_system_block_handlers, get_block_type_handler
 
 
-def initialize_system_blocks(db: Session, process_id: int) -> List[Block]:
+def initialize_system_blocks(db: Session, document_id: int) -> List[Block]:
     """
     Create all required system blocks for a new document.
     Returns list of created blocks.
@@ -27,7 +27,7 @@ def initialize_system_blocks(db: Session, process_id: int) -> List[Block]:
         # Create block
         block = Block(
             block_id=uuid.uuid4(),
-            process_id=process_id,
+            document_id=document_id,
             parent_block_id=None,
             order_key=order_key,
             block_type=BlockType[block_type_name],
@@ -42,14 +42,14 @@ def initialize_system_blocks(db: Session, process_id: int) -> List[Block]:
         db.flush()  # Ensure block_id is available
 
         # Call handler's on_create hook
-        handler.on_create(db, block.block_id, process_id, block.props)
+        handler.on_create(db, block.block_id, document_id, block.props)
 
         created_blocks.append(block)
 
     return created_blocks
 
 
-def validate_block_constraints(db: Session, process_id: int, block_type: BlockType) -> bool:
+def validate_block_constraints(db: Session, document_id: int, block_type: BlockType) -> bool:
     """
     Validate that creating/modifying a block doesn't violate constraints.
     Returns True if valid, False otherwise.
@@ -63,12 +63,12 @@ def validate_block_constraints(db: Session, process_id: int, block_type: BlockTy
         from sqlalchemy import select, func
         count = db.execute(
             select(func.count(Block.block_id)).filter(
-                Block.process_id == process_id,
+                Block.document_id == document_id,
                 Block.block_type == block_type
             )
         ).scalar()
 
-        if count > 0:
+        if count is not None and count > 0:
             return False  # Block already exists
 
     return True
@@ -114,7 +114,7 @@ def can_reorder_block(db: Session, block_id: uuid.UUID, new_order_key: str) -> b
     return True
 
 
-def generate_order_key(position: int) -> str:
+def generate_order_key(position: Optional[int]) -> str:
     """
     Generate order key for a fixed position.
     Uses position as prefix to ensure correct ordering.
@@ -153,7 +153,7 @@ def enrich_block_data_for_frontend(db: Session, block: Block) -> dict:
 
     # Get enriched data from handler
     enriched_props = handler.serialize_for_frontend(
-        db, block.block_id, block.process_id, block.props
+        db, block.block_id, block.document_id, block.props
     )
 
     return {

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, process, blocks, revisions, sharing, search, import_export, migration
+from app.routers import auth, document, blocks, revisions, sharing, search, import_export, migration
 from app.routers.sharing import share_router
 from app.routers.search import document_search_router
 
@@ -21,7 +21,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router)
-app.include_router(process.router)
+app.include_router(document.router)
 app.include_router(blocks.router)
 app.include_router(revisions.router)
 app.include_router(sharing.router)

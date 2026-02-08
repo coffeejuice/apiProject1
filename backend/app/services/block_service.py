@@ -4,9 +4,9 @@ from typing import List, Optional
 from uuid import UUID
 from app.models.document.block import Block, BlockType
 
-def get_root_blocks(db: Session, process_id: int) -> List[Block]:
+def get_root_blocks(db: Session, document_id: int) -> List[Block]:
     return list(db.execute(select(Block).filter(
-        Block.process_id == process_id,
+        Block.document_id == document_id,
         Block.parent_block_id == None
     ).order_by(Block.order_key)).scalars().all())
 
@@ -16,7 +16,7 @@ def get_block_children(db: Session, block_id: UUID) -> List[Block]:
         return []
 
     return list(db.execute(select(Block).filter(
-        Block.process_id == block.process_id,
+        Block.document_id == block.document_id,
         Block.parent_block_id == block_id
     ).order_by(Block.order_key)).scalars().all())
 

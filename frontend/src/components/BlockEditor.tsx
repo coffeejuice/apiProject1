@@ -16,7 +16,7 @@ export default function BlockEditor() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [saveError, setSaveError] = useState<string | null>(null)
   const [title, setTitle] = useState('')
-  const [titleSaveTimeout, setTitleSaveTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [titleSaveTimeout, setTitleSaveTimeout] = useState<ReturnType<typeof setTimeout> | null>(null)
 
   const { currentDoc, updateLocalDoc, updateDocument } = useDocumentsStore()
 
@@ -96,7 +96,7 @@ export default function BlockEditor() {
 
         // Update the document's revision number for next save
         if (response.data.new_rev_number && currentDoc) {
-          updateLocalDoc(currentDoc.id, { rev_number: response.data.new_rev_number })
+          updateLocalDoc(String(currentDoc.id), { rev_number: response.data.new_rev_number })
         }
 
         setSaveStatus('saved')
@@ -125,7 +125,7 @@ export default function BlockEditor() {
   const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle)
     if (currentDoc) {
-      updateLocalDoc(currentDoc.id, { title: newTitle })
+      updateLocalDoc(String(currentDoc.id), { title: newTitle })
 
       // Clear any pending save
       if (titleSaveTimeout) {
@@ -134,7 +134,7 @@ export default function BlockEditor() {
 
       // Debounce backend update
       const timeoutId = setTimeout(async () => {
-        await updateDocument(currentDoc.id, { title: newTitle })
+        await updateDocument(String(currentDoc.id), { title: newTitle })
         setTitleSaveTimeout(null)
       }, 1000)
 

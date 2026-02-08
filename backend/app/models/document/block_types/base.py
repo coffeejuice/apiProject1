@@ -50,28 +50,28 @@ class BlockTypeHandler(ABC):
         """Validate block props. Return True if valid."""
         pass
 
-    def on_create(self, db: Session, block_id: UUID, process_id: int, props: Dict[str, Any]) -> None:
+    def on_create(self, db: Session, block_id: UUID, document_id: int, props: Dict[str, Any]) -> None:
         """
         Called when a block of this type is created.
         Override to perform custom initialization.
         """
         pass
 
-    def on_update(self, db: Session, block_id: UUID, process_id: int, props: Dict[str, Any]) -> None:
+    def on_update(self, db: Session, block_id: UUID, document_id: int, props: Dict[str, Any]) -> None:
         """
         Called when a block of this type is updated.
         Override to perform custom logic (e.g., update related tables).
         """
         pass
 
-    def on_delete(self, db: Session, block_id: UUID, process_id: int) -> None:
+    def on_delete(self, db: Session, block_id: UUID, document_id: int) -> None:
         """
         Called when a block of this type is deleted.
         Override to perform cleanup.
         """
         pass
 
-    def serialize_for_frontend(self, db: Session, block_id: UUID, process_id: int, props: Dict[str, Any]) -> Dict[str, Any]:
+    def serialize_for_frontend(self, db: Session, block_id: UUID, document_id: int, props: Dict[str, Any]) -> Dict[str, Any]:
         """
         Serialize block data for frontend.
         Override to include data from related tables.

@@ -101,11 +101,11 @@ class NotionClient:
         return self._request("POST", f"/documents/{document_id}/restore")
 
     # Block methods
-    def get_root_blocks(self, document_id: str) -> Optional[List[Dict]]:
+    def get_root_blocks(self, document_id: str) -> Optional[Any]:
         """Get root-level blocks"""
         return self._request("GET", f"/documents/{document_id}/blocks/root")
 
-    def get_block_children(self, block_id: str) -> Optional[List[Dict]]:
+    def get_block_children(self, block_id: str) -> Optional[Any]:
         """Get children of a block"""
         return self._request("GET", f"/blocks/{block_id}/children")
 
@@ -139,7 +139,7 @@ class NotionClient:
         result = self._request("POST", f"/documents/{document_id}/invites", json=data)
         return result is not None
 
-    def get_acl(self, document_id: str) -> Optional[List[Dict]]:
+    def get_acl(self, document_id: str) -> Optional[Any]:
         """Get document ACL"""
         return self._request("GET", f"/documents/{document_id}/acl")
 
@@ -216,7 +216,7 @@ class NotionClient:
         return self.commit(document_id, base_rev, ops)
 
     # Settings methods
-    def list_settings(self, scope: Optional[str] = None, key_like: Optional[str] = None) -> Optional[List[Dict]]:
+    def list_settings(self, scope: Optional[str] = None, key_like: Optional[str] = None) -> Optional[Any]:
         """List settings"""
         params = []
         if scope: params.append(f"scope={scope}")

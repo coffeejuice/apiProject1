@@ -60,10 +60,10 @@ def get_system_block_handlers() -> Dict[str, BlockTypeHandler]:
 def _ensure_handlers_registered():
     """Lazy initialization of handlers to avoid circular imports"""
     if len(_registry.get_all()) == 0:
-        from .process_heading import ProcessHeadingHandler
+        from .document_heading import DocumentHeadingHandler
         from .input_workpiece import InputWorkpieceHandler
 
-        register_block_type(ProcessHeadingHandler())
+        register_block_type(DocumentHeadingHandler())
         register_block_type(InputWorkpieceHandler())
 
 

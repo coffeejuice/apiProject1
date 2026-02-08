@@ -1,6 +1,6 @@
 # Techno-Notion API - Monorepo
 
-> Industrial-grade process management system with Notion-style block architecture for versioned simulation data.
+> Industrial-grade document management system with Notion-style block architecture for versioned simulation data.
 
 ## 📁 Repository Structure
 
@@ -84,7 +84,7 @@ Frontend implementation is planned. Legacy clients are archived in `frontend_obs
 
 ## 🏢 Core Concepts
 
-- **Processes** - Root entities (documents/pages)
+- **Documents** - Root entities (documents/pages)
 - **Blocks** - Polymorphic content components (text, tables, images)
 - **Revisions** - Immutable change history with version control
 - **Library** - Industrial assets (materials, dies, presses)
@@ -144,7 +144,7 @@ Full API documentation available at http://localhost:8001/docs
 **Key endpoints:**
 - `POST /auth/register` - Register new user
 - `POST /auth/login` - User authentication
-- `POST /documents` - Create process/document
+- `POST /documents` - Create document
 - `GET /documents` - List all documents
 - `POST /documents/{id}/commit` - Commit block changes
 - `GET /documents/{id}/blocks/root` - Get root blocks

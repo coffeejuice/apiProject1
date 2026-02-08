@@ -6,7 +6,7 @@ import enum
 from app.database import Base
 
 if TYPE_CHECKING:
-    from app.models.document.process import ProcessVersion
+    from app.models.document.document import DocumentVersion
 
 
 class ServerType(enum.Enum):
@@ -35,7 +35,7 @@ class Server(Base):
     time_started: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=func.now())
     time_updated: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, default=None)
     time_finished: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, default=None)
-    process_version_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("process_versions.process_version_id", onupdate="CASCADE", ondelete="SET DEFAULT"), nullable=True)
+    document_version_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("document_versions.document_version_id", onupdate="CASCADE", ondelete="SET DEFAULT"), nullable=True)
     projects_dir: Mapped[str] = mapped_column(String(2047), default="", nullable=True)
     local_dir: Mapped[str] = mapped_column(String(2047), default="", nullable=True)
     public_dir: Mapped[str] = mapped_column(String(2047), default="", nullable=True)
@@ -57,7 +57,7 @@ class Server(Base):
     notify_channel: Mapped[Optional[str]] = mapped_column(String(255), default=None, nullable=True)
     timeout_counter: Mapped[int] = mapped_column(SmallInteger, default=0, nullable=True)
 
-    process_version: Mapped[Optional["ProcessVersion"]] = relationship("ProcessVersion", foreign_keys=[process_version_id])
+    document_version: Mapped[Optional["DocumentVersion"]] = relationship("DocumentVersion", foreign_keys=[document_version_id])
 
     __table_args__ = (
         UniqueConstraint("type", "hostname", "name", name="uk_servers_1"),

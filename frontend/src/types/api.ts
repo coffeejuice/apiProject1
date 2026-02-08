@@ -35,7 +35,7 @@ export interface User {
 // Documents
 export interface Document {
   id: string | number
-  process_id?: number  // Backend field name
+  document_id?: number  // Backend field name
   title: string
   created_at?: string
   updated_at?: string
@@ -93,7 +93,7 @@ export interface RevisionListResponse {
 // Search
 export interface SearchResult {
   block_id: string
-  process_id: number
+  document_id: number
   snippet: string
   block_type: string
 }

@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from typing import List, Dict, Any, Optional, Tuple
 from uuid import UUID
-from app.models import Process, Block, Revision, LegacyOperation, OperationType, BlockType, RevisionSnapshot, Device
+from app.models import Document, Block, Revision, LegacyOperation, OperationType, BlockType, RevisionSnapshot, Device
 from app.schemas import OpData, ConflictInfo
 
 def check_duplicate_commit(
@@ -19,7 +19,7 @@ def check_duplicate_commit(
 
 def detect_conflicts(
     db: Session,
-    process_id: int,
+    document_id: int,
     base_rev: int,
     ops: List[OpData]
 ) -> List[ConflictInfo]:
@@ -28,7 +28,7 @@ def detect_conflicts(
 
     # Get ops since base_rev
     server_ops = db.execute(select(LegacyOperation).join(Revision).filter(
-        Revision.process_id == process_id,
+        Revision.document_id == document_id,
         Revision.rev_number > base_rev
     )).scalars().all()
 
@@ -77,7 +77,7 @@ def detect_conflicts(
 
 def apply_operations(
     db: Session,
-    process_id: int,
+    document_id: int,
     ops: List[OpData]
 ) -> None:
     """Apply operations to document blocks"""
@@ -93,12 +93,12 @@ def apply_operations(
             block_type = BlockType[op.data["block_type"]]
 
             # Validate constraints (e.g., single instance check)
-            if not validate_block_constraints(db, process_id, block_type):
+            if not validate_block_constraints(db, document_id, block_type):
                 raise ValueError(f"Cannot create block of type {block_type.value}: constraints violated")
 
             block = Block(
                 block_id=UUID(op.data["block_id"]),
-                process_id=process_id,
+                document_id=document_id,
                 parent_block_id=UUID(op.data["parent_block_id"]) if op.data.get("parent_block_id") else None,
                 order_key=op.data["order_key"],
                 block_type=block_type,
@@ -119,7 +119,7 @@ def apply_operations(
                 # Call handler's on_delete hook
                 handler = get_block_type_handler(block_obj.block_type.value)
                 if handler:
-                    handler.on_delete(db, block_id, block_obj.process_id)
+                    handler.on_delete(db, block_id, block_obj.document_id)
 
                 db.delete(block_obj)
 
@@ -151,7 +151,7 @@ def apply_operations(
                 handler = get_block_type_handler(block_obj.block_type.value)
                 if handler:
                     try:
-                        handler.on_update(db, block_id, block_obj.process_id, block_obj.props)
+                        handler.on_update(db, block_id, block_obj.document_id, block_obj.props)
                     except Exception as e:
                         print(f"Error in block handler on_update for {block_obj.block_type.value}: {e}")
                         import traceback
@@ -160,7 +160,7 @@ def apply_operations(
 
 def commit_operations(
     db: Session,
-    process_id: int,
+    document_id: int,
     device_id: UUID,
     client_batch_id: UUID,
     base_rev_number: int,
@@ -189,24 +189,25 @@ def commit_operations(
         db.flush()
 
     # Get document
-    doc = db.execute(select(Process).filter(Process.process_id == process_id)).scalars().first()
+    doc = db.execute(select(Document).filter(Document.document_id == document_id)).scalars().first()
     if not doc:
         return False, None, None
 
     # Check conflicts
-    if base_rev_number < doc.current_rev_number:
-        conflicts = detect_conflicts(db, process_id, base_rev_number, ops)
+    current_rev = doc.current_rev_number or 0
+    if base_rev_number < current_rev:
+        conflicts = detect_conflicts(db, document_id, base_rev_number, ops)
         if conflicts:
             return False, None, conflicts
 
     # Apply operations
     try:
-        apply_operations(db, process_id, ops)
+        apply_operations(db, document_id, ops)
 
         # Create new revision
-        new_rev_number = doc.current_rev_number + 1
+        new_rev_number = current_rev + 1
         revision = Revision(
-            process_id=process_id,
+            document_id=document_id,
             rev_number=new_rev_number,
             device_id=device_id,
             client_batch_id=client_batch_id,
@@ -244,7 +245,7 @@ def create_snapshot(db: Session, revision_id: UUID) -> None:
     if not revision:
         return
 
-    blocks = db.execute(select(Block).filter(Block.process_id == revision.process_id)).scalars().all()
+    blocks = db.execute(select(Block).filter(Block.document_id == revision.document_id)).scalars().all()
     blocks_data = [
         {
             "block_id": str(block.block_id),

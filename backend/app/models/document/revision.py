@@ -2,28 +2,31 @@ from sqlalchemy import String, Integer, JSON, DateTime, ForeignKey, Index, Enum 
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 import uuid
 import enum
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.document.document import Document
 
 class Revision(Base):
     __tablename__ = "revisions"
 
     revision_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    process_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("processes.process_id"), nullable=False)
+    document_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("documents.document_id"), nullable=False)
     rev_number: Mapped[int] = mapped_column(Integer, nullable=False)
     device_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("devices.device_id"), nullable=False)
     client_batch_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     created_by: Mapped[int] = mapped_column(Integer, ForeignKey("users.user_id"), nullable=False)
 
-    document: Mapped["Process"] = relationship("Process", back_populates="revisions")
+    document: Mapped["Document"] = relationship("Document", back_populates="revisions")
     ops: Mapped[List["LegacyOperation"]] = relationship("LegacyOperation", back_populates="revision", cascade="all, delete-orphan")
     snapshot: Mapped[Optional["RevisionSnapshot"]] = relationship("RevisionSnapshot", back_populates="revision", uselist=False, cascade="all, delete-orphan")
 
     __table_args__ = (
-        Index("idx_document_rev", "process_id", "rev_number"),
+        Index("idx_document_rev", "document_id", "rev_number"),
         Index("idx_device_batch", "device_id", "client_batch_id"),
     )
 

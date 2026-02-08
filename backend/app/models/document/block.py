@@ -2,10 +2,13 @@ from sqlalchemy import String, Text, JSON, DateTime, ForeignKey, Index, Enum as 
 from sqlalchemy.dialects.postgresql import UUID, BYTEA
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 import uuid
 import enum
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.document.document import Document
 
 class BlockType(enum.Enum):
     # Old block types (keep for backward compatibility during migration)
@@ -19,7 +22,7 @@ class BlockType(enum.Enum):
     divider = "divider"
 
     # System blocks (non-removable, auto-created)
-    process_heading = "process_heading"
+    document_heading = "document_heading"
     input_workpiece = "input_workpiece"
 
 class DeformationType(enum.Enum):
@@ -47,7 +50,7 @@ class Block(Base):
     __tablename__ = "blocks"
 
     block_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    process_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("processes.process_id"), nullable=False)
+    document_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("documents.document_id"), nullable=False)
     parent_block_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
     order_key: Mapped[str] = mapped_column(String(100), nullable=False)
     block_type: Mapped[BlockType] = mapped_column(SQLEnum(BlockType), nullable=False)
@@ -61,11 +64,11 @@ class Block(Base):
     is_removable: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     fixed_position: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
 
-    document: Mapped["Process"] = relationship("Process", back_populates="blocks")
+    document: Mapped["Document"] = relationship("Document", back_populates="blocks")
 
     __table_args__ = (
-        Index("idx_document_parent", "process_id", "parent_block_id"),
-        Index("idx_document_order", "process_id", "order_key"),
+        Index("idx_document_parent", "document_id", "parent_block_id"),
+        Index("idx_document_order", "document_id", "order_key"),
     )
 
 

@@ -67,10 +67,10 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
       'data'
     )
 
-    // Normalize documents: map process_id to id if needed
+    // Normalize documents: map document_id to id if needed
     const normalizedDocs = (documents || []).map((doc) => ({
       ...doc,
-      id: doc.id || doc.process_id || '',
+      id: doc.id || doc.document_id || '',
     }))
 
     set({
@@ -97,7 +97,7 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
 
     const newDoc = {
       ...response.data!,
-      id: response.data!.id || response.data!.process_id || '',
+      id: response.data!.id || response.data!.document_id || '',
     }
 
     set((state) => ({
@@ -124,7 +124,7 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
 
     const doc = {
       ...response.data!,
-      id: response.data!.id || response.data!.process_id || '',
+      id: response.data!.id || response.data!.document_id || '',
     }
 
     set({
@@ -164,11 +164,11 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
   },
 
   updateDocument: async (id: string | number, updates: Partial<Document>) => {
-    const response = await apiClient.patch(`/documents/${id}`, {
+    const response = await apiClient.patch<Document>(`/documents/${id}`, {
       body: updates,
     })
 
-    if (!response.ok) {
+    if (!response.ok || !response.data) {
       console.error('Failed to update document:', response.errorMessage)
       return false
     }
@@ -176,7 +176,7 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
     // Update local state
     const normalizedDoc = {
       ...response.data,
-      id: response.data?.id || response.data?.process_id || id,
+      id: response.data?.id || response.data?.document_id || id,
     }
 
     set((state) => ({

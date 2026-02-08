@@ -4,7 +4,7 @@ import Sidebar from '../components/Sidebar'
 import BlockEditor from '../components/BlockEditor'
 
 export default function AppPage() {
-  const { currentDocId, fetchDocuments } = useDocumentsStore()
+  const { fetchDocuments } = useDocumentsStore()
 
   useEffect(() => {
     fetchDocuments()
