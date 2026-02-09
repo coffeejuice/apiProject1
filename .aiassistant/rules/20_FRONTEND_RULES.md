@@ -1,3 +1,7 @@
+---
+apply: always
+---
+
 # Frontend Rules
 
 ## Stack
@@ -13,6 +17,7 @@
 - frontend/src/pages/        Route pages
 - frontend/src/stores/       Zustand stores
 - frontend/src/types/        API types
+- frontend/e2e/              Playwright end-to-end tests
 
 ## State and API rules
 - All HTTP requests go through the API client (expected at src/lib/apiClient.ts).

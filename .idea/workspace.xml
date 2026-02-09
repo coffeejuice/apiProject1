@@ -7,77 +7,56 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Add two blocks: Process Heading and Input Workpiece">
-      <change beforePath="$PROJECT_DIR$/.idea/MypyPlugin.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/MypyPlugin.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/apiProject1.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/apiProject1.iml" afterDir="false" />
+    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Move AI Context to .aiassistant\rules. Fix Node.js erros">
+      <change beforePath="$PROJECT_DIR$/.aiassistant/rules/00_INDEX.md" beforeDir="false" afterPath="$PROJECT_DIR$/.aiassistant/rules/00_INDEX.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.aiassistant/rules/01_PROJECT_RULES.md" beforeDir="false" afterPath="$PROJECT_DIR$/.aiassistant/rules/01_PROJECT_RULES.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.aiassistant/rules/02_PROJECT_WORKFLOW.md" beforeDir="false" afterPath="$PROJECT_DIR$/.aiassistant/rules/02_PROJECT_WORKFLOW.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.aiassistant/rules/10_BACKEND_RULES.md" beforeDir="false" afterPath="$PROJECT_DIR$/.aiassistant/rules/10_BACKEND_RULES.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.aiassistant/rules/11_BACKEND_WORKFLOW.md" beforeDir="false" afterPath="$PROJECT_DIR$/.aiassistant/rules/11_BACKEND_WORKFLOW.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.aiassistant/rules/20_FRONTEND_RULES.md" beforeDir="false" afterPath="$PROJECT_DIR$/.aiassistant/rules/20_FRONTEND_RULES.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.aiassistant/rules/21_FRONTEND_WORKFLOW.md" beforeDir="false" afterPath="$PROJECT_DIR$/.aiassistant/rules/21_FRONTEND_WORKFLOW.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BLOCK_SYSTEM_REFACTOR.md" beforeDir="false" afterPath="$PROJECT_DIR$/BLOCK_SYSTEM_REFACTOR.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PROJECT_CONTEXT.md" beforeDir="false" afterPath="$PROJECT_DIR$/CONTEXT.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BLOCK_SYSTEM_REFACTOR.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CONTEXT.md" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/CHANGELOG.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/CHANGELOG.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/QUICKSTART_WINDOWS.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/QUICKSTART_WINDOWS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/SETUP.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/SETUP.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/START_HERE.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/START_HERE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/UPDATE_SUMMARY.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/UPDATE_SUMMARY.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/alembic/env.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/env.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/bite.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/bite.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block_types/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block_types/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/base.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block_types/input_workpiece.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/input_workpiece.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block_types/process_heading.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/operation.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/operation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/post.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/post.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/process.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/revision.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/revision.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/server_pre_main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/server_pre_main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/log.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/log.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/server.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/user.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/blocks.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/blocks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/import_export.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/import_export.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/migration.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/migration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/process.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/revisions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/revisions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/search.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/search.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/sharing.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/sharing.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/block_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/block_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/block_type_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/block_type_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/commit_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/commit_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/import_export_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/import_export_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/search_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/search_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/example.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/example.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gui_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gui_client.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/migrations/002_add_system_blocks.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/migrations/002_add_system_blocks.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/migrations/002_add_system_blocks_safe.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/migrations/002_add_system_blocks_safe.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/seed/v0003_settings.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/seed/v0003_settings.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/test_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test_search.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/DEVELOPMENT_NOTES.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/DEVELOPMENT_NOTES.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/FRONTEND_CONTEXT.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/FRONTEND_CONTEXT.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/INITIAL_TASK.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/INITIAL_TASK.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/TODO.txt" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/TODO.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/WINDOWS_QUICKSTART.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/WINDOWS_QUICKSTART.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/CHANGELOG.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/QUICKSTART_WINDOWS.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/SETUP.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/START_HERE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/UPDATE_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/check_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/check_schema.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/check_user.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/check_user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/check_users_content.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/check_users_content.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/convert_operations.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/convert_operations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/create_test_user.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/create_test_user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/example.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gui_client.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/list_all_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/list_all_tables.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/list_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/list_tables.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/mypy.ini" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/operations.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/operations.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/operations.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/operations.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/recreate_settings_table.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup/recreate_settings_table.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/reinit_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup/reinit_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/run_migration.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup/run_migration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/setup_database.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup/setup_database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test_login.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_login.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test_provisioning.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_provisioning.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test_register.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_register.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test_settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/DEVELOPMENT_NOTES.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/FRONTEND_CONTEXT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/INITIAL_TASK.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/TODO.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/WINDOWS_QUICKSTART.md" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/BlockEditor.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/BlockEditor.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Editor.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Editor.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/SearchBar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/SearchBar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Sidebar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/ProcessHeadingBlock.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/blocks/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/AppPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AppPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/stores/useDocumentsStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/stores/useDocumentsStore.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/types/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/types/api.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend_obsolete/client/api_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/client/api_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/reproduce_issue.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/reproduce_issue.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,7 +64,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="254" />
+    <option name="cachedIndexableFilesCount" value="243" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="FileTemplateManagerImpl">
@@ -139,9 +118,10 @@
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;npm.Dev Server.executor&quot;: &quot;Run&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;C:\\Users\\alext\\ProgrammingProjects\\apiProject1\\frontend\\node_modules\\prettier&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;ml.llm.agents.accounts&quot;,
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\alext\\PycharmProjects\\apiProject1\\frontend\\node_modules\\typescript\\lib&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\alext\\ProgrammingProjects\\apiProject1\\frontend\\node_modules\\typescript\\lib&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
   &quot;keyToStringList&quot;: {
@@ -173,9 +153,11 @@
       <recent name="C:\Users\alext\PycharmProjects\apiProject1" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\alext\PycharmProjects\apiProject1\backend" />
-      <recent name="C:\Users\alext\PycharmProjects\apiProject1\frontend_obsolete" />
-      <recent name="C:\Users\alext\PycharmProjects\apiProject1\app\models\document" />
+      <recent name="C:\Users\alext\ProgrammingProjects\apiProject1\backend\scripts" />
+      <recent name="C:\Users\alext\ProgrammingProjects\apiProject1\backend\tests" />
+      <recent name="C:\Users\alext\ProgrammingProjects\apiProject1\setup" />
+      <recent name="C:\Users\alext\ProgrammingProjects\apiProject1\backend\app\data" />
+      <recent name="C:\Users\alext\ProgrammingProjects\apiProject1\frontend_obsolete" />
     </key>
   </component>
   <component name="RunManager" selected="Python.Backend Server">
@@ -239,7 +221,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-WS-253.30387.83" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PY-253.30387.173" />
+        <option value="bundled-python-sdk-4762d8aabb82-6d6dccd035ac-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.30387.173" />
       </set>
     </attachedChunks>
   </component>
@@ -282,7 +265,8 @@
       <workItem from="1770297156876" duration="337000" />
       <workItem from="1770349583009" duration="78000" />
       <workItem from="1770349763711" duration="6292000" />
-      <workItem from="1770364175640" duration="9523000" />
+      <workItem from="1770364175640" duration="9907000" />
+      <workItem from="1770607337246" duration="9287000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -388,7 +372,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768887169229</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Move AI Context to .aiassistant\rules. Fix Node.js erros">
+      <option name="closed" value="true" />
+      <created>1770566830224</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1770566830224</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
@@ -424,10 +416,11 @@
     <MESSAGE value="Refactor mono repo: +backend, + frontend. Add React frontend." />
     <MESSAGE value="Fix minor problems (visual and DB connection)" />
     <MESSAGE value="Add two blocks: Process Heading and Input Workpiece" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add two blocks: Process Heading and Input Workpiece" />
+    <MESSAGE value="Move AI Context to .aiassistant\rules. Fix Node.js erros" />
+    <option name="LAST_COMMIT_MESSAGE" value="Move AI Context to .aiassistant\rules. Fix Node.js erros" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/apiProject1$Backend_Server.coverage" NAME="Backend Server Coverage Results" MODIFIED="1770557463736" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:\Users\alext\ProgrammingProjects\apiProject1\backend" />
+    <SUITE FILE_PATH="coverage/apiProject1$Backend_Server.coverage" NAME="Backend Server Coverage Results" MODIFIED="1770607464931" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:\Users\alext\ProgrammingProjects\apiProject1\backend" />
     <SUITE FILE_PATH="coverage/apiProject1$main.coverage" NAME="main Coverage Results" MODIFIED="1768523636270" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/gui_client_v2" />
     <SUITE FILE_PATH="coverage/apiProject1$example.coverage" NAME="example Coverage Results" MODIFIED="1768285098953" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/apiProject1$gui_client.coverage" NAME="gui_client Coverage Results" MODIFIED="1768468851893" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

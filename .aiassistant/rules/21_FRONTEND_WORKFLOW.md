@@ -1,3 +1,7 @@
+---
+apply: always
+---
+
 # Frontend Workflow
 
 ## Setup

@@ -11,9 +11,11 @@ Backend:
 3) .venv\Scripts\activate
 4) pip install -r requirements.txt
 5) Create backend/.env with DATABASE_URL and SECRET_KEY
-6) python setup_database.py
+6) python ..\setup\setup_database.py
 7) python -m alembic upgrade head
 8) python run.py  # http://localhost:8001
+
+Note: Run setup scripts from backend so backend/.env is loaded.
 
 Frontend:
 1) cd frontend
@@ -45,6 +47,6 @@ Frontend:
 ## Integration notes
 - Frontend default API base URL: http://127.0.0.1:8001
 - Auth uses JWT bearer tokens stored in localStorage.
-- If a test user is created via backend/create_test_user.py:
+- If a test user is created via backend/scripts/create_test_user.py:
   - username: testuser
   - password: password123

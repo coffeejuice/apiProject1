@@ -6,10 +6,23 @@ from app.database import engine
 
 def run_migration(migration_file: str):
     """Run a SQL migration file"""
-    migration_path = Path(__file__).parent / "migrations" / migration_file
+    candidate_paths = []
+    migration_path = Path(migration_file)
 
-    if not migration_path.exists():
-        print(f"Error: Migration file not found: {migration_path}")
+    if not migration_path.is_file():
+        script_dir = Path(__file__).resolve().parent
+        candidate_paths = [
+            script_dir / "migrations" / migration_file,
+            script_dir.parent / "backend" / "migrations" / migration_file,
+        ]
+        migration_path = next((path for path in candidate_paths if path.is_file()), None)
+
+    if not migration_path or not migration_path.is_file():
+        print("Error: Migration file not found.")
+        if candidate_paths:
+            print("Checked:")
+            for path in candidate_paths:
+                print(f"- {path}")
         sys.exit(1)
 
     print(f"Running migration: {migration_file}")

@@ -1,3 +1,7 @@
+---
+apply: always
+---
+
 # Backend Rules
 
 ## Stack
@@ -14,19 +18,21 @@
 - backend/app/services/      Business logic (commit, search, import/export)
 - backend/app/schemas.py     Pydantic schemas
 - backend/run.py             Uvicorn entry point
+- backend/scripts/           Maintenance and utility scripts
+- backend/tests/             Backend test suite
+
+## Environment
+- Keep backend/.env out of version control; use backend/.env.example as a template.
 
 ## Domain rules
-- API routes use `/documents`; DB table is `documents`.
 - Blocks are ordered by lexicographic `order_key` and store type-specific data in JSON `props`.
 - Revisions are immutable history records.
-- Users are stored in table `users` (not `accounts`).
 
 ## Guardrails
 - Always filter soft-deleted rows unless explicitly including deleted (`deleted_at IS NULL`).
 - Update `app/schemas.py` with any model changes.
 - Enforce access control via `DocumentACL` or `ShareLink` on mutations.
 - Follow `BlockType` enum definitions when adding or updating block types.
-- Use `language_code` (string) and keep removed fields removed (`department_id`, `editor_append_mode_id`).
 
 ## Migration policy
 - This repo favors a single consolidated migration file.

@@ -11,8 +11,9 @@ Read order:
 2. 02_PROJECT_WORKFLOW.md
 3. 10_BACKEND_RULES.md
 4. 11_BACKEND_WORKFLOW.md
-5. 20_FRONTEND_RULES.md
-6. 21_FRONTEND_WORKFLOW.md
+5. 12_BLOCK_TYPES.md
+6. 20_FRONTEND_RULES.md
+7. 21_FRONTEND_WORKFLOW.md
 
 Scope notes:
 - Backend rules apply to `backend/`.
