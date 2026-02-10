@@ -1,3 +1,7 @@
+---
+apply: always
+---
+
 # Project Rules
 
 ## Purpose

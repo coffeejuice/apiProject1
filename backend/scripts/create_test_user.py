@@ -9,15 +9,15 @@ def create_test_user():
     db = SessionLocal()
 
     # Check if user already exists
-    existing = db.query(User).filter(User.login == "testuser").first()
+    existing = db.query(User).filter(User.login == "demo_user").first()
     if existing:
-        print(f"✓ User 'testuser' already exists (ID: {existing.user_id})")
+        print(f"✓ User 'demo_user' already exists (ID: {existing.user_id})")
         print(f"  Email: {existing.email}")
         return
 
     # Create new user
     user = User(
-        login="testuser",
+        login="demo_user",
         email="test@example.com",
         password_hashed=get_password_hash("password123")
     )
@@ -26,7 +26,7 @@ def create_test_user():
     db.refresh(user)
 
     print(f"✓ Created test user:")
-    print(f"  Username: testuser")
+    print(f"  Username: demo_user")
     print(f"  Password: password123")
     print(f"  Email: test@example.com")
     print(f"  User ID: {user.user_id}")

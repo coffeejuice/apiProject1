@@ -5,7 +5,7 @@ apply: always
 # Backend Rules
 
 ## Stack
-- Python 3.11
+- Python 3.12
 - FastAPI (see backend/requirements.txt for exact versions)
 - SQLAlchemy 2.x (sync ORM)
 - Alembic migrations

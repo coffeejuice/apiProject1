@@ -1,6 +1,10 @@
 """Run database migration for system blocks"""
 import sys
 from pathlib import Path
+
+# Add the backend directory to sys.path to allow importing from app
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
 from sqlalchemy import text
 from app.database import engine
 
@@ -11,10 +15,7 @@ def run_migration(migration_file: str):
 
     if not migration_path.is_file():
         script_dir = Path(__file__).resolve().parent
-        candidate_paths = [
-            script_dir / "migrations" / migration_file,
-            script_dir.parent / "backend" / "migrations" / migration_file,
-        ]
+        candidate_paths = [script_dir.parent / "migrations" / migration_file]
         migration_path = next((path for path in candidate_paths if path.is_file()), None)
 
     if not migration_path or not migration_path.is_file():
@@ -50,8 +51,8 @@ def run_migration(migration_file: str):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python run_migration.py <migration_file>")
-        print("Example: python run_migration.py 002_add_system_blocks_safe.sql")
+        print("Usage: python db_setup/run_migration.py <migration_file>")
+        print("Example: python db_setup/run_migration.py 002_add_system_blocks_safe.sql")
         sys.exit(1)
 
     migration_file = sys.argv[1]

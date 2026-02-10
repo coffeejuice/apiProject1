@@ -1,8 +1,8 @@
-import os
 import sys
+from pathlib import Path
 
-# Add the project root to sys.path to allow importing from app
-sys.path.append(os.getcwd())
+# Add the backend directory to sys.path to allow importing from app
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from sqlalchemy import create_engine, text
 from app.config import settings
