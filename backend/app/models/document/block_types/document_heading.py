@@ -69,12 +69,12 @@ class DocumentHeadingHandler(BlockTypeHandler):
         data = dict(props)
 
         # Add document metadata
-        data["title"] = document.title
-        data["user_id"] = document.user_id
-        data["material_id"] = document.material_id
+        data["name"] = document.name
+        data["project_id"] = document.project_id
+        data["source_document_id"] = document.source_document_id
+        data["editor_user_id"] = document.editor_user_id
         data["created_at"] = document.created_at.isoformat() if document.created_at else None
-        data["last_edit_at"] = document.last_edit_at.isoformat() if document.last_edit_at else None
-        data["current_rev_number"] = document.current_rev_number
+        data["updated_at"] = document.updated_at.isoformat() if document.updated_at else None
 
         # Get latest document version (if exists)
         version = db.execute(
@@ -99,14 +99,14 @@ class DocumentHeadingHandler(BlockTypeHandler):
 
     def on_update(self, db: Session, block_id: UUID, document_id: int, props: Dict[str, Any]) -> None:
         """
-        Validate and update block props. Also update document title if provided.
+        Validate and update block props. Also update document name if provided.
         Data is now stored in block props only.
         """
         from app.models.document.document import Document, DocumentVersion
 
         # Validate field lengths before updating (all fields are strings)
         field_limits = {
-            "title": 1024,
+            "name": 1024,
             "heat_no": 511,
             "finished_size": 511,
             "stock_size": 511,
@@ -126,14 +126,14 @@ class DocumentHeadingHandler(BlockTypeHandler):
         if validation_errors:
             raise ValueError("Validation failed:\n" + "\n".join(validation_errors))
 
-        # Update document title if provided (keep title in document table)
-        if "title" in props:
+        # Update document name if provided
+        if "name" in props:
             document = db.execute(
                 select(Document).filter(Document.document_id == document_id)
             ).scalars().first()
 
             if document:
-                document.title = props["title"]
+                document.name = props["name"]
 
         # Update version fields if provided
         if "version" in props and isinstance(props["version"], dict):
@@ -157,7 +157,7 @@ class DocumentHeadingHandler(BlockTypeHandler):
     def get_editable_fields(self):
         """Return list of fields that can be edited"""
         return [
-            "title", "heat_no", "finished_size",
+            "name", "heat_no", "finished_size",
             "stock_size", "stock_weight",
             "remarks",
             "preview_status"

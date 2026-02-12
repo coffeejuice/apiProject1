@@ -4,16 +4,11 @@ import Sidebar from '../components/Sidebar'
 import BlockEditor from '../components/BlockEditor'
 
 export default function AppPage() {
-  const { fetchDocuments } = useDocumentsStore()
+  const { fetchProjects } = useDocumentsStore()
 
   useEffect(() => {
-    fetchDocuments()
-  }, [fetchDocuments])
-
-  // Initialize block components
-  useEffect(() => {
-    import('../components/blocks')
-  }, [])
+    fetchProjects()
+  }, [fetchProjects])
 
   return (
     <div className="flex h-screen bg-gray-50">

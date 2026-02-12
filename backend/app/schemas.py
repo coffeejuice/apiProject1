@@ -1,26 +1,24 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 from uuid import UUID
-from app.models.document.block import BlockType, FeedDirection
-from pydantic import RootModel
-from app.models.document.document import Role, Status
-from app.models.document.revision import OperationType
+
+from pydantic import BaseModel, EmailStr, Field
+
+from app.models.document.document import Role
+from app.models.settings import SettingScope
+
 
 # Auth schemas
-class FeedDirectionInfo(RootModel):
-    root: FeedDirection = Field(
-        description="Left: -X direction, Right: +X direction, Alternating: -X first, then reverse"
-    )
-
 class UserRegister(BaseModel):
     login: str = Field(min_length=3, max_length=50)
     email: EmailStr
     password: str = Field(min_length=8)
 
+
 class UserLogin(BaseModel):
     login: str
     password: str
+
 
 class UserResponse(BaseModel):
     user_id: int
@@ -31,33 +29,76 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class Token(BaseModel):
     access_token: str
     token_type: str
 
-# Document schemas
-class DocumentCreate(BaseModel):
-    user_id: Optional[int] = None
-    material_id: Optional[int] = None
-    title: str = Field(min_length=1, max_length=1024)
 
-class DocumentUpdate(BaseModel):
-    user_id: Optional[int] = None
+# Project schemas
+class ProjectCreate(BaseModel):
     material_id: Optional[int] = None
-    title: Optional[str] = Field(None, min_length=1, max_length=1024)
+    name: str = Field(min_length=1, max_length=1024)
+    notes: Optional[str] = None
 
-class DocumentResponse(BaseModel):
-    document_id: int
-    user_id: Optional[int]
+
+class ProjectUpdate(BaseModel):
+    material_id: Optional[int] = None
+    name: Optional[str] = Field(default=None, min_length=1, max_length=1024)
+    notes: Optional[str] = None
+
+
+class ProjectResponse(BaseModel):
+    project_id: int
+    user_id: int
     material_id: Optional[int]
-    title: str
+    name: str
+    notes: Optional[str]
     created_at: datetime
-    last_edit_at: datetime
+    updated_at: datetime
     deleted_at: Optional[datetime]
-    current_rev_number: int
 
     class Config:
         from_attributes = True
+
+
+class ProjectListResponse(BaseModel):
+    projects: List[ProjectResponse]
+    total: int
+    page: int
+    page_size: int
+
+
+# Document schemas
+class DocumentCreate(BaseModel):
+    project_id: int
+    source_document_id: Optional[int] = None
+    editor_user_id: Optional[int] = None
+    name: str = Field(min_length=1, max_length=1024)
+    notes: Optional[str] = None
+
+
+class DocumentUpdate(BaseModel):
+    editor_user_id: Optional[int] = None
+    name: Optional[str] = Field(default=None, min_length=1, max_length=1024)
+    notes: Optional[str] = None
+
+
+class DocumentResponse(BaseModel):
+    document_id: int
+    project_id: int
+    source_document_id: Optional[int]
+    editor_user_id: Optional[int]
+    first_block_id: Optional[UUID]
+    name: str
+    notes: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
 
 class DocumentListResponse(BaseModel):
     documents: List[DocumentResponse]
@@ -65,86 +106,123 @@ class DocumentListResponse(BaseModel):
     page: int
     page_size: int
 
+
+class DocumentCopyRequest(BaseModel):
+    name: Optional[str] = Field(default=None, max_length=1024)
+    notes: Optional[str] = None
+    editor_user_id: Optional[int] = None
+
+
+class DocumentLineageNode(BaseModel):
+    document_id: int
+    source_document_id: Optional[int]
+    name: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class DocumentLineageResponse(BaseModel):
+    target_document_id: int
+    ancestors: List[DocumentLineageNode]
+    descendants: List[DocumentLineageNode]
+
+
+class BlockDiffEntry(BaseModel):
+    index: int
+    change_type: str  # added | removed | modified
+    left_block_id: Optional[UUID] = None
+    right_block_id: Optional[UUID] = None
+    left_block_type_id: Optional[str] = None
+    right_block_type_id: Optional[str] = None
+    left_props: Optional[Dict[str, Any]] = None
+    right_props: Optional[Dict[str, Any]] = None
+
+
+class DocumentDiffResponse(BaseModel):
+    left_document_id: int
+    right_document_id: int
+    left_name: str
+    right_name: str
+    total_changes: int
+    changes: List[BlockDiffEntry]
+
+
 # Block schemas
 class BlockResponse(BaseModel):
     block_id: UUID
     document_id: int
-    parent_block_id: Optional[UUID]
-    order_key: str
-    block_type: BlockType
-    text: str
+    previous_block_id: Optional[UUID]
+    next_block_id: Optional[UUID]
+    block_type_id: str
     props: Dict[str, Any]
     created_at: datetime
     updated_at: datetime
+    is_system: bool
+    is_removable: bool
+    fixed_position: Optional[int]
+    editable_fields: Optional[List[str]] = None
 
     class Config:
         from_attributes = True
 
-# Operation schemas
-class InsertBlockOp(BaseModel):
-    block_id: UUID
-    parent_block_id: Optional[UUID]
-    order_key: str
-    block_type: BlockType
-    text: str = ""
+
+class BlockCreate(BaseModel):
+    block_type_id: str = Field(min_length=1, max_length=100)
     props: Dict[str, Any] = Field(default_factory=dict)
+    previous_block_id: Optional[UUID] = None
 
-class DeleteBlockOp(BaseModel):
-    block_id: UUID
 
-class MoveBlockOp(BaseModel):
-    block_id: UUID
-    parent_block_id: Optional[UUID]
-    order_key: str
-
-class UpdateTextOp(BaseModel):
-    block_id: UUID
-    text: str
-
-class UpdatePropsOp(BaseModel):
-    block_id: UUID
+class BlockUpdate(BaseModel):
     props: Dict[str, Any]
 
-class OpData(BaseModel):
-    op_type: OperationType
+
+class BlockMove(BaseModel):
+    previous_block_id: Optional[UUID] = None
+
+
+# Document edit sessions
+class EditSessionStartRequest(BaseModel):
+    editor_user_id: Optional[int] = None
+
+
+class EditSessionResponse(BaseModel):
+    session_id: UUID
+    document_id: int
+    editor_user_id: int
+    started_at: datetime
+    ended_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class EditSessionListResponse(BaseModel):
+    sessions: List[EditSessionResponse]
+    total: int
+
+
+# Operations (revision-free commit)
+class OperationPayload(BaseModel):
+    op_type: str
     data: Dict[str, Any]
 
-class CommitRequest(BaseModel):
-    device_id: UUID
-    base_rev_number: int
-    client_batch_id: UUID
-    ops: List[OpData]
 
-class ConflictInfo(BaseModel):
-    block_id: UUID
-    field: str
-    server_value: Any
-    client_value: Any
+class CommitRequest(BaseModel):
+    ops: List[OperationPayload]
+
 
 class CommitResponse(BaseModel):
     success: bool
-    new_rev_number: Optional[int]
-    conflicts: Optional[List[ConflictInfo]]
+    message: Optional[str] = None
 
-# Revision schemas
-class RevisionResponse(BaseModel):
-    revision_id: UUID
-    document_id: int
-    rev_number: int
-    created_at: datetime
-    created_by: int
 
-    class Config:
-        from_attributes = True
-
-class RevisionListResponse(BaseModel):
-    revisions: List[RevisionResponse]
-    total: int
-
-# Sharing schemas
+# Sharing schemas (kept for compatibility)
 class InviteRequest(BaseModel):
     email: str
     role: Role
+
 
 class ACLResponse(BaseModel):
     acl_id: UUID
@@ -155,6 +233,7 @@ class ACLResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class ShareLinkResponse(BaseModel):
     link_id: UUID
     token: str
@@ -164,44 +243,46 @@ class ShareLinkResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 # Search schemas
 class SearchResult(BaseModel):
     block_id: UUID
     document_id: int
     snippet: str
-    block_type: BlockType
+    block_type_id: str
+
 
 class SearchResponse(BaseModel):
     results: List[SearchResult]
     total: int
 
+
 # Import/Export schemas
 class ExportResponse(BaseModel):
     markdown: str
 
+
 class ImportRequest(BaseModel):
-    title: str
+    project_id: int
+    name: str
     markdown: str
 
-class DiffResponse(BaseModel):
-    from_rev: int
-    to_rev: int
-    changes: List[Dict[str, Any]]
 
 # Setting schemas
-from app.models.settings import SettingScope
-
 class SettingBase(BaseModel):
     key: str = Field(min_length=1, max_length=255)
     value: Any
     scope: SettingScope = SettingScope.GLOBAL
     user_id: Optional[int] = None
 
+
 class SettingCreate(SettingBase):
     pass
 
+
 class SettingUpdate(BaseModel):
     value: Any
+
 
 class SettingResponse(SettingBase):
     setting_id: int

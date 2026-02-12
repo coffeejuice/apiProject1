@@ -1,4 +1,3 @@
-// API Response Types
 export interface ApiResponse<T = unknown> {
   ok: boolean
   status: number
@@ -26,68 +25,145 @@ export interface RegisterRequest {
 }
 
 export interface User {
+  user_id: number
+  login: string
+  email: string
+}
+
+// Projects
+export interface Project {
   id: string
-  username?: string
-  login?: string
-  email?: string
+  project_id?: number
+  user_id: number
+  material_id?: number | null
+  name: string
+  notes?: string | null
+  created_at?: string
+  updated_at?: string
+  deleted_at?: string | null
+}
+
+export interface ProjectListResponse {
+  projects?: Project[]
+  items?: Project[]
+  data?: Project[]
+}
+
+export interface CreateProjectRequest {
+  name: string
+  notes?: string
+  material_id?: number
 }
 
 // Documents
 export interface Document {
-  id: string | number
-  document_id?: number  // Backend field name
-  title: string
+  id: string
+  document_id?: number
+  project_id: number
+  source_document_id?: number | null
+  editor_user_id?: number | null
+  first_block_id?: string | null
+  name: string
+  notes?: string | null
   created_at?: string
   updated_at?: string
   deleted_at?: string | null
-  rev_number?: number
-  content?: unknown
 }
 
 export interface DocumentListResponse {
-  items?: Document[]
   documents?: Document[]
+  items?: Document[]
   data?: Document[]
-  cursor?: string
-  has_more?: boolean
 }
 
 export interface CreateDocumentRequest {
-  title: string
+  project_id: number
+  name: string
+  notes?: string
+  source_document_id?: number
+  editor_user_id?: number
 }
 
-// Operations
+export interface CopyDocumentRequest {
+  name?: string
+  notes?: string
+  editor_user_id?: number
+}
+
+// Blocks
+export interface BlockData {
+  block_id: string
+  document_id: number
+  previous_block_id: string | null
+  next_block_id: string | null
+  block_type_id: string
+  props: Record<string, any>
+  is_system: boolean
+  is_removable: boolean
+  fixed_position: number | null
+  editable_fields?: string[]
+}
+
 export interface Operation {
   op_type: 'insert_block' | 'delete_block' | 'move_block' | 'update_text' | 'update_props'
   data: Record<string, unknown>
 }
 
 export interface CommitRequest {
-  device_id: string
-  base_rev_number: number
-  client_batch_id: string
   ops: Operation[]
 }
 
 export interface CommitResponse {
   success: boolean
-  new_rev_number: number
-  conflicts?: unknown[]
+  message?: string
 }
 
-// Revisions
-export interface Revision {
-  id: string
-  rev_number: number
+// Lineage + diff
+export interface LineageNode {
+  document_id: number
+  source_document_id?: number | null
+  name: string
   created_at: string
-  device_id?: string
-  operations?: Operation[]
 }
 
-export interface RevisionListResponse {
-  items?: Revision[]
-  revisions?: Revision[]
-  data?: Revision[]
+export interface DocumentLineageResponse {
+  target_document_id: number
+  ancestors: LineageNode[]
+  descendants: LineageNode[]
+}
+
+export interface BlockDiffEntry {
+  index: number
+  change_type: 'added' | 'removed' | 'modified'
+  left_block_id?: string | null
+  right_block_id?: string | null
+  left_block_type_id?: string | null
+  right_block_type_id?: string | null
+  left_props?: Record<string, unknown> | null
+  right_props?: Record<string, unknown> | null
+}
+
+export interface DocumentDiffResponse {
+  left_document_id: number
+  right_document_id: number
+  left_name: string
+  right_name: string
+  total_changes: number
+  changes: BlockDiffEntry[]
+}
+
+// Edit sessions
+export interface EditSession {
+  session_id: string
+  document_id: number
+  editor_user_id: number
+  started_at: string
+  ended_at?: string | null
+}
+
+export interface EditSessionListResponse {
+  sessions: EditSession[]
+  total: number
 }
 
 // Search
@@ -95,16 +171,10 @@ export interface SearchResult {
   block_id: string
   document_id: number
   snippet: string
-  block_type: string
+  block_type_id: string
 }
 
 export interface SearchResponse {
   results: SearchResult[]
   total: number
-}
-
-// Import/Export
-export interface ImportRequest {
-  title: string
-  content_markdown: string
 }

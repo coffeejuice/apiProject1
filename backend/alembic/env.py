@@ -15,11 +15,7 @@ load_dotenv()
 
 # Import models
 from app.database import Base
-from app.models.user import User
-from app.models.document.document import Document
-from app.models.document.block import Block
-from app.models.document.revision import Revision
-from app.models.settings import Setting
+import app.models  # noqa: F401  # Ensure all models are registered on Base.metadata
 
 # this is the Alembic Config object
 config = context.config

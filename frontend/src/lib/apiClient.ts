@@ -10,6 +10,39 @@ interface RequestOptions {
 
 type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE'
 
+const LOOPBACK_DEFAULT_BASE_URL = 'http://127.0.0.1:8001'
+const LOOPBACK_HOSTNAMES = new Set(['127.0.0.1', 'localhost', '::1'])
+const viteEnv = (
+  import.meta as { env?: Record<string, string | boolean | undefined> }
+).env
+const isDevMode = viteEnv?.DEV === true || viteEnv?.MODE === 'development'
+
+function normalizeApiBaseUrl(url: string): string {
+  if (!url) {
+    return ''
+  }
+
+  const trimmed = url.trim().replace(/\/+$/, '')
+  if (!trimmed) {
+    return ''
+  }
+
+  if (!isDevMode) {
+    return trimmed
+  }
+
+  try {
+    const parsed = new URL(trimmed)
+    if (LOOPBACK_HOSTNAMES.has(parsed.hostname.toLowerCase())) {
+      return parsed.origin
+    }
+  } catch {
+    return LOOPBACK_DEFAULT_BASE_URL
+  }
+
+  return LOOPBACK_DEFAULT_BASE_URL
+}
+
 class ApiClient {
   private baseUrl: string
   private token: string | null = null
@@ -158,17 +191,12 @@ class ApiClient {
   }
 
   private normalizeBaseUrl(url: string): string {
-    if (!url) {
-      return ''
-    }
-    return url.replace(/\/+$/, '')
+    return normalizeApiBaseUrl(url)
   }
 }
 
-const envBaseUrl = (
-  import.meta as { env?: Record<string, string | undefined> }
-).env?.VITE_API_BASE_URL
+const envBaseUrl = (viteEnv?.VITE_API_BASE_URL as string | undefined) || ''
 
-const defaultBaseUrl = envBaseUrl || 'http://127.0.0.1:8001'
+const defaultBaseUrl = normalizeApiBaseUrl(envBaseUrl || LOOPBACK_DEFAULT_BASE_URL)
 
 export const apiClient = new ApiClient(defaultBaseUrl)

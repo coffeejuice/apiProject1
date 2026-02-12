@@ -8,7 +8,8 @@ import enum
 from app.database import Base
 
 if TYPE_CHECKING:
-    from app.models.document.document import Document
+    from app.models.document.document import Document, DocumentEditSession
+    from app.models.project import Project
 
 
 class UserPriority(enum.Enum):
@@ -33,7 +34,17 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
     devices: Mapped[List["Device"]] = relationship("Device", back_populates="user")
-    document_owner: Mapped[List["Document"]] = relationship("Document", back_populates="owner", foreign_keys="[Document.user_id]")
+    project_owner: Mapped[List["Project"]] = relationship(
+        "Project", back_populates="owner", foreign_keys="[Project.user_id]"
+    )
+    document_editor: Mapped[List["Document"]] = relationship(
+        "Document", back_populates="editor", foreign_keys="[Document.editor_user_id]"
+    )
+    document_edit_sessions: Mapped[List["DocumentEditSession"]] = relationship(
+        "DocumentEditSession",
+        back_populates="editor",
+        foreign_keys="[DocumentEditSession.editor_user_id]",
+    )
 
 
 class Device(Base):

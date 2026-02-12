@@ -32,9 +32,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   error: null,
 
   setBaseUrl: (url: string) => {
-    localStorage.setItem(BASE_URL_KEY, url)
     apiClient.setBaseUrl(url)
-    set({ baseUrl: url })
+    const normalizedBaseUrl = apiClient.getBaseUrl()
+    localStorage.setItem(BASE_URL_KEY, normalizedBaseUrl)
+    set({ baseUrl: normalizedBaseUrl })
   },
 
   login: async (credentials: LoginRequest) => {
@@ -124,9 +125,14 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const savedBaseUrl = localStorage.getItem(BASE_URL_KEY)
     if (savedBaseUrl) {
       apiClient.setBaseUrl(savedBaseUrl)
-      set({ baseUrl: savedBaseUrl })
+      const normalizedBaseUrl = apiClient.getBaseUrl()
+      if (normalizedBaseUrl !== savedBaseUrl) {
+        localStorage.setItem(BASE_URL_KEY, normalizedBaseUrl)
+      }
+      set({ baseUrl: normalizedBaseUrl })
     } else {
       apiClient.setBaseUrl(DEFAULT_BASE_URL)
+      set({ baseUrl: apiClient.getBaseUrl() })
     }
 
     // Load token

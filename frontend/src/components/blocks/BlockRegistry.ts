@@ -7,10 +7,11 @@ import { ComponentType } from 'react'
 
 export interface BlockData {
   block_id: string
-  block_type: string
-  text: string
+  document_id: number
+  previous_block_id: string | null
+  next_block_id: string | null
+  block_type_id: string
   props: Record<string, any>
-  order_key: string
   is_system: boolean
   is_removable: boolean
   fixed_position: number | null

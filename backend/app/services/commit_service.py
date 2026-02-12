@@ -1,266 +1,96 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Tuple
 from uuid import UUID
-from app.models import Document, Block, Revision, LegacyOperation, OperationType, BlockType, RevisionSnapshot, Device
-from app.schemas import OpData, ConflictInfo
 
-def check_duplicate_commit(
-    db: Session,
-    device_id: UUID,
-    client_batch_id: UUID
-) -> Optional[Revision]:
-    """Check if this commit was already applied (idempotency)"""
-    return db.execute(select(Revision).filter(
-        Revision.device_id == device_id,
-        Revision.client_batch_id == client_batch_id
-    )).scalars().first()
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
-def detect_conflicts(
-    db: Session,
-    document_id: int,
-    base_rev: int,
-    ops: List[OpData]
-) -> List[ConflictInfo]:
-    """Detect conflicts between client ops and server state"""
-    conflicts = []
+from app.models.document.block import Block
+from app.models.document.block_types import get_block_type_handler
+from app.schemas import OperationPayload
+from app.services.block_service import create_block, delete_block, move_block_after, update_block_props
+from app.services.block_type_service import can_delete_block, can_reorder_block, validate_block_constraints
 
-    # Get ops since base_rev
-    server_ops = db.execute(select(LegacyOperation).join(Revision).filter(
-        Revision.document_id == document_id,
-        Revision.rev_number > base_rev
-    )).scalars().all()
-
-    # Build map of server changes
-    server_changes: Dict[UUID, List[LegacyOperation]] = {}
-    for server_op in server_ops:
-        block_id = server_op.block_id
-        if block_id not in server_changes:
-            server_changes[block_id] = []
-        server_changes[block_id].append(server_op)
-
-    # Check client ops against server changes
-    for client_op in ops:
-        block_id_str = client_op.data.get("block_id")
-        if not block_id_str:
-            continue
-        block_id = UUID(block_id_str)
-        if block_id not in server_changes:
-            continue
-
-        # Check if this is a system block - skip conflict detection for system blocks
-        # System blocks update main database tables, so operation-based conflict detection doesn't apply
-        block_obj = db.execute(select(Block).filter(Block.block_id == block_id)).scalars().first()
-        if block_obj and block_obj.is_system:
-            print(f"Skipping conflict detection for system block {block_id}")
-            continue
-
-        # Simple conflict detection: same block modified
-        for server_op in server_changes[block_id]:
-            if client_op.op_type == OperationType.update_text and server_op.op_type == OperationType.update_text:
-                conflicts.append(ConflictInfo(
-                    block_id=block_id,
-                    field="text",
-                    server_value=server_op.data.get("text"),
-                    client_value=client_op.data.get("text")
-                ))
-            elif client_op.op_type == OperationType.update_props and server_op.op_type == OperationType.update_props:
-                conflicts.append(ConflictInfo(
-                    block_id=block_id,
-                    field="props",
-                    server_value=server_op.data.get("props"),
-                    client_value=client_op.data.get("props")
-                ))
-
-    return conflicts
 
 def apply_operations(
     db: Session,
     document_id: int,
-    ops: List[OpData]
+    ops: List[OperationPayload],
 ) -> None:
-    """Apply operations to document blocks"""
-    from app.services.block_type_service import (
-        can_delete_block,
-        can_reorder_block,
-        validate_block_constraints,
-        get_block_type_handler
-    )
-
     for op in ops:
-        if op.op_type == OperationType.insert_block:
-            block_type = BlockType[op.data["block_type"]]
+        op_type = op.op_type
+        data = op.data
 
-            # Validate constraints (e.g., single instance check)
-            if not validate_block_constraints(db, document_id, block_type):
-                raise ValueError(f"Cannot create block of type {block_type.value}: constraints violated")
+        if op_type == "insert_block":
+            block_type_id = str(data["block_type_id"])
+            if not validate_block_constraints(db, document_id, block_type_id):
+                raise ValueError(f"Cannot create block of type {block_type_id}: constraints violated")
 
-            block = Block(
-                block_id=UUID(op.data["block_id"]),
+            previous_block_id = data.get("previous_block_id")
+            parsed_prev = UUID(previous_block_id) if previous_block_id else None
+            block_id = UUID(data["block_id"]) if data.get("block_id") else None
+
+            create_block(
+                db=db,
                 document_id=document_id,
-                parent_block_id=UUID(op.data["parent_block_id"]) if op.data.get("parent_block_id") else None,
-                order_key=op.data["order_key"],
-                block_type=block_type,
-                text=op.data.get("text", ""),
-                props=op.data.get("props", {})
+                block_type_id=block_type_id,
+                props=data.get("props", {}),
+                previous_block_id=parsed_prev,
+                block_id=block_id,
             )
-            db.add(block)
 
-        elif op.op_type == OperationType.delete_block:
-            block_id = UUID(op.data["block_id"])
-
-            # Check if block can be deleted
+        elif op_type == "delete_block":
+            block_id = UUID(str(data["block_id"]))
             if not can_delete_block(db, block_id):
                 raise ValueError(f"Cannot delete block {block_id}: block is not removable")
+            if not delete_block(db, document_id, block_id):
+                raise ValueError(f"Block {block_id} not found")
 
-            block_obj = db.execute(select(Block).filter(Block.block_id == block_id)).scalars().first()
-            if block_obj:
-                # Call handler's on_delete hook
-                handler = get_block_type_handler(block_obj.block_type.value)
-                if handler:
-                    handler.on_delete(db, block_id, block_obj.document_id)
-
-                db.delete(block_obj)
-
-        elif op.op_type == OperationType.move_block:
-            block_id = UUID(op.data["block_id"])
-            new_order_key = op.data["order_key"]
-
-            # Check if block can be reordered
-            if not can_reorder_block(db, block_id, new_order_key):
+        elif op_type == "move_block":
+            block_id = UUID(str(data["block_id"]))
+            if not can_reorder_block(db, block_id):
                 raise ValueError(f"Cannot reorder block {block_id}: block has fixed position")
+            previous_block_id = data.get("previous_block_id")
+            parsed_prev = UUID(str(previous_block_id)) if previous_block_id else None
+            moved = move_block_after(db, document_id, block_id, parsed_prev)
+            if not moved:
+                raise ValueError(f"Block {block_id} not found")
 
-            block_obj = db.execute(select(Block).filter(Block.block_id == block_id)).scalars().first()
-            if block_obj:
-                block_obj.parent_block_id = UUID(op.data["parent_block_id"]) if op.data.get("parent_block_id") else None
-                block_obj.order_key = new_order_key
+        elif op_type == "update_props":
+            block_id = UUID(str(data["block_id"]))
+            block = update_block_props(db, block_id, data.get("props", {}))
+            if not block:
+                raise ValueError(f"Block {block_id} not found")
 
-        elif op.op_type == OperationType.update_text:
-            block_obj = db.execute(select(Block).filter(Block.block_id == UUID(op.data["block_id"]))).scalars().first()
-            if block_obj:
-                block_obj.text = op.data["text"]
+            handler = get_block_type_handler(block.block_type_id)
+            if handler:
+                handler.on_update(db, block.block_id, block.document_id, block.props)
 
-        elif op.op_type == OperationType.update_props:
-            block_id = UUID(op.data["block_id"])
-            block_obj = db.execute(select(Block).filter(Block.block_id == block_id)).scalars().first()
-            if block_obj:
-                block_obj.props = op.data["props"]
+        elif op_type == "update_text":
+            block_id = UUID(str(data["block_id"]))
+            block = db.execute(select(Block).filter(Block.block_id == block_id)).scalars().first()
+            if not block:
+                raise ValueError(f"Block {block_id} not found")
+            props = dict(block.props or {})
+            props["text"] = data.get("text", "")
+            block.props = props
 
-                # Call handler's on_update hook
-                handler = get_block_type_handler(block_obj.block_type.value)
-                if handler:
-                    try:
-                        handler.on_update(db, block_id, block_obj.document_id, block_obj.props)
-                    except Exception as e:
-                        print(f"Error in block handler on_update for {block_obj.block_type.value}: {e}")
-                        import traceback
-                        traceback.print_exc()
-                        raise ValueError(f"Failed to update {block_obj.block_type.value} block: {str(e)}")
+            handler = get_block_type_handler(block.block_type_id)
+            if handler:
+                handler.on_update(db, block.block_id, block.document_id, block.props)
+
+        else:
+            raise ValueError(f"Unsupported operation type: {op_type}")
+
 
 def commit_operations(
     db: Session,
     document_id: int,
-    device_id: UUID,
-    client_batch_id: UUID,
-    base_rev_number: int,
-    ops: List[OpData],
-    user_id: int
-) -> Tuple[bool, Optional[int], Optional[List[ConflictInfo]]]:
-    """
-    Commit operations to document.
-    Returns (success, new_rev_number, conflicts)
-    """
-
-    # Check for duplicate commit
-    existing = check_duplicate_commit(db, device_id, client_batch_id)
-    if existing:
-        return True, existing.rev_number, None
-
-    # Ensure device exists (auto-register if not)
-    device = db.execute(select(Device).filter(Device.device_id == device_id)).scalars().first()
-    if not device:
-        device = Device(
-            device_id=device_id,
-            user_id=user_id,
-            device_name="Auto-registered device"
-        )
-        db.add(device)
-        db.flush()
-
-    # Get document
-    doc = db.execute(select(Document).filter(Document.document_id == document_id)).scalars().first()
-    if not doc:
-        return False, None, None
-
-    # Check conflicts
-    current_rev = doc.current_rev_number or 0
-    if base_rev_number < current_rev:
-        conflicts = detect_conflicts(db, document_id, base_rev_number, ops)
-        if conflicts:
-            return False, None, conflicts
-
-    # Apply operations
+    ops: List[OperationPayload],
+) -> Tuple[bool, str]:
     try:
         apply_operations(db, document_id, ops)
-
-        # Create new revision
-        new_rev_number = current_rev + 1
-        revision = Revision(
-            document_id=document_id,
-            rev_number=new_rev_number,
-            device_id=device_id,
-            client_batch_id=client_batch_id,
-            created_by=user_id
-        )
-        db.add(revision)
-        db.flush()
-
-        # Store operations
-        for op in ops:
-            operation = LegacyOperation(
-                revision_id=revision.revision_id,
-                op_type=op.op_type,
-                block_id=UUID(op.data["block_id"]),
-                data=op.data
-            )
-            db.add(operation)
-
-        # Update document rev number
-        doc.current_rev_number = new_rev_number
-
         db.commit()
-        return True, new_rev_number, None
-
-    except Exception as e:
-        print(f"Error in commit_operations: {e}")
-        import traceback
-        traceback.print_exc()
+        return True, "Operations applied"
+    except Exception as exc:
         db.rollback()
-        return False, None, None
-
-def create_snapshot(db: Session, revision_id: UUID) -> None:
-    """Create a snapshot of all blocks for a revision"""
-    revision = db.execute(select(Revision).filter(Revision.revision_id == revision_id)).scalars().first()
-    if not revision:
-        return
-
-    blocks = db.execute(select(Block).filter(Block.document_id == revision.document_id)).scalars().all()
-    blocks_data = [
-        {
-            "block_id": str(block.block_id),
-            "parent_block_id": str(block.parent_block_id) if block.parent_block_id else None,
-            "order_key": block.order_key,
-            "block_type": block.block_type.value,
-            "text": block.text,
-            "props": block.props
-        }
-        for block in blocks
-    ]
-
-    snapshot = RevisionSnapshot(
-        revision_id=revision_id,
-        blocks_data=blocks_data
-    )
-    db.add(snapshot)
-    db.commit()
+        return False, str(exc)

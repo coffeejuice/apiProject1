@@ -34,7 +34,7 @@ Backend:
 Note: Run setup scripts from backend so backend/.env is loaded and app imports resolve.
 
 Frontend:
-1) Install Node.js 18+.
+1) Install latest Node.js and Vite
 2) cd frontend
 3) npm install
 4) npm run dev  # http://localhost:5173

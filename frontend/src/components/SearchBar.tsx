@@ -54,7 +54,7 @@ export default function SearchBar() {
 
   const getDocumentTitle = (documentId: number): string => {
     const doc = documents.find((d) => d.id === String(documentId))
-    return doc?.title || `Document #${documentId}`
+    return doc?.name || `Document #${documentId}`
   }
 
   return (
@@ -103,7 +103,7 @@ export default function SearchBar() {
                 {result.snippet}
               </div>
               <div className="text-xs text-gray-400 mt-1">
-                {result.block_type}
+                {result.block_type_id}
               </div>
             </button>
           ))}

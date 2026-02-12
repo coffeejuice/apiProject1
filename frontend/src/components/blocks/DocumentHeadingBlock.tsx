@@ -37,7 +37,7 @@ export default function DocumentHeadingBlock({
 
   // Field length limits (must match backend validation) - all fields are strings
   const fieldLimits: Record<string, number> = {
-    title: 1024,
+    name: 1024,
     heat_no: 511,
     finished_size: 511,
     stock_size: 511,
@@ -100,18 +100,15 @@ export default function DocumentHeadingBlock({
           {isEditing && !isReadOnly ? (
             <input
               type="text"
-              value={editedData.title ?? block.props.title ?? ''}
-              onChange={(e) => handleFieldChange('title', e.target.value)}
+              value={editedData.name ?? block.props.name ?? ''}
+              onChange={(e) => handleFieldChange('name', e.target.value)}
               className="w-full text-center px-2 py-1 border border-gray-300 rounded"
               placeholder="Document Title"
             />
           ) : (
-            block.props.title || 'Untitled Document'
+            block.props.name || 'Untitled Document'
           )}
         </h1>
-        <div className="text-sm text-gray-500 mt-2">
-          Revision: {block.props.current_rev_number ?? 0}
-        </div>
       </div>
 
       {/* Edit/Save Controls */}
@@ -197,8 +194,8 @@ export default function DocumentHeadingBlock({
             <td className="py-2 px-4 font-semibold bg-gray-50">Last Edited:</td>
             <td className="py-2 px-4">
               <span className="text-gray-600 text-sm">
-                {block.props.last_edit_at
-                  ? new Date(block.props.last_edit_at).toLocaleString()
+                {block.props.updated_at
+                  ? new Date(block.props.updated_at as string).toLocaleString()
                   : 'N/A'}
               </span>
             </td>

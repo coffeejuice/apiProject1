@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, document, blocks, revisions, sharing, search, import_export, migration
-from app.routers.sharing import share_router
+from app.routers import auth, document, blocks, search, projects
 from app.routers.search import document_search_router
+from app.routers import settings
 
 app = FastAPI(
-    title="Notion-style Block Editor API",
-    description="Backend API for a Notion-style Markdown block editor with versioning and offline support",
-    version="1.0.0"
+    title="Techno-Notion API",
+    description="Projects, inheritable documents, and linked-list block editing API",
+    version="2.0.0",
 )
 
 # CORS middleware
@@ -21,24 +21,19 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router)
+app.include_router(projects.router)
 app.include_router(document.router)
 app.include_router(blocks.router)
-app.include_router(revisions.router)
-app.include_router(sharing.router)
-app.include_router(share_router)
 app.include_router(search.router)
 app.include_router(document_search_router)
-app.include_router(import_export.router)
-from app.routers import settings
 app.include_router(settings.router)
-app.include_router(migration.router)
 
 @app.get("/")
 def root():
     return {
-        "message": "Notion-style Block Editor API",
+        "message": "Techno-Notion API",
         "docs": "/docs",
-        "version": "1.0.0"
+        "version": "2.0.0",
     }
 
 @app.get("/health")
