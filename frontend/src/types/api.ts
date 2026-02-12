@@ -102,6 +102,7 @@ export interface BlockData {
   is_removable: boolean
   fixed_position: number | null
   editable_fields?: string[]
+  field_limits?: Record<string, number>
 }
 
 export interface Operation {

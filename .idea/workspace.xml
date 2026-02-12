@@ -8,58 +8,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Add creation of Postgres users and passwords.">
-      <change beforePath="$PROJECT_DIR$/.aiassistant/rules/02_PROJECT_SETUP.md" beforeDir="false" afterPath="$PROJECT_DIR$/.aiassistant/rules/02_PROJECT_SETUP.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/apiProject1.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/apiProject1.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.codex/context/DOCUMENT_BLOCK_ARCHITECTURE.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/DOCUMENT_BLOCK_ARCHITECTURE.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/alembic/env.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/env.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/bite.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block_types/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/base.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/models/document/block_types/document_heading.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/document_heading.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/document.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/document.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/operation.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/post.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/revision.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/server_pre_main.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/user.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/blocks.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/blocks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/document.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/document.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/import_export.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/migration.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/revisions.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/sharing.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/block_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/block_service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/services/block_type_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/block_type_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/commit_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/commit_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/import_export_service.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/search_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/search_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/migrations/002_add_system_blocks.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/migrations/002_add_system_blocks_rollback.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/migrations/002_add_system_blocks_safe.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/run.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/BlockEditor.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/BlockEditor.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Editor.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/EditorToolbar.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/ImportExport.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/RevisionHistory.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/SearchBar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/SearchBar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Sidebar.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/BlockRegistry.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/blocks/BlockRegistry.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/DocumentHeadingBlock.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/blocks/DocumentHeadingBlock.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/lib/apiClient.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/apiClient.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/lib/blockManager.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/AppPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AppPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/stores/useDocumentsStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/stores/useDocumentsStore.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/stores/useEditorStore.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/stores/useSessionStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/stores/useSessionStore.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/InputWorkpieceBlock.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/blocks/InputWorkpieceBlock.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/types/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/types/api.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vite.config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -278,7 +237,7 @@
       <workItem from="1770697286222" duration="480000" />
       <workItem from="1770699914622" duration="11916000" />
       <workItem from="1770781591338" duration="58000" />
-      <workItem from="1770781669268" duration="8661000" />
+      <workItem from="1770781669268" duration="12891000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -400,7 +359,15 @@
       <option name="project" value="LOCAL" />
       <updated>1770731947701</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="Change project architectrure to Project -&gt; Document -&gt; Block flow">
+      <option name="closed" value="true" />
+      <created>1770875139561</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1770875139561</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
@@ -446,7 +413,8 @@
     <MESSAGE value="Add two blocks: Process Heading and Input Workpiece" />
     <MESSAGE value="Move AI Context to .aiassistant\rules. Fix Node.js erros" />
     <MESSAGE value="Add creation of Postgres users and passwords." />
-    <option name="LAST_COMMIT_MESSAGE" value="Add creation of Postgres users and passwords." />
+    <MESSAGE value="Change project architectrure to Project -&gt; Document -&gt; Block flow" />
+    <option name="LAST_COMMIT_MESSAGE" value="Change project architectrure to Project -&gt; Document -&gt; Block flow" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/apiProject1$Backend_Server.coverage" NAME="Backend Server Coverage Results" MODIFIED="1770607464931" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:\Users\alext\ProgrammingProjects\apiProject1\backend" />

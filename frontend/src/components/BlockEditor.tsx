@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDocumentsStore } from '../stores/useDocumentsStore'
 import { apiClient } from '../lib/apiClient'
+import { applyFieldLengthLimits } from '../lib/blockFieldLimits'
 import { getBlockComponent, BlockData } from './blocks'
 import type {
   DocumentLineageResponse,
@@ -10,17 +11,79 @@ import type {
 } from '../types/api'
 
 interface EditorSnapshot {
-  name: string
   blocks: BlockData[]
 }
 
+function cloneProps(props: Record<string, any>): Record<string, any> {
+  return JSON.parse(JSON.stringify(props || {}))
+}
+
+function cloneBlocks(blocks: BlockData[]): BlockData[] {
+  return blocks.map((block) => ({
+    ...block,
+    props: cloneProps((block.props || {}) as Record<string, any>),
+  }))
+}
+
+function deepEqual(left: unknown, right: unknown): boolean {
+  if (left === right) {
+    return true
+  }
+
+  if (left === null || right === null || left === undefined || right === undefined) {
+    return false
+  }
+
+  if (typeof left !== typeof right) {
+    return false
+  }
+
+  if (Array.isArray(left) && Array.isArray(right)) {
+    if (left.length !== right.length) {
+      return false
+    }
+    for (let index = 0; index < left.length; index += 1) {
+      if (!deepEqual(left[index], right[index])) {
+        return false
+      }
+    }
+    return true
+  }
+
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return false
+  }
+
+  if (typeof left === 'object' && typeof right === 'object') {
+    const leftRecord = left as Record<string, unknown>
+    const rightRecord = right as Record<string, unknown>
+    const leftKeys = Object.keys(leftRecord)
+    const rightKeys = Object.keys(rightRecord)
+
+    if (leftKeys.length !== rightKeys.length) {
+      return false
+    }
+
+    for (const key of leftKeys) {
+      if (!Object.prototype.hasOwnProperty.call(rightRecord, key)) {
+        return false
+      }
+      if (!deepEqual(leftRecord[key], rightRecord[key])) {
+        return false
+      }
+    }
+    return true
+  }
+
+  return false
+}
+
 export default function BlockEditor() {
-  const [blocks, setBlocks] = useState<BlockData[]>([])
+  const [savedBlocks, setSavedBlocks] = useState<BlockData[]>([])
+  const [draftBlocks, setDraftBlocks] = useState<BlockData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [saveError, setSaveError] = useState<string | null>(null)
-  const [name, setName] = useState('')
-  const [nameSaveTimeout, setNameSaveTimeout] = useState<ReturnType<typeof setTimeout> | null>(null)
   const [lineage, setLineage] = useState<DocumentLineageResponse | null>(null)
   const [showLineage, setShowLineage] = useState(false)
   const [isLineageLoading, setIsLineageLoading] = useState(false)
@@ -30,48 +93,100 @@ export default function BlockEditor() {
   const [undoStack, setUndoStack] = useState<EditorSnapshot[]>([])
   const [redoStack, setRedoStack] = useState<EditorSnapshot[]>([])
   const activeSessionIdRef = useRef<string | null>(null)
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
-  const { currentDoc, updateLocalDoc, updateDocument } = useDocumentsStore()
+  const { currentDoc, fetchDocument } = useDocumentsStore()
 
   const cloneSnapshot = (): EditorSnapshot => ({
-    name,
-    blocks: blocks.map((block) => ({
-      ...block,
-      props: { ...(block.props || {}) },
-    })),
+    blocks: cloneBlocks(draftBlocks),
   })
 
+  const savedBlocksById = useMemo(
+    () => new Map(savedBlocks.map((block) => [block.block_id, block])),
+    [savedBlocks]
+  )
+
+  const changedBlocks = useMemo(() => {
+    return draftBlocks.filter((block) => {
+      const savedBlock = savedBlocksById.get(block.block_id)
+      if (!savedBlock) {
+        return true
+      }
+      return !deepEqual(savedBlock.props, block.props)
+    })
+  }, [draftBlocks, savedBlocksById])
+
+  const hasUnsavedChanges = changedBlocks.length > 0
+
+  const draftDocumentName = useMemo(() => {
+    const headingBlock = draftBlocks.find((block) => block.block_type_id === 'document_heading')
+    const headingName = headingBlock?.props?.name
+    if (typeof headingName === 'string' && headingName.trim().length > 0) {
+      return headingName
+    }
+    return currentDoc?.name || ''
+  }, [draftBlocks, currentDoc?.name])
+
+  const loadEditorState = async (
+    docId: string,
+    refreshDocument: boolean,
+    options?: { showLoading?: boolean; preserveScroll?: boolean }
+  ) => {
+    const showLoading = options?.showLoading ?? true
+    const preserveScroll = options?.preserveScroll ?? false
+    const scrollTopBefore = preserveScroll ? scrollContainerRef.current?.scrollTop ?? null : null
+
+    if (showLoading) {
+      setIsLoading(true)
+    }
+
+    try {
+      const [response] = await Promise.all([
+        apiClient.get<BlockData[]>(`/documents/${docId}/blocks/root`),
+        refreshDocument ? fetchDocument(docId) : Promise.resolve(null),
+      ])
+
+      const loadedBlocks = response.ok && response.data ? cloneBlocks(response.data) : []
+      setSavedBlocks(loadedBlocks)
+      setDraftBlocks(cloneBlocks(loadedBlocks))
+      setUndoStack([])
+      setRedoStack([])
+
+      if (scrollTopBefore !== null) {
+        requestAnimationFrame(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = scrollTopBefore
+          }
+        })
+      }
+
+      return
+    } finally {
+      if (showLoading) {
+        setIsLoading(false)
+      }
+    }
+  }
+
   useEffect(() => {
-    if (!currentDoc) {
-      setBlocks([])
-      setName('')
+    if (!currentDoc?.id) {
+      setSavedBlocks([])
+      setDraftBlocks([])
+      setSaveStatus('idle')
+      setSaveError(null)
+      setShowLineage(false)
+      setShowSessions(false)
+      setLineage(null)
+      setSessions([])
+      activeSessionIdRef.current = null
       setUndoStack([])
       setRedoStack([])
       setIsLoading(false)
       return
     }
 
-    const loadBlocks = async () => {
-      setIsLoading(true)
-      try {
-        const response = await apiClient.get<BlockData[]>(
-          `/documents/${currentDoc.id}/blocks/root`
-        )
-        if (response.ok && response.data) {
-          setBlocks(response.data)
-        } else {
-          setBlocks([])
-        }
-        setName(currentDoc.name || '')
-        setUndoStack([])
-        setRedoStack([])
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadBlocks()
-  }, [currentDoc])
+    void loadEditorState(String(currentDoc.id), false)
+  }, [currentDoc?.id])
 
   useEffect(() => {
     if (!currentDoc) {
@@ -104,13 +219,60 @@ export default function BlockEditor() {
     }
   }, [currentDoc?.id])
 
-  const applySnapshot = async (snapshot: EditorSnapshot) => {
-    if (!currentDoc) return
-    setName(snapshot.name)
-    setBlocks(snapshot.blocks)
-    updateLocalDoc(String(currentDoc.id), { name: snapshot.name })
+  const handleUndo = () => {
+    if (undoStack.length === 0) return
+    const target = undoStack[undoStack.length - 1]
+    const current = cloneSnapshot()
+    setUndoStack((prev) => prev.slice(0, -1))
+    setRedoStack((prev) => [...prev, current])
+    setDraftBlocks(cloneBlocks(target.blocks))
+  }
 
-    const ops: Operation[] = snapshot.blocks.map((block) => ({
+  const handleRedo = () => {
+    if (redoStack.length === 0) return
+    const target = redoStack[redoStack.length - 1]
+    const current = cloneSnapshot()
+    setRedoStack((prev) => prev.slice(0, -1))
+    setUndoStack((prev) => [...prev, current])
+    setDraftBlocks(cloneBlocks(target.blocks))
+  }
+
+  const handleBlockUpdate = (blockId: string, props: Record<string, any>) => {
+    const currentBlock = draftBlocks.find((block) => block.block_id === blockId)
+    if (!currentBlock) {
+      return
+    }
+
+    const constrainedProps = applyFieldLengthLimits(props, currentBlock.field_limits)
+
+    if (deepEqual(currentBlock.props, constrainedProps)) {
+      return
+    }
+
+    const before = cloneSnapshot()
+
+    setDraftBlocks((prev) =>
+      prev.map((block) =>
+        block.block_id === blockId
+          ? { ...block, props: cloneProps(constrainedProps) }
+          : block
+      )
+    )
+    setUndoStack((prev) => [...prev, before])
+    setRedoStack([])
+    setSaveStatus('idle')
+    setSaveError(null)
+  }
+
+  const handleSaveChanges = async () => {
+    if (!currentDoc || changedBlocks.length === 0) {
+      return
+    }
+
+    setSaveStatus('saving')
+    setSaveError(null)
+
+    const ops: Operation[] = changedBlocks.map((block) => ({
       op_type: 'update_props',
       data: {
         block_id: block.block_id,
@@ -118,88 +280,38 @@ export default function BlockEditor() {
       },
     }))
 
-    await updateDocument(String(currentDoc.id), { name: snapshot.name })
-    if (ops.length > 0) {
-      await apiClient.post(`/documents/${currentDoc.id}/commit`, {
-        body: { ops },
-      })
-    }
-  }
-
-  const handleUndo = async () => {
-    if (undoStack.length === 0) return
-    const target = undoStack[undoStack.length - 1]
-    const current = cloneSnapshot()
-    setUndoStack((prev) => prev.slice(0, -1))
-    setRedoStack((prev) => [...prev, current])
-    await applySnapshot(target)
-  }
-
-  const handleRedo = async () => {
-    if (redoStack.length === 0) return
-    const target = redoStack[redoStack.length - 1]
-    const current = cloneSnapshot()
-    setRedoStack((prev) => prev.slice(0, -1))
-    setUndoStack((prev) => [...prev, current])
-    await applySnapshot(target)
-  }
-
-  const handleBlockUpdate = async (blockId: string, props: Record<string, unknown>) => {
-    if (!currentDoc) return
-    const before = cloneSnapshot()
-    setSaveStatus('saving')
-    setSaveError(null)
-
-    const operation: Operation = {
-      op_type: 'update_props',
-      data: {
-        block_id: blockId,
-        props,
-      },
-    }
-
     const response = await apiClient.post<{ success: boolean; message?: string }>(
       `/documents/${currentDoc.id}/commit`,
       {
-        body: {
-          ops: [operation],
-        },
+        body: { ops },
       }
     )
 
-    if (response.ok && response.data?.success) {
-      setBlocks((prev) =>
-        prev.map((block) => (block.block_id === blockId ? { ...block, props } : block))
-      )
-      setUndoStack((prev) => [...prev, before])
-      setRedoStack([])
-      setSaveStatus('saved')
-      setTimeout(() => setSaveStatus('idle'), 1500)
+    if (!response.ok || !response.data?.success) {
+      setSaveStatus('error')
+      setSaveError(response.errorMessage || response.data?.message || 'Failed to save changes')
       return
     }
 
-    setSaveStatus('error')
-    setSaveError(response.errorMessage || response.data?.message || 'Failed to save block')
+    await loadEditorState(String(currentDoc.id), true, {
+      showLoading: false,
+      preserveScroll: true,
+    })
+    setSaveStatus('saved')
+    setTimeout(() => setSaveStatus('idle'), 1500)
   }
 
-  const handleNameChange = (newName: string) => {
-    const before = cloneSnapshot()
-    setName(newName)
-    if (!currentDoc) return
-
-    updateLocalDoc(String(currentDoc.id), { name: newName })
-    setUndoStack((prev) => [...prev, before])
-    setRedoStack([])
-    if (nameSaveTimeout) {
-      clearTimeout(nameSaveTimeout)
+  const handleCancelChanges = async () => {
+    if (!currentDoc || !hasUnsavedChanges) {
+      return
     }
 
-    const timeout = setTimeout(async () => {
-      await updateDocument(String(currentDoc.id), { name: newName })
-      setNameSaveTimeout(null)
-    }, 700)
-
-    setNameSaveTimeout(timeout)
+    setSaveError(null)
+    await loadEditorState(String(currentDoc.id), true, {
+      showLoading: false,
+      preserveScroll: true,
+    })
+    setSaveStatus('idle')
   }
 
   const handleShowLineage = async () => {
@@ -254,15 +366,29 @@ export default function BlockEditor() {
     <div className="flex flex-col h-full">
       <div className="border-b border-gray-200 bg-white p-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-2 gap-4">
-          <input
-            type="text"
-            value={name}
-            onChange={(event) => handleNameChange(event.target.value)}
-            className="text-2xl font-bold border-none outline-none flex-1"
-            placeholder="Untitled Document"
-          />
+          <div className="text-2xl font-bold flex-1 truncate">
+            {draftDocumentName || 'Untitled Document'}
+          </div>
 
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleSaveChanges}
+              disabled={!hasUnsavedChanges || saveStatus === 'saving'}
+              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              Save
+            </button>
+
+            <button
+              type="button"
+              onClick={handleCancelChanges}
+              disabled={!hasUnsavedChanges || saveStatus === 'saving'}
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+
             <button
               type="button"
               onClick={handleUndo}
@@ -307,7 +433,11 @@ export default function BlockEditor() {
                   Error saving
                 </span>
               )}
-              {saveStatus === 'idle' && <span className="text-gray-400">-</span>}
+              {saveStatus === 'idle' && (
+                <span className={hasUnsavedChanges ? 'text-amber-600' : 'text-gray-400'}>
+                  {hasUnsavedChanges ? `${changedBlocks.length} unsaved` : '-'}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -323,13 +453,14 @@ export default function BlockEditor() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-gray-100">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto bg-gray-100">
         <div className="max-w-4xl mx-auto py-8 px-4 space-y-4">
-          {blocks.length === 0 ? (
+          {draftBlocks.length === 0 ? (
             <div className="text-center text-gray-500 py-12">No blocks found in this document.</div>
           ) : (
-            blocks.map((block) => {
+            draftBlocks.map((block) => {
               const BlockComponent = getBlockComponent(block.block_type_id)
+              const baselineProps = savedBlocksById.get(block.block_id)?.props || {}
 
               if (!BlockComponent) {
                 return (
@@ -348,6 +479,7 @@ export default function BlockEditor() {
                 <BlockComponent
                   key={block.block_id}
                   block={block}
+                  baselineProps={baselineProps}
                   onUpdate={handleBlockUpdate}
                   isReadOnly={false}
                 />

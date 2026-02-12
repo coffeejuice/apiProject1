@@ -14,6 +14,14 @@ class DocumentHeadingHandler(BlockTypeHandler):
     mimicking an industrial document report title page.
     Data is stored in the 'documents' and 'document_versions' tables.
     """
+    FIELD_LIMITS = {
+        "name": 1024,
+        "heat_no": 511,
+        "finished_size": 511,
+        "stock_size": 511,
+        "stock_weight": 511,
+        "remarks": 4095,
+    }
 
     @property
     def block_type_name(self) -> str:
@@ -104,18 +112,8 @@ class DocumentHeadingHandler(BlockTypeHandler):
         """
         from app.models.document.document import Document, DocumentVersion
 
-        # Validate field lengths before updating (all fields are strings)
-        field_limits = {
-            "name": 1024,
-            "heat_no": 511,
-            "finished_size": 511,
-            "stock_size": 511,
-            "stock_weight": 511,
-            "remarks": 4095,
-        }
-
         validation_errors = []
-        for field, max_len in field_limits.items():
+        for field, max_len in self.FIELD_LIMITS.items():
             if field in props and props[field] is not None:
                 value = str(props[field])
                 if len(value) > max_len:
@@ -162,3 +160,6 @@ class DocumentHeadingHandler(BlockTypeHandler):
             "remarks",
             "preview_status"
         ]
+
+    def get_field_limits(self) -> Dict[str, int]:
+        return dict(self.FIELD_LIMITS)

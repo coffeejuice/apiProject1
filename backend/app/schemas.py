@@ -163,6 +163,7 @@ class BlockResponse(BaseModel):
     is_removable: bool
     fixed_position: Optional[int]
     editable_fields: Optional[List[str]] = None
+    field_limits: Optional[Dict[str, int]] = None
 
     class Config:
         from_attributes = True

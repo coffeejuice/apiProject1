@@ -3,182 +3,151 @@
  * Displays document metadata in a table format mimicking a title page
  */
 
-import { useState, useEffect } from 'react'
 import type { BlockComponentProps } from './BlockRegistry'
+import { getFieldMaxLength } from '../../lib/blockFieldLimits'
+
+function normalizeComparable(value: unknown): string {
+  return value === null || value === undefined ? '' : String(value)
+}
 
 export default function DocumentHeadingBlock({
   block,
+  baselineProps,
   onUpdate,
   isReadOnly = false,
 }: BlockComponentProps) {
-  const [editedData, setEditedData] = useState<Record<string, any>>(block.props)
-  const [isEditing, setIsEditing] = useState(false)
-
-  useEffect(() => {
-    setEditedData(block.props)
-  }, [block.props])
-
-  const handleFieldChange = (field: string, value: any) => {
-    setEditedData((prev) => ({
-      ...prev,
+  const handleFieldChange = (field: string, value: unknown) => {
+    onUpdate(block.block_id, {
+      ...(block.props || {}),
       [field]: value,
-    }))
+    })
   }
 
-  const handleSave = () => {
-    onUpdate(block.block_id, editedData)
-    setIsEditing(false)
+  const isFieldDirty = (field: string) =>
+    normalizeComparable(block.props?.[field]) !== normalizeComparable(baselineProps?.[field])
+
+  const resetField = (field: string) => {
+    const fallbackValue = field === 'name' ? 'Untitled Document' : ''
+    handleFieldChange(field, baselineProps?.[field] ?? fallbackValue)
   }
 
-  const handleCancel = () => {
-    setEditedData(block.props)
-    setIsEditing(false)
+  const renderResetButton = (field: string) => {
+    if (isReadOnly || !isFieldDirty(field)) {
+      return null
+    }
+
+    return (
+      <button
+        type="button"
+        onClick={() => resetField(field)}
+        className="h-8 w-8 flex-shrink-0 border border-red-300 rounded text-red-700 bg-red-50 hover:bg-red-100"
+        title="Revert this parameter"
+      >
+        ↺
+      </button>
+    )
   }
 
-  // Field length limits (must match backend validation) - all fields are strings
-  const fieldLimits: Record<string, number> = {
-    name: 1024,
-    heat_no: 511,
-    finished_size: 511,
-    stock_size: 511,
-    stock_weight: 511,
-    remarks: 4095,
-  }
+  const renderTextField = (field: string, placeholder = '') => {
+    const currentValue = normalizeComparable(block.props?.[field])
+    const maxLength = getFieldMaxLength(block, field)
+    const isDirty = isFieldDirty(field)
 
-  const renderField = (field: string, value: any) => {
-    if (isEditing && !isReadOnly) {
-      const currentValue = editedData[field] ?? value ?? ''
-      const maxLength = fieldLimits[field]
-      const isOverLimit = maxLength && currentValue.length > maxLength
+    if (isReadOnly) {
+      return <span className="text-gray-900">{currentValue}</span>
+    }
 
-      return (
-        <div className="w-full">
+    return (
+      <div className="w-full">
+        <div className="flex items-start gap-2">
           <input
             type="text"
             value={currentValue}
-            onChange={(e) => handleFieldChange(field, e.target.value)}
+            onChange={(event) => handleFieldChange(field, event.target.value)}
             className={`w-full px-2 py-1 border rounded ${
-              isOverLimit ? 'border-red-500 bg-red-50' : 'border-gray-300'
+              isDirty ? 'border-red-300 bg-red-50' : 'border-gray-300'
             }`}
             maxLength={maxLength || undefined}
+            placeholder={placeholder}
           />
-          {maxLength && (
-            <div
-              className={`text-xs mt-1 ${
-                isOverLimit ? 'text-red-600' : 'text-gray-500'
-              }`}
-            >
-              {currentValue.length} / {maxLength} characters
-            </div>
-          )}
+          {renderResetButton(field)}
         </div>
-      )
-    }
-    return <span className="text-gray-900">{value ?? ''}</span>
+      </div>
+    )
   }
 
-  const renderNumberField = (field: string, value: any) => {
-    if (isEditing && !isReadOnly) {
-      return (
-        <input
-          type="number"
-          step="0.01"
-          value={editedData[field] ?? value ?? 0}
-          onChange={(e) => handleFieldChange(field, parseFloat(e.target.value) || 0)}
-          className="w-full px-2 py-1 border border-gray-300 rounded"
-        />
-      )
+  const renderTextareaField = (field: string, rows: number) => {
+    const currentValue = normalizeComparable(block.props?.[field])
+    const maxLength = getFieldMaxLength(block, field)
+    const isDirty = isFieldDirty(field)
+
+    if (isReadOnly) {
+      return <span className="text-gray-900 whitespace-pre-wrap">{currentValue}</span>
     }
-    return <span className="text-gray-900">{value ?? 0}</span>
+
+    return (
+      <div className="w-full">
+        <div className="flex items-start gap-2">
+          <textarea
+            value={currentValue}
+            onChange={(event) => handleFieldChange(field, event.target.value)}
+            className={`w-full px-2 py-1 border rounded ${
+              isDirty ? 'border-red-300 bg-red-50' : 'border-gray-300'
+            }`}
+            rows={rows}
+            maxLength={maxLength || undefined}
+          />
+          {renderResetButton(field)}
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
-      {/* Title Header */}
       <div className="text-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">
-          {isEditing && !isReadOnly ? (
+        {isReadOnly ? (
+          <h1 className="text-3xl font-bold text-gray-900">
+            {normalizeComparable(block.props?.name) || 'Untitled Document'}
+          </h1>
+        ) : (
+          <div className="flex items-start gap-2">
             <input
               type="text"
-              value={editedData.name ?? block.props.name ?? ''}
-              onChange={(e) => handleFieldChange('name', e.target.value)}
-              className="w-full text-center px-2 py-1 border border-gray-300 rounded"
+              value={normalizeComparable(block.props?.name)}
+              onChange={(event) => handleFieldChange('name', event.target.value)}
+              className={`w-full text-center text-3xl font-bold text-gray-900 px-2 py-1 border rounded ${
+                isFieldDirty('name') ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+              maxLength={getFieldMaxLength(block, 'name')}
               placeholder="Document Title"
             />
-          ) : (
-            block.props.name || 'Untitled Document'
-          )}
-        </h1>
+            {renderResetButton('name')}
+          </div>
+        )}
       </div>
 
-      {/* Edit/Save Controls */}
-      {!isReadOnly && (
-        <div className="flex justify-end gap-2 mb-4">
-          {!isEditing ? (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Edit
-            </button>
-          ) : (
-            <>
-              <button
-                onClick={handleCancel}
-                className="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Save
-              </button>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Document Information Table */}
       <table className="w-full border-collapse">
         <tbody>
           <tr className="border-b">
             <td className="py-2 px-4 font-semibold bg-gray-50 w-1/3">Heat No:</td>
-            <td className="py-2 px-4">{renderField('heat_no', block.props.heat_no)}</td>
+            <td className="py-2 px-4">{renderTextField('heat_no')}</td>
           </tr>
           <tr className="border-b">
             <td className="py-2 px-4 font-semibold bg-gray-50">Finished Size:</td>
-            <td className="py-2 px-4">
-              {renderField('finished_size', block.props.finished_size)}
-            </td>
+            <td className="py-2 px-4">{renderTextField('finished_size')}</td>
           </tr>
           <tr className="border-b">
             <td className="py-2 px-4 font-semibold bg-gray-50">Stock Size:</td>
-            <td className="py-2 px-4">
-              {renderField('stock_size', block.props.stock_size)}
-            </td>
+            <td className="py-2 px-4">{renderTextField('stock_size')}</td>
           </tr>
           <tr className="border-b">
             <td className="py-2 px-4 font-semibold bg-gray-50">Stock Weight [kg]:</td>
-            <td className="py-2 px-4">
-              {renderNumberField('stock_weight', block.props.stock_weight)}
-            </td>
+            <td className="py-2 px-4">{renderTextField('stock_weight')}</td>
           </tr>
           <tr className="border-b">
             <td className="py-2 px-4 font-semibold bg-gray-50">Remarks:</td>
-            <td className="py-2 px-4">
-              {isEditing && !isReadOnly ? (
-                <textarea
-                  value={editedData.remarks ?? block.props.remarks ?? ''}
-                  onChange={(e) => handleFieldChange('remarks', e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded"
-                  rows={3}
-                />
-              ) : (
-                <span className="text-gray-900 whitespace-pre-wrap">{block.props.remarks ?? ''}</span>
-              )}
-            </td>
+            <td className="py-2 px-4">{renderTextareaField('remarks', 3)}</td>
           </tr>
           <tr>
             <td className="py-2 px-4 font-semibold bg-gray-50">Created At:</td>
@@ -203,7 +172,6 @@ export default function DocumentHeadingBlock({
         </tbody>
       </table>
 
-      {/* Version Info (if exists) */}
       {block.props.version && (
         <div className="mt-6 pt-6 border-t">
           <h3 className="text-lg font-semibold mb-3">Version Information</h3>

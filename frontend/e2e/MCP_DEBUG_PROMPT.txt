@@ -1,0 +1,43 @@
+Playwright MCP debug run for Techno-Notion.
+
+Goal:
+Run this exact UI flow and collect diagnostics at every checkpoint to speed up frontend/backend debugging.
+
+Environment:
+- Frontend URL: http://127.0.0.1:5173
+- Backend URL: http://127.0.0.1:8001
+- Login route: /login
+- Username: demo_user
+- Password: password123
+
+Required checkpoints:
+1) Login page loaded
+2) Immediately after clicking Sign in
+3) /app page fully loaded
+4) After clicking New Document
+
+At each checkpoint, execute all of these:
+- browser_snapshot
+- browser_network_requests with includeStatic=false
+- browser_console_messages with level=info
+- browser_take_screenshot (png) to /tmp/mcp-debug-<checkpoint>.png
+
+Flow steps:
+1) Navigate to http://127.0.0.1:5173/login
+2) Ensure Username and Password fields are populated with the values above
+3) Click Sign in
+4) Wait for /app
+5) Click New Document
+6) Capture required diagnostics for each checkpoint
+
+Output format:
+- Section per checkpoint
+- URL and page title
+- Network: list only non-2xx/3xx requests; if none, say "No failing requests"
+- Console: list only warnings/errors; if none, say "No console warnings/errors"
+- End with PASS or FAIL and the first failing checkpoint if any
+
+Execution rules:
+- Use Playwright MCP tools only
+- Do not ask me follow-up questions before running
+- If a step fails, continue collecting diagnostics and mark status FAIL

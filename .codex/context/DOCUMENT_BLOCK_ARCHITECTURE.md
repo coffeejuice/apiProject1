@@ -68,22 +68,27 @@ This file is the source of truth for document/block architecture, block types, a
 - Delete operations relink neighbors and update head pointer if head is removed.
 - `GET /documents/{document_id}/blocks/root` returns this ordered linear list.
 
-## Block type enum (current)
+## Block type enum and implementation status
 Defined in `backend/app/models/document/block.py`.
 
-General/editor block types:
-- `paragraph`
-- `heading1`
-- `heading2`
-- `list`
-- `todo`
-- `code`
-- `quote`
-- `divider`
-
-System block types:
-- `document_heading`
-- `input_workpiece`
+- Enum values:
+  - `paragraph`
+  - `heading1`
+  - `heading2`
+  - `list`
+  - `todo`
+  - `code`
+  - `quote`
+  - `divider`
+  - `document_heading`
+  - `input_workpiece`
+- Active handler-backed types:
+  - `document_heading`
+  - `input_workpiece`
+- Frontend-registered block components:
+  - `document_heading` -> `DocumentHeadingBlock`
+  - `input_workpiece` -> `InputWorkpieceBlock`
+- Enum-only types currently have no active handler registration and no dedicated frontend component registration.
 
 ## Block handler architecture
 - Base contract: `BlockTypeHandler` (`backend/app/models/document/block_types/base.py`)
@@ -97,6 +102,84 @@ System block types:
   - delete/reorder restrictions
   - frontend enrichment via handler serialization
 
+### Frontend payload metadata for handler-backed blocks
+`enrich_block_data_for_frontend` returns:
+- `editable_fields`: editable prop names from `handler.get_editable_fields()`
+- `field_limits`: per-field max string lengths from `handler.get_field_limits()`
+
+`field_limits` is consumed by frontend to enforce DB-aligned limits during input and draft updates.
+
+## Document editing model (frontend, current)
+Implemented in `frontend/src/components/BlockEditor.tsx` and block components.
+
+- All rendered block types are always in editable mode.
+- Per-block `Edit`, `Save`, `Cancel` controls do not exist.
+- Editing is draft-first:
+  - `savedBlocks` = backend snapshot
+  - `draftBlocks` = local editable state
+- Document-level controls above blocks:
+  - `Save`: commits all changed blocks in one cumulative batch
+  - `Cancel`: discards all drafts and restores backend snapshot
+- Dirty UX:
+  - changed fields are highlighted with light red background
+  - each dirty field has a square `↺` button to reset only that field
+- Save/cancel flow preserves editor scroll position.
+- String length limits are enforced without visible counters:
+  - input-level `maxLength` where field mapping exists
+  - centralized clamping in `applyFieldLengthLimits(...)` before state update
+
+## Virtual common block standard (documentation-only)
+### `draft_synced_props_block`
+This is a virtual standard type. It is not part of the DB enum and is not instantiated in documents.
+It defines common behavior expected from active document-building block types.
+
+Common characteristics:
+- Backed by a `blocks` row with JSON `props` and linked-list placement metadata.
+- Participates in document-level draft editing (`draftBlocks`) and cumulative save/cancel.
+- Updates are propagated via `onUpdate(blockId, props)` and committed through `update_props` ops.
+- Supports baseline-vs-draft dirty comparison per editable field.
+- Supports per-field reset to backend baseline (`↺` button behavior).
+- Accepts optional backend-supplied `editable_fields` metadata.
+- Accepts optional backend-supplied `field_limits` metadata; frontend enforces string limits even if a specific UI control does not declare `maxLength`.
+
+## Existing handler-backed block types as deltas from `draft_synced_props_block`
+
+### `document_heading` delta
+- System-only placement constraints:
+  - `is_system = true`
+  - `is_removable = false`
+  - `fixed_position = 0`
+  - `allow_multiple_instances = false`
+- Cross-entity enrichment and writes:
+  - props are enriched with document metadata (`name`, project/source/editor IDs, timestamps)
+  - optional latest `document_versions` payload is embedded as `version`
+  - updates to `props.name` also update `documents.name`
+  - updates to `props.version` map to selected latest-version fields
+- Adds block-specific string limits through `get_field_limits()`:
+  - `name`, `heat_no`, `finished_size`, `stock_size`, `stock_weight`, `remarks`
+
+### `input_workpiece` delta
+- System-only placement constraints:
+  - `is_system = true`
+  - `is_removable = false`
+  - `fixed_position = 1`
+  - `allow_multiple_instances = false`
+- Domain-specific geometry model:
+  - geometry selector keyed by `geometry_type_id`
+  - dynamic `attributes` schema derived from geometry definition
+  - generated display `title` from geometry and attributes
+  - serialized geometry metadata (`available_geometry_types`, optional `selected_geometry`)
+- Numeric/domain validation in handler:
+  - `geometry_type_id` must exist and be known when non-empty
+  - `mesh_elements` must be integer-compatible
+  - `weight` must be numeric-compatible
+- No explicit block-specific `field_limits` currently returned by handler.
+
+### Enum-only editor block types delta (`paragraph`, `heading1`, `heading2`, `list`, `todo`, `code`, `quote`, `divider`)
+- Currently no handler registration in `backend/app/models/document/block_types/__init__.py`.
+- Currently no dedicated frontend component registration in `frontend/src/components/blocks/index.ts`.
+- As a result, these types do not yet implement the full `draft_synced_props_block` behavior contract in the active UI path.
+
 ## System block lifecycle
 - For non-copy document creation:
   - `POST /documents` calls `initialize_system_blocks(...)`.
@@ -106,78 +189,14 @@ System block types:
   2. `input_workpiece` (`fixed_position = 1`)
 - Both are non-removable and single-instance per document.
 
-## System block: `document_heading`
-Handler: `backend/app/models/document/block_types/document_heading.py`
-
-Behavior:
-- `is_system = true`
-- `is_removable = false`
-- `fixed_position = 0`
-- `allow_multiple_instances = false`
-
-Default `props`:
-- `heat_no`
-- `finished_size`
-- `stock_size`
-- `stock_weight`
-- `remarks`
-- `preview_status` (default `"empty"`)
-
-Frontend serialization enriches props with document metadata:
-- `name`
-- `project_id`
-- `source_document_id`
-- `editor_user_id`
-- `created_at`, `updated_at`
-- optional latest `version` from `document_versions`
-
-Update behavior:
-- Validates field length limits for editable strings.
-- If `props.name` is provided, updates `documents.name`.
-- If `props.version` is provided, updates selected latest-version fields.
-
-Editable fields:
-- `name`
-- `heat_no`
-- `finished_size`
-- `stock_size`
-- `stock_weight`
-- `remarks`
-- `preview_status`
-
-## System block: `input_workpiece`
-Handler: `backend/app/models/document/block_types/input_workpiece.py`
-
-Behavior:
-- `is_system = true`
-- `is_removable = false`
-- `fixed_position = 1`
-- `allow_multiple_instances = false`
-
-Default `props`:
-- `geometry_type_id`
-- `mesh_elements`
-- `weight`
-- `attributes` (dynamic key-value map)
-
-Validation rules:
-- `geometry_type_id` must exist in payload and be known when non-empty.
-- `mesh_elements` must be integer-compatible.
-- `weight` must be numeric-compatible.
-
-Frontend serialization includes:
-- generated `title`
-- `available_geometry_types` metadata list
-- `selected_geometry` metadata when selected
-
-Supported geometry IDs:
-- `68`, `69`, `70`, `71`, `72`, `73`, `74`, `75`, `76`, `77`, `78`, `79`
-
-Editable fields:
-- `geometry_type_id`
-- `mesh_elements`
-- `weight`
-- `attributes`
+## Fixed leading block rules
+- The first two blocks of any document are:
+  1. `document_heading`
+  2. `input_workpiece`
+- These two block types are treated as fixed blocks with:
+  - `is_removable = false`
+  - `is_fixed = true` (documentation alias; implemented via non-null `fixed_position`)
+- Inserting new blocks in front of block types with `is_fixed = true` is not allowed.
 
 ## Active API routes affecting document/block architecture
 - Projects:
@@ -216,19 +235,12 @@ Editable fields:
 - Block commit persistence is handled directly by `commit_service`.
 - `document_versions` still exists and is used by `document_heading` enrichment/update logic.
 
-## Frontend rendering architecture
-- Registry:
-  - `frontend/src/components/blocks/BlockRegistry.ts`
-  - `frontend/src/components/blocks/index.ts`
-- Registered system components:
-  - `document_heading` -> `DocumentHeadingBlock`
-  - `input_workpiece` -> `InputWorkpieceBlock`
-- Editor (`frontend/src/components/BlockEditor.tsx`) loads ordered root blocks and submits `update_props` commit operations.
-
 ## Notes for future updates
-- If new system blocks are added:
+- For every new handler-backed block type:
   - update `BlockType` enum
   - register handler in block type registry
-  - include initialization and constraints logic
-  - register frontend block component
+  - include initialization and constraints logic if it is a system block
+  - register frontend block component if it must render in editor
+  - define `get_editable_fields()` and `get_field_limits()` when applicable
+  - keep behavior aligned with `draft_synced_props_block` standard unless there is an explicit delta
   - update this file and `PROJECT_CONTEXT.md`

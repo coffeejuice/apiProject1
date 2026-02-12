@@ -95,6 +95,7 @@ def enrich_block_data_for_frontend(db: Session, block: Block) -> dict:
             "is_system": block.is_system,
             "is_removable": block.is_removable,
             "fixed_position": block.fixed_position,
+            "field_limits": None,
         }
 
     enriched_props = handler.serialize_for_frontend(db, block.block_id, block.document_id, block.props)
@@ -111,4 +112,5 @@ def enrich_block_data_for_frontend(db: Session, block: Block) -> dict:
         "is_removable": block.is_removable,
         "fixed_position": block.fixed_position,
         "editable_fields": handler.get_editable_fields(),
+        "field_limits": handler.get_field_limits(),
     }

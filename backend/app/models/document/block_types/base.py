@@ -85,3 +85,10 @@ class BlockTypeHandler(ABC):
         Used for frontend validation and UI generation.
         """
         return []
+
+    def get_field_limits(self) -> Dict[str, int]:
+        """
+        Return per-field max string lengths for frontend input limiting.
+        Keys are dot-paths in props (for example, "name" or "version.name").
+        """
+        return {}
