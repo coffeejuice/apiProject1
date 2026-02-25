@@ -26,6 +26,17 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 - Frontend dev server: `http://127.0.0.1:5173` (`frontend/vite.config.ts`)
 - Frontend default API base URL: `http://127.0.0.1:8001` (`frontend/src/lib/apiClient.ts`)
 
+## Backend configuration (`.env`) for setup/install
+- Backend settings are loaded by `backend/app/config.py` (`pydantic-settings`) from `backend/.env`.
+- During initial setup/install, edit or generate `backend/.env` before starting backend services.
+- Keep `backend/.env.example` as the editable template/snapshot for required keys.
+- Current file-storage-related keys in `Settings`:
+  - `LIBRARY_FILES_ROOT`
+  - `NAS_MOUNT_ROOT`
+  - `LOGS_FILES_ROOT`
+  - `TEMP_FILES_ROOT`
+- Keep secrets and machine-specific paths in `.env`; do not hardcode them in source files.
+
 ## Product flow (Project -> Document -> Block)
 1. User authenticates via JWT (`/auth/login`) and frontend stores bearer token.
 2. Frontend loads projects with `GET /projects` (`useDocumentsStore.fetchProjects`).

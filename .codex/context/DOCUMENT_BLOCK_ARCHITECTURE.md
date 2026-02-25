@@ -7,6 +7,8 @@ apply: always
 ## Scope
 This file is the source of truth for document/block architecture, block types, and block behavior.
 
+Configuration/setup details (including `.env` editing during install) are tracked in `.codex/context/PROJECT_CONTEXT.md`.
+
 ## Current hierarchy
 - Product data flow is `Project -> Document -> Block`.
 - Documents are project-scoped (`documents.project_id` is required).

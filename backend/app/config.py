@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    LIBRARY_FILES_ROOT: str = "/var/lib/forgelab/"
+    NAS_MOUNT_ROOT: str = "/mnt/forgelab"
+    LOGS_FILES_ROOT: str = "/var/log/forgelab"
+    TEMP_FILES_ROOT: str = "/var/cache/forgelab"
 
     class Config:
         env_file = Path(__file__).parent.parent / ".env"
