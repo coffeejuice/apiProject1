@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, List
 
-from sqlalchemy import String, Integer, DateTime, ForeignKey, BigInteger, SmallInteger, Text
+from sqlalchemy import String, Integer, DateTime, ForeignKey, BigInteger, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -22,8 +22,8 @@ class Project(Base):
         index=True,
     )
     material_id: Mapped[Optional[int]] = mapped_column(
-        SmallInteger,
-        ForeignKey("material.material_id", ondelete="SET DEFAULT"),
+        Integer,
+        ForeignKey("library.id", ondelete="SET NULL"),
         nullable=True,
         default=None,
     )

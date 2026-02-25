@@ -1,13 +1,59 @@
+import defaultTheme from 'tailwindcss/defaultTheme'
+import typography from '@tailwindcss/typography'
+
+const neutralGray = {
+  50: '#fafafa',
+  100: '#f2f2f2',
+  200: '#e3e3e3',
+  300: '#d6d6d6',
+  400: '#bfbfbf',
+  500: '#8c8c8c',
+  600: '#666666',
+  700: '#4a4a4a',
+  800: '#303030',
+  900: '#1f1f1f',
+}
+
+const compactFontScale = {
+  xs: ['0.625rem', { lineHeight: '0.875rem' }], // 10/14
+  sm: ['0.6875rem', { lineHeight: '0.9375rem' }], // 11/15
+  base: ['0.75rem', { lineHeight: '1rem' }], // 12/16
+  lg: ['0.875rem', { lineHeight: '1.125rem' }], // 14/18
+}
+
+const flatterShadows = {
+  sm: '0 1px 2px rgba(0, 0, 0, 0.06)',
+  DEFAULT: '0 1px 3px rgba(0, 0, 0, 0.08)',
+  md: '0 2px 4px rgba(0, 0, 0, 0.08)',
+  lg: '0 4px 10px rgba(0, 0, 0, 0.10)',
+  xl: '0 6px 14px rgba(0, 0, 0, 0.12)',
+  '2xl': '0 8px 20px rgba(0, 0, 0, 0.14)',
+  none: 'none',
+}
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    './index.html',
+    './src/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
-    extend: {},
+    fontFamily: {
+      ...defaultTheme.fontFamily,
+      sans: ['Open Sans', 'Segoe UI', 'Tahoma', 'sans-serif'],
+    },
+    fontSize: compactFontScale,
+    fontWeight: {
+      ...defaultTheme.fontWeight,
+      medium: '400',
+      semibold: '600',
+    },
+    boxShadow: flatterShadows,
+    extend: {
+      colors: {
+        gray: neutralGray,
+      },
+    },
   },
-  plugins: [
-    require('@tailwindcss/typography'),
-  ],
+  plugins: [typography],
 }

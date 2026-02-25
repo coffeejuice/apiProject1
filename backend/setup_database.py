@@ -465,7 +465,7 @@ def main():
     print("Database setup complete!")
     print("=" * 60)
     print("\nNext steps:")
-    print("1. Run migrations: alembic upgrade head")
+    print("1. Run migrations: alembic upgrade head (creates active app tables only)")
     print("2. Start the server: python run.py")
     print()
 

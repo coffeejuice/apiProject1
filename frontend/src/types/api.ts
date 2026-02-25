@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export interface ApiResponse<T = unknown> {
   ok: boolean
   status: number

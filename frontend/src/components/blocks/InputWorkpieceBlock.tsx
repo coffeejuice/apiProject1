@@ -101,7 +101,7 @@ export default function InputWorkpieceBlock({
       <button
         type="button"
         onClick={onClick}
-        className="h-8 w-8 flex-shrink-0 border border-red-300 rounded text-red-700 bg-red-50 hover:bg-red-100"
+        className="ui-btn-danger h-8 w-8 p-0 flex-shrink-0"
         title="Revert this parameter"
       >
         ↺
@@ -110,16 +110,16 @@ export default function InputWorkpieceBlock({
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+    <div className="ui-card ui-card-body text-sm">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-bold text-gray-900">{title}</h2>
       </div>
 
       <table className="w-full border-collapse">
         <tbody>
           <tr className="border-b">
-            <td className="py-3 px-4 font-semibold bg-gray-50 w-1/2">Geometry Type:</td>
-            <td className="py-3 px-4">
+            <td className="py-1 px-2 font-semibold bg-gray-50 w-1/2">Geometry Type:</td>
+            <td className="py-1 px-2">
               {isReadOnly ? (
                 <span className="text-gray-900">
                   {selectedGeometry ? selectedGeometry.library_name : 'Not set'}
@@ -129,7 +129,7 @@ export default function InputWorkpieceBlock({
                   <select
                     value={normalizeComparable(block.props.geometry_type_id)}
                     onChange={(event) => handleGeometryTypeChange(event.target.value)}
-                    className={`w-full px-2 py-1 border rounded ${
+                    className={`ui-select ${
                       isFieldDirty('geometry_type_id')
                         ? 'border-red-300 bg-red-50'
                         : 'border-gray-300'
@@ -159,8 +159,8 @@ export default function InputWorkpieceBlock({
 
               return (
                 <tr key={colName} className="border-b">
-                  <td className="py-3 px-4 font-semibold bg-gray-50">{label}</td>
-                  <td className="py-3 px-4">
+                  <td className="py-1 px-2 font-semibold bg-gray-50">{label}</td>
+                  <td className="py-1 px-2">
                     {isReadOnly ? (
                       <span className="text-gray-900">{currentValue || '-'}</span>
                     ) : (
@@ -170,7 +170,7 @@ export default function InputWorkpieceBlock({
                           step="0.001"
                           value={currentValue}
                           onChange={(event) => handleAttributeChange(colName, event.target.value)}
-                          className={`w-full px-2 py-1 border rounded ${
+                          className={`ui-input ${
                             dirty ? 'border-red-300 bg-red-50' : 'border-gray-300'
                           }`}
                           placeholder={`Enter ${label.toLowerCase()}`}
@@ -184,8 +184,8 @@ export default function InputWorkpieceBlock({
             })}
 
           <tr className="border-b">
-            <td className="py-3 px-4 font-semibold bg-gray-50">Weight [kg]:</td>
-            <td className="py-3 px-4">
+            <td className="py-1 px-2 font-semibold bg-gray-50">Weight [kg]:</td>
+            <td className="py-1 px-2">
               {isReadOnly ? (
                 <span className="text-gray-900">{block.props.weight ?? 0}</span>
               ) : (
@@ -196,7 +196,7 @@ export default function InputWorkpieceBlock({
                     min="0"
                     value={normalizeComparable(block.props.weight)}
                     onChange={(event) => handleFieldChange('weight', event.target.value)}
-                    className={`w-full px-2 py-1 border rounded ${
+                    className={`ui-input ${
                       isFieldDirty('weight') ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
                   />
@@ -207,10 +207,10 @@ export default function InputWorkpieceBlock({
           </tr>
 
           <tr>
-            <td className="py-3 px-4 font-semibold bg-gray-50">
+            <td className="py-1 px-2 font-semibold bg-gray-50">
               Elements across width [pcs]:
             </td>
-            <td className="py-3 px-4">
+            <td className="py-1 px-2">
               {isReadOnly ? (
                 <span className="text-gray-900">{block.props.mesh_elements ?? 0}</span>
               ) : (
@@ -221,7 +221,7 @@ export default function InputWorkpieceBlock({
                     min="0"
                     value={normalizeComparable(block.props.mesh_elements)}
                     onChange={(event) => handleFieldChange('mesh_elements', event.target.value)}
-                    className={`w-full px-2 py-1 border rounded ${
+                    className={`ui-input ${
                       isFieldDirty('mesh_elements')
                         ? 'border-red-300 bg-red-50'
                         : 'border-gray-300'
@@ -239,7 +239,7 @@ export default function InputWorkpieceBlock({
       </table>
 
       {block.is_system && (
-        <div className="mt-4 text-xs text-gray-500 italic">
+        <div className="mt-3 text-xs text-gray-500 italic">
           * This is a required system block and cannot be removed
         </div>
       )}

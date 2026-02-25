@@ -40,7 +40,7 @@ export default function DocumentHeadingBlock({
       <button
         type="button"
         onClick={() => resetField(field)}
-        className="h-8 w-8 flex-shrink-0 border border-red-300 rounded text-red-700 bg-red-50 hover:bg-red-100"
+        className="ui-btn-danger h-8 w-8 p-0 flex-shrink-0"
         title="Revert this parameter"
       >
         ↺
@@ -64,7 +64,7 @@ export default function DocumentHeadingBlock({
             type="text"
             value={currentValue}
             onChange={(event) => handleFieldChange(field, event.target.value)}
-            className={`w-full px-2 py-1 border rounded ${
+            className={`ui-input ${
               isDirty ? 'border-red-300 bg-red-50' : 'border-gray-300'
             }`}
             maxLength={maxLength || undefined}
@@ -91,7 +91,7 @@ export default function DocumentHeadingBlock({
           <textarea
             value={currentValue}
             onChange={(event) => handleFieldChange(field, event.target.value)}
-            className={`w-full px-2 py-1 border rounded ${
+            className={`ui-textarea ${
               isDirty ? 'border-red-300 bg-red-50' : 'border-gray-300'
             }`}
             rows={rows}
@@ -104,10 +104,10 @@ export default function DocumentHeadingBlock({
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <div className="text-center mb-6">
+    <div className="ui-card ui-card-body text-sm">
+      <div className="text-center mb-3">
         {isReadOnly ? (
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-sm font-bold text-gray-900">
             {normalizeComparable(block.props?.name) || 'Untitled Document'}
           </h1>
         ) : (
@@ -116,7 +116,7 @@ export default function DocumentHeadingBlock({
               type="text"
               value={normalizeComparable(block.props?.name)}
               onChange={(event) => handleFieldChange('name', event.target.value)}
-              className={`w-full text-center text-3xl font-bold text-gray-900 px-2 py-1 border rounded ${
+              className={`ui-input text-center text-sm font-bold text-gray-900 ${
                 isFieldDirty('name') ? 'border-red-300 bg-red-50' : 'border-gray-300'
               }`}
               maxLength={getFieldMaxLength(block, 'name')}
@@ -130,29 +130,29 @@ export default function DocumentHeadingBlock({
       <table className="w-full border-collapse">
         <tbody>
           <tr className="border-b">
-            <td className="py-2 px-4 font-semibold bg-gray-50 w-1/3">Heat No:</td>
-            <td className="py-2 px-4">{renderTextField('heat_no')}</td>
+            <td className="py-1 px-2 font-semibold bg-gray-50 w-1/3">Heat No:</td>
+            <td className="py-1 px-2">{renderTextField('heat_no')}</td>
           </tr>
           <tr className="border-b">
-            <td className="py-2 px-4 font-semibold bg-gray-50">Finished Size:</td>
-            <td className="py-2 px-4">{renderTextField('finished_size')}</td>
+            <td className="py-1 px-2 font-semibold bg-gray-50">Finished Size:</td>
+            <td className="py-1 px-2">{renderTextField('finished_size')}</td>
           </tr>
           <tr className="border-b">
-            <td className="py-2 px-4 font-semibold bg-gray-50">Stock Size:</td>
-            <td className="py-2 px-4">{renderTextField('stock_size')}</td>
+            <td className="py-1 px-2 font-semibold bg-gray-50">Stock Size:</td>
+            <td className="py-1 px-2">{renderTextField('stock_size')}</td>
           </tr>
           <tr className="border-b">
-            <td className="py-2 px-4 font-semibold bg-gray-50">Stock Weight [kg]:</td>
-            <td className="py-2 px-4">{renderTextField('stock_weight')}</td>
+            <td className="py-1 px-2 font-semibold bg-gray-50">Stock Weight [kg]:</td>
+            <td className="py-1 px-2">{renderTextField('stock_weight')}</td>
           </tr>
           <tr className="border-b">
-            <td className="py-2 px-4 font-semibold bg-gray-50">Remarks:</td>
-            <td className="py-2 px-4">{renderTextareaField('remarks', 3)}</td>
+            <td className="py-1 px-2 font-semibold bg-gray-50">Remarks:</td>
+            <td className="py-1 px-2">{renderTextareaField('remarks', 3)}</td>
           </tr>
           <tr>
-            <td className="py-2 px-4 font-semibold bg-gray-50">Created At:</td>
-            <td className="py-2 px-4">
-              <span className="text-gray-600 text-sm">
+            <td className="py-1 px-2 font-semibold bg-gray-50">Created At:</td>
+            <td className="py-1 px-2">
+              <span className="text-gray-600 text-xs">
                 {block.props.created_at
                   ? new Date(block.props.created_at).toLocaleString()
                   : 'N/A'}
@@ -160,9 +160,9 @@ export default function DocumentHeadingBlock({
             </td>
           </tr>
           <tr>
-            <td className="py-2 px-4 font-semibold bg-gray-50">Last Edited:</td>
-            <td className="py-2 px-4">
-              <span className="text-gray-600 text-sm">
+            <td className="py-1 px-2 font-semibold bg-gray-50">Last Edited:</td>
+            <td className="py-1 px-2">
+              <span className="text-gray-600 text-xs">
                 {block.props.updated_at
                   ? new Date(block.props.updated_at as string).toLocaleString()
                   : 'N/A'}
@@ -173,23 +173,23 @@ export default function DocumentHeadingBlock({
       </table>
 
       {block.props.version && (
-        <div className="mt-6 pt-6 border-t">
-          <h3 className="text-lg font-semibold mb-3">Version Information</h3>
+        <div className="mt-3 pt-3 border-t">
+          <h3 className="text-sm font-semibold mb-2">Version Information</h3>
           <table className="w-full border-collapse">
             <tbody>
               <tr className="border-b">
-                <td className="py-2 px-4 font-semibold bg-gray-50 w-1/3">Version Name:</td>
-                <td className="py-2 px-4">{block.props.version.name || 'N/A'}</td>
+                <td className="py-1 px-2 font-semibold bg-gray-50 w-1/3">Version Name:</td>
+                <td className="py-1 px-2">{block.props.version.name || 'N/A'}</td>
               </tr>
               <tr className="border-b">
-                <td className="py-2 px-4 font-semibold bg-gray-50">Editable:</td>
-                <td className="py-2 px-4">
+                <td className="py-1 px-2 font-semibold bg-gray-50">Editable:</td>
+                <td className="py-1 px-2">
                   {block.props.version.is_editable ? 'Yes' : 'No'}
                 </td>
               </tr>
               <tr>
-                <td className="py-2 px-4 font-semibold bg-gray-50">Operations Count:</td>
-                <td className="py-2 px-4">{block.props.version.operations_count ?? 0}</td>
+                <td className="py-1 px-2 font-semibold bg-gray-50">Operations Count:</td>
+                <td className="py-1 px-2">{block.props.version.operations_count ?? 0}</td>
               </tr>
             </tbody>
           </table>

@@ -28,18 +28,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="ui-shell min-h-screen flex items-center justify-center">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Techno-Notion</h1>
-            <p className="text-gray-600 mt-2">
+        <div className="ui-card p-4">
+          <div className="text-center mb-4">
+            <h1 className="text-sm font-semibold text-gray-900">Techno-Notion</h1>
+            <p className="text-sm text-gray-600 mt-1">
               {isRegisterMode ? 'Create your account' : 'Sign in to your account'}
             </p>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+            <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-xs">
               {error}
             </div>
           )}
@@ -48,7 +48,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="login"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-xs font-semibold text-gray-700 mb-1"
               >
                 Username
               </label>
@@ -57,7 +57,7 @@ export default function LoginPage() {
                 type="text"
                 value={loginUsername}
                 onChange={(e) => setLoginUsername(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="ui-input"
                 required
                 disabled={isLoading}
               />
@@ -67,7 +67,7 @@ export default function LoginPage() {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-xs font-semibold text-gray-700 mb-1"
                 >
                   Email
                 </label>
@@ -76,7 +76,7 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="ui-input"
                   required
                   disabled={isLoading}
                 />
@@ -86,7 +86,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-xs font-semibold text-gray-700 mb-1"
               >
                 Password
               </label>
@@ -95,7 +95,7 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="ui-input"
                 required
                 disabled={isLoading}
               />
@@ -104,7 +104,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="ui-btn-primary w-full"
             >
               {isLoading
                 ? (isRegisterMode ? 'Creating account...' : 'Signing in...')
@@ -115,7 +115,7 @@ export default function LoginPage() {
           <div className="mt-4 text-center">
             <button
               onClick={() => setIsRegisterMode(!isRegisterMode)}
-              className="text-sm text-blue-600 hover:text-blue-800"
+              className="ui-btn"
             >
               {isRegisterMode
                 ? 'Already have an account? Sign in'
@@ -123,27 +123,27 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-gray-200">
             <button
               onClick={() => {
                 setCustomBaseUrl(baseUrl)
                 setShowSettings(!showSettings)
               }}
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="ui-btn"
             >
               ⚙️ API Settings
             </button>
 
             {showSettings && (
-              <div className="mt-4 p-4 bg-gray-50 rounded border border-gray-200">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="ui-card ui-card-body mt-3">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
                   API Base URL
                 </label>
                 <input
                   type="text"
                   value={customBaseUrl}
                   onChange={(e) => setCustomBaseUrl(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm mb-2"
+                  className="ui-input mb-2"
                   placeholder="http://127.0.0.1:8001"
                 />
                 <div className="text-xs text-gray-500 mb-3">
@@ -151,7 +151,7 @@ export default function LoginPage() {
                 </div>
                 <button
                   onClick={handleSaveSettings}
-                  className="w-full bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 text-sm"
+                  className="ui-btn w-full"
                 >
                   Save Settings
                 </button>

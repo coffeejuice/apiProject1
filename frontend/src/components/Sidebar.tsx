@@ -114,14 +114,14 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-96 bg-white border-r border-gray-200 flex flex-col">
-      <div className="p-4 border-b border-gray-200">
+    <aside className="ui-pane w-96">
+      <div className="ui-pane-header">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-xl font-bold text-gray-900">Techno-Notion</h1>
+          <h1 className="ui-pane-title">Techno-Notion</h1>
           <button
             type="button"
             onClick={logout}
-            className="text-sm text-gray-600 hover:text-gray-900"
+            className="ui-btn"
           >
             Logout
           </button>
@@ -134,12 +134,12 @@ export default function Sidebar() {
         )}
       </div>
 
-      <div className="p-4 border-b border-gray-200 space-y-3">
+      <div className="p-3 border-b border-gray-200 space-y-3">
         <div className="flex gap-2">
           <select
             value={currentProjectId || ''}
             onChange={(event) => setCurrentProject(event.target.value || null)}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+            className="ui-select flex-1"
           >
             {projects.length === 0 && <option value="">No projects</option>}
             {projects.map((project) => (
@@ -151,7 +151,7 @@ export default function Sidebar() {
           <button
             type="button"
             onClick={() => setShowNewProjectModal(true)}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+            className="ui-btn"
           >
             New Project
           </button>
@@ -162,7 +162,7 @@ export default function Sidebar() {
             type="button"
             onClick={() => setShowNewDocModal(true)}
             disabled={!currentProjectId}
-            className="bg-blue-600 text-white py-2 px-3 rounded-md hover:bg-blue-700 text-sm disabled:opacity-50"
+            className="ui-btn-primary"
           >
             New Document
           </button>
@@ -170,7 +170,7 @@ export default function Sidebar() {
             type="button"
             onClick={handleCopyDocument}
             disabled={!currentDocId && selectedDocIds.size === 0}
-            className="bg-indigo-600 text-white py-2 px-3 rounded-md hover:bg-indigo-700 text-sm disabled:opacity-50"
+            className="ui-btn-secondary"
           >
             Copy
           </button>
@@ -178,7 +178,7 @@ export default function Sidebar() {
             type="button"
             onClick={handleDeleteDocuments}
             disabled={(selectedDocIds.size === 0 && !currentDocId) || isDeleting}
-            className="bg-red-600 text-white py-2 px-3 rounded-md hover:bg-red-700 text-sm disabled:opacity-50"
+            className="ui-btn-danger"
           >
             {isDeleting ? 'Deleting...' : 'Delete'}
           </button>
@@ -186,7 +186,7 @@ export default function Sidebar() {
             type="button"
             onClick={handleDiff}
             disabled={selectedDocIds.size !== 2 || isDiffing}
-            className="bg-gray-800 text-white py-2 px-3 rounded-md hover:bg-gray-900 text-sm disabled:opacity-50"
+            className="ui-btn"
           >
             {isDiffing ? 'Comparing...' : 'Diff'}
           </button>
@@ -196,7 +196,7 @@ export default function Sidebar() {
           <button
             type="button"
             onClick={handleToggleSelectAll}
-            className="text-xs text-blue-600 hover:text-blue-800"
+            className="ui-btn"
           >
             {selectedDocIds.size === documents.length && documents.length > 0
               ? 'Deselect all'
@@ -212,7 +212,7 @@ export default function Sidebar() {
           value={filterText}
           onChange={(event) => setFilterText(event.target.value)}
           placeholder="Filter documents..."
-          className="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm"
+          className="ui-input"
         />
       </div>
 
@@ -231,7 +231,7 @@ export default function Sidebar() {
               return (
                 <div
                   key={docId}
-                  className={`flex items-center gap-2 px-4 py-3 hover:bg-gray-50 border-l-4 transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-2 hover:bg-gray-50 border-l-4 transition-colors ${
                     isActive ? 'border-blue-600 bg-blue-50' : 'border-transparent'
                   }`}
                 >
@@ -260,16 +260,16 @@ export default function Sidebar() {
       </div>
 
       {showNewProjectModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-96">
-            <h2 className="text-xl font-bold mb-4">Create Project</h2>
+        <div className="ui-modal-overlay">
+          <div className="ui-modal w-96">
+            <h2 className="ui-pane-title mb-3">Create Project</h2>
             <form onSubmit={handleCreateProject}>
               <input
                 type="text"
                 value={newProjectName}
                 onChange={(event) => setNewProjectName(event.target.value)}
                 placeholder="Project name..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm mb-4"
+                className="ui-input mb-3"
                 disabled={isCreating}
                 autoFocus
               />
@@ -277,14 +277,14 @@ export default function Sidebar() {
                 <button
                   type="button"
                   onClick={() => setShowNewProjectModal(false)}
-                  className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  className="ui-btn"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating || !newProjectName.trim()}
-                  className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  className="ui-btn-primary"
                 >
                   {isCreating ? 'Creating...' : 'Create'}
                 </button>
@@ -295,16 +295,16 @@ export default function Sidebar() {
       )}
 
       {showNewDocModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-96">
-            <h2 className="text-xl font-bold mb-4">Create Document</h2>
+        <div className="ui-modal-overlay">
+          <div className="ui-modal w-96">
+            <h2 className="ui-pane-title mb-3">Create Document</h2>
             <form onSubmit={handleCreateDocument}>
               <input
                 type="text"
                 value={newDocName}
                 onChange={(event) => setNewDocName(event.target.value)}
                 placeholder="Document name..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm mb-4"
+                className="ui-input mb-3"
                 disabled={isCreating}
                 autoFocus
               />
@@ -312,14 +312,14 @@ export default function Sidebar() {
                 <button
                   type="button"
                   onClick={() => setShowNewDocModal(false)}
-                  className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  className="ui-btn"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating || !newDocName.trim() || !currentProjectId}
-                  className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  className="ui-btn-primary"
                 >
                   {isCreating ? 'Creating...' : 'Create'}
                 </button>
@@ -330,16 +330,16 @@ export default function Sidebar() {
       )}
 
       {diffResult && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto">
+        <div className="ui-modal-overlay">
+          <div className="ui-modal w-full max-w-4xl max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">
+              <h2 className="text-sm font-semibold">
                 Diff: {diffResult.left_name} vs {diffResult.right_name}
               </h2>
               <button
                 type="button"
                 onClick={() => setDiffResult(null)}
-                className="text-gray-500 hover:text-gray-800"
+                className="ui-btn"
               >
                 Close
               </button>

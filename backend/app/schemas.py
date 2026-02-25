@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field
 
 from app.models.document.document import Role
+from app.models.library.library_item import LibraryType
 from app.models.settings import SettingScope
 
 
@@ -287,6 +288,26 @@ class SettingUpdate(BaseModel):
 
 class SettingResponse(SettingBase):
     setting_id: int
+
+    class Config:
+        from_attributes = True
+
+
+class LibraryListItemResponse(BaseModel):
+    id: int
+    parent_id: Optional[int]
+    name: str
+
+    class Config:
+        from_attributes = True
+
+
+class LibraryResponse(LibraryListItemResponse):
+    type: LibraryType
+    props: Any
+    created_at: datetime
+    updated_at: datetime
+    is_obsolete: bool
 
     class Config:
         from_attributes = True

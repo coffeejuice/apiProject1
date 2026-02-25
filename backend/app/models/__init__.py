@@ -4,10 +4,23 @@ from app.models.document import (
     Document, DocumentACL, ShareLink, Role, DocumentVersion, DocumentEditSession, SimulationStatus, Status,
     Block, BlockType, IngotSide, FeedDirection, DeformationType
 )
-from app.models.library import OperationsLibrary, TimeBetweenOperations, Die, DieAssembly, DieType, FurnaceClass, Material, Press, PressMode
+from app.models.library import (
+    Library,
+    LibraryType,
+    OperationsLibrary,
+    TimeBetweenOperations,
+    Die,
+    DieAssembly,
+    DieType,
+    FurnaceClass,
+    Material,
+    Press,
+    PressMode,
+)
 from app.models.server import Server, PhysicalMachine, ServerType
 from app.models.config import Config
 from app.models.log import Log, LogLevel
+from app.models.settings import Setting, SettingScope
 
 __all__ = [
     "User",
@@ -28,6 +41,8 @@ __all__ = [
     "IngotSide",
     "FeedDirection",
     "DeformationType",
+    "Library",
+    "LibraryType",
     "OperationsLibrary",
     "TimeBetweenOperations",
     "Config",
@@ -42,4 +57,6 @@ __all__ = [
     "DieType",
     "Server",
     "PhysicalMachine",
+    "Setting",
+    "SettingScope",
 ]

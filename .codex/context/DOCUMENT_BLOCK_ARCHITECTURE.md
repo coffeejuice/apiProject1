@@ -12,6 +12,10 @@ This file is the source of truth for document/block architecture, block types, a
 - Documents are project-scoped (`documents.project_id` is required).
 - Block ordering is linked-list based (no `order_key`, no block tree).
 
+## Cross-domain note
+- `projects.material_id` now references `library.id` (unified `library` table).
+- This does not change document/block storage, linked-list ordering, commit operations, or block handler behavior.
+
 ## Document model (`backend/app/models/document/document.py`)
 - Table: `documents`
 - Primary key: `document_id` (BigInteger)
@@ -88,7 +92,14 @@ Defined in `backend/app/models/document/block.py`.
 - Frontend-registered block components:
   - `document_heading` -> `DocumentHeadingBlock`
   - `input_workpiece` -> `InputWorkpieceBlock`
-- Enum-only types currently have no active handler registration and no dedicated frontend component registration.
+  - `paragraph` -> `BasicContentBlock`
+  - `heading1` -> `BasicContentBlock`
+  - `heading2` -> `BasicContentBlock`
+  - `list` -> `BasicContentBlock`
+  - `todo` -> `BasicContentBlock`
+  - `code` -> `BasicContentBlock`
+  - `quote` -> `BasicContentBlock`
+  - `divider` -> `BasicContentBlock`
 
 ## Block handler architecture
 - Base contract: `BlockTypeHandler` (`backend/app/models/document/block_types/base.py`)
@@ -110,7 +121,30 @@ Defined in `backend/app/models/document/block.py`.
 `field_limits` is consumed by frontend to enforce DB-aligned limits during input and draft updates.
 
 ## Document editing model (frontend, current)
-Implemented in `frontend/src/components/BlockEditor.tsx` and block components.
+Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockEditor.tsx`, `frontend/src/components/MenuBar.tsx`, `frontend/src/components/ToolsPane.tsx`, and `frontend/src/components/VisualEditor.tsx`.
+
+- Main screen uses split-pane layout:
+  - `MenuBar` (top, full width, always visible)
+  - below: `ToolsSwitcher` (left, always visible), `ToolsPane` (middle, collapsible), right editor stack
+  - right editor stack: `VisualEditor` (top, collapsible) + `BlockEditor` (bottom, always visible)
+- `ToolsSwitcher` toggles current `ToolsPane` view; if no view is active, `ToolsPane` is hidden.
+- `ToolsPane` views:
+  - `Projects` (list/filter/create modal)
+  - `Documents` (project-scoped list/filter/new/copy modals)
+  - `BlocksLibrary` (drag-and-drop/insert block palette)
+  - `Users` (current user/session information)
+- `MenuBar` contains document-level controls (`Save`, `Cancel`, `Undo`, `Redo`, `Lineage`, `Sessions`) and save/dirty status.
+- `VisualEditor` renders a horizontal block icon strip in the same order as `BlockEditor` and supports:
+  - full hide/show behavior: when collapsed it is not rendered at all
+  - visibility toggle is provided by `MenuBar` (no duplicate collapse control inside `VisualEditor`)
+  - click-to-scroll navigation to block anchors inside `BlockEditor`
+  - viewer mode type visibility toggles (hide/show per block type)
+  - editor mode with multi-selection, drag-drop reordering, Ctrl/Cmd-drop copy, insert, and delete
+- Structural edits from `VisualEditor` and `BlocksLibrary` are blocked while unsaved draft prop edits exist (user must save/cancel first).
+- Frontend visual styling for document editing UI is standardized on a compact VisualEditor-derived system:
+  - shared style primitives are defined in `frontend/src/index.css` (`ui-*` classes)
+  - active editor-related components (`MenuBar`, `ToolsPane`, `ToolsSwitcher`, `VisualEditor`, `BlockEditor`, and block components) should consume `ui-*` classes instead of ad-hoc utility combinations for common controls/surfaces
+  - typography scale is constrained by `frontend/tailwind.config.js` to `text-xs`, `text-sm`, `text-base`, `text-lg`
 
 - All rendered block types are always in editable mode.
 - Per-block `Edit`, `Save`, `Cancel` controls do not exist.
@@ -177,8 +211,8 @@ Common characteristics:
 
 ### Enum-only editor block types delta (`paragraph`, `heading1`, `heading2`, `list`, `todo`, `code`, `quote`, `divider`)
 - Currently no handler registration in `backend/app/models/document/block_types/__init__.py`.
-- Currently no dedicated frontend component registration in `frontend/src/components/blocks/index.ts`.
-- As a result, these types do not yet implement the full `draft_synced_props_block` behavior contract in the active UI path.
+- Frontend component registration exists in `frontend/src/components/blocks/index.ts` via `BasicContentBlock`.
+- These types are renderable/editable in the active UI path, but still do not have backend handler hooks beyond generic block persistence.
 
 ## System block lifecycle
 - For non-copy document creation:

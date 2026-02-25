@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export type FieldLimits = Record<string, number>
 
 interface BlockWithFieldLimits {

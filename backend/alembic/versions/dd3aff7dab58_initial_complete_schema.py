@@ -16,26 +16,54 @@ branch_labels = None
 depends_on = None
 
 
+ACTIVE_SCHEMA_TABLES = (
+    "users",
+    "library",
+    "material",
+    "projects",
+    "servers",
+    "documents",
+    "blocks",
+    "document_edit_sessions",
+    "document_versions",
+    "settings",
+)
+
+
+def _load_active_models() -> None:
+    """
+    Import only models that back currently active backend/frontend flows.
+    """
+    from app.models.user import User  # noqa: F401
+    from app.models.library.library_item import Library  # noqa: F401
+    from app.models.library.material import Material  # noqa: F401
+    from app.models.project import Project  # noqa: F401
+    from app.models.server import Server  # noqa: F401
+    from app.models.document.document import Document, DocumentEditSession, DocumentVersion  # noqa: F401
+    from app.models.document.block import Block  # noqa: F401
+    from app.models.settings import Setting  # noqa: F401
+
+
+def _get_active_tables(metadata: sa.MetaData) -> list[sa.Table]:
+    return [metadata.tables[name] for name in ACTIVE_SCHEMA_TABLES if name in metadata.tables]
+
+
 def upgrade() -> None:
-    # Import all models to ensure they're registered with Base.metadata
     from app.database import Base
-    import app.models
+    _load_active_models()
 
-    # Get the bind (database connection)
     bind = op.get_bind()
+    tables = _get_active_tables(Base.metadata)
 
-    # Create all tables using SQLAlchemy's metadata
-    # This will handle all dependencies and circular references correctly
-    Base.metadata.create_all(bind)
+    # Create only active tables; legacy/obsolete tables are intentionally excluded.
+    Base.metadata.create_all(bind, tables=tables, checkfirst=True)
 
 
 def downgrade() -> None:
-    # Import all models
     from app.database import Base
-    import app.models
+    _load_active_models()
 
-    # Get the bind (database connection)
     bind = op.get_bind()
+    tables = _get_active_tables(Base.metadata)
 
-    # Drop all tables
-    Base.metadata.drop_all(bind)
+    Base.metadata.drop_all(bind, tables=tables, checkfirst=True)

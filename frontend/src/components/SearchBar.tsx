@@ -65,7 +65,7 @@ export default function SearchBar() {
           value={query}
           onChange={(e) => handleInputChange(e.target.value)}
           placeholder="Search documents..."
-          className="w-full px-3 py-2 pl-9 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="ui-input pl-9"
         />
         <svg
           className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -89,12 +89,12 @@ export default function SearchBar() {
 
       {/* Search Results Dropdown */}
       {showResults && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-64 overflow-y-auto z-10">
+        <div className="absolute top-full left-0 right-0 mt-1 ui-card max-h-64 overflow-y-auto z-10">
           {results.map((result) => (
             <button
               key={result.block_id}
               onClick={() => handleSelectResult(result.document_id)}
-              className="w-full text-left px-3 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+              className="w-full text-left px-2 py-1 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
             >
               <div className="font-medium text-sm text-gray-900">
                 {getDocumentTitle(result.document_id)}
@@ -111,7 +111,7 @@ export default function SearchBar() {
       )}
 
       {showResults && results.length === 0 && query && !isSearching && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-3 text-sm text-gray-500 text-center z-10">
+        <div className="absolute top-full left-0 right-0 mt-1 ui-card p-3 text-sm text-gray-500 text-center z-10">
           No results found
         </div>
       )}

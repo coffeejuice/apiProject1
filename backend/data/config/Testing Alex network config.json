@@ -1,0 +1,66 @@
+{
+    "db": {
+        "host": "192.168.111.15",
+        "base": "forgelab",
+        "user": "postgres",
+        "pass": "SIQ3PAGDL8pa",
+        "port": 5432
+    },
+
+    "servers": {
+        "sql_1": {
+            "type": "sql",
+            "version": "v1.0.14",
+            "servers_versions_compatibility": {
+                "pre": "v1.0.7",
+                "post": "v1.0.1",
+                "simulation": "v2.0.18",
+                "client": "",
+                "file_server": ""
+            }
+        },
+        "file_server_1": {
+            "type": "file_server",
+            "name": "192.168.111.1",
+            "hostname": "192.168.111.1",
+            "dns_domain": "",
+            "ip": "192.168.111.1",
+            "port_number": 445,
+            "login_name": "nas_user",
+            "loging_password": "Nas123&123",
+            "version": "",
+            "servers_versions_compatibility": {
+                "sql": "",
+                "pre": "",
+                "post": "",
+                "simulation": "",
+                "client": ""
+            },
+            "local_dir": "E:\\forgelabProjects",
+            "public_dir": "forgelabProjects",
+            "cpu_performance": 0.0,
+            "ram_free_size_gb": 0,
+            "hdd_free_size_gb": 0
+        },
+        "queue_simulation_server": {
+            "type": "simulation",
+            "name": "QUEUE",
+            "hostname": "QUEUE",
+            "dns_domain": "",
+            "ip": "192.168.111.254",
+            "version": "",
+            "servers_versions_compatibility": {
+                "sql": "",
+                "pre": "",
+                "post": "",
+                "simulation": "",
+                "client": ""
+            },
+            "local_dir": "E:\\forgelabProjects",
+            "public_dir": "forgelabProjects",
+            "cpu_performance": 0.0,
+            "ram_free_size_gb": 0,
+            "hdd_free_size_gb": 0
+        }
+    }
+}

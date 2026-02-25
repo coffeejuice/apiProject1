@@ -48,6 +48,7 @@ Techno-Notion is a monorepo for a project-scoped, Notion-like editor with a Fast
   - `blocks`
   - `search` and `document_search_router`
   - `settings`
+  - `library`
 - Not mounted in current `main.py`:
   - legacy `revisions`, `sharing`, `import_export`, `migration` routers
 
@@ -59,9 +60,40 @@ Techno-Notion is a monorepo for a project-scoped, Notion-like editor with a Fast
 - Token and base URL persistence keys:
   - `techno-notion-token`
   - `techno-notion-base-url`
-- Sidebar and editor flow:
-  - Project selection drives document list
-  - Document selection drives block editor and commit operations
+- Main app screen (`frontend/src/pages/AppPage.tsx`) uses a split-pane layout:
+  - `MenuBar` at top (full width, always visible)
+  - below it: `ToolsSwitcher` (left, always visible), `ToolsPane` (middle, collapsible), right editor stack
+  - right editor stack: `VisualEditor` (top, collapsible) + `BlockEditor` (bottom, always visible)
+- `ToolsSwitcher` controls `ToolsPane` view visibility; if no tool is active, `ToolsPane` is hidden.
+- `ToolsPane` provides views:
+  - `Projects`: project list, filter, create modal
+  - `Documents`: project-scoped document list, filter, new/copy modals
+  - `BlocksLibrary`: block icon palette for drag-and-drop or insert into `BlockEditor`
+  - `Users`: active user/session info
+- `VisualEditor` provides horizontal block-order visualization with:
+  - when hidden/collapsed, it is fully removed from layout (no header/placeholder)
+  - visibility is controlled from `MenuBar` (`Show VisualEditor` / `Hide VisualEditor`)
+  - click-to-scroll navigation into `BlockEditor`
+  - viewer/editor modes
+  - multi-select, move/copy (Ctrl/Cmd-drop), insert, delete for block structure edits
+
+## Frontend visual standard (VisualEditor-based)
+- The frontend uses a compact, VisualEditor-derived standard style across panes, controls, cards, lists, and modals.
+- Source of truth for reusable visual primitives is `frontend/src/index.css` under `@layer components`.
+- Required shared classes:
+  - layout/panes: `ui-shell`, `ui-pane`, `ui-pane-header`, `ui-pane-body`
+  - toolbar: `ui-toolbar`, `ui-toolbar-title`, `ui-toolbar-meta`
+  - surfaces: `ui-card`, `ui-card-body`
+  - controls: `ui-btn`, `ui-btn-primary`, `ui-btn-secondary`, `ui-btn-danger`
+  - form fields: `ui-input`, `ui-select`, `ui-textarea`
+  - lists/modals/status: `ui-list-item`, `ui-list-item-active`, `ui-modal-overlay`, `ui-modal`, `ui-badge`
+- Text scale is centrally defined in `frontend/tailwind.config.js` (`fontSize`) with only four sizes:
+  - `text-xs` = 10px/14px
+  - `text-sm` = 11px/15px
+  - `text-base` = 12px/16px
+  - `text-lg` = 14px/18px
+- Rule for future UI edits:
+  - prefer shared `ui-*` classes and the 4-size text palette; avoid introducing ad-hoc spacing/button/input styles unless the standard itself is intentionally updated.
 
 ## Domain model summary
 - Core entities:
@@ -70,8 +102,12 @@ Techno-Notion is a monorepo for a project-scoped, Notion-like editor with a Fast
   - Documents (`documents`)
   - Blocks (`blocks`)
   - Settings (`settings`)
+  - Unified library (`library`)
 - Project model:
-  - `project_id`, `user_id`, optional `material_id`, `name`, `notes`, timestamps, soft delete
+  - `project_id`, `user_id`, optional `material_id` (FK to `library.id`), `name`, `notes`, timestamps, soft delete
+- Library model:
+  - `id`, nullable `parent_id` self-reference, enum `type`, `name`, JSON `props`, timestamps, `is_obsolete`
+  - `type` enum values: `die`, `die_assembly`, `press`, `press_mode`, `time_between_operations`, `material`, `operation_type`
 - Document model:
   - `document_id`, required `project_id`, optional `source_document_id`, optional `editor_user_id`, `first_block_id`, `name`, `notes`, timestamps, soft delete
   - supports inheritance/lineage through `source_document_id`
@@ -79,7 +115,8 @@ Techno-Notion is a monorepo for a project-scoped, Notion-like editor with a Fast
   - linked-list ordering with `previous_block_id` and `next_block_id`
   - block type is stored as `block_type_id`
   - metadata flags: `is_system`, `is_removable`, `fixed_position`
-- Additional industrial/library entities still exist (`material`, `operations_library`, `press`, `die`, `servers`, etc.).
+- Additional industrial/library entities still exist as legacy model definitions (`material`, `operations_library`, `press`, `die`, etc.).
+- Active API/library flows are routed through the unified `library` table and `/library/*` endpoints.
 - Legacy ACL/share/version tables remain in models but are not primary mounted API flow.
 
 ## Access model summary
@@ -132,6 +169,19 @@ Techno-Notion is a monorepo for a project-scoped, Notion-like editor with a Fast
   - `GET /settings/resolve/{key}`
   - `POST /settings/provision/apply`
   - `POST /settings/provision/file/{filename}`
+- Library:
+  - `GET /library/dies`
+  - `GET /library/dies/{item_id}`
+  - `GET /library/die-assemblies`
+  - `GET /library/die-assemblies/{item_id}`
+  - `GET /library/presses`
+  - `GET /library/presses/{item_id}`
+  - `GET /library/press-modes`
+  - `GET /library/press-modes/{item_id}`
+  - `GET /library/time-between-operations`
+  - `GET /library/time-between-operations/{item_id}`
+  - `GET /library/operation-types`
+  - `GET /library/operation-types/{item_id}`
 
 ## Global coding constraints for this repo
 - Keep the primary product hierarchy as `Project -> Document -> Block`.
@@ -150,3 +200,5 @@ Techno-Notion is a monorepo for a project-scoped, Notion-like editor with a Fast
 ## Migration policy
 - Repo currently keeps a consolidated active migration pattern in `backend/alembic/versions/`.
 - Historical migrations are stored in `backend/alembic/versions_backup/`.
+- Current head migration is `9b9c2f4e7c31`.
+- `dd3aff7dab58_initial_complete_schema.py` creates a curated active table subset (not every legacy model table).

@@ -3,6 +3,8 @@
  * Maps block types to their React components
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { ComponentType } from 'react'
 
 export interface BlockData {
