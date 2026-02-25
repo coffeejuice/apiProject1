@@ -112,7 +112,7 @@ export default function ToolsPane({ activeView, onInsertBlockType }: ToolsPanePr
   }
 
   const handleBlockDragStart = (event: DragEvent<HTMLButtonElement>, blockTypeId: string) => {
-    event.dataTransfer.setData('application/x-technonotion-block-type', blockTypeId)
+    event.dataTransfer.setData('application/x-forgelab-block-type', blockTypeId)
     event.dataTransfer.effectAllowed = 'copy'
   }
 

@@ -16,7 +16,7 @@ interface VisualEditorProps {
 }
 
 function getDropPayload(event: DragEvent<HTMLElement>): string[] {
-  const payload = event.dataTransfer.getData('application/x-technonotion-visual-block-ids')
+  const payload = event.dataTransfer.getData('application/x-forgelab-visual-block-ids')
   if (!payload) {
     return []
   }
@@ -109,7 +109,7 @@ export default function VisualEditor({
       return
     }
 
-    event.dataTransfer.setData('application/x-technonotion-visual-block-ids', JSON.stringify(payloadIds))
+    event.dataTransfer.setData('application/x-forgelab-visual-block-ids', JSON.stringify(payloadIds))
     event.dataTransfer.effectAllowed = 'copyMove'
   }
 

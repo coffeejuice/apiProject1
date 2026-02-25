@@ -670,7 +670,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
   }))
 
   const handleCanvasDragOver = (event: DragEvent<HTMLDivElement>) => {
-    const blockType = event.dataTransfer.getData('application/x-technonotion-block-type')
+    const blockType = event.dataTransfer.getData('application/x-forgelab-block-type')
     if (!blockType) {
       return
     }
@@ -678,7 +678,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
   }
 
   const handleCanvasDrop = async (event: DragEvent<HTMLDivElement>) => {
-    const blockType = event.dataTransfer.getData('application/x-technonotion-block-type')
+    const blockType = event.dataTransfer.getData('application/x-forgelab-block-type')
     if (!blockType) {
       return
     }

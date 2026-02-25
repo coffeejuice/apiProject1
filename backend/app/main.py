@@ -5,7 +5,7 @@ from app.routers.search import document_search_router
 from app.routers import settings
 
 app = FastAPI(
-    title="Techno-Notion API",
+    title="ForgeLab API",
     description="Projects, inheritable documents, and linked-list block editing API",
     version="2.0.0",
 )
@@ -32,7 +32,7 @@ app.include_router(library.router)
 @app.get("/")
 def root():
     return {
-        "message": "Techno-Notion API",
+        "message": "ForgeLab API",
         "docs": "/docs",
         "version": "2.0.0",
     }

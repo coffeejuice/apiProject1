@@ -117,7 +117,7 @@ export default function Sidebar() {
     <aside className="ui-pane w-96">
       <div className="ui-pane-header">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="ui-pane-title">Techno-Notion</h1>
+          <h1 className="ui-pane-title">ForgeLab</h1>
           <button
             type="button"
             onClick={logout}

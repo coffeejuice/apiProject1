@@ -5,7 +5,7 @@ apply: always
 # Project Cumulative Context (Codex)
 
 ## Purpose
-Techno-Notion is a monorepo for a project-scoped, Notion-like editor with a FastAPI backend and a React frontend.
+ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI backend and a React frontend.
 
 ## Authoritative sources
 - Primary: source code in `backend/` and `frontend/`.
@@ -58,8 +58,8 @@ Techno-Notion is a monorepo for a project-scoped, Notion-like editor with a Fast
 - State: Zustand stores, primarily `useDocumentsStore` for project/document flow
 - API access rule: use `frontend/src/lib/apiClient.ts` (avoid direct `fetch` in components)
 - Token and base URL persistence keys:
-  - `techno-notion-token`
-  - `techno-notion-base-url`
+  - `forgelab-token`
+  - `forgelab-base-url`
 - Main app screen (`frontend/src/pages/AppPage.tsx`) uses a split-pane layout:
   - `MenuBar` at top (full width, always visible)
   - below it: `ToolsSwitcher` (left, always visible), `ToolsPane` (middle, collapsible), right editor stack

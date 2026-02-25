@@ -2,5 +2,5 @@ import { expect, test } from '@playwright/test';
 
 test('frontend loads', async ({ page }) => {
   await page.goto('/');
-  await expect(page).toHaveTitle(/Techno-Notion/);
+  await expect(page).toHaveTitle(/ForgeLab/);
 });

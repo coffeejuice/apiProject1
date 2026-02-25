@@ -19,8 +19,8 @@ interface SessionState {
   initialize: () => void
 }
 
-const TOKEN_KEY = 'techno-notion-token'
-const BASE_URL_KEY = 'techno-notion-base-url'
+const TOKEN_KEY = 'forgelab-token'
+const BASE_URL_KEY = 'forgelab-base-url'
 const DEFAULT_BASE_URL = 'http://127.0.0.1:8001'
 
 export const useSessionStore = create<SessionState>((set, get) => ({

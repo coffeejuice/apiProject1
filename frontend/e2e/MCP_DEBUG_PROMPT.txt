@@ -1,4 +1,4 @@
-Playwright MCP debug run for Techno-Notion.
+Playwright MCP debug run for ForgeLab.
 
 Goal:
 Run this exact UI flow and collect diagnostics at every checkpoint to speed up frontend/backend debugging.

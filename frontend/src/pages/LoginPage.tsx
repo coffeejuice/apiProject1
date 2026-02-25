@@ -32,7 +32,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="ui-card p-4">
           <div className="text-center mb-4">
-            <h1 className="text-sm font-semibold text-gray-900">Techno-Notion</h1>
+            <h1 className="text-sm font-semibold text-gray-900">ForgeLab</h1>
             <p className="text-sm text-gray-600 mt-1">
               {isRegisterMode ? 'Create your account' : 'Sign in to your account'}
             </p>
