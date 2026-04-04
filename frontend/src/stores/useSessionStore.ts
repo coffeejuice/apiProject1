@@ -23,6 +23,46 @@ const TOKEN_KEY = 'forgelab-token'
 const BASE_URL_KEY = 'forgelab-base-url'
 const DEFAULT_BASE_URL = 'http://127.0.0.1:8001'
 
+function buildAuthErrorMessage(
+  mode: 'login' | 'register',
+  errorMessage: string | undefined,
+  status: number
+): string {
+  const message = (errorMessage || '').trim()
+
+  if (!message) {
+    if (status === 0) {
+      return 'Cannot reach API server. Check API Settings and server connection.'
+    }
+
+    return mode === 'register'
+      ? 'Registration failed. Check input fields and try again.'
+      : 'Login failed. Check credentials and try again.'
+  }
+
+  const normalized = message.toLowerCase()
+
+  if (mode === 'register') {
+    if (normalized.includes('login already registered')) {
+      return 'Username is already registered.\nUse a different username or sign in to the existing account.'
+    }
+
+    if (normalized.includes('email already registered')) {
+      return 'Email is already registered.\nUse a different email or sign in to the existing account.'
+    }
+
+    if (status === 422) {
+      return `Registration validation failed:\n${message}`
+    }
+  }
+
+  if (mode === 'login' && normalized.includes('incorrect username or password')) {
+    return 'Incorrect username or password.'
+  }
+
+  return message
+}
+
 export const useSessionStore = create<SessionState>((set, get) => ({
   token: null,
   user: null,
@@ -48,7 +88,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     if (!response.ok) {
       set({
         isLoading: false,
-        error: response.errorMessage || 'Login failed',
+        error: buildAuthErrorMessage('login', response.errorMessage, response.status),
       })
       return false
     }
@@ -87,7 +127,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     if (!response.ok) {
       set({
         isLoading: false,
-        error: response.errorMessage || 'Registration failed',
+        error: buildAuthErrorMessage('register', response.errorMessage, response.status),
       })
       return false
     }

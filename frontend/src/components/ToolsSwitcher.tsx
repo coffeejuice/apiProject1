@@ -1,4 +1,4 @@
-export type ToolView = 'projects' | 'documents' | 'blocksLibrary' | 'users'
+export type ToolView = 'projects' | 'documents' | 'blocks' | 'library' | 'users'
 
 interface ToolsSwitcherProps {
   activeView: ToolView | null
@@ -8,7 +8,8 @@ interface ToolsSwitcherProps {
 const TOOL_ITEMS: Array<{ id: ToolView; label: string; short: string }> = [
   { id: 'projects', label: 'Projects', short: 'P' },
   { id: 'documents', label: 'Documents', short: 'D' },
-  { id: 'blocksLibrary', label: 'BlocksLibrary', short: 'B' },
+  { id: 'blocks', label: 'Blocks', short: 'B' },
+  { id: 'library', label: 'Library', short: 'L' },
   { id: 'users', label: 'Users', short: 'U' },
 ]
 

@@ -43,6 +43,60 @@ function normalizeApiBaseUrl(url: string): string {
   return LOOPBACK_DEFAULT_BASE_URL
 }
 
+function formatErrorDetail(detail: unknown): string | undefined {
+  if (typeof detail === 'string') {
+    return detail
+  }
+
+  if (Array.isArray(detail)) {
+    const lines = detail
+      .map((entry) => {
+        if (!entry || typeof entry !== 'object') {
+          return String(entry)
+        }
+
+        const record = entry as Record<string, unknown>
+        const message =
+          (typeof record.msg === 'string' && record.msg) ||
+          (typeof record.message === 'string' && record.message) ||
+          (typeof record.error === 'string' && record.error) ||
+          ''
+
+        const location = Array.isArray(record.loc)
+          ? record.loc
+              .filter((token): token is string | number => typeof token === 'string' || typeof token === 'number')
+              .map(String)
+              .filter((token) => token !== 'body' && token !== 'query' && token !== 'path')
+              .join('.')
+          : ''
+
+        if (location && message) {
+          return `${location}: ${message}`
+        }
+
+        if (message) {
+          return message
+        }
+
+        return JSON.stringify(record)
+      })
+      .filter((line) => line && line.trim().length > 0)
+
+    return lines.length > 0 ? lines.join('\n') : undefined
+  }
+
+  if (detail && typeof detail === 'object') {
+    const record = detail as Record<string, unknown>
+    return (
+      (typeof record.message === 'string' && record.message) ||
+      (typeof record.error === 'string' && record.error) ||
+      JSON.stringify(record)
+    )
+  }
+
+  return undefined
+}
+
 class ApiClient {
   private baseUrl: string
   private token: string | null = null
@@ -154,7 +208,7 @@ class ApiClient {
       } else if (data && typeof data === 'object') {
         const dataObj = data as Record<string, unknown>
         errorMessage =
-          (typeof dataObj.detail === 'string' && dataObj.detail) ||
+          formatErrorDetail(dataObj.detail) ||
           (typeof dataObj.message === 'string' && dataObj.message) ||
           (typeof dataObj.error === 'string' && dataObj.error) ||
           undefined

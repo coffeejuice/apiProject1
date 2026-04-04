@@ -122,11 +122,11 @@
   labels: 'LANGUAGE|EN|Material:'
   labels_regex: ''
   db_column_names: material_id
-  foreign_keys: material(material_id,material_name)
+  foreign_keys: materials(material_id,name)
   tooltip_image: /src/ForgelabPostgresDbInstaller/images/tooltip_image_N.png
   is_simulation: false
   sql_query_formula: "\n        material_id SMALLINT NOT NULL DEFAULT 1,\n       \
-    \ FOREIGN KEY (material_id) REFERENCES material(material_id) ON DELETE SET DEFAULT"
+    \ FOREIGN KEY (material_id) REFERENCES materials(material_id) ON DELETE SET DEFAULT"
   is_forming_operation: false
   is_custom_die_assembly: false
   is_geometry: false
@@ -726,12 +726,10 @@
   labels: 'LANGUAGE|EN|Furnace class:'
   labels_regex: ''
   db_column_names: furnace_class_id
-  foreign_keys: furnace_class(furnace_class_id,furnace_class_name)
+  foreign_keys: ''
   tooltip_image: /src/ForgelabPostgresDbInstaller/images/tooltip_image_N.png
   is_simulation: false
-  sql_query_formula: "\n        furnace_class_id SMALLINT NOT NULL DEFAULT 1,\n  \
-    \      FOREIGN KEY (furnace_class_id) REFERENCES furnace_class(furnace_class_id)\
-    \ ON DELETE SET DEFAULT"
+  sql_query_formula: "\n        furnace_class_id SMALLINT NOT NULL DEFAULT 1"
   is_forming_operation: false
   is_custom_die_assembly: false
   is_geometry: false
@@ -951,11 +949,11 @@
   labels: 'LANGUAGE|EN|Press name:'
   labels_regex: ''
   db_column_names: press_id
-  foreign_keys: press(press_id,name)
+  foreign_keys: presses(press_id,name)
   tooltip_image: /src/ForgelabPostgresDbInstaller/images/tooltip_image_N.png
   is_simulation: false
   sql_query_formula: "\n        press_id SMALLINT NOT NULL DEFAULT 1,\n        FOREIGN\
-    \ KEY (press_id) REFERENCES press(press_id) ON DELETE SET DEFAULT"
+    \ KEY (press_id) REFERENCES presses(press_id) ON DELETE SET DEFAULT"
   is_forming_operation: false
   is_custom_die_assembly: false
   is_geometry: false
@@ -1030,7 +1028,7 @@
   tooltip_image: /src/ForgelabPostgresDbInstaller/images/tooltip_image_N.png
   is_simulation: false
   sql_query_formula: "\n        die_assembly_id INT NOT NULL DEFAULT 1,\n        FOREIGN\
-    \ KEY (die_assembly_id) REFERENCES die_assembly(id) ON DELETE SET DEFAULT"
+    \ KEY (die_assembly_id) REFERENCES die_assemblies(id) ON DELETE SET DEFAULT"
   is_forming_operation: false
   is_custom_die_assembly: false
   is_geometry: false
@@ -1068,7 +1066,7 @@
   tooltip_image: /src/ForgelabPostgresDbInstaller/images/tooltip_image_N.png
   is_simulation: false
   sql_query_formula: "\n        die_assembly_id INT NOT NULL DEFAULT 1,\n        FOREIGN\
-    \ KEY (die_assembly_id) REFERENCES die_assembly(id) ON DELETE SET DEFAULT"
+    \ KEY (die_assembly_id) REFERENCES die_assemblies(id) ON DELETE SET DEFAULT"
   is_forming_operation: false
   is_custom_die_assembly: false
   is_geometry: false
@@ -1106,7 +1104,7 @@
   tooltip_image: /src/ForgelabPostgresDbInstaller/images/tooltip_image_N.png
   is_simulation: false
   sql_query_formula: "\n        die_assembly_id INT NOT NULL DEFAULT 1,\n        FOREIGN\
-    \ KEY (die_assembly_id) REFERENCES die_assembly(id) ON DELETE SET DEFAULT"
+    \ KEY (die_assembly_id) REFERENCES die_assemblies(id) ON DELETE SET DEFAULT"
   is_forming_operation: false
   is_custom_die_assembly: false
   is_geometry: false
@@ -1144,7 +1142,7 @@
   tooltip_image: /src/ForgelabPostgresDbInstaller/images/tooltip_image_N.png
   is_simulation: false
   sql_query_formula: "\n        die_assembly_id INT NOT NULL DEFAULT 1,\n        FOREIGN\
-    \ KEY (die_assembly_id) REFERENCES die_assembly(id) ON DELETE SET DEFAULT"
+    \ KEY (die_assembly_id) REFERENCES die_assemblies(id) ON DELETE SET DEFAULT"
   is_forming_operation: false
   is_custom_die_assembly: false
   is_geometry: false
@@ -1256,7 +1254,7 @@
   tooltip_image: /src/ForgelabPostgresDbInstaller/images/tooltip_image_N.png
   is_simulation: false
   sql_query_formula: "\n        top_die_id INT NOT NULL DEFAULT 1,\n        FOREIGN\
-    \ KEY (top_die_id) REFERENCES die(id) ON DELETE SET DEFAULT"
+    \ KEY (top_die_id) REFERENCES dies(id) ON DELETE SET DEFAULT"
   is_forming_operation: false
   is_custom_die_assembly: true
   is_geometry: false
@@ -1294,7 +1292,7 @@
   tooltip_image: /src/ForgelabPostgresDbInstaller/images/tooltip_image_N.png
   is_simulation: false
   sql_query_formula: "\n        top_die_id INT NOT NULL DEFAULT 1,\n        FOREIGN\
-    \ KEY (top_die_id) REFERENCES die(id) ON DELETE SET DEFAULT"
+    \ KEY (top_die_id) REFERENCES dies(id) ON DELETE SET DEFAULT"
   is_forming_operation: false
   is_custom_die_assembly: true
   is_geometry: false
@@ -1332,7 +1330,7 @@
   tooltip_image: /src/ForgelabPostgresDbInstaller/images/tooltip_image_N.png
   is_simulation: false
   sql_query_formula: "\n        top_die_id INT NOT NULL DEFAULT 1,\n        FOREIGN\
-    \ KEY (top_die_id) REFERENCES die(id) ON DELETE SET DEFAULT"
+    \ KEY (top_die_id) REFERENCES dies(id) ON DELETE SET DEFAULT"
   is_forming_operation: false
   is_custom_die_assembly: true
   is_geometry: false
@@ -1407,7 +1405,7 @@
   tooltip_image: /src/ForgelabPostgresDbInstaller/images/tooltip_image_N.png
   is_simulation: false
   sql_query_formula: "\n        bottom_die_id INT NOT NULL DEFAULT 1,\n        FOREIGN\
-    \ KEY (bottom_die_id) REFERENCES die(id) ON DELETE SET DEFAULT"
+    \ KEY (bottom_die_id) REFERENCES dies(id) ON DELETE SET DEFAULT"
   is_forming_operation: false
   is_custom_die_assembly: true
   is_geometry: false
@@ -1445,7 +1443,7 @@
   tooltip_image: /src/ForgelabPostgresDbInstaller/images/tooltip_image_N.png
   is_simulation: false
   sql_query_formula: "\n        bottom_die_id INT NOT NULL DEFAULT 1,\n        FOREIGN\
-    \ KEY (bottom_die_id) REFERENCES die(id) ON DELETE SET DEFAULT"
+    \ KEY (bottom_die_id) REFERENCES dies(id) ON DELETE SET DEFAULT"
   is_forming_operation: false
   is_custom_die_assembly: true
   is_geometry: false
@@ -1483,7 +1481,7 @@
   tooltip_image: /src/ForgelabPostgresDbInstaller/images/tooltip_image_N.png
   is_simulation: false
   sql_query_formula: "\n        bottom_die_id INT NOT NULL DEFAULT 1,\n        FOREIGN\
-    \ KEY (bottom_die_id) REFERENCES die(id) ON DELETE SET DEFAULT"
+    \ KEY (bottom_die_id) REFERENCES dies(id) ON DELETE SET DEFAULT"
   is_forming_operation: false
   is_custom_die_assembly: true
   is_geometry: false

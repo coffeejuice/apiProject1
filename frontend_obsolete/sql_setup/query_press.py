@@ -7,33 +7,33 @@ from forgelab.sql_setup.connections import close_connection, connect_to_db, load
 def postgresql_get_list_of_press(cur) -> (list, list):
     """Returns two lists: list of column names and list of tuples with press data."""
     press_columns = ('press_id', 'name')
-    cur.execute(f"SELECT {press_columns[0]}, {press_columns[1]} FROM press")
+    cur.execute(f"SELECT {press_columns[0]}, {press_columns[1]} FROM presses")
     press_list = cur.fetchall()
     return press_columns, press_list
 
 
 def postgresql_get_press_record(cur, press_id: int) -> (list, list):
     """Get press_id. Returns two lists: column names and press record."""
-    cur.execute("SHOW COLUMNS FROM press")
+    cur.execute("SHOW COLUMNS FROM presses")
     press_columns = [i[0] for i in cur.fetchall()]
-    cur.execute("SELECT * FROM press WHERE press_id = %s LIMIT 1", (press_id,))
+    cur.execute("SELECT * FROM presses WHERE press_id = %s LIMIT 1", (press_id,))
     press_data = cur.fetchone()
     return press_columns, press_data
 
 
 def postgresql_get_list_of_press_mode(cur, press_id: int) -> (list, list):
     """Get press_id. Returns two lists: list of column names and list of tuples with press modes data."""
-    press_columns = ('press_mode_id', 'press_mode_name')
-    cur.execute(f"SELECT {press_columns[0]}, {press_columns[1]} FROM press_mode WHERE press_id = %s", (press_id,))
+    press_columns = ('press_mode_id', 'name')
+    cur.execute(f"SELECT {press_columns[0]}, {press_columns[1]} FROM press_modes WHERE press_id = %s", (press_id,))
     press_mode_list = cur.fetchall()
     return press_columns, press_mode_list
 
 
 def postgresql_get_press_mode_record(cur, press_mode_id: int) -> (list, list):
     """Get press_mode_id. Returns two lists: column names and press mode record."""
-    cur.execute("SHOW COLUMNS FROM press_mode")
+    cur.execute("SHOW COLUMNS FROM press_modes")
     press_mode_columns = [i[0] for i in cur.fetchall()]
-    cur.execute("SELECT * FROM press_mode WHERE press_mode_id = %s LIMIT 1", (press_mode_id,))
+    cur.execute("SELECT * FROM press_modes WHERE press_mode_id = %s LIMIT 1", (press_mode_id,))
     press_mode_data = cur.fetchone()
     return press_mode_columns, press_mode_data
 

@@ -38,17 +38,8 @@ def insert_languages(cur):
 
 
 def insert_furnace_class_records(cur):
-    """Add materials to materials table in postgresql 'forgelab_db' database."""
-
-    query_text = "INSERT INTO furnace_class (furnace_class_name) VALUES (%s)"
-    query_values = [
-        ('LANGUAGE|EN|Select class|LANGUAGE|RU|Выберите класс|LANGUAGE|ZH_HANS|选择班级',),
-        ('LANGUAGE|EN|Class I|LANGUAGE|RU|I Класс|LANGUAGE|ZH_HANS|一等',),
-        ('LANGUAGE|EN|Class II|LANGUAGE|RU|II Класс|LANGUAGE|ZH_HANS|二等',),
-        ('LANGUAGE|EN|Class III|LANGUAGE|RU|III Класс|LANGUAGE|ZH_HANS|三等',),
-        ('LANGUAGE|EN|Class VI|LANGUAGE|RU|VI Класс|LANGUAGE|ZH_HANS|四等',)
-    ]
-    cur.executemany(query_text, query_values)
+    """Deprecated: furnace_class table was removed."""
+    return
 
 
 def insert_departments_records(cur):

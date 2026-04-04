@@ -32,6 +32,46 @@ export interface User {
   email: string
 }
 
+export interface SeedRunSummary {
+  id: number
+  seed_name: string
+  file_hash: string
+  status: string
+  started_at?: string | null
+  finished_at?: string | null
+  details?: Record<string, unknown> | null
+}
+
+export interface SetupStatusResponse {
+  file_exists: boolean
+  file_path: string
+  file_hash: string | null
+  counts: Record<string, number>
+  needs_seed: boolean
+  is_seeded: boolean
+  can_seed_without_auth: boolean
+  last_run?: SeedRunSummary | null
+}
+
+export interface SeedLibraryResponse {
+  ok: boolean
+  run_id: number
+  file_hash: string
+  tables_processed: Record<string, number>
+  only_missing: boolean
+}
+
+export interface ResetAdminPasswordRequest {
+  new_password: string
+}
+
+export interface ResetAdminPasswordResponse {
+  ok: boolean
+  user_id: number
+  login: string
+  message: string
+}
+
 // Projects
 export interface Project {
   id: string
@@ -119,6 +159,87 @@ export interface CommitRequest {
 export interface CommitResponse {
   success: boolean
   message?: string
+}
+
+// Library DB tables
+export interface LibraryDbUserRecord {
+  user_id: number
+  login: string
+  full_name?: string | null
+}
+
+export interface DieTypeRecord {
+  id: number
+  name: unknown
+}
+
+export interface MaterialRecord {
+  material_id: number
+  name: unknown
+  source: string
+  source_version: string
+  file_name: string
+  properties: unknown
+  is_obsolete: boolean
+  created_at: string
+  obsolete_at?: string | null
+  owner_id?: number | null
+}
+
+export interface DieRecord {
+  id: number
+  name: unknown
+  die_type_id: number
+  owner_user_id?: number | null
+  die_template_file_name?: string | null
+  stl_file_name?: string | null
+  stl_file_url?: string | null
+  stl_file_exists?: boolean
+  inventory_number?: string | null
+  properties?: unknown
+  is_obsolete: boolean
+  created_at: string
+  obsolete_at?: string | null
+}
+
+export interface DieAssemblyRecord {
+  id: number
+  name: unknown
+  owner_user_id?: number | null
+  top_die_id?: number | null
+  bottom_die_id?: number | null
+  left_die_id?: number | null
+  right_die_id?: number | null
+  is_obsolete?: boolean | null
+  created_at: string
+  obsolete_at?: string | null
+}
+
+export interface PressRecord {
+  id: number
+  owner_user_id?: number | null
+  name: unknown
+  is_obsolete: boolean
+  created_at: string
+  obsolete_at?: string | null
+}
+
+export interface PowerLimitPoint {
+  id?: number | null
+  force?: number | null
+  speed?: number | null
+}
+
+export interface PressModeRecord {
+  id: number
+  press_id?: number | null
+  owner_user_id?: number | null
+  name?: unknown
+  properties: Record<string, unknown>
+  is_default_press_mode: boolean
+  is_obsolete: boolean
+  created_at: string
+  obsolete_at?: string | null
 }
 
 // Lineage + diff

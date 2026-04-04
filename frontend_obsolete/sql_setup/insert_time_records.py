@@ -33,10 +33,10 @@ def insert_time_operation_changing_records(conn):
     # PRESS type_id's
     try:
         with  conn.cursor() as cur:
-            cur.execute("SELECT press_id FROM press")
+            cur.execute("SELECT press_id FROM presses")
             press_id_list = [i[0] for i in cur.fetchall()]
     except (Exception, DatabaseError) as _err:
-        print(f"\nQUERY FAILED: 'SELECT press_id FROM press'\nError: {_err}\n")
+        print(f"\nQUERY FAILED: 'SELECT press_id FROM presses'\nError: {_err}\n")
         return
 
     try:

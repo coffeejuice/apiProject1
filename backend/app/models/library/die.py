@@ -1,62 +1,64 @@
-from sqlalchemy import String, Integer, DateTime, ForeignKey, Enum as SQLEnum, Boolean, func
+from sqlalchemy import String, Integer, DateTime, ForeignKey, Boolean, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
-from typing import List, Optional
-import enum
+from typing import Any, Optional
 from app.database import Base
 
 
-class DieType(enum.Enum):
-    flat = "flat"
-    v_die = "v_die"
-    rounding = "rounding"
-    knife = "knife"
-    gfm_die = "gfm_die"
+class DieType(Base):
+    __tablename__ = "die_types"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[Any] = mapped_column(JSONB, nullable=False)
 
 
 class DieAssembly(Base):
-    __tablename__ = "die_assembly"
+    __tablename__ = "die_assemblies"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    die_assembly_name: Mapped[str] = mapped_column(String(127), nullable=False)
-    name: Mapped[str] = mapped_column(String(1023), nullable=False)
-    die_type: Mapped[DieType] = mapped_column(SQLEnum(DieType, name="die_type_enum"), nullable=False)
+    name: Mapped[Any] = mapped_column(JSONB, nullable=False)
+    owner_user_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey("users.user_id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    top_die_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("dies.id", ondelete="SET NULL"), nullable=True)
+    bottom_die_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("dies.id", ondelete="SET NULL"), nullable=True)
+    left_die_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("dies.id", ondelete="SET NULL"), nullable=True)
+    right_die_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("dies.id", ondelete="SET NULL"), nullable=True)
     is_obsolete: Mapped[bool] = mapped_column(Boolean, default=False, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=func.now())
-    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=func.now(), server_default=func.now())
     obsolete_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
-    dies: Mapped[List["Die"]] = relationship("Die", back_populates="die_assembly")
+    top_die: Mapped[Optional["Die"]] = relationship("Die", foreign_keys=[top_die_id])
+    bottom_die: Mapped[Optional["Die"]] = relationship("Die", foreign_keys=[bottom_die_id])
+    left_die: Mapped[Optional["Die"]] = relationship("Die", foreign_keys=[left_die_id])
+    right_die: Mapped[Optional["Die"]] = relationship("Die", foreign_keys=[right_die_id])
 
 
 class Die(Base):
-    __tablename__ = "die"
+    __tablename__ = "dies"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    die_assembly_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("die_assembly.id", ondelete="RESTRICT"), nullable=True, default=None)
 
-    die_name: Mapped[str] = mapped_column(String(127), nullable=False)
-    name: Mapped[str] = mapped_column(String(1023), nullable=False)
-    die_type: Mapped[DieType] = mapped_column(SQLEnum(DieType, name="die_type_enum"), nullable=False)
+    name: Mapped[Any] = mapped_column(JSONB, nullable=False)
+    die_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("die_types.id", ondelete="RESTRICT"), nullable=False)
+    owner_user_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey("users.user_id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
     die_template_file_name: Mapped[str] = mapped_column(String(1023), default="", nullable=True)
-    die_assembly_name: Mapped[Optional[str]] = mapped_column(String(127), nullable=True)
-    press_die_match_code: Mapped[Optional[str]] = mapped_column(String(127), nullable=True)
     inventory_number: Mapped[str] = mapped_column(String(127), default="", nullable=True)
 
-    is_matching_as_top: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    is_matching_as_bottom: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    is_matching_as_minus_y: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    is_matching_as_plus_y: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-
-    dimensions: Mapped[str] = mapped_column(String(4095), default="", nullable=True)
+    properties: Mapped[Optional[Any]] = mapped_column(JSONB, nullable=True)
 
     is_obsolete: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=func.now())
-    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=func.now(), server_default=func.now())
     obsolete_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
-    die_assembly: Mapped[Optional["DieAssembly"]] = relationship("DieAssembly", back_populates="dies")
-
+    die_type_item: Mapped["DieType"] = relationship("DieType")

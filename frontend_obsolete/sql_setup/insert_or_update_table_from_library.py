@@ -9,21 +9,29 @@ def query_insert_or_update_records_from_library(cur,
                                                 table_name: str,
                                                 column_name_of_unique_name: str,
                                                 exclude_columns: list,
-                                                is_convert_dict_to_json_str: bool = False):
+                                                library_key: str | None = None,
+                                                is_convert_dict_to_json_str: bool = False,
+                                                json_columns: list[str] | None = None):
+    if library_key is None:
+        library_key = table_name
     sql_column_names, sql_column_values = select_from_table(cur,
                                                             table_name=table_name,
                                                             column_name_of_unique_name=column_name_of_unique_name,
                                                             order_by='')
-    common_column_names = common_keys(sql_column_names, library_key=table_name)
+    common_column_names = common_keys(sql_column_names, library_key=library_key)
     [common_column_names.remove(column_name) for column_name in exclude_columns if column_name in common_column_names]
 
-    insert_records, update_records = records_for_insert_and_update(table_name=table_name,
+    insert_records, update_records = records_for_insert_and_update(table_name=library_key,
                                                                    matching_column_name=column_name_of_unique_name,
                                                                    sql_records_dict=sql_column_values)
-    for record in library[table_name]:
+    for record in library[library_key]:
         unique_name = record[column_name_of_unique_name]
         record_data = delete_columns_except_common(record, common_column_names)
-        record_data = convert_dict_values_to_json_string(record_data, is_convert_dict_to_json_str)
+        record_data = convert_dict_values_to_json_string(
+            record_data,
+            is_convert_dict_to_json_str,
+            json_columns=json_columns,
+        )
         if unique_name in insert_records:
             query_insert_record(cur,
                                 table_name=table_name,
@@ -38,12 +46,17 @@ def query_insert_or_update_records_from_library(cur,
             raise ValueError(f"Unique name '{unique_name}' not found in insert or update records")
 
 
-def convert_dict_values_to_json_string(input_dict: dict, is_convert_dict_to_json_str: bool) -> dict:
-    # apply json.dumb function to all dict values
+def convert_dict_values_to_json_string(input_dict: dict,
+                                       is_convert_dict_to_json_str: bool,
+                                       json_columns: list[str] | None = None) -> dict:
+    # Apply json.dumps for selected columns and optionally for dict values.
     output = {}
+    json_columns_set = set(json_columns or [])
     for key in input_dict.keys():
-        if is_convert_dict_to_json_str and isinstance(input_dict[key], dict):
-            output[key] = json.dumps(input_dict[key])
+        if key in json_columns_set:
+            output[key] = json.dumps(input_dict[key], ensure_ascii=False)
+        elif is_convert_dict_to_json_str and isinstance(input_dict[key], dict):
+            output[key] = json.dumps(input_dict[key], ensure_ascii=False)
         else:
             output[key] = input_dict[key]
     return output

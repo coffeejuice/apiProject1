@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import Optional
 import enum
 
-from sqlalchemy import Boolean, DateTime, Enum as SQLEnum, ForeignKey, Integer, JSON, String
+from sqlalchemy import Boolean, DateTime, Enum as SQLEnum, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -35,7 +36,7 @@ class Library(Base):
         index=True,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    props: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    props: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow

@@ -3,8 +3,8 @@ from typing import Optional, TYPE_CHECKING
 import uuid
 import enum
 
-from sqlalchemy import String, JSON, DateTime, ForeignKey, Index, Boolean, SmallInteger, BigInteger
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import String, DateTime, ForeignKey, Index, Boolean, SmallInteger, BigInteger
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from app.database import Base
@@ -60,7 +60,7 @@ class Block(Base):
         UUID(as_uuid=True), ForeignKey("blocks.block_id", ondelete="SET NULL"), nullable=True, default=None
     )
     block_type_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
-    props: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    props: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False

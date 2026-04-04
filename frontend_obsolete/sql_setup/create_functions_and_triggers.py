@@ -36,7 +36,7 @@ CREATE OR REPLACE FUNCTION update_updated_at_column_in_die()
 
     update_updated_at_in_die_trigger = """
 CREATE TRIGGER update_updated_at_in_die_trigger
-    BEFORE UPDATE ON die
+    BEFORE UPDATE ON dies
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column_in_die();"""
 
@@ -58,7 +58,7 @@ CREATE OR REPLACE FUNCTION update_obsolete_at_column_in_die()
 
     update_obsolete_at_in_die_trigger = """
 CREATE TRIGGER update_obsolete_at_in_die_trigger
-    BEFORE UPDATE ON die
+    BEFORE UPDATE ON dies
     FOR EACH ROW
     WHEN (OLD.is_obsolete IS DISTINCT FROM NEW.is_obsolete)
     EXECUTE FUNCTION update_obsolete_at_column_in_die();"""

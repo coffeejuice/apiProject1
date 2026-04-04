@@ -15,7 +15,7 @@ Configuration/setup details (including `.env` editing during install) are tracke
 - Block ordering is linked-list based (no `order_key`, no block tree).
 
 ## Cross-domain note
-- `projects.material_id` now references `library.id` (unified `library` table).
+- `projects.material_id` now references `materials.material_id` (dedicated `materials` table).
 - This does not change document/block storage, linked-list ordering, commit operations, or block handler behavior.
 
 ## Document model (`backend/app/models/document/document.py`)
@@ -54,7 +54,7 @@ Configuration/setup details (including `.env` editing during install) are tracke
   - `previous_block_id` (nullable UUID)
   - `next_block_id` (nullable UUID)
   - `block_type_id` (string)
-  - `props` (JSON dict)
+  - `props` (JSONB dict)
   - `created_at`, `updated_at`
 - System metadata:
   - `is_system` (bool)
@@ -63,6 +63,22 @@ Configuration/setup details (including `.env` editing during install) are tracke
 - Indexes:
   - `(document_id, previous_block_id)`
   - `(document_id, next_block_id)`
+
+## `blocks.props` JSONB contract
+- `props` is schema-flexible JSONB, but active handlers/components impose de facto structures.
+- Handler-backed structures:
+  - `document_heading`:
+    - persisted/editable fields: `name`, `heat_no`, `finished_size`, `stock_size`, `stock_weight`, `remarks`, `preview_status`
+    - response enrichment fields: `project_id`, `source_document_id`, `editor_user_id`, `created_at`, `updated_at`
+    - optional nested object: `version` with `document_version_id`, `name`, `is_editable`, `execution_order`, `operations_count`, `created_at`, `last_modified`
+  - `input_workpiece`:
+    - persisted/editable fields: `geometry_type_id`, `mesh_elements`, `weight`, `attributes`
+    - response enrichment fields: `title`, `available_geometry_types`, optional `selected_geometry`
+    - `available_geometry_types[]` item shape: `id`, `name`, `labels[]`, `columns[]`
+- Enum-only editor blocks (frontend `BasicContentBlock`) use lightweight props:
+  - `paragraph`, `heading1`, `heading2`, `list`, `code`, `quote`: usually `text`
+  - `todo`: `text` + boolean `checked`
+  - `divider`: typically empty object
 
 ## Linked-list ordering behavior (`backend/app/services/block_service.py`)
 - Document order root is `documents.first_block_id`.
@@ -128,21 +144,62 @@ Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockE
 - Main screen uses split-pane layout:
   - `MenuBar` (top, full width, always visible)
   - below: `ToolsSwitcher` (left, always visible), `ToolsPane` (middle, collapsible), right editor stack
-  - right editor stack: `VisualEditor` (top, collapsible) + `BlockEditor` (bottom, always visible)
-- `ToolsSwitcher` toggles current `ToolsPane` view; if no view is active, `ToolsPane` is hidden.
+  - right editor stack: `TopEditorPane` (conditional) + `MainEditorPane` (conditional)
+- `ToolsSwitcher` toggles current `ToolsPane` view.
+  - if no view is active, `ToolsPane` is hidden
+  - clicking the currently active tool hides `ToolsPane` only and does not change the current `MainEditorPane` view
 - `ToolsPane` views:
   - `Projects` (list/filter/create modal)
   - `Documents` (project-scoped list/filter/new/copy modals)
-  - `BlocksLibrary` (drag-and-drop/insert block palette)
+  - `Blocks` (drag-and-drop/insert block palette)
+  - `Library` (selector for `Dies`, `Die Assemblies`, `Presses`, `Materials`)
   - `Users` (current user/session information)
 - `MenuBar` contains document-level controls (`Save`, `Cancel`, `Undo`, `Redo`, `Lineage`, `Sessions`) and save/dirty status.
-- `VisualEditor` renders a horizontal block icon strip in the same order as `BlockEditor` and supports:
+- `MainEditorPane` routes active content:
+  - `BlockEditor` when current tool is `Projects`, `Documents`, `Blocks`, or `Users`
+  - `Dies`, `Die Assemblies`, `Presses`, `Materials` when current tool is `Library`
+- `Dies` view behavior:
+  - one die card per `dies` record after active filters
+  - die card layout: top row = die name; second row = square STL preview (left) + die metadata block (right)
+  - each die card includes an interactive STL preview window (camera-only)
+  - STL source is derived from `die_template_file_name` (`*.zip` stem -> `*.stl`) and loaded through `/library/db/dies/stl/{file_name}`
+  - interactions: rotate, pan, zoom, and reset view without changing model coordinates
+  - initial camera is isometric (Z up, X left-down, Y right-down); model is centered and fitted to ~90% of viewport
+- `Presses` view behavior:
+  - one press card per `presses` record
+  - each press card contains combined related `press_modes` data
+  - layout inside press card:
+    - top row: `Power Limit Diagram` + `Power Limit Table`
+    - bottom: `Press Modes Table`
+  - `Power Limit Diagram`:
+    - one curve per related press mode
+    - engineering-style axes with X = `Force, MN`, Y = `Speed, mm/s`
+    - always renders `x=0` and `y=0` scale ticks
+    - axis minimum snaps to `0` when there are no negative values on that axis
+    - exactly one curve is selected at any time; default selection is press mode with `is_default_press_mode = true` (fallback: first by `id`)
+  - `Power Limit Table`:
+    - shows data for the currently selected curve/press mode only
+  - `Press Modes Table`:
+    - one row per related `press_modes` record
+    - includes `press_modes.properties` fields except `power_limit`
+    - left legend column is sticky
+    - rows are sortable by clicking column headers (default sort by `id`)
+    - horizontal scroll is synchronized across all press cards
+- `Materials` view behavior:
+  - one material card per `materials` record after active filters
+  - text filter matches `material_id`, localized `name`, `source`, `source_version`, and `file_name`
+  - owner filtering reuses the shared library owner filter controls
+  - selecting a card expands the raw `properties` JSON payload inline
+- `TopEditorPane` routes top content:
+  - `VisualEditor` when `BlockEditor` is active
+  - library action menu when a library view is active
+- `VisualEditor` view in `TopEditorPane` renders a horizontal block icon strip in the same order as `BlockEditor` and supports:
   - full hide/show behavior: when collapsed it is not rendered at all
-  - visibility toggle is provided by `MenuBar` (no duplicate collapse control inside `VisualEditor`)
+  - visibility toggle is provided by `MenuBar` in block-editor mode
   - click-to-scroll navigation to block anchors inside `BlockEditor`
   - viewer mode type visibility toggles (hide/show per block type)
   - editor mode with multi-selection, drag-drop reordering, Ctrl/Cmd-drop copy, insert, and delete
-- Structural edits from `VisualEditor` and `BlocksLibrary` are blocked while unsaved draft prop edits exist (user must save/cancel first).
+- Structural edits from `VisualEditor` and `Blocks` are blocked while unsaved draft prop edits exist (user must save/cancel first).
 - Frontend visual styling for document editing UI is standardized on a compact VisualEditor-derived system:
   - shared style primitives are defined in `frontend/src/index.css` (`ui-*` classes)
   - active editor-related components (`MenuBar`, `ToolsPane`, `ToolsSwitcher`, `VisualEditor`, `BlockEditor`, and block components) should consume `ui-*` classes instead of ad-hoc utility combinations for common controls/surfaces

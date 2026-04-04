@@ -214,7 +214,7 @@ def postgresql_add_test_process(cur):
     cur.execute("SELECT user_id FROM accounts WHERE user_id > 1;")
     user_id_all = [i[0] for i in cur.fetchall()]
 
-    cur.execute("SELECT material_id FROM material WHERE material_id > 1;")
+    cur.execute("SELECT material_id FROM materials WHERE material_id > 1;")
     material_id_all = [i[0] for i in cur.fetchall()]
 
     formula = (

@@ -1,10 +1,13 @@
+import { Link } from 'react-router-dom'
+
 import type { BlockEditorMeta } from './BlockEditor'
 
 interface MenuBarProps {
   meta: BlockEditorMeta
   hasDocument: boolean
-  isVisualEditorVisible: boolean
-  onToggleVisualEditor: () => void
+  isTopEditorVisible: boolean
+  showTopEditorToggle: boolean
+  onToggleTopEditor: () => void
   onSave: () => void
   onCancel: () => void
   onUndo: () => void
@@ -16,8 +19,9 @@ interface MenuBarProps {
 export default function MenuBar({
   meta,
   hasDocument,
-  isVisualEditorVisible,
-  onToggleVisualEditor,
+  isTopEditorVisible,
+  showTopEditorToggle,
+  onToggleTopEditor,
   onSave,
   onCancel,
   onUndo,
@@ -39,13 +43,19 @@ export default function MenuBar({
       </div>
 
       <div className="flex items-center gap-2 flex-wrap justify-end">
-        <button
-          type="button"
-          onClick={onToggleVisualEditor}
-          className="ui-btn"
-        >
-          {isVisualEditorVisible ? 'Hide VisualEditor' : 'Show VisualEditor'}
-        </button>
+        <Link to="/setup" className="ui-btn">
+          Setup
+        </Link>
+
+        {showTopEditorToggle && (
+          <button
+            type="button"
+            onClick={onToggleTopEditor}
+            className="ui-btn"
+          >
+            {isTopEditorVisible ? 'Hide TopEditorPane' : 'Show TopEditorPane'}
+          </button>
+        )}
 
         <button
           type="button"

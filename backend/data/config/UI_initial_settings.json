@@ -1,0 +1,975 @@
+{
+  "operations": [
+    "Draw",
+    "Upset",
+    "Cut",
+    "Heat",
+    "Pause"
+  ],
+  "feed_directions": {
+    "Draw": [
+      "-->",
+      "<--"
+    ],
+    "Upset": [
+      "-->",
+      "<--"
+    ],
+    "Cut": [
+      "-->",
+      "<--"
+    ],
+    "Heat": [
+      "NA"
+    ],
+    "Pause": [
+      "NA"
+    ],
+    "NewBillet": [
+      "NA"
+    ]
+  },
+  "deformation_control": {
+    "Draw": [
+      "E",
+      "P",
+      "H"
+    ],
+    "Upset": [
+      "E",
+      "P",
+      "H"
+    ],
+    "Cut": {
+      "Equals": [
+        "k1-PcNum"
+      ],
+      "KeepFirst": [
+        "Length",
+        "Percent"
+      ],
+      "DeleteFirst": [
+        "Length",
+        "Percent"
+      ]
+    },
+    "Heat": [
+      "NA"
+    ],
+    "Pause": [
+      "NA"
+    ],
+    "NewBillet": [
+      "NA"
+    ]
+  },
+  "first_pass_values": {
+    "initialize_table": {
+      "operation_number": 1,
+      "operation_type": "NewBillet",
+      "step_control": "TC4",
+      "deformation_control": "NA",
+      "angle": "0",
+      "max_temperature": 20.0,
+      "operation_time": 0.0,
+      "total_time": 0.0,
+      "feed_first": 0.0,
+      "feed_middle": 0.0,
+      "feed_last": 0.0,
+      "speed": 0.0,
+      "final_height": 500.0,
+      "final_width": 500.0,
+      "final_length": 1000.0,
+      "final_diagonal": 600.0,
+      "elongation_channel_a": 1.0,
+      "elongation_channel_b": 1.0,
+      "strain_accumulated_channel_a": 0.0,
+      "strain_accumulated_channel_b": 0.0
+    },
+    "update_pass": {
+      "operation_number": 1,
+      "operation_type": "NewBillet",
+      "deformation_control": "NA",
+      "angle": "0",
+      "feed_first": 0.0,
+      "feed_middle": 0.0,
+      "feed_last": 0.0,
+      "speed": 0.0,
+      "elongation_channel_a": 1.0,
+      "elongation_channel_b": 1.0,
+      "strain_accumulated_channel_a": 0.0,
+      "strain_accumulated_channel_b": 0.0
+    }
+  },
+  "variables_to_show_in_widget": [
+    "operation_type",
+    "deformation_control",
+    "step_control",
+    "press",
+    "die",
+    "feed_direction",
+    "angle",
+    "feed_first",
+    "feed_middle",
+    "feed_last",
+    "speed",
+    "final_height",
+    "final_width",
+    "final_length",
+    "final_diagonal",
+    "final_chamfer"
+  ],
+  "change_operation_type_initial_parameters": {
+    "Draw": {
+      "operation_type": "NA",
+      "deformation_control": "E",
+      "step_control": "Feed",
+      "feed_direction": "-->",
+      "angle": "90",
+      "feed_first": 250.0,
+      "feed_middle": 250.0,
+      "feed_last": 250.0,
+      "speed": 20.0,
+      "relative_deformation": 12.0
+    },
+    "Upset": {
+      "operation_type": "NA",
+      "deformation_control": "E",
+      "step_control": "StepsNum",
+      "feed_direction": "-->",
+      "angle": "90",
+      "feed_first": 250.0,
+      "feed_middle": 250.0,
+      "feed_last": 250.0,
+      "speed": 20.0,
+      "relative_deformation": 12.0
+    },
+    "Cut": {
+      "operation_type": "NA",
+      "step_control": "Equals",
+      "deformation_control": "k1-PcNum",
+      "feed_direction": "-->",
+      "angle": "0",
+      "relative_deformation": 0.0,
+      "penetration": 0.5,
+      "feed_first": 0.0,
+      "feed_middle": 0.0,
+      "feed_last": 0.0,
+      "speed": 40.0,
+      "elongation_channel_a": 1.0,
+      "strain_accumulated_channel_a": 0.0,
+      "num_of_bites": 2
+    },
+    "Heat": {
+      "operation_type": "NA",
+      "deformation_control": "NA",
+      "step_control": "NA",
+      "feed_direction": "NA",
+      "angle": "0",
+      "relative_deformation": 0.0,
+      "penetration": 0.0,
+      "feed_first": 0.0,
+      "feed_middle": 0.0,
+      "feed_last": 0.0,
+      "speed": 0.0,
+      "num_of_bites": 0,
+      "elongation_channel_a": 1.0,
+      "strain_accumulated_channel_a": 0.0
+    },
+    "Pause": {
+      "operation_type": "NA",
+      "deformation_control": "NA",
+      "step_control": "NA",
+      "feed_direction": "NA",
+      "angle": "0",
+      "relative_deformation": 0.0,
+      "penetration": 0.0,
+      "feed_first": 0.0,
+      "feed_middle": 0.0,
+      "feed_last": 0.0,
+      "speed": 0.0,
+      "num_of_bites": 0,
+      "elongation_channel_a": 1.0,
+      "strain_accumulated_channel_a": 0.0
+    },
+    "NewBillet": {
+      "operation_type": "NA",
+      "deformation_control": "NA",
+      "step_control": "NA",
+      "feed_direction": "NA",
+      "angle": "0",
+      "relative_deformation": 0.0,
+      "penetration": 0.0,
+      "feed_first": 0.0,
+      "feed_middle": 0.0,
+      "feed_last": 0.0,
+      "speed": 0.0,
+      "num_of_bites": 0,
+      "elongation_channel_a": 1.0,
+      "strain_accumulated_channel_a": 0.0
+    }
+  },
+  "add_row_copy_parameters": {
+    "Draw": {
+      "copied_values": [
+        "operation_type",
+        "deformation_control",
+        "step_control",
+        "press",
+        "die",
+        "feed_direction",
+        "angle",
+        "relative_deformation",
+        "final_length",
+        "final_height",
+        "penetration",
+        "feed_first",
+        "feed_middle",
+        "feed_last",
+        "speed"
+      ],
+      "initialized_values": {
+        "operation_type": "Draw"
+      }
+    },
+    "Upset": {
+      "copied_values": [
+        "operation_type",
+        "deformation_control",
+        "step_control",
+        "press",
+        "die",
+        "feed_direction",
+        "angle",
+        "relative_deformation",
+        "final_length",
+        "final_height",
+        "penetration",
+        "feed_first",
+        "feed_middle",
+        "feed_last",
+        "speed"
+      ],
+      "initialized_values": {
+        "operation_type": "Upset"
+      }
+    },
+    "Cut": {
+      "copied_values": [
+        "press",
+        "die"
+      ],
+      "initialized_values": {
+        "operation_type": "Heat",
+        "feed_direction": "-->",
+        "angle": "0",
+        "feed_first": 0.0,
+        "feed_middle": 0.0,
+        "feed_last": 0.0,
+        "speed": 0.0,
+        "elongation_channel_a": 1.0,
+        "strain_accumulated_channel_a": 0.0
+      }
+    },
+    "Heat": {
+      "copied_values": [
+        "press",
+        "die"
+      ],
+      "initialized_values": {
+        "operation_type": "Draw",
+        "deformation_control": "H",
+        "step_control": "Feed",
+        "feed_direction": "-->",
+        "angle": "0",
+        "feed_first": 250.0,
+        "feed_middle": 250.0,
+        "feed_last": 250.0,
+        "speed": 20.0,
+        "relative_deformation": 12.0
+      }
+    },
+    "Pause": {
+      "copied_values": [
+        "press",
+        "die"
+      ],
+      "initialized_values": {
+        "operation_type": "Draw",
+        "deformation_control": "E",
+        "step_control": "Feed",
+        "feed_direction": "-->",
+        "angle": "0",
+        "feed_first": 250.0,
+        "feed_middle": 250.0,
+        "feed_last": 250.0,
+        "speed": 20.0,
+        "relative_deformation": 12.0
+      }
+    },
+    "NewBillet": {
+      "copied_values": [
+        "press",
+        "die"
+      ],
+      "initialized_values": {
+        "operation_type": "Heat",
+        "feed_direction": "-->",
+        "angle": "0",
+        "feed_first": 0.0,
+        "feed_middle": 0.0,
+        "feed_last": 0.0,
+        "speed": 0.0,
+        "elongation_channel_a": 1.0,
+        "strain_accumulated_channel_a": 0.0
+      }
+    }
+  },
+  "default_values": {
+    "Draw": {
+      "E": {
+        "Feed": {},
+        "StepsNum": {}
+      },
+      "P": {
+        "Feed": {},
+        "StepsNum": {}
+      },
+      "H": {
+        "Feed": {},
+        "StepsNum": {}
+      }
+    },
+    "Upset": {
+      "E": {
+        "Feed": {},
+        "StepsNum": {}
+      },
+      "P": {
+        "Feed": {},
+        "StepsNum": {}
+      },
+      "H": {
+        "Feed": {},
+        "StepsNum": {}
+      }
+    },
+    "Cut": {
+      "Equals": {
+        "k1-PcNum": {}
+      },
+      "KeepFirst": {
+        "Length": {},
+        "Percent": {}
+      },
+      "DeleteFirst": {
+        "Length": {},
+        "Percent": {}
+      }
+    },
+    "Heat": {
+      "NA": {
+        "NA": {
+          "num_of_bites": 0,
+          "time_before_pass": 60.0
+        }
+      }
+    },
+    "Pause": {
+      "NA": {
+        "NA": {
+          "num_of_bites": 0
+        }
+      }
+    },
+    "NewBillet": {
+      "NA": {
+        "NA": {
+          "num_of_bites": 0,
+          "time_before_pass": 0.0
+        }
+      }
+    }
+  },
+  "set_editable": {
+    "first_pass": [
+      "step_control",
+      "max_temperature",
+      "press",
+      "die",
+      "final_height",
+      "final_width",
+      "final_length",
+      "final_diagonal"
+    ],
+    "Draw": {
+      "E": {
+        "Feed": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "angle",
+            "relative_deformation",
+            "feed_first",
+            "feed_middle",
+            "feed_last"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "angle",
+            "relative_deformation",
+            "feed_first",
+            "feed_middle",
+            "feed_last",
+            "speed"
+          ]
+        },
+        "StepsNum": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "angle",
+            "relative_deformation",
+            "num_of_bites"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "angle",
+            "relative_deformation",
+            "num_of_bites",
+            "speed"
+          ]
+        }
+      },
+      "P": {
+        "Feed": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "angle",
+            "penetration",
+            "feed_first",
+            "feed_middle",
+            "feed_last"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "angle",
+            "penetration",
+            "feed_first",
+            "feed_middle",
+            "feed_last",
+            "speed"
+          ]
+        },
+        "StepsNum": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "angle",
+            "penetration",
+            "num_of_bites"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "angle",
+            "penetration",
+            "num_of_bites",
+            "speed"
+          ]
+        }
+      },
+      "H": {
+        "Feed": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "angle",
+            "final_height",
+            "feed_first",
+            "feed_middle",
+            "feed_last"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "angle",
+            "final_height",
+            "feed_first",
+            "feed_middle",
+            "feed_last",
+            "speed"
+          ]
+        },
+        "StepsNum": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "angle",
+            "final_height",
+            "num_of_bites"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "angle",
+            "final_height",
+            "num_of_bites",
+            "speed"
+          ]
+        }
+      }
+    },
+    "Upset": {
+      "E": {
+        "Feed": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "relative_deformation",
+            "feed_first",
+            "feed_middle",
+            "feed_last"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "relative_deformation",
+            "feed_first",
+            "feed_middle",
+            "feed_last",
+            "speed"
+          ]
+        },
+        "StepsNum": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "relative_deformation",
+            "num_of_bites"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "relative_deformation",
+            "num_of_bites",
+            "speed"
+          ]
+        },
+        "OneStrictly": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "relative_deformation"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "relative_deformation",
+            "speed"
+          ]
+        },
+        "Three(Mid+L+R)": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "relative_deformation"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "relative_deformation",
+            "speed"
+          ]
+        },
+        "OneOrThree": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "relative_deformation"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "relative_deformation",
+            "speed"
+          ]
+        }
+      },
+      "P": {
+        "Feed": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "penetration",
+            "feed_first",
+            "feed_middle",
+            "feed_last"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "penetration",
+            "feed_first",
+            "feed_middle",
+            "feed_last",
+            "speed"
+          ]
+        },
+        "StepsNum": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "penetration",
+            "num_of_bites"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "penetration",
+            "num_of_bites",
+            "speed"
+          ]
+        },
+        "OneStrictly": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "penetration"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "penetration",
+            "speed"
+          ]
+        },
+        "Three(Mid+L+R)": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "penetration"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "penetration",
+            "speed"
+          ]
+        },
+        "OneOrThree": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "penetration"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "penetration",
+            "speed"
+          ]
+        }
+      },
+      "H": {
+        "Feed": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "final_length",
+            "feed_first",
+            "feed_middle",
+            "feed_last"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "final_length",
+            "feed_first",
+            "feed_middle",
+            "feed_last",
+            "speed"
+          ]
+        },
+        "StepsNum": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "final_length",
+            "num_of_bites"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "final_length",
+            "num_of_bites",
+            "speed"
+          ]
+        },
+        "OneStrictly": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "final_length"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "final_length",
+            "speed"
+          ]
+        },
+        "Three(Mid+L+R)": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "final_length"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "final_length",
+            "speed"
+          ]
+        },
+        "OneOrThree": {
+          "same_controls": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "feed_direction",
+            "final_length"
+          ],
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "final_length",
+            "speed"
+          ]
+        }
+      }
+    },
+    "Cut": {
+      "Equals": {
+        "k1-PcNum": {
+          "NA": [
+            "operation_type",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "k1",
+            "num_of_bites",
+            "scrap_rate",
+            "speed"
+          ]
+        }
+      },
+      "KeepFirst": {
+        "Length": {
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "final_length",
+            "scrap_rate",
+            "speed"
+          ]
+        },
+        "Percent": {
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "relative_deformation",
+            "scrap_rate",
+            "speed"
+          ]
+        }
+      },
+      "DeleteFirst": {
+        "Length": {
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "penetration",
+            "scrap_rate",
+            "speed"
+          ]
+        },
+        "Percent": {
+          "NA": [
+            "operation_type",
+            "deformation_control",
+            "step_control",
+            "press",
+            "die",
+            "feed_direction",
+            "relative_deformation",
+            "scrap_rate",
+            "speed"
+          ]
+        }
+      }
+    },
+    "Heat": {
+      "NA": {
+        "NA": {
+          "NA": [
+            "operation_type",
+            "press",
+            "die",
+            "max_temperature",
+            "operation_time",
+            "time_before_pass",
+            "scrap_rate"
+          ]
+        }
+      }
+    },
+    "Pause": {
+      "NA": {
+        "NA": {
+          "NA": [
+            "operation_type",
+            "press",
+            "die",
+            "time_before_pass_minutes"
+          ]
+        }
+      }
+    }
+  }
+}

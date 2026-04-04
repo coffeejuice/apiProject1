@@ -2,7 +2,7 @@
 
 def insert_material_records(cur):
     """Add materials to materials table in postgresql 'forgelab_db' database."""
-    mat_formula = "INSERT INTO material (material_name, material_path, short_name, density) VALUES (%s, %s, %s, %s)"
+    mat_formula = "INSERT INTO materials (material_name, material_path, short_name, density) VALUES (%s, %s, %s, %s)"
     mat_values = [
         ('LANGUAGE|EN|Select material|LANGUAGE|RU|Выберите материал|LANGUAGE|ZH_HANS|选择材料', '', 'NA', 0),
         ('LANGUAGE|EN|INC718|LANGUAGE|RU|INC718|LANGUAGE|ZH_HANS|INC718', 'material_Inc718_20220602.key', 'Inc718', 8190),

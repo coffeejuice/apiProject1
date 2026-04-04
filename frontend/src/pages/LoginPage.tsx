@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useSessionStore } from '../stores/useSessionStore'
 
 export default function LoginPage() {
   const [loginUsername, setLoginUsername] = useState('demo_user')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('password123')
+  const [showPassword, setShowPassword] = useState(false)
   const [isRegisterMode, setIsRegisterMode] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [customBaseUrl, setCustomBaseUrl] = useState('')
@@ -39,7 +41,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-xs">
+            <div className="mb-3 p-2 min-h-[72px] max-h-40 overflow-y-auto bg-red-50 border border-red-200 rounded text-red-700 text-xs whitespace-pre-line">
               {error}
             </div>
           )}
@@ -90,15 +92,25 @@ export default function LoginPage() {
               >
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="ui-input"
-                required
-                disabled={isLoading}
-              />
+              <div className="flex items-center gap-2">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="ui-input flex-1"
+                  required
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="ui-btn min-w-[58px]"
+                  disabled={isLoading}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </div>
 
             <button
@@ -124,15 +136,20 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <button
-              onClick={() => {
-                setCustomBaseUrl(baseUrl)
-                setShowSettings(!showSettings)
-              }}
-              className="ui-btn"
-            >
-              ⚙️ API Settings
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setCustomBaseUrl(baseUrl)
+                  setShowSettings(!showSettings)
+                }}
+                className="ui-btn"
+              >
+                API Settings
+              </button>
+              <Link to="/setup" className="ui-btn">
+                Setup
+              </Link>
+            </div>
 
             {showSettings && (
               <div className="ui-card ui-card-body mt-3">

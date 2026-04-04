@@ -15,10 +15,10 @@ const neutralGray = {
 }
 
 const compactFontScale = {
-  xs: ['0.625rem', { lineHeight: '0.875rem' }], // 10/14
-  sm: ['0.6875rem', { lineHeight: '0.9375rem' }], // 11/15
-  base: ['0.75rem', { lineHeight: '1rem' }], // 12/16
-  lg: ['0.875rem', { lineHeight: '1.125rem' }], // 14/18
+  xs: ['0.6875rem', { lineHeight: '0.9375rem' }], // 11/15
+  sm: ['0.75rem', { lineHeight: '1rem' }], // 12/16
+  base: ['0.8125rem', { lineHeight: '1.125rem' }], // 13/18
+  lg: ['0.9375rem', { lineHeight: '1.25rem' }], // 15/20
 }
 
 const flatterShadows = {

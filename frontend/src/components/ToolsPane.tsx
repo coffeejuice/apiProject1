@@ -3,13 +3,21 @@ import { useDocumentsStore } from '../stores/useDocumentsStore'
 import { useSessionStore } from '../stores/useSessionStore'
 import { BLOCK_LIBRARY_TYPES, getBlockTypeIcon, getBlockTypeLabel } from '../lib/blockTypeMeta'
 import type { ToolView } from './ToolsSwitcher'
+import type { LibraryEditorView } from './editorPaneTypes'
 
 interface ToolsPaneProps {
   activeView: ToolView | null
+  libraryView: LibraryEditorView
+  onLibraryViewChange: (view: LibraryEditorView) => void
   onInsertBlockType: (blockTypeId: string) => void
 }
 
-export default function ToolsPane({ activeView, onInsertBlockType }: ToolsPaneProps) {
+export default function ToolsPane({
+  activeView,
+  libraryView,
+  onLibraryViewChange,
+  onInsertBlockType,
+}: ToolsPaneProps) {
   const [projectsFilter, setProjectsFilter] = useState('')
   const [documentsFilter, setDocumentsFilter] = useState('')
   const [showProjectModal, setShowProjectModal] = useState(false)
@@ -126,7 +134,8 @@ export default function ToolsPane({ activeView, onInsertBlockType }: ToolsPanePr
         <h2 className="ui-pane-title">
           {activeView === 'projects' && 'Projects'}
           {activeView === 'documents' && 'Documents'}
-          {activeView === 'blocksLibrary' && 'BlocksLibrary'}
+          {activeView === 'blocks' && 'Blocks'}
+          {activeView === 'library' && 'Library'}
           {activeView === 'users' && 'Users'}
         </h2>
       </div>
@@ -240,7 +249,7 @@ export default function ToolsPane({ activeView, onInsertBlockType }: ToolsPanePr
         </div>
       )}
 
-      {activeView === 'blocksLibrary' && (
+      {activeView === 'blocks' && (
         <div className="ui-pane-body">
           <div className="text-xs text-gray-500">
             Drag a block type into BlockEditor or use Insert.
@@ -271,6 +280,44 @@ export default function ToolsPane({ activeView, onInsertBlockType }: ToolsPanePr
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {activeView === 'library' && (
+        <div className="ui-pane-body">
+          <div className="text-xs text-gray-500">
+            Select Library editor view.
+          </div>
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => onLibraryViewChange('dies')}
+              className={`ui-list-item ${libraryView === 'dies' ? 'ui-list-item-active' : ''}`}
+            >
+              Dies
+            </button>
+            <button
+              type="button"
+              onClick={() => onLibraryViewChange('dieAssemblies')}
+              className={`ui-list-item ${libraryView === 'dieAssemblies' ? 'ui-list-item-active' : ''}`}
+            >
+              Die Assemblies
+            </button>
+            <button
+              type="button"
+              onClick={() => onLibraryViewChange('presses')}
+              className={`ui-list-item ${libraryView === 'presses' ? 'ui-list-item-active' : ''}`}
+            >
+              Presses
+            </button>
+            <button
+              type="button"
+              onClick={() => onLibraryViewChange('materials')}
+              className={`ui-list-item ${libraryView === 'materials' ? 'ui-list-item-active' : ''}`}
+            >
+              Materials
+            </button>
           </div>
         </div>
       )}

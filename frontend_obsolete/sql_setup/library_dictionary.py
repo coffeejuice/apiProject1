@@ -1,10 +1,6 @@
 library = dict(
     press=[
         {
-            'press_die_match_code': 'empty_record',
-            'name': 'LANGUAGE|EN|Select press|LANGUAGE|RU|Выберите пресс|LANGUAGE|ZH_HANS|选择锻压机'
-        },
-        {
             'press_die_match_code': 'p80',
             'name': 'LANGUAGE|EN|80MN|LANGUAGE|RU|80МН|LANGUAGE|ZH_HANS|80MN'
         },
@@ -23,26 +19,6 @@ library = dict(
     ],
     # --------------------------------------------------------------------------------------------------------
     press_mode=[
-        dict(
-            press_mode_name='p80_empty_record',
-            name='LANGUAGE|EN|Select press mode|LANGUAGE|RU|Выберите режим|LANGUAGE|ZH_HANS|选择锻压模式',
-            press_die_match_code='p80',
-            is_default_press_mode=False,
-            manipulators_count=2,
-            automatic_feed_mode_is_on_when_bites_count=7,
-            max_force=0.0,
-            back_speed=0.0,
-            idle_speed=0.0,
-            working_speed=0.0,
-            min_dwell_speed=0.0,
-            max_dwell_time=0.0,
-            power_limit=[
-                [0.0, 0.0],
-                [0.0, 0.0]],
-            min_idle_stroke=0.0,
-            max_idle_stroke=0.0,
-            approaching_distance=0.0,  # Distance to billet, at which speed switches from idle to working ones
-            open_height_without_dies=0.0),
         dict(
             press_mode_name='p80_63',
             name='LANGUAGE|EN|63/80MN|LANGUAGE|RU|63/80МН|LANGUAGE|ZH_HANS|63/80MN',
@@ -144,26 +120,6 @@ library = dict(
             approaching_distance=10.0,  # Distance to billet, at which speed switches from idle to working ones
             open_height_without_dies=4500.0),
         dict(
-            press_mode_name='p45_empty_record',
-            name='LANGUAGE|EN|Select press mode|LANGUAGE|RU|Выберите режим|LANGUAGE|ZH_HANS|选择锻压模式',
-            press_die_match_code='p45',
-            is_default_press_mode=False,
-            manipulators_count=2,
-            automatic_feed_mode_is_on_when_bites_count=7,
-            max_force=0.0,
-            back_speed=0.0,
-            idle_speed=0.0,
-            working_speed=0.0,
-            min_dwell_speed=0.0,
-            max_dwell_time=0.0,
-            power_limit=[
-                [0.0, 0.0],
-                [0.0, 0.0]],
-            min_idle_stroke=0.0,
-            max_idle_stroke=0.0,
-            approaching_distance=0.0,  # Distance to billet, at which speed switches from idle to working ones
-            open_height_without_dies=0.0),
-        dict(
             press_mode_name='p45_45',
             name='LANGUAGE|EN|45/45MN|LANGUAGE|RU|45/45МН|LANGUAGE|ZH_HANS|45/45MN',
             press_die_match_code='p45',
@@ -188,26 +144,6 @@ library = dict(
             max_idle_stroke=250.0,
             approaching_distance=10.0,  # Distance to billet, at which speed switches from idle to working ones
             open_height_without_dies=4500.0),
-        dict(
-            press_mode_name='p16_empty_record',
-            name='LANGUAGE|EN|Select press mode|LANGUAGE|RU|Выберите режим|LANGUAGE|ZH_HANS|选择锻压模式',
-            press_die_match_code='p16',
-            is_default_press_mode=False,
-            manipulators_count=1,
-            automatic_feed_mode_is_on_when_bites_count=7,
-            max_force=0.0,
-            back_speed=0.0,
-            idle_speed=0.0,
-            working_speed=0.0,
-            min_dwell_speed=0.0,
-            max_dwell_time=0.0,
-            power_limit=[
-                [0.0, 0.0],
-                [0.0, 0.0]],
-            min_idle_stroke=0.0,
-            max_idle_stroke=0.0,
-            approaching_distance=0.0,  # Distance to billet, at which speed switches from idle to working ones
-            open_height_without_dies=0.0),
         dict(
             press_mode_name='p16_16',
             name='LANGUAGE|EN|16/16MN|LANGUAGE|RU|16/16МН|LANGUAGE|ZH_HANS|16/16MN',
@@ -234,26 +170,6 @@ library = dict(
             max_idle_stroke=250.0,
             approaching_distance=10.0,  # Distance to billet, at which speed switches from idle to working ones
             open_height_without_dies=4500.0),
-        dict(
-            press_mode_name='gfm20_empty_record',
-            name='LANGUAGE|EN|Select press mode|LANGUAGE|RU|Выберите режим|LANGUAGE|ZH_HANS|选择锻压模式',
-            press_die_match_code='gfm20',
-            is_default_press_mode=False,
-            manipulators_count=2,
-            automatic_feed_mode_is_on_when_bites_count=7,
-            max_force=0.0,
-            back_speed=0.0,
-            idle_speed=0.0,
-            working_speed=0.0,
-            min_dwell_speed=0.0,
-            max_dwell_time=0.0,
-            power_limit=[
-                [0.0, 0.0],
-                [0.0, 0.0]],
-            min_idle_stroke=0.0,
-            max_idle_stroke=0.0,
-            approaching_distance=0.0,  # Distance to billet, at which speed switches from idle to working ones
-            open_height_without_dies=0.0),
         dict(
             press_mode_name='gfm20_20',
             name='LANGUAGE|EN|20/20MN|LANGUAGE|RU|20/20МН|LANGUAGE|ZH_HANS|20/20MN'
@@ -284,27 +200,6 @@ library = dict(
     ],
     # --------------------------------------------------------------------------------------------------------
     die=[
-        dict(
-            die_name='flat_empty_record',
-            die_assembly_name='flat_empty_record',
-            name='LANGUAGE|EN|Select die|LANGUAGE|RU|Выберите боёк|LANGUAGE|ZH_HANS|选择锻造工具',
-            press_die_match_code='empty_record',
-            die_template_file_name='',
-            die_type='flat',
-            inventory_number='',
-            is_matching_as_top=True,
-            is_matching_as_bottom=True,
-            is_matching_as_minus_y=True,
-            is_matching_as_plus_y=True,
-            dimensions=dict(
-                total_length=0.0,
-                total_width=0.0,
-                height=0.0,
-                straight_length=0.0,
-                edge_radius=0.0,
-                edge_angle=0.0
-            ),
-            is_obsolete=False),
         dict(
             die_name='flat_d650_top',
             die_assembly_name='flat_d650',
@@ -433,27 +328,6 @@ library = dict(
             is_obsolete=False),
         # ------------------------------------------- V-DIES ------------------------------------------------------
         dict(
-            die_name='v_die_empty_record',
-            die_assembly_name='v_die_empty_record',
-            name='LANGUAGE|EN|Select die|LANGUAGE|RU|Выберите боёк|LANGUAGE|ZH_HANS|选择锻造工具',
-            press_die_match_code='p80',
-            die_template_file_name='',
-            die_type='v_die',
-            inventory_number='',
-            is_matching_as_top=True,
-            is_matching_as_bottom=True,
-            is_matching_as_minus_y=True,
-            is_matching_as_plus_y=True,
-            dimensions=dict(
-                total_length=0.0,
-                total_width=0.0,
-                height=0.0,
-                straight_length=0.0,
-                edge_radius=0.0,
-                edge_angle=90.0,
-            ),
-            is_obsolete=False),
-        dict(
             die_name='v_die_p80_v_die_d355_d180_top',
             die_assembly_name='v_die_p80_v_die_d355_d180',
             name='LANGUAGE|EN|V122°◯355->◯180|LANGUAGE|RU|V122°◯355->◯180|LANGUAGE|ZH_HANS|V122°◯355->◯180',
@@ -496,29 +370,6 @@ library = dict(
             ),
             is_obsolete=False),
         # ------------------------------------------- GFM-DIES -------------------------------------------
-        dict(
-            die_name='gfm_die_empty_record',
-            die_assembly_name='gfm_die_empty_record',
-            name='LANGUAGE|EN|Select die|'
-                 'LANGUAGE|RU|Выберите боёк|'
-                 'LANGUAGE|ZH_HANS|选择锻造工具',
-            press_die_match_code='gfm20',
-            die_template_file_name='',
-            die_type='gfm_die',
-            inventory_number='',
-            is_matching_as_top=True,
-            is_matching_as_bottom=True,
-            is_matching_as_minus_y=True,
-            is_matching_as_plus_y=True,
-            dimensions=dict(
-                total_length=0.0,
-                total_width=0.0,
-                height=0.0,
-                straight_length=0.0,
-                edge_radius=0.0,
-                edge_angle=10.0,
-            ),
-            is_obsolete=False),
         dict(
             die_name='gfm_die_gfm20_w90_top',
             die_assembly_name='gfm_die_gfm20_w90',
@@ -615,12 +466,6 @@ library = dict(
 
     # --------------------------------------------------------------------------------------------------------
     die_assembly=[
-        dict(
-            die_assembly_name='flat_empty_record',
-            name='LANGUAGE|EN|Select die|LANGUAGE|RU|Выберите боёк|LANGUAGE|ZH_HANS|选择锻造工具',
-            press_die_match_code='empty_record',
-            die_type='flat',
-            is_obsolete=False),
         dict(
             die_assembly_name='flat_d650',
             name='LANGUAGE|EN|650|LANGUAGE|RU|650|LANGUAGE|ZH_HANS|650',

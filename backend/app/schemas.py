@@ -311,3 +311,98 @@ class LibraryResponse(LibraryListItemResponse):
 
     class Config:
         from_attributes = True
+
+
+class LibraryDbUserResponse(BaseModel):
+    user_id: int
+    login: str
+    full_name: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+
+class LibraryDbDieTypeResponse(BaseModel):
+    id: int
+    name: Any
+
+    class Config:
+        from_attributes = True
+
+
+class LibraryDbMaterialResponse(BaseModel):
+    material_id: int
+    name: Any
+    source: str
+    source_version: str
+    file_name: str
+    properties: Any
+    is_obsolete: bool
+    created_at: datetime
+    obsolete_at: Optional[datetime]
+    owner_id: Optional[int]
+
+    class Config:
+        from_attributes = True
+
+
+class LibraryDbDieResponse(BaseModel):
+    id: int
+    name: Any
+    die_type_id: int
+    owner_user_id: Optional[int]
+    die_template_file_name: Optional[str]
+    stl_file_name: Optional[str] = None
+    stl_file_url: Optional[str] = None
+    stl_file_exists: bool = False
+    inventory_number: Optional[str]
+    properties: Optional[Any]
+    is_obsolete: bool
+    created_at: datetime
+    obsolete_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class LibraryDbDieAssemblyResponse(BaseModel):
+    id: int
+    name: Any
+    owner_user_id: Optional[int]
+    top_die_id: Optional[int]
+    bottom_die_id: Optional[int]
+    left_die_id: Optional[int]
+    right_die_id: Optional[int]
+    is_obsolete: Optional[bool]
+    created_at: datetime
+    obsolete_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class LibraryDbPressResponse(BaseModel):
+    id: int
+    owner_user_id: Optional[int]
+    name: Any
+    is_obsolete: bool
+    created_at: datetime
+    obsolete_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class LibraryDbPressModeResponse(BaseModel):
+    id: int
+    press_id: Optional[int]
+    owner_user_id: Optional[int]
+    name: Optional[Any]
+    properties: Dict[str, Any]
+    is_default_press_mode: bool
+    is_obsolete: bool
+    created_at: datetime
+    obsolete_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True

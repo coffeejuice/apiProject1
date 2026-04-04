@@ -16,7 +16,7 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 
 ## Monorepo structure (current)
 - `backend/`: FastAPI API, SQLAlchemy models, Alembic, services, scripts
-- `frontend/`: React 18 + TypeScript SPA (Vite), Zustand state, block UI
+- `frontend/`: React 19 + TypeScript SPA (Vite), Zustand state, block UI
 - `frontend_obsolete/`: archived clients, no changes unless explicitly requested
 - `.aiassistant/rules/`: JetBrains context
 - `.codex/context/`: Codex context
@@ -64,7 +64,7 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - legacy `revisions`, `sharing`, `import_export`, `migration` routers
 
 ## Frontend architecture summary
-- Stack: React, TypeScript, Vite, Tailwind
+- Stack: React 19, TypeScript, Vite, Tailwind
 - Routing: `react-router-dom`
 - State: Zustand stores, primarily `useDocumentsStore` for project/document flow
 - API access rule: use `frontend/src/lib/apiClient.ts` (avoid direct `fetch` in components)
@@ -74,16 +74,46 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 - Main app screen (`frontend/src/pages/AppPage.tsx`) uses a split-pane layout:
   - `MenuBar` at top (full width, always visible)
   - below it: `ToolsSwitcher` (left, always visible), `ToolsPane` (middle, collapsible), right editor stack
-  - right editor stack: `VisualEditor` (top, collapsible) + `BlockEditor` (bottom, always visible)
-- `ToolsSwitcher` controls `ToolsPane` view visibility; if no tool is active, `ToolsPane` is hidden.
+  - right editor stack: `TopEditorPane` (conditional) + `MainEditorPane` (conditional)
+- `ToolsSwitcher` controls `ToolsPane` view visibility.
+  - if no tool is active, `ToolsPane` is hidden
+  - clicking the currently active tool button hides `ToolsPane` only and preserves the current `MainEditorPane` view
 - `ToolsPane` provides views:
   - `Projects`: project list, filter, create modal
   - `Documents`: project-scoped document list, filter, new/copy modals
-  - `BlocksLibrary`: block icon palette for drag-and-drop or insert into `BlockEditor`
+  - `Blocks`: block icon palette for drag-and-drop or insert into `BlockEditor`
+  - `Library`: selector for `Dies`, `Die Assemblies`, `Presses`, `Materials` main editor views
   - `Users`: active user/session info
-- `VisualEditor` provides horizontal block-order visualization with:
+- `MainEditorPane` routes active content:
+  - default main view: `BlockEditor` (for `Projects`, `Documents`, `Blocks`, `Users`)
+  - library main views: `Dies`, `Die Assemblies`, `Presses`, `Materials` (for `Library`)
+- `Dies` library view characteristics:
+  - die card layout: top row = die name; second row = square STL preview on the left and die metadata on the right
+  - each die card includes a small interactive STL preview window (camera-only interaction)
+  - controls: drag to rotate, right-drag to pan, wheel to zoom, and reset-view button
+  - initial camera is isometric (Z up, X left-down, Y right-down), model centered and fitted to ~90% of viewport
+  - STL source is derived from `dies.die_template_file_name` (`*.zip` stem -> `*.stl`) and served by backend endpoint `/library/db/dies/stl/{file_name}`
+- `Presses` library view characteristics:
+  - shows one press card per `presses` record
+  - each press card combines related `press_modes` data into a single layout (no standalone press-mode cards)
+  - top row inside a press card: `Power Limit Diagram` + `Power Limit Table`
+  - bottom inside a press card: sortable, horizontally scrollable `Press Modes Table` with sticky left `Legend` column
+  - `Power Limit Diagram` plots one curve per related press mode with engineering-style axes: X = `Force, MN`, Y = `Speed, mm/s`
+  - diagram always includes `x=0` and `y=0` ticks; each axis starts at `0` when that axis has no negative values
+  - exactly one press-mode curve/row is selected at a time; default selection is `is_default_press_mode = true` (fallback: first by `id`)
+  - `Power Limit Table` shows values only for the currently selected press mode
+  - `Press Modes Table` horizontal scroll is synchronized across all press cards to simplify cross-press comparison
+- `Materials` library view characteristics:
+  - shows one material card per `materials` record
+  - supports text filtering by `material_id`, localized `name`, `source`, `source_version`, and `file_name`
+  - supports the shared owner filter used by other library views
+  - selected material cards expand to show the raw `properties` JSON payload
+- `TopEditorPane` routes top content:
+  - `VisualEditor` view when `BlockEditor` is active in `MainEditorPane`
+  - library action menu when a library main view is active
+- `VisualEditor` view in `TopEditorPane` provides horizontal block-order visualization with:
   - when hidden/collapsed, it is fully removed from layout (no header/placeholder)
-  - visibility is controlled from `MenuBar` (`Show VisualEditor` / `Hide VisualEditor`)
+  - visibility is controlled from `MenuBar` (`Show TopEditorPane` / `Hide TopEditorPane`) for block-editor mode
   - click-to-scroll navigation into `BlockEditor`
   - viewer/editor modes
   - multi-select, move/copy (Ctrl/Cmd-drop), insert, delete for block structure edits
@@ -99,26 +129,29 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - form fields: `ui-input`, `ui-select`, `ui-textarea`
   - lists/modals/status: `ui-list-item`, `ui-list-item-active`, `ui-modal-overlay`, `ui-modal`, `ui-badge`
 - Text scale is centrally defined in `frontend/tailwind.config.js` (`fontSize`) with only four sizes:
-  - `text-xs` = 10px/14px
-  - `text-sm` = 11px/15px
-  - `text-base` = 12px/16px
-  - `text-lg` = 14px/18px
+  - `text-xs` = 11px/15px
+  - `text-sm` = 12px/16px
+  - `text-base` = 13px/18px
+  - `text-lg` = 15px/20px
 - Rule for future UI edits:
   - prefer shared `ui-*` classes and the 4-size text palette; avoid introducing ad-hoc spacing/button/input styles unless the standard itself is intentionally updated.
 
 ## Domain model summary
-- Core entities:
+- Core runtime entities:
   - Users (`users`)
   - Projects (`projects`)
   - Documents (`documents`)
   - Blocks (`blocks`)
   - Settings (`settings`)
-  - Unified library (`library`)
+  - Unified library catalog (`library`)
 - Project model:
-  - `project_id`, `user_id`, optional `material_id` (FK to `library.id`), `name`, `notes`, timestamps, soft delete
-- Library model:
-  - `id`, nullable `parent_id` self-reference, enum `type`, `name`, JSON `props`, timestamps, `is_obsolete`
-  - `type` enum values: `die`, `die_assembly`, `press`, `press_mode`, `time_between_operations`, `material`, `operation_type`
+  - `project_id`, `user_id`, optional `material_id` (FK to `materials.material_id`), `name`, `notes`, timestamps, soft delete
+- Library API model (currently mounted):
+  - table `library`: `id`, `parent_id`, `type`, `name`, `props` (JSONB), timestamps, `is_obsolete`
+  - enum values in code: `die`, `die_assembly`, `press`, `press_mode`, `time_between_operations`, `material`, `operation_type`
+- Industrial normalized tables also exist in DB/models:
+  - `die_types`, `materials`, `dies`, `die_assemblies`, `presses`, `press_modes`, `press_die_map`
+  - mounted `/library/db/*` routes read from these normalized tables, while the older `/library/*` list/detail routes still serve from the unified `library` table
 - Document model:
   - `document_id`, required `project_id`, optional `source_document_id`, optional `editor_user_id`, `first_block_id`, `name`, `notes`, timestamps, soft delete
   - supports inheritance/lineage through `source_document_id`
@@ -126,9 +159,56 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - linked-list ordering with `previous_block_id` and `next_block_id`
   - block type is stored as `block_type_id`
   - metadata flags: `is_system`, `is_removable`, `fixed_position`
-- Additional industrial/library entities still exist as legacy model definitions (`material`, `operations_library`, `press`, `die`, etc.).
-- Active API/library flows are routed through the unified `library` table and `/library/*` endpoints.
-- Legacy ACL/share/version tables remain in models but are not primary mounted API flow.
+- Legacy ACL/share/version/server/log tables remain in models and DB for compatibility and existing flows.
+
+## DB consistency snapshot (updated 2026-03-23)
+- Alembic code state:
+  - new head migration file: `3a4d8f2c1b90_reshape_materials_table.py`
+  - baseline remains `9ac4e7b1d2f3_squashed_current_schema_baseline.py`
+- Expected schema change in this turn:
+  - `materials` now stores `name`, `source`, `source_version`, `file_name`, `properties`, `is_obsolete`, `created_at`, `obsolete_at`, `owner_id`
+  - `projects.material_id` now points to `materials.material_id`
+- Frontend status: `npm run typecheck` passes after the materials update.
+- Backend verification: `python3 -m compileall backend/app backend/alembic/versions/3a4d8f2c1b90_reshape_materials_table.py backend/db_setup/reinit_db.py` passes.
+- Backend tests: `pytest` is not installed in `backend/.venv`, so automated backend test execution is unavailable.
+
+## DB tables and columns (public schema)
+- Tables currently present:
+  - `alembic_version`, `blocks`, `config`, `devices`, `die_assemblies`, `die_types`, `dies`, `document_acl`, `document_edit_sessions`, `document_versions`, `documents`, `library`, `logs`, `materials`, `operations_library`, `physical_machines`, `press_die_map`, `press_modes`, `presses`, `projects`, `servers`, `settings`, `share_links`, `time_between_operations`, `users`
+- Core editor/auth tables:
+  - `users`: `user_id`, `login`, `email`, `password_hashed`, `signal_clear_token`, `supervisor_id`, `full_name`, `language_code`, `user_settings`, `user_priority_enum`, `created_at`
+  - `projects`: `project_id`, `user_id` (FK `users.user_id`), `material_id` (FK `materials.material_id`), `name`, `notes`, `created_at`, `updated_at`, `deleted_at`
+  - `documents`: `document_id`, `project_id`, `source_document_id`, `editor_user_id`, `first_block_id`, `name`, `notes`, `created_at`, `updated_at`, `deleted_at`
+  - `blocks`: `block_id`, `document_id`, `previous_block_id`, `next_block_id`, `block_type_id`, `props` (JSONB), `created_at`, `updated_at`, `is_system`, `is_removable`, `fixed_position`
+  - `settings`: `setting_id`, `key`, `value` (JSONB), `scope`, `user_id`; unique index on (`key`, `scope`, `user_id`)
+- Industrial/library normalized tables:
+  - `die_types`: `id`, `name` (JSONB)
+  - `materials`: `material_id`, `name` (JSONB), `source`, `source_version`, `file_name`, `properties` (JSONB), `is_obsolete`, `created_at`, `obsolete_at`, `owner_id` (FK `users.user_id`)
+  - `dies`: `id`, `name` (JSONB), `die_type_id` (FK `die_types.id`), `die_template_file_name`, `inventory_number`, `properties` (JSONB), `is_obsolete`, `created_at`, `obsolete_at`, `owner_user_id` (FK `users.user_id`)
+  - `die_assemblies`: `id`, `name` (JSONB), `is_obsolete`, `created_at`, `obsolete_at`, `top_die_id`, `bottom_die_id`, `left_die_id`, `right_die_id` (FKs to `dies.id`), `owner_user_id` (FK `users.user_id`)
+  - `presses`: `id`, `name` (JSONB), `is_obsolete`, `created_at`, `obsolete_at`, `owner_user_id` (FK `users.user_id`)
+  - `press_modes`: `id`, `press_id` (FK `presses.id`), `name` (JSONB, nullable), `owner_user_id` (FK `users.user_id`), `is_obsolete`, `created_at`, `obsolete_at`, `properties` (JSONB), `is_default_press_mode`
+  - `press_die_map`: composite PK (`press_id`, `die_id`), plus `is_matching_as_top`, `is_matching_as_bottom`, `is_matching_as_left`, `is_matching_as_right`, `owner_user_id`, `is_obsolete`, `created_at`, `obsolete_at`
+- Unified library table (mounted by `/library/*` router):
+  - `library`: `id`, `parent_id` (self FK), `type`, `name`, `props` (JSONB), `created_at`, `updated_at`, `is_obsolete`
+
+## JSONB internal structure (DB + code/seed verified)
+- All JSON-like columns are JSONB (no remaining `json` columns in `public`).
+- Localization name objects (`die_types.name`, `materials.name`, `dies.name`, `die_assemblies.name`, `presses.name`, `press_modes.name`) use a multilingual map structure:
+  - keys observed: `EN`, `RU`, `ZH_HANS`
+  - value type: localized string
+- `dies.properties` (seed structure):
+  - numeric keys observed: `total_length`, `total_width`, `height`, `straight_length`, `edge_radius`, `edge_angle`
+- `press_modes.properties` (seed structure):
+  - scalar keys: `is_left_manipulator`, `is_right_manipulator`, `automatic_feed_mode_is_on_when_bites_count`, `max_force`, `back_speed`, `idle_speed`, `working_speed`, `min_dwell_speed`, `max_dwell_time`, `min_idle_stroke`, `max_idle_stroke`, `approaching_distance`, `open_height_without_dies`
+  - array key: `power_limit` -> list of objects with keys `id`, `force`, `speed`
+- `blocks.props`:
+  - `document_heading`: stores block fields (`heat_no`, `finished_size`, `stock_size`, `stock_weight`, `remarks`, `preview_status`), then is enriched for read responses with document metadata (`name`, `project_id`, `source_document_id`, `editor_user_id`, `created_at`, `updated_at`) and optional nested `version`
+  - `input_workpiece`: `geometry_type_id`, `mesh_elements`, `weight`, `attributes` (dynamic object), and response-enriched fields (`title`, `available_geometry_types`, optional `selected_geometry`)
+  - basic text blocks (`paragraph`, `heading1`, `heading2`, `list`, `code`, `quote`): `text`; `todo` additionally uses `checked`; `divider` typically has empty props
+- `materials.properties`: schema-flexible JSONB payload. Migration/backfill preserves legacy keys such as `short_name`, `density`, and `legacy_material_path` when present.
+- `library.props`: schema-flexible payload keyed by `library.type`.
+- `settings.value`: schema-flexible JSONB payload (object/array/scalar).
 
 ## Access model summary
 - Project owner controls project CRUD and project-scoped document listing.
@@ -193,6 +273,13 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - `GET /library/time-between-operations/{item_id}`
   - `GET /library/operation-types`
   - `GET /library/operation-types/{item_id}`
+  - `GET /library/db/users`
+  - `GET /library/db/die-types`
+  - `GET /library/db/materials`
+  - `GET /library/db/dies`
+  - `GET /library/db/die-assemblies`
+  - `GET /library/db/presses`
+  - `GET /library/db/press-modes`
 
 ## Global coding constraints for this repo
 - Keep the primary product hierarchy as `Project -> Document -> Block`.
@@ -209,7 +296,9 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 - Validate critical backend changes via focused manual checks and targeted tests when feasible.
 
 ## Migration policy
-- Repo currently keeps a consolidated active migration pattern in `backend/alembic/versions/`.
-- Historical migrations are stored in `backend/alembic/versions_backup/`.
-- Current head migration is `9b9c2f4e7c31`.
-- `dd3aff7dab58_initial_complete_schema.py` creates a curated active table subset (not every legacy model table).
+- Active migration chain in `backend/alembic/versions/` is:
+  - `9ac4e7b1d2f3_squashed_current_schema_baseline.py`
+  - `3a4d8f2c1b90_reshape_materials_table.py`
+- Historical migrations are archived in `backend/alembic/versions_backup/`.
+- Current head migration is `3a4d8f2c1b90`.
+- The baseline migration uses `Base.metadata.create_all(checkfirst=True)` / `drop_all(checkfirst=True)` against registered SQLAlchemy models; follow-up migrations must remain idempotent enough to coexist with the squashed baseline on fresh installs.

@@ -58,7 +58,7 @@ class TimeBetweenOperations(Base):
 
     first_operation_type_id: Mapped[int] = mapped_column(SmallInteger, ForeignKey("operations_library.type_id", ondelete="CASCADE"), primary_key=True)
     second_operation_type_id: Mapped[int] = mapped_column(SmallInteger, ForeignKey("operations_library.type_id", ondelete="CASCADE"), primary_key=True)
-    press_id: Mapped[int] = mapped_column(SmallInteger, ForeignKey("press_mode.press_mode_id", ondelete="CASCADE"), primary_key=True)
+    press_id: Mapped[int] = mapped_column(SmallInteger, ForeignKey("press_modes.id", ondelete="CASCADE"), primary_key=True)
 
     time_mean: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     time_sigma: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
@@ -66,4 +66,3 @@ class TimeBetweenOperations(Base):
     first_operation: Mapped["OperationsLibrary"] = relationship("OperationsLibrary", foreign_keys=[first_operation_type_id])
     second_operation: Mapped["OperationsLibrary"] = relationship("OperationsLibrary", foreign_keys=[second_operation_type_id])
     press: Mapped["PressMode"] = relationship("PressMode")
-

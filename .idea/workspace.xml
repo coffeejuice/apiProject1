@@ -8,11 +8,166 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Rename app from 'Techno-Notion' to 'ForgeLab'">
+      <change afterPath="$PROJECT_DIR$/backend/data/config/UI_initial_settings.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/insert_die_records_from_library.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/insert_press_records_from_library.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.codex/context/DOCUMENT_BLOCK_ARCHITECTURE.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/DOCUMENT_BLOCK_ARCHITECTURE.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.codex/context/PROJECT_CONTEXT.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/PROJECT_CONTEXT.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.env.example" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/9b9c2f4e7c31_add_library_table_and_project_material_fk.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/dd3aff7dab58_initial_complete_schema.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/library/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/library/die.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/die.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/library/furnace.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/library/library.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/library.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/library/library_item.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/library_item.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/library/material.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/material.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/library/press.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/press.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/project.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/project.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/routers/library.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/library.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/connections.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/connections.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/create_admin_management_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/create_admin_management_functions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/create_functions_and_triggers.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/create_functions_and_triggers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/create_functions_communicate_with_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/create_functions_communicate_with_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/create_operations.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/create_operations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/create_operations_table_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/create_operations_table_functions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/create_queue_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/create_queue_functions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/create_run_stop_buttons_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/create_run_stop_buttons_functions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/create_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/create_tables.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/create_tooltip_images.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/create_tooltip_images.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/hash_password.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/hash_password.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_1.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_1.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_10.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_10.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_11.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_11.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_12.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_12.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_13.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_13.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_14.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_14.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_15.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_15.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_16.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_16.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_17.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_17.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_18.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_18.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_19.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_19.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_2.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_2.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_20.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_20.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_21.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_21.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_22.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_22.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_23.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_23.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_24.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_24.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_25.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_25.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_26.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_26.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_27.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_27.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_28.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_28.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_29.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_29.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_3.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_3.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_30.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_30.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_31.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_31.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_32.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_32.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_33.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_33.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_34.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_34.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_35.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_35.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_36.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_36.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_37.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_37.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_38.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_38.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_39.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_39.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_4.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_4.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_40.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_40.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_41.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_41.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_42.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_42.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_43.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_43.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_44.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_44.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_45.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_45.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_46.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_46.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_47.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_47.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_48.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_48.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_49.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_49.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_5.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_5.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_50.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_50.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_51.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_51.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_52.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_52.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_53.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_53.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_54.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_54.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_55.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_55.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_56.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_56.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_57.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_57.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_58.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_58.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_59.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_59.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_6.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_6.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_60.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_60.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_61.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_61.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_62.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_62.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_63.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_63.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_64.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_64.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_65.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_65.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_66.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_66.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_67.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_67.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_68.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_68.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_69.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_69.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_7.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_7.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_70.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_70.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_71.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_71.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_72.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_72.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_73.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_73.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_74.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_74.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_75.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_75.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_76.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_76.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_77.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_77.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_78.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_78.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_79.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_79.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_8.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_8.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_80.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_80.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_81.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_81.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_82.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_82.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_83.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_83.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_84.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_84.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_85.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_85.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_86.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_86.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_87.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_87.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_88.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_88.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_89.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_89.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_9.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_9.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_90.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_90.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_91.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_91.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_92.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_92.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_93.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_93.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_94.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_94.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_95.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_95.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_96.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_96.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_97.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_97.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_98.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_98.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/images/tooltip_image_99.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/images/tooltip_image_99.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/import_json.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/import_json.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/insert_die_records_from_library.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/insert_feed_direction_records.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/insert_feed_direction_records.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/insert_material_records.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/insert_material_records.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/insert_or_update_table_from_library.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/insert_or_update_table_from_library.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/insert_press_records_from_library.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/insert_time_records.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/insert_time_records.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/library_dictionary.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/library_dictionary.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/operations.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/operations.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/query_operation.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/query_operation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/query_press.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/query_press.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/sql_setup/test_records_add.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend_obsolete/sql_setup/test_records_add.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/db_setup/reinit_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/db_setup/reinit_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/scripts/operations.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/operations.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/scripts/operations.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/operations.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/MenuBar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/MenuBar.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/ToolsPane.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ToolsPane.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/ToolsSwitcher.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ToolsSwitcher.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/lib/apiClient.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/apiClient.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/AppPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AppPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/LoginPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/LoginPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/stores/useSessionStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/stores/useSessionStore.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/types/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/types/api.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/tailwind.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/tailwind.config.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,7 +175,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="407" />
+    <option name="cachedIndexableFilesCount" value="454" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="FileTemplateManagerImpl">
@@ -60,12 +215,13 @@
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;ai.playground.ignore.import.keys.banner.in.settings&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/alextub/Documents/apiProject1/backend/data&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/alextub/Documents/apiProject1&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.stylelint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -75,7 +231,7 @@
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;npm.Dev Server.executor&quot;: &quot;Run&quot;,
     &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;/home/alextub/Documents/apiProject1/frontend/node_modules/prettier&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;terminal&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.idesettings.debugger.python&quot;,
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
     &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\alext\\ProgrammingProjects\\apiProject1\\frontend\\node_modules\\typescript\\lib&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
@@ -112,11 +268,11 @@
       <recent name="C:\Users\alext\PycharmProjects\apiProject1" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/frontend_obsolete" />
       <recent name="$PROJECT_DIR$/backend/data/config" />
+      <recent name="$PROJECT_DIR$" />
       <recent name="C:\Users\alext\ProgrammingProjects\apiProject1\backend\scripts" />
       <recent name="C:\Users\alext\ProgrammingProjects\apiProject1\backend\tests" />
-      <recent name="C:\Users\alext\ProgrammingProjects\apiProject1\setup" />
     </key>
   </component>
   <component name="RunManager" selected="npm.Dev Server">
@@ -133,6 +289,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="RUN_TOOL" value="" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/backend/run.py" />
@@ -174,14 +331,12 @@
     </configuration>
     <list>
       <item itemvalue="npm.Dev Server" />
-      <item itemvalue="Python.Backend Server" />
     </list>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PY-253.31033.139" />
-        <option value="bundled-python-sdk-2653e85de345-6d6dccd035ac-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.31033.139" />
+        <option value="bundled-js-predefined-d6986cc7102b-3bd3a6803838-JavaScript-WS-261.22158.274" />
       </set>
     </attachedChunks>
   </component>
@@ -238,7 +393,22 @@
       <workItem from="1770781669268" duration="18111000" />
       <workItem from="1771736950686" duration="2288000" />
       <workItem from="1771822238463" duration="1928000" />
-      <workItem from="1771986454572" duration="4934000" />
+      <workItem from="1771986454572" duration="5995000" />
+      <workItem from="1772071496769" duration="101000" />
+      <workItem from="1772071623208" duration="29069000" />
+      <workItem from="1772216755130" duration="8000" />
+      <workItem from="1772244820210" duration="2214000" />
+      <workItem from="1772274691172" duration="1084000" />
+      <workItem from="1772592573363" duration="686000" />
+      <workItem from="1774231559066" duration="551000" />
+      <workItem from="1774307692456" duration="3031000" />
+      <workItem from="1774432215681" duration="1829000" />
+      <workItem from="1774860585151" duration="84000" />
+      <workItem from="1774860678809" duration="1913000" />
+      <workItem from="1774919817599" duration="1174000" />
+      <workItem from="1774924412718" duration="3179000" />
+      <workItem from="1775030625513" duration="26000" />
+      <workItem from="1775275660373" duration="1452000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -384,7 +554,15 @@
       <option name="project" value="LOCAL" />
       <updated>1772017374675</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="Add *_FILES_ROOT variables into .env.example file">
+      <option name="closed" value="true" />
+      <created>1772019355060</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1772019355060</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
@@ -433,12 +611,13 @@
     <MESSAGE value="Change project architectrure to Project -&gt; Document -&gt; Block flow" />
     <MESSAGE value="Change blocks style to always editable" />
     <MESSAGE value="Create and apply new visual style (more dense)" />
-    <option name="LAST_COMMIT_MESSAGE" value="Create and apply new visual style (more dense)" />
+    <MESSAGE value="Add *_FILES_ROOT variables into .env.example file" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add *_FILES_ROOT variables into .env.example file" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/apiProject1$Backend_Server.coverage" NAME="Backend Server Coverage Results" MODIFIED="1771986464450" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend" />
     <SUITE FILE_PATH="coverage/apiProject1$gui_client.coverage" NAME="gui_client Coverage Results" MODIFIED="1768468851893" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/apiProject1$main.coverage" NAME="main Coverage Results" MODIFIED="1768523636270" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/gui_client_v2" />
     <SUITE FILE_PATH="coverage/apiProject1$example.coverage" NAME="example Coverage Results" MODIFIED="1768285098953" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/apiProject1$Backend_Server.coverage" NAME="Backend Server Coverage Results" MODIFIED="1774923060003" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend" />
   </component>
 </project>

@@ -88,7 +88,7 @@ def sql_get_list_of_processes(
 def sql_get_operations_for_process_id(cur, process_id) -> (list, list):
     """Receives process_id. Returns two lists: list of column names and list of tuples of operations."""
     #
-    cur.execute("SHOW COLUMNS FROM press")
+    cur.execute("SHOW COLUMNS FROM presses")
     column_names = [i[0] for i in cur.fetchall()]
     #
     sql_formula = (
@@ -156,9 +156,9 @@ def sql_get_operation_type_categories(cur) -> list:
 
 def postgresql_get_press_mode_record(cur, press_mode_id: int) -> (list, list):
     """Get press_mode_id. Returns two lists: column names and press mode record."""
-    cur.execute("SHOW COLUMNS FROM press_mode")
+    cur.execute("SHOW COLUMNS FROM press_modes")
     press_mode_columns = [i[0] for i in cur.fetchall()]
-    cur.execute("SELECT * FROM press_mode WHERE press_mode_id = %s LIMIT 1", (press_mode_id,))
+    cur.execute("SELECT * FROM press_modes WHERE press_mode_id = %s LIMIT 1", (press_mode_id,))
     press_mode_data = cur.fetchone()
     return press_mode_columns, press_mode_data
 

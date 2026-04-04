@@ -23,7 +23,7 @@ class Project(Base):
     )
     material_id: Mapped[Optional[int]] = mapped_column(
         Integer,
-        ForeignKey("library.id", ondelete="SET NULL"),
+        ForeignKey("materials.material_id", ondelete="SET NULL"),
         nullable=True,
         default=None,
     )

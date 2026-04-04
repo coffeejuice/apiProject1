@@ -34,7 +34,14 @@ def init_db_raw():
     with Session(engine) as session:
         # Create default material
         from app.models.library.material import Material
-        mat = Material(material_id=1, material_name="Default Material", material_path="")
+        mat = Material(
+            material_id=1,
+            name={"EN": "Default Material"},
+            source="system",
+            source_version="",
+            file_name="",
+            properties={},
+        )
         session.add(mat)
         session.flush() # Get IDs if they are serial
 

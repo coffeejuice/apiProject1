@@ -19,9 +19,11 @@ class CreateTables(Enum):
 CREATE TYPE priority_enum AS ENUM ('Whenever', 'Normal', 'ASAP', 'Now');
 """
 
-    # Die types
-    die_type_enum = """
-CREATE TYPE die_type_enum AS ENUM ('flat', 'v_die', 'rounding', 'knife', 'gfm_die');
+    die_type = """
+CREATE TABLE IF NOT EXISTS die_types (
+    id   SERIAL PRIMARY KEY,
+    name JSON NOT NULL
+);
 """
 
     deformation_type_enum = """
@@ -158,20 +160,13 @@ CREATE TABLE IF NOT EXISTS accounts (
 """
 
     material = """
-CREATE TABLE IF NOT EXISTS material (
+CREATE TABLE IF NOT EXISTS materials (
     material_id SERIAL PRIMARY KEY,
     material_name VARCHAR(2047) NOT NULL,
     material_path VARCHAR(2047) NOT NULL,
     short_name VARCHAR(63) NOT NULL DEFAULT '',
     density DOUBLE PRECISION DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-"""
-
-    furnace_class = """
-CREATE TABLE IF NOT EXISTS furnace_class (
-    furnace_class_id SMALLSERIAL PRIMARY KEY,
-    furnace_class_name VARCHAR(1023)
 );
 """
 
@@ -205,7 +200,7 @@ CREATE TABLE IF NOT EXISTS process (
 
     CONSTRAINT fk_process_material_id_material_material_id
         FOREIGN KEY (material_id)
-            REFERENCES material(material_id) ON DELETE SET DEFAULT
+            REFERENCES materials(material_id) ON DELETE SET DEFAULT
 );
 """
 
@@ -376,24 +371,25 @@ CREATE TABLE IF NOT EXISTS operation_type_category (
 """
 
     press = """
-CREATE TABLE IF NOT EXISTS press (
+CREATE TABLE IF NOT EXISTS presses (
     press_id                SERIAL PRIMARY KEY,
-    press_die_match_code    VARCHAR(127) NOT NULL,
-    name                    VARCHAR(1023) NOT NULL
+    default_press_mode_id   INT,
+    name                    JSON NOT NULL,
+    is_obsolete             BOOL NOT NULL DEFAULT FALSE,
+    created_at              TIMESTAMP NOT NULL DEFAULT NOW(),
+    obsolete_at             TIMESTAMP DEFAULT NULL
 );
 """
 
     # press parameters
     # approaching_distance - Distance to billet, at which speed switches from idle to working ones
     press_mode = """
-CREATE TABLE IF NOT EXISTS press_mode (
+CREATE TABLE IF NOT EXISTS press_modes (
     press_mode_id               SERIAL,
-    press_mode_name             VARCHAR(127) NOT NULL,
-    press_die_match_code        VARCHAR(127) NOT NULL,
     press_id                    SMALLINT,
-    name                        VARCHAR(1023),
-    is_default_press_mode       BOOL DEFAULT FALSE,
-    manipulators_count          SMALLINT,
+    name                        JSON,
+    is_left_manipulator         BOOL NOT NULL DEFAULT FALSE,
+    is_right_manipulator        BOOL NOT NULL DEFAULT FALSE,
     automatic_feed_mode_is_on_when_bites_count SMALLINT,
     max_force                   FLOAT,
     back_speed                  FLOAT,
@@ -406,8 +402,36 @@ CREATE TABLE IF NOT EXISTS press_mode (
     approaching_distance        FLOAT,
     open_height_without_dies    FLOAT,
     PRIMARY KEY (press_mode_id),
-    FOREIGN KEY (press_id) REFERENCES press(press_id) ON DELETE RESTRICT
+    FOREIGN KEY (press_id) REFERENCES presses(press_id) ON DELETE RESTRICT
 );
+"""
+
+    press_ALTER = """
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name = 'presses'
+          AND column_name = 'default_press_mode_id'
+    ) AND EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_name = 'press_modes'
+    ) THEN
+        IF NOT EXISTS (
+            SELECT 1
+            FROM information_schema.table_constraints
+            WHERE table_name = 'presses'
+              AND constraint_name = 'fk_press_default_press_mode_id'
+        ) THEN
+            ALTER TABLE presses
+            ADD CONSTRAINT fk_press_default_press_mode_id
+            FOREIGN KEY (default_press_mode_id) REFERENCES press_modes(press_mode_id) ON DELETE SET NULL;
+        END IF;
+    END IF;
+END
+$$;
 """
 
     # Power Limit
@@ -418,27 +442,28 @@ CREATE TABLE IF NOT EXISTS press_mode_power_limit (
     force_value FLOAT,
     speed_value FLOAT,
     PRIMARY KEY (press_mode_id, row_num),
-    FOREIGN KEY (press_mode_id) REFERENCES press_mode(press_mode_id) ON DELETE CASCADE
+    FOREIGN KEY (press_mode_id) REFERENCES press_modes(press_mode_id) ON DELETE CASCADE
 );
 """
 
     die_assembly = """
-    CREATE TABLE IF NOT EXISTS die_assembly (
+    CREATE TABLE IF NOT EXISTS die_assemblies (
         id                  SERIAL PRIMARY KEY,
-        die_assembly_name   VARCHAR(127) NOT NULL,
-        name                VARCHAR(1023) NOT NULL,
-        die_type            die_type_enum NOT NULL,
+        name                JSON NOT NULL,
+        die_type_id         INT NOT NULL,
         is_obsolete         BOOL DEFAULT FALSE,
         --
         created_at          TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at          TIMESTAMP DEFAULT NULL,
-        obsolete_at         TIMESTAMP DEFAULT NULL
+        obsolete_at         TIMESTAMP DEFAULT NULL,
+        --
+        FOREIGN KEY (die_type_id) REFERENCES die_types(id) ON DELETE RESTRICT
     );
     """
 
     # Die flat
     die = """
-CREATE TABLE IF NOT EXISTS die (
+CREATE TABLE IF NOT EXISTS dies (
     --
     -- AUTOFILL
     --
@@ -447,13 +472,10 @@ CREATE TABLE IF NOT EXISTS die (
     -- 
     -- mandatory parameters
     -- 
-    die_name                VARCHAR(127) NOT NULL,
-    name                    VARCHAR(1023) NOT NULL,
-    die_type                die_type_enum NOT NULL,
+    name                    JSON NOT NULL,
+    die_type_id             INT NOT NULL,
     -- 
     die_template_file_name  VARCHAR(1023) DEFAULT '',
-    die_assembly_name       VARCHAR(127),
-    press_die_match_code    VARCHAR(127),
     inventory_number        VARCHAR(127) DEFAULT '',
     --
     is_matching_as_top      BOOL NOT NULL DEFAULT FALSE,
@@ -469,97 +491,118 @@ CREATE TABLE IF NOT EXISTS die (
     updated_at              TIMESTAMP DEFAULT NULL,
     obsolete_at             TIMESTAMP DEFAULT NULL,
     -- 
-    FOREIGN KEY (die_assembly_id) REFERENCES die_assembly(id) ON DELETE RESTRICT
+    FOREIGN KEY (die_assembly_id) REFERENCES die_assemblies(id) ON DELETE RESTRICT,
+    FOREIGN KEY (die_type_id) REFERENCES die_types(id) ON DELETE RESTRICT
+);
+"""
+
+    press_die_map = """
+CREATE TABLE IF NOT EXISTS press_die_map (
+    press_id INT NOT NULL,
+    die_id   INT NOT NULL,
+    PRIMARY KEY (press_id, die_id),
+    FOREIGN KEY (press_id) REFERENCES presses(press_id) ON DELETE CASCADE,
+    FOREIGN KEY (die_id) REFERENCES dies(id) ON DELETE CASCADE
+);
+"""
+
+    die_assembly_die_map = """
+CREATE TABLE IF NOT EXISTS die_assembly_die_map (
+    die_assembly_id INT NOT NULL,
+    die_id          INT NOT NULL,
+    PRIMARY KEY (die_assembly_id, die_id),
+    FOREIGN KEY (die_assembly_id) REFERENCES die_assemblies(id) ON DELETE CASCADE,
+    FOREIGN KEY (die_id) REFERENCES dies(id) ON DELETE CASCADE
 );
 """
 
     die_top_flat = """
--- Create the view 'die_top_flat' with rows where 'die_type' = 'flat'
+-- Create the view 'die_top_flat' with rows where 'die_type_id' = 'flat'
 CREATE VIEW die_top_flat AS
 SELECT *
-FROM die
-WHERE die_type = 'flat' AND is_matching_as_top = TRUE
+FROM dies
+WHERE die_type_id = 1 AND is_matching_as_top = TRUE
 ORDER BY name ASC;
 """
 
     die_top_v_die = """
--- Create the view 'die_top_v_die' with rows where 'die_type' = 'v_die'
+-- Create the view 'die_top_v_die' with rows where 'die_type_id' = 'v_die'
 CREATE VIEW die_top_v_die AS
 SELECT *
-FROM die
-WHERE die_type = 'v_die' AND is_matching_as_top = TRUE
+FROM dies
+WHERE die_type_id = 2 AND is_matching_as_top = TRUE
 ORDER BY name ASC;
 """
 
     die_top_rounding = """
--- Create the view 'die_top_rounding' with rows where 'die_type' = 'rounding'
+-- Create the view 'die_top_rounding' with rows where 'die_type_id' = 'rounding'
 CREATE VIEW die_top_rounding AS
 SELECT *
-FROM die
-WHERE die_type = 'rounding' AND is_matching_as_top = TRUE
+FROM dies
+WHERE die_type_id = 4 AND is_matching_as_top = TRUE
 ORDER BY name ASC;
 """
 
     die_bottom_flat = """
--- Create the view 'die_bottom_flat' with rows where 'die_type' = 'flat'
+-- Create the view 'die_bottom_flat' with rows where 'die_type_id' = 'flat'
 CREATE VIEW die_bottom_flat AS
 SELECT *
-FROM die
-WHERE die_type = 'flat' AND is_matching_as_bottom = TRUE
+FROM dies
+WHERE die_type_id = 1 AND is_matching_as_bottom = TRUE
 ORDER BY name ASC;
 """
 
     die_bottom_v_die = """
--- Create the view 'die_bottom_v_die' with rows where 'die_type' = 'v_die'
+-- Create the view 'die_bottom_v_die' with rows where 'die_type_id' = 'v_die'
 CREATE VIEW die_bottom_v_die AS
 SELECT *
-FROM die
-WHERE die_type = 'v_die' AND is_matching_as_bottom = TRUE
+FROM dies
+WHERE die_type_id = 2 AND is_matching_as_bottom = TRUE
 ORDER BY name ASC;
 """
 
     die_bottom_rounding = """
--- Create the view 'die_bottom_rounding' with rows where 'die_type' = 'rounding'
+-- Create the view 'die_bottom_rounding' with rows where 'die_type_id' = 'rounding'
 CREATE VIEW die_bottom_rounding AS
 SELECT *
-FROM die
-WHERE die_type = 'rounding' AND is_matching_as_bottom = TRUE
+FROM dies
+WHERE die_type_id = 4 AND is_matching_as_bottom = TRUE
 ORDER BY name ASC;
 """
 
     die_assembly_flat = """
--- Create the view 'die_assembly_flat' with rows where 'die_type' = 'flat'
+-- Create the view 'die_assembly_flat' with rows where 'die_type_id' = 'flat'
 CREATE VIEW die_assembly_flat AS
 SELECT *
-FROM die_assembly
-WHERE die_type = 'flat'
+FROM die_assemblies
+WHERE die_type_id = 1
 ORDER BY name ASC;
 """
 
     die_assembly_v_die = """
--- Create the view 'die_assembly_v_die' with rows where 'die_type' = 'v_die'
+-- Create the view 'die_assembly_v_die' with rows where 'die_type_id' = 'v_die'
 CREATE VIEW die_assembly_v_die AS
 SELECT *
-FROM die_assembly
-WHERE die_type = 'v_die'
+FROM die_assemblies
+WHERE die_type_id = 2
 ORDER BY name ASC;
 """
 
     die_assembly_rounding = """
--- Create the view 'die_assembly_rounding' with rows where 'die_type' = 'rounding'
+-- Create the view 'die_assembly_rounding' with rows where 'die_type_id' = 'rounding'
 CREATE VIEW die_assembly_rounding AS
 SELECT *
-FROM die_assembly
-WHERE die_type = 'rounding'
+FROM die_assemblies
+WHERE die_type_id = 4
 ORDER BY name ASC;
 """
 
     die_assembly_gfm_die = """
--- Create the view 'die_assembly_gfm_die' with rows where 'die_type' = 'gfm_die'
+-- Create the view 'die_assembly_gfm_die' with rows where 'die_type_id' = 'gfm_die'
 CREATE VIEW die_assembly_gfm_die AS
 SELECT *
-FROM die_assembly
-WHERE die_type = 'gfm_die'
+FROM die_assemblies
+WHERE die_type_id = 3
 ORDER BY name ASC;
 """
 
@@ -612,7 +655,7 @@ CREATE TABLE IF NOT EXISTS time_between_operations (
 
     CONSTRAINT fk_time_press_id
         FOREIGN KEY (press_id)
-            REFERENCES press(press_id) ON DELETE CASCADE
+            REFERENCES presses(press_id) ON DELETE CASCADE
 );
 """
 
@@ -934,31 +977,27 @@ CREATE TABLE IF NOT EXISTS server_pre_main (
 
     CONSTRAINT fk_server_pre_main_material_id
         FOREIGN KEY (material_id)
-        REFERENCES material(material_id) ON DELETE SET DEFAULT,
-
-    CONSTRAINT fk_server_pre_main_furnace_class_id
-        FOREIGN KEY (furnace_class_id)
-        REFERENCES furnace_class(furnace_class_id) ON DELETE SET DEFAULT,
+        REFERENCES materials(material_id) ON DELETE SET DEFAULT,
 
     CONSTRAINT fk_server_pre_main_press_id
         FOREIGN KEY (press_id)
-        REFERENCES press(press_id) ON DELETE SET DEFAULT,
+        REFERENCES presses(press_id) ON DELETE SET DEFAULT,
 
     CONSTRAINT fk_server_pre_main_press_mode_id
         FOREIGN KEY (press_mode_id)
-        REFERENCES press_mode(press_mode_id) ON DELETE SET DEFAULT,
+        REFERENCES press_modes(press_mode_id) ON DELETE SET DEFAULT,
 
     CONSTRAINT fk_server_pre_main_die_assembly_id
         FOREIGN KEY (die_assembly_id)
-        REFERENCES die_assembly(id) ON DELETE SET DEFAULT,
+        REFERENCES die_assemblies(id) ON DELETE SET DEFAULT,
 
     CONSTRAINT fk_server_pre_main_die_top_die_id
         FOREIGN KEY (top_die_id)
-        REFERENCES die(id) ON DELETE SET DEFAULT,
+        REFERENCES dies(id) ON DELETE SET DEFAULT,
 
     CONSTRAINT fk_server_pre_main_die_bottom_die_id
         FOREIGN KEY (bottom_die_id)
-        REFERENCES die(id) ON DELETE SET DEFAULT,
+        REFERENCES dies(id) ON DELETE SET DEFAULT,
 
     CONSTRAINT fk_server_pre_main_feed_direction_id
         FOREIGN KEY (feed_direction_id)
@@ -1094,7 +1133,7 @@ CREATE TABLE IF NOT EXISTS post_operations (
 
     CONSTRAINT fk_post_operations_press_mode_id
         FOREIGN KEY (press_mode_id)
-        REFERENCES press_mode(press_mode_id)
+        REFERENCES press_modes(press_mode_id)
         ON DELETE SET DEFAULT
         ON UPDATE CASCADE
 );
@@ -1217,7 +1256,7 @@ CREATE TABLE IF NOT EXISTS bites (
 
     CONSTRAINT fk_post_bites_press_mode_id
         FOREIGN KEY (press_mode_id)
-        REFERENCES press_mode(press_mode_id)
+        REFERENCES press_modes(press_mode_id)
         ON DELETE SET DEFAULT
         ON UPDATE CASCADE           
 );
