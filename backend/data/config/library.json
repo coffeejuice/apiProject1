@@ -1,0 +1,1187 @@
+{
+  "users": [
+    {
+      "user_id": 1,
+      "login": "admin",
+      "email": "admin@forgelab.local",
+      "password_hashed": "$2b$12$WjRLte772JcCOl0epfEyEuyMsoB49avPsiF0cjg/1JwDB65fM9I.K",
+      "signal_clear_token": false,
+      "supervisor_id": 1,
+      "full_name": "Administrator",
+      "language_code": "en",
+      "user_settings": null,
+      "user_priority_enum": "high"
+    }
+  ],
+  "die_type_id": [
+    {
+      "id": 1,
+      "name": {
+        "EN": "Flat die",
+        "RU": "Плоский боёк",
+        "ZH_HANS": "平砧"
+      }
+    },
+    {
+      "id": 2,
+      "name": {
+        "EN": "V-die",
+        "RU": "V-образный боёк",
+        "ZH_HANS": "V形砧"
+      }
+    },
+    {
+      "id": 3,
+      "name": {
+        "EN": "GFM die",
+        "RU": "Боёк GFM",
+        "ZH_HANS": "GFM砧"
+      }
+    },
+    {
+      "id": 4,
+      "name": {
+        "EN": "Rounding die",
+        "RU": "Радиусный боёк",
+        "ZH_HANS": "圆角砧"
+      }
+    },
+    {
+      "id": 5,
+      "name": {
+        "EN": "Knife die",
+        "RU": "Ножевой боёк",
+        "ZH_HANS": "刀形砧"
+      }
+    }
+  ],
+  "materials": [
+    {
+      "material_id": 1,
+      "name": {
+        "EN": "INC718",
+        "RU": "INC718",
+        "ZH_HANS": "INC718"
+      },
+      "source": "deform",
+      "source_version": "11.0.2",
+      "file_name": "material_Inc718_20220602.key",
+      "properties": {
+        "density": 8190
+      },
+      "is_obsolete": false,
+      "obsolete_at": null,
+      "owner_id": 1
+    },
+    {
+      "material_id": 2,
+      "name": {
+        "EN": "BT20 (Ti-6.5Al-2Zr-1Mo-1V)",
+        "RU": "Вт20 (Ti-6.5Al-2Zr-1Mo-1V)",
+        "ZH_HANS": "TA15 (Ti-6.5Al-2Zr-1Mo-1V)"
+      },
+      "source": "deform",
+      "source_version": "11.0.2",
+      "file_name": "material_TA15_20221024_RUSSIA_JMATPRO.KEY",
+      "properties": {
+        "density": 4450
+      },
+      "is_obsolete": false,
+      "obsolete_at": null,
+      "owner_id": 1
+    },
+    {
+      "material_id": 3,
+      "name": {
+        "EN": "Ti-10V-2Fe-3Al",
+        "RU": "Ti-10V-2Fe-3Al",
+        "ZH_HANS": "TB6"
+      },
+      "source": "deform",
+      "source_version": "11.0.2",
+      "file_name": "material_TB6_20220717.key",
+      "properties": {
+        "density": 4620
+      },
+      "is_obsolete": false,
+      "obsolete_at": null,
+      "owner_id": 1
+    },
+    {
+      "material_id": 4,
+      "name": {
+        "EN": "TB18",
+        "RU": "TB18",
+        "ZH_HANS": "TB18"
+      },
+      "source": "deform",
+      "source_version": "11.0.2",
+      "file_name": "material_TB18_20220602.key",
+      "properties": {
+        "density": 4450
+      },
+      "is_obsolete": false,
+      "obsolete_at": null,
+      "owner_id": 1
+    },
+    {
+      "material_id": 5,
+      "name": {
+        "EN": "TC2 (Ti-4AL-1.5Mn)",
+        "RU": "OT4-1 (Ti-4AL-1.5Mn)",
+        "ZH_HANS": "TC2 (Ti-4AL-1.5Mn)"
+      },
+      "source": "deform",
+      "source_version": "11.0.2",
+      "file_name": "material_TC2_20220602.key",
+      "properties": {
+        "density": 4530
+      },
+      "is_obsolete": false,
+      "obsolete_at": null,
+      "owner_id": 1
+    },
+    {
+      "material_id": 6,
+      "name": {
+        "EN": "Ti-6Al-4V",
+        "RU": "Вт6 (Ti-6Al-4V)",
+        "ZH_HANS": "TC4 (Ti-6Al-4V)"
+      },
+      "source": "deform",
+      "source_version": "11.0.2",
+      "file_name": "material_TC4_20220602.key",
+      "properties": {
+        "density": 4430
+      },
+      "is_obsolete": false,
+      "obsolete_at": null,
+      "owner_id": 1
+    },
+    {
+      "material_id": 7,
+      "name": {
+        "EN": "TC17 (Ti-5Al-2Sn-4Mo-2Zr-4Cr)",
+        "RU": "Ti17 (Ti-5Al-2Sn-4Mo-2Zr-4Cr)",
+        "ZH_HANS": "TC17 (Ti-5Al-2Sn-4Mo-2Zr-4Cr)"
+      },
+      "source": "deform",
+      "source_version": "11.0.2",
+      "file_name": "material_TC17_20220602.key",
+      "properties": {
+        "density": 4650
+      },
+      "is_obsolete": false,
+      "obsolete_at": null,
+      "owner_id": 1
+    },
+    {
+      "material_id": 8,
+      "name": {
+        "EN": "BT22",
+        "RU": "Вт22",
+        "ZH_HANS": "TC18"
+      },
+      "source": "deform",
+      "source_version": "11.0.2",
+      "file_name": "material_TC18_TC18-D500-T16-v04-sparse.KEY",
+      "properties": {
+        "density": 4620
+      },
+      "is_obsolete": false,
+      "obsolete_at": null,
+      "owner_id": 1
+    },
+    {
+      "material_id": 9,
+      "name": {
+        "EN": "TC21",
+        "RU": "TC21",
+        "ZH_HANS": "TC21"
+      },
+      "source": "deform",
+      "source_version": "11.0.2",
+      "file_name": "material_TC21_20220622.KEY",
+      "properties": {
+        "density": 4430
+      },
+      "is_obsolete": false,
+      "obsolete_at": null,
+      "owner_id": 1
+    },
+    {
+      "material_id": 10,
+      "name": {
+        "EN": "Ti5553",
+        "RU": "Ti5553",
+        "ZH_HANS": "Ti5553"
+      },
+      "source": "deform",
+      "source_version": "11.0.2",
+      "file_name": "material_Ti5553_20220621.key",
+      "properties": {
+        "density": 4650
+      },
+      "is_obsolete": false,
+      "obsolete_at": null,
+      "owner_id": 1
+    },
+    {
+      "material_id": 11,
+      "name": {
+        "EN": "Ti80 (Ti-6Al-3Nb-2Zr-1Mo)",
+        "RU": "Ti80 (Ti-6Al-3Nb-2Zr-1Mo)",
+        "ZH_HANS": "Ti80 (Ti-6Al-3Nb-2Zr-1Mo)"
+      },
+      "source": "deform",
+      "source_version": "11.0.2",
+      "file_name": "material_Ti80_WST_20240528.KEY",
+      "properties": {
+        "density": 4490
+      },
+      "is_obsolete": false,
+      "obsolete_at": null,
+      "owner_id": 1
+    }
+  ],
+  "dies": [
+    {
+      "id": 1,
+      "name": {
+        "EN": "650",
+        "RU": "650",
+        "ZH_HANS": "650"
+      },
+      "die_type_id": 1,
+      "die_template_file_name": "press_80_flat_650_top.zip",
+      "inventory_number": "",
+      "properties": {
+        "total_length": 650.0,
+        "total_width": 2200.0,
+        "height": 1200.0,
+        "straight_length": 390.0,
+        "edge_radius": 160.0,
+        "edge_angle": 90.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 2,
+      "name": {
+        "EN": "650",
+        "RU": "650",
+        "ZH_HANS": "650"
+      },
+      "die_type_id": 1,
+      "die_template_file_name": "press_80_flat_650_bottom.zip",
+      "inventory_number": "",
+      "properties": {
+        "total_length": 650.0,
+        "total_width": 2200.0,
+        "height": 1200.0,
+        "straight_length": 390.0,
+        "edge_radius": 160.0,
+        "edge_angle": 90.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 3,
+      "name": {
+        "EN": "900",
+        "RU": "900",
+        "ZH_HANS": "900"
+      },
+      "die_type_id": 1,
+      "die_template_file_name": "press_80_flat_900_top.zip",
+      "inventory_number": "",
+      "properties": {
+        "total_length": 900.0,
+        "total_width": 1500.0,
+        "height": 1200.0,
+        "straight_length": 500.0,
+        "edge_radius": 250.0,
+        "edge_angle": 90.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 4,
+      "name": {
+        "EN": "900",
+        "RU": "900",
+        "ZH_HANS": "900"
+      },
+      "die_type_id": 1,
+      "die_template_file_name": "press_80_flat_900_bottom.zip",
+      "inventory_number": "",
+      "properties": {
+        "total_length": 900.0,
+        "total_width": 1500.0,
+        "height": 1200.0,
+        "straight_length": 500.0,
+        "edge_radius": 250.0,
+        "edge_angle": 90.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 5,
+      "name": {
+        "EN": "550",
+        "RU": "550",
+        "ZH_HANS": "550"
+      },
+      "die_type_id": 1,
+      "die_template_file_name": "press_45_flat_550_top.zip",
+      "inventory_number": "",
+      "properties": {
+        "total_length": 550.0,
+        "total_width": 2000.0,
+        "height": 1200.0,
+        "straight_length": 390.0,
+        "edge_radius": 80.0,
+        "edge_angle": 90.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 6,
+      "name": {
+        "EN": "550",
+        "RU": "550",
+        "ZH_HANS": "550"
+      },
+      "die_type_id": 1,
+      "die_template_file_name": "press_45_flat_550_bottom.zip",
+      "inventory_number": "",
+      "properties": {
+        "total_length": 550.0,
+        "total_width": 2000.0,
+        "height": 1200.0,
+        "straight_length": 390.0,
+        "edge_radius": 80.0,
+        "edge_angle": 90.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 7,
+      "name": {
+        "EN": "V122°◯355->◯180",
+        "RU": "V122°◯355->◯180",
+        "ZH_HANS": "V122°◯355->◯180"
+      },
+      "die_type_id": 2,
+      "die_template_file_name": "press_80_v_a122_d355_d180_top.zip",
+      "inventory_number": "",
+      "properties": {
+        "total_length": 650.0,
+        "total_width": 500.0,
+        "height": 300.0,
+        "straight_length": 353.35,
+        "edge_radius": 150.0,
+        "edge_angle": 90.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 8,
+      "name": {
+        "EN": "V122°◯355->◯180",
+        "RU": "V122°◯355->◯180",
+        "ZH_HANS": "V122°◯355->◯180"
+      },
+      "die_type_id": 2,
+      "die_template_file_name": "press_80_v_a122_d355_d180_bottom.zip",
+      "inventory_number": "",
+      "properties": {
+        "total_length": 650.0,
+        "total_width": 500.0,
+        "height": 300.0,
+        "straight_length": 353.35,
+        "edge_radius": 150.0,
+        "edge_angle": 90.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 9,
+      "name": {
+        "EN": "w90xl240 ∠10° L850 (Top)",
+        "RU": "w90xl240 ∠10° L850 (Верхний)",
+        "ZH_HANS": "w90xl240 ∠10° L850 (Top)"
+      },
+      "die_type_id": 3,
+      "die_template_file_name": "gfm_die_gfm20_w90_top.zip",
+      "inventory_number": "",
+      "properties": {
+        "total_length": 850.0,
+        "total_width": 90.0,
+        "height": 170.0,
+        "straight_length": 240.0,
+        "edge_radius": 20.0,
+        "edge_angle": 10.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 10,
+      "name": {
+        "EN": "w90xl240 ∠10° L850 (Bottom)",
+        "RU": "w90xl240 ∠10° L850 (Нижний)",
+        "ZH_HANS": "w90xl240 ∠10° L850 (Bottom)"
+      },
+      "die_type_id": 3,
+      "die_template_file_name": "gfm_die_gfm20_w90_bottom.zip",
+      "inventory_number": "",
+      "properties": {
+        "total_length": 850.0,
+        "total_width": 90.0,
+        "height": 170.0,
+        "straight_length": 240.0,
+        "edge_radius": 20.0,
+        "edge_angle": 10.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 11,
+      "name": {
+        "EN": "w90xl240 ∠10° L850 (+Y)",
+        "RU": "w90xl240 ∠10° L850 (+Y)",
+        "ZH_HANS": "w90xl240 ∠10° L850 (+Y)"
+      },
+      "die_type_id": 3,
+      "die_template_file_name": "gfm_die_gfm20_w90_plus_y.zip",
+      "inventory_number": "",
+      "properties": {
+        "total_length": 850.0,
+        "total_width": 90.0,
+        "height": 170.0,
+        "straight_length": 240.0,
+        "edge_radius": 20.0,
+        "edge_angle": 10.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 12,
+      "name": {
+        "EN": "w90xl240 ∠10° L850 (-Y)",
+        "RU": "w90xl240 ∠10° L850 (-Y)",
+        "ZH_HANS": "w90xl240 ∠10° L850 (-Y)"
+      },
+      "die_type_id": 3,
+      "die_template_file_name": "gfm_die_gfm20_w90_minus_y.zip",
+      "inventory_number": "",
+      "properties": {
+        "total_length": 850.0,
+        "total_width": 90.0,
+        "height": 170.0,
+        "straight_length": 240.0,
+        "edge_radius": 20.0,
+        "edge_angle": 10.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false
+    }
+  ],
+  "die_assemblies": [
+    {
+      "id": 1,
+      "name": {
+        "EN": "650",
+        "RU": "650",
+        "ZH_HANS": "650"
+      },
+      "top_die_id": 1,
+      "bottom_die_id": 2,
+      "left_die_id": null,
+      "right_die_id": null,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 2,
+      "name": {
+        "EN": "900",
+        "RU": "900",
+        "ZH_HANS": "900"
+      },
+      "top_die_id": 3,
+      "bottom_die_id": 4,
+      "left_die_id": null,
+      "right_die_id": null,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 3,
+      "name": {
+        "EN": "550",
+        "RU": "550",
+        "ZH_HANS": "550"
+      },
+      "top_die_id": 5,
+      "bottom_die_id": 6,
+      "left_die_id": null,
+      "right_die_id": null,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 4,
+      "name": {
+        "EN": "V122°◯355->◯180",
+        "RU": "V122°◯355->◯180",
+        "ZH_HANS": "V122°◯355->◯180"
+      },
+      "top_die_id": 7,
+      "bottom_die_id": 8,
+      "left_die_id": null,
+      "right_die_id": null,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 5,
+      "name": {
+        "EN": "GFM 20",
+        "RU": "GFM 20",
+        "ZH_HANS": "GFM 20"
+      },
+      "top_die_id": 9,
+      "bottom_die_id": 10,
+      "left_die_id": 11,
+      "right_die_id": 12,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    }
+  ],
+  "presses": [
+    {
+      "id": 1,
+      "name": {
+        "EN": "80MN",
+        "RU": "80МН",
+        "ZH_HANS": "80MN"
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 2,
+      "name": {
+        "EN": "45MN",
+        "RU": "45МН",
+        "ZH_HANS": "45MN"
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 3,
+      "name": {
+        "EN": "16MN",
+        "RU": "16МН",
+        "ZH_HANS": "16MN"
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "id": 4,
+      "name": {
+        "EN": "GFM 20MN",
+        "RU": "GFM 20МН",
+        "ZH_HANS": "GFM 20MN"
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false
+    }
+  ],
+  "press_modes": [
+    {
+      "id": 1,
+      "press_id": 1,
+      "name": {
+        "EN": "21/80MN",
+        "RU": "21/80МН",
+        "ZH_HANS": "21/80MN"
+      },
+      "properties": {
+        "is_left_manipulator": true,
+        "is_right_manipulator": true,
+        "automatic_feed_mode_is_on_when_bites_count": 7,
+        "max_force": 21000000.0,
+        "back_speed": 250.0,
+        "idle_speed": 250.0,
+        "working_speed": 190.0,
+        "min_dwell_speed": 5.0,
+        "max_dwell_time": 0.25,
+        "power_limit": [
+          {
+            "id": 1,
+            "force": 0.0,
+            "speed": 190.0
+          },
+          {
+            "id": 2,
+            "force": 4200000.0,
+            "speed": 152.0
+          },
+          {
+            "id": 3,
+            "force": 8400000.0,
+            "speed": 116.0
+          },
+          {
+            "id": 4,
+            "force": 12600000.0,
+            "speed": 76.0
+          },
+          {
+            "id": 5,
+            "force": 16800000.0,
+            "speed": 38.0
+          },
+          {
+            "id": 6,
+            "force": 21000000.0,
+            "speed": 0.0
+          },
+          {
+            "id": 7,
+            "force": 90000000.0,
+            "speed": 0.0
+          }
+        ],
+        "min_idle_stroke": 40.0,
+        "max_idle_stroke": 250.0,
+        "approaching_distance": 10.0,
+        "open_height_without_dies": 4500.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false,
+      "is_default_press_mode": false
+    },
+    {
+      "id": 2,
+      "press_id": 1,
+      "name": {
+        "EN": "42/80MN",
+        "RU": "42/80МН",
+        "ZH_HANS": "42/80MN"
+      },
+      "properties": {
+        "is_left_manipulator": true,
+        "is_right_manipulator": true,
+        "automatic_feed_mode_is_on_when_bites_count": 7,
+        "max_force": 42000000.0,
+        "back_speed": 250.0,
+        "idle_speed": 250.0,
+        "working_speed": 140.0,
+        "min_dwell_speed": 5.0,
+        "max_dwell_time": 0.5,
+        "power_limit": [
+          {
+            "id": 1,
+            "force": 0.0,
+            "speed": 140.0
+          },
+          {
+            "id": 2,
+            "force": 8400000.0,
+            "speed": 112.0
+          },
+          {
+            "id": 3,
+            "force": 16800000.0,
+            "speed": 84.0
+          },
+          {
+            "id": 4,
+            "force": 25200000.0,
+            "speed": 56.0
+          },
+          {
+            "id": 5,
+            "force": 33600000.0,
+            "speed": 28.0
+          },
+          {
+            "id": 6,
+            "force": 42000000.0,
+            "speed": 0.0
+          },
+          {
+            "id": 7,
+            "force": 90000000.0,
+            "speed": 0.0
+          }
+        ],
+        "min_idle_stroke": 40.0,
+        "max_idle_stroke": 250.0,
+        "approaching_distance": 10.0,
+        "open_height_without_dies": 4500.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false,
+      "is_default_press_mode": false
+    },
+    {
+      "id": 3,
+      "press_id": 1,
+      "name": {
+        "EN": "63/80MN",
+        "RU": "63/80МН",
+        "ZH_HANS": "63/80MN"
+      },
+      "properties": {
+        "is_left_manipulator": true,
+        "is_right_manipulator": true,
+        "automatic_feed_mode_is_on_when_bites_count": 7,
+        "max_force": 63000000.0,
+        "back_speed": 250.0,
+        "idle_speed": 250.0,
+        "working_speed": 95.0,
+        "min_dwell_speed": 5.0,
+        "max_dwell_time": 3.0,
+        "power_limit": [
+          {
+            "id": 1,
+            "force": 0.0,
+            "speed": 95.0
+          },
+          {
+            "id": 2,
+            "force": 12600000.0,
+            "speed": 76.0
+          },
+          {
+            "id": 3,
+            "force": 25200000.0,
+            "speed": 57.0
+          },
+          {
+            "id": 4,
+            "force": 37800000.0,
+            "speed": 38.0
+          },
+          {
+            "id": 5,
+            "force": 50400000.0,
+            "speed": 19.0
+          },
+          {
+            "id": 6,
+            "force": 63000000.0,
+            "speed": 0.0
+          },
+          {
+            "id": 7,
+            "force": 90000000.0,
+            "speed": 0.0
+          }
+        ],
+        "min_idle_stroke": 40.0,
+        "max_idle_stroke": 250.0,
+        "approaching_distance": 10.0,
+        "open_height_without_dies": 4500.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false,
+      "is_default_press_mode": true
+    },
+    {
+      "id": 4,
+      "press_id": 1,
+      "name": {
+        "EN": "80/80MN",
+        "RU": "80/80МН",
+        "ZH_HANS": "80/80MN"
+      },
+      "properties": {
+        "is_left_manipulator": true,
+        "is_right_manipulator": true,
+        "automatic_feed_mode_is_on_when_bites_count": 7,
+        "max_force": 80000000.0,
+        "back_speed": 250.0,
+        "idle_speed": 250.0,
+        "working_speed": 67.0,
+        "min_dwell_speed": 1.0,
+        "max_dwell_time": 120.0,
+        "power_limit": [
+          {
+            "id": 1,
+            "force": 0.0,
+            "speed": 67.0
+          },
+          {
+            "id": 2,
+            "force": 16000000.0,
+            "speed": 53.6
+          },
+          {
+            "id": 3,
+            "force": 32000000.0,
+            "speed": 40.2
+          },
+          {
+            "id": 4,
+            "force": 48000000.0,
+            "speed": 26.8
+          },
+          {
+            "id": 5,
+            "force": 64000000.0,
+            "speed": 13.4
+          },
+          {
+            "id": 6,
+            "force": 80000000.0,
+            "speed": 0.0
+          },
+          {
+            "id": 7,
+            "force": 90000000.0,
+            "speed": 0.0
+          }
+        ],
+        "min_idle_stroke": 40.0,
+        "max_idle_stroke": 250.0,
+        "approaching_distance": 10.0,
+        "open_height_without_dies": 4500.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false,
+      "is_default_press_mode": false
+    },
+    {
+      "id": 5,
+      "press_id": 2,
+      "name": {
+        "EN": "45/45MN",
+        "RU": "45/45МН",
+        "ZH_HANS": "45/45MN"
+      },
+      "properties": {
+        "is_left_manipulator": true,
+        "is_right_manipulator": true,
+        "automatic_feed_mode_is_on_when_bites_count": 7,
+        "max_force": 45000000.0,
+        "back_speed": 250.0,
+        "idle_speed": 250.0,
+        "working_speed": 40.0,
+        "min_dwell_speed": 5.0,
+        "max_dwell_time": 2.0,
+        "power_limit": [
+          {
+            "id": 1,
+            "force": 0.0,
+            "speed": 40.0
+          },
+          {
+            "id": 2,
+            "force": 9000000.0,
+            "speed": 32.0
+          },
+          {
+            "id": 3,
+            "force": 18000000.0,
+            "speed": 24.0
+          },
+          {
+            "id": 4,
+            "force": 27000000.0,
+            "speed": 16.0
+          },
+          {
+            "id": 5,
+            "force": 36000000.0,
+            "speed": 8.0
+          },
+          {
+            "id": 6,
+            "force": 45000000.0,
+            "speed": 0.0
+          },
+          {
+            "id": 7,
+            "force": 50000000.0,
+            "speed": 0.0
+          }
+        ],
+        "min_idle_stroke": 40.0,
+        "max_idle_stroke": 250.0,
+        "approaching_distance": 10.0,
+        "open_height_without_dies": 4500.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false,
+      "is_default_press_mode": true
+    },
+    {
+      "id": 6,
+      "press_id": 3,
+      "name": {
+        "EN": "16/16MN",
+        "RU": "16/16МН",
+        "ZH_HANS": "16/16MN"
+      },
+      "properties": {
+        "is_left_manipulator": true,
+        "is_right_manipulator": true,
+        "automatic_feed_mode_is_on_when_bites_count": 7,
+        "max_force": 16000000.0,
+        "back_speed": 250.0,
+        "idle_speed": 250.0,
+        "working_speed": 40.0,
+        "min_dwell_speed": 5.0,
+        "max_dwell_time": 1.0,
+        "power_limit": [
+          {
+            "id": 1,
+            "force": 0.0,
+            "speed": 40.0
+          },
+          {
+            "id": 2,
+            "force": 3200000.0,
+            "speed": 32.0
+          },
+          {
+            "id": 3,
+            "force": 6400000.0,
+            "speed": 24.0
+          },
+          {
+            "id": 4,
+            "force": 9600000.0,
+            "speed": 16.0
+          },
+          {
+            "id": 5,
+            "force": 12800000.0,
+            "speed": 8.0
+          },
+          {
+            "id": 6,
+            "force": 16000000.0,
+            "speed": 0.0
+          },
+          {
+            "id": 7,
+            "force": 18000000.0,
+            "speed": 0.0
+          }
+        ],
+        "min_idle_stroke": 40.0,
+        "max_idle_stroke": 250.0,
+        "approaching_distance": 10.0,
+        "open_height_without_dies": 4500.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false,
+      "is_default_press_mode": true
+    },
+    {
+      "id": 7,
+      "press_id": 4,
+      "name": {
+        "EN": "20/20MN",
+        "RU": "20/20МН",
+        "ZH_HANS": "20/20MN"
+      },
+      "properties": {
+        "is_left_manipulator": true,
+        "is_right_manipulator": true,
+        "automatic_feed_mode_is_on_when_bites_count": 7,
+        "max_force": 20000000.0,
+        "back_speed": 250.0,
+        "idle_speed": 250.0,
+        "working_speed": 70.0,
+        "min_dwell_speed": 20.0,
+        "max_dwell_time": 0.1,
+        "power_limit": [
+          {
+            "id": 1,
+            "force": 0.0,
+            "speed": 160.0
+          },
+          {
+            "id": 2,
+            "force": 4000000.0,
+            "speed": 128.0
+          },
+          {
+            "id": 3,
+            "force": 8000000.0,
+            "speed": 96.0
+          },
+          {
+            "id": 4,
+            "force": 12000000.0,
+            "speed": 64.0
+          },
+          {
+            "id": 5,
+            "force": 16000000.0,
+            "speed": 32.0
+          },
+          {
+            "id": 6,
+            "force": 20000000.0,
+            "speed": 0.0
+          },
+          {
+            "id": 7,
+            "force": 22000000.0,
+            "speed": 0.0
+          }
+        ],
+        "min_idle_stroke": 10.0,
+        "max_idle_stroke": 100.0,
+        "approaching_distance": 0.0,
+        "open_height_without_dies": 2000.0
+      },
+      "owner_user_id": 1,
+      "is_obsolete": false,
+      "is_default_press_mode": true
+    }
+  ],
+  "press_die_map": [
+    {
+      "press_id": 1,
+      "die_id": 1,
+      "is_matching_as_top": true,
+      "is_matching_as_bottom": false,
+      "is_matching_as_left": false,
+      "is_matching_as_right": false,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "press_id": 1,
+      "die_id": 2,
+      "is_matching_as_top": false,
+      "is_matching_as_bottom": true,
+      "is_matching_as_left": false,
+      "is_matching_as_right": false,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "press_id": 1,
+      "die_id": 3,
+      "is_matching_as_top": true,
+      "is_matching_as_bottom": false,
+      "is_matching_as_left": false,
+      "is_matching_as_right": false,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "press_id": 1,
+      "die_id": 4,
+      "is_matching_as_top": false,
+      "is_matching_as_bottom": true,
+      "is_matching_as_left": false,
+      "is_matching_as_right": false,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "press_id": 2,
+      "die_id": 5,
+      "is_matching_as_top": true,
+      "is_matching_as_bottom": false,
+      "is_matching_as_left": false,
+      "is_matching_as_right": false,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "press_id": 2,
+      "die_id": 6,
+      "is_matching_as_top": false,
+      "is_matching_as_bottom": true,
+      "is_matching_as_left": false,
+      "is_matching_as_right": false,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "press_id": 1,
+      "die_id": 7,
+      "is_matching_as_top": true,
+      "is_matching_as_bottom": false,
+      "is_matching_as_left": false,
+      "is_matching_as_right": false,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "press_id": 1,
+      "die_id": 8,
+      "is_matching_as_top": false,
+      "is_matching_as_bottom": true,
+      "is_matching_as_left": false,
+      "is_matching_as_right": false,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "press_id": 4,
+      "die_id": 9,
+      "is_matching_as_top": true,
+      "is_matching_as_bottom": false,
+      "is_matching_as_left": false,
+      "is_matching_as_right": false,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "press_id": 4,
+      "die_id": 10,
+      "is_matching_as_top": false,
+      "is_matching_as_bottom": true,
+      "is_matching_as_left": false,
+      "is_matching_as_right": false,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "press_id": 4,
+      "die_id": 11,
+      "is_matching_as_top": false,
+      "is_matching_as_bottom": false,
+      "is_matching_as_left": true,
+      "is_matching_as_right": false,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    },
+    {
+      "press_id": 4,
+      "die_id": 12,
+      "is_matching_as_top": false,
+      "is_matching_as_bottom": false,
+      "is_matching_as_left": false,
+      "is_matching_as_right": true,
+      "owner_user_id": 1,
+      "is_obsolete": false
+    }
+  ]
+}
