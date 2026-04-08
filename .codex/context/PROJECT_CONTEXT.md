@@ -82,7 +82,7 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - `Projects`: project list, filter, create modal
   - `Documents`: project-scoped document list, filter, new/copy modals
   - `Blocks`: block icon palette for drag-and-drop or insert into `BlockEditor`
-  - `Library`: selector for `Dies`, `Die Assemblies`, `Presses`, `Materials` main editor views
+  - `Library`: selector for `Dies`, `Die Assemblies`, `Presses`, and `Materials` main editor views
   - `Users`: active user/session info
 - `MainEditorPane` routes active content:
   - default main view: `BlockEditor` (for `Projects`, `Documents`, `Blocks`, `Users`)
@@ -104,10 +104,23 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - `Power Limit Table` shows values only for the currently selected press mode
   - `Press Modes Table` horizontal scroll is synchronized across all press cards to simplify cross-press comparison
 - `Materials` library view characteristics:
-  - shows one material card per `materials` record
-  - supports text filtering by `material_id`, localized `name`, `source`, `source_version`, and `file_name`
-  - supports the shared owner filter used by other library views
-  - selected material cards expand to show the raw `properties` JSON payload
+  - this is the only active materials UI in the Library tool; it uses a dashboard-style comparison layout and the older standalone `Materials` card view has been removed
+  - it renders only parsed DEFORM source-file content referenced by `materials.deform_file_name`
+  - it overlays the visible material set on shared dashboard charts built from `GET /library/db/materials/{material_id}/visuals`
+  - left rail is a dense full-height scroll area that contains text filter, owner filters, classification filters, placeholder material actions, and simplified material name cards in one shared scroll flow
+  - when the Library tool is toggled closed while `Materials` remains active, the left material rail is hidden and the diagrams pane expands to the full main-pane width
+  - supports dashboard-local multi-selection: click for single selection, repeated click to clear, Ctrl/Cmd-click to toggle, and Shift-click for range selection
+  - highlighted charts are driven by the view's selected material set; a non-scrollable single-line abstract summary above the charts shows selected names with line colors, or all visible materials when nothing is selected, and explicitly labels the view as DEFORM materials
+  - dashboard title/metadata details live in the diagrams pane, are shown only for a single active material, and render as a compact two-column key/value layout summarizing DEFORM file, owner, test-record count, note, and diagram load state
+  - material designations and linked standards in that single-material header are rendered as a compact table with `Designation`, `Standard`, `Country`, and dynamic chemistry-limit element columns; chemistry cells use compact display strings such as `min-max`, `<max`, `>min`, or `bal`
+  - the classification section in that single-material header is a two-column comparison layout: axis labels on the left, all visible-set values on the right, with selected-material values highlighted and other visible-material values muted
+  - classification axes are hierarchy-aware: level 1 = object type, level 2 = composition base, level 3 = all other categories
+  - material list filtering is classification-aware: no active classification chips means all visible materials remain included; within one axis values are ORed, across axes filters are ANDed
+  - classification filter chips and the single-material comparison header are branch-scoped by hierarchy: level 2 values are limited by the active level 1 branch, and level 3 values are limited by the active level 1 + level 2 branch
+  - dashboard lazily loads visuals for the visible filtered material set through repeated `GET /library/db/materials/{material_id}/visuals` calls
+  - chart rendering is frontend-inline SVG and reuses the same backend diagram payload shape for all visible materials
+  - each dashboard chart has `Auto / Manual / Reset` scale controls; in manual mode the first and last tick values on each axis become inline-editable
+  - the shared library action strip in `TopEditorPane` is hidden for `Materials`; its placeholder buttons are rendered inside the material rail instead
 - `TopEditorPane` routes top content:
   - `VisualEditor` view when `BlockEditor` is active in `MainEditorPane`
   - library action menu when a library main view is active
@@ -152,6 +165,9 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 - Industrial normalized tables also exist in DB/models:
   - `die_types`, `materials`, `dies`, `die_assemblies`, `presses`, `press_modes`, `press_die_map`
   - mounted `/library/db/*` routes read from these normalized tables, while the older `/library/*` list/detail routes still serve from the unified `library` table
+- `materials.name` is plain text; national/regional material naming is expected to live in `materials_designations`
+- `backend/data/database_seeding/materials.json` now includes fully populated normalized-material seed examples for Ti-6Al-4V, Inconel 718, and Waspaloy across the standards, designations, publications, standard chemistry, test-record, and property-table sections
+- Waspaloy is currently a normalized seed-only material with `deform_file_name = null`, so it does not contribute DEFORM charts until a DEFORM source file is added
 - Document model:
   - `document_id`, required `project_id`, optional `source_document_id`, optional `editor_user_id`, `first_block_id`, `name`, `notes`, timestamps, soft delete
   - supports inheritance/lineage through `source_document_id`
@@ -160,55 +176,7 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - block type is stored as `block_type_id`
   - metadata flags: `is_system`, `is_removable`, `fixed_position`
 - Legacy ACL/share/version/server/log tables remain in models and DB for compatibility and existing flows.
-
-## DB consistency snapshot (updated 2026-03-23)
-- Alembic code state:
-  - new head migration file: `3a4d8f2c1b90_reshape_materials_table.py`
-  - baseline remains `9ac4e7b1d2f3_squashed_current_schema_baseline.py`
-- Expected schema change in this turn:
-  - `materials` now stores `name`, `source`, `source_version`, `file_name`, `properties`, `is_obsolete`, `created_at`, `obsolete_at`, `owner_id`
-  - `projects.material_id` now points to `materials.material_id`
-- Frontend status: `npm run typecheck` passes after the materials update.
-- Backend verification: `python3 -m compileall backend/app backend/alembic/versions/3a4d8f2c1b90_reshape_materials_table.py backend/db_setup/reinit_db.py` passes.
-- Backend tests: `pytest` is not installed in `backend/.venv`, so automated backend test execution is unavailable.
-
-## DB tables and columns (public schema)
-- Tables currently present:
-  - `alembic_version`, `blocks`, `config`, `devices`, `die_assemblies`, `die_types`, `dies`, `document_acl`, `document_edit_sessions`, `document_versions`, `documents`, `library`, `logs`, `materials`, `operations_library`, `physical_machines`, `press_die_map`, `press_modes`, `presses`, `projects`, `servers`, `settings`, `share_links`, `time_between_operations`, `users`
-- Core editor/auth tables:
-  - `users`: `user_id`, `login`, `email`, `password_hashed`, `signal_clear_token`, `supervisor_id`, `full_name`, `language_code`, `user_settings`, `user_priority_enum`, `created_at`
-  - `projects`: `project_id`, `user_id` (FK `users.user_id`), `material_id` (FK `materials.material_id`), `name`, `notes`, `created_at`, `updated_at`, `deleted_at`
-  - `documents`: `document_id`, `project_id`, `source_document_id`, `editor_user_id`, `first_block_id`, `name`, `notes`, `created_at`, `updated_at`, `deleted_at`
-  - `blocks`: `block_id`, `document_id`, `previous_block_id`, `next_block_id`, `block_type_id`, `props` (JSONB), `created_at`, `updated_at`, `is_system`, `is_removable`, `fixed_position`
-  - `settings`: `setting_id`, `key`, `value` (JSONB), `scope`, `user_id`; unique index on (`key`, `scope`, `user_id`)
-- Industrial/library normalized tables:
-  - `die_types`: `id`, `name` (JSONB)
-  - `materials`: `material_id`, `name` (JSONB), `source`, `source_version`, `file_name`, `properties` (JSONB), `is_obsolete`, `created_at`, `obsolete_at`, `owner_id` (FK `users.user_id`)
-  - `dies`: `id`, `name` (JSONB), `die_type_id` (FK `die_types.id`), `die_template_file_name`, `inventory_number`, `properties` (JSONB), `is_obsolete`, `created_at`, `obsolete_at`, `owner_user_id` (FK `users.user_id`)
-  - `die_assemblies`: `id`, `name` (JSONB), `is_obsolete`, `created_at`, `obsolete_at`, `top_die_id`, `bottom_die_id`, `left_die_id`, `right_die_id` (FKs to `dies.id`), `owner_user_id` (FK `users.user_id`)
-  - `presses`: `id`, `name` (JSONB), `is_obsolete`, `created_at`, `obsolete_at`, `owner_user_id` (FK `users.user_id`)
-  - `press_modes`: `id`, `press_id` (FK `presses.id`), `name` (JSONB, nullable), `owner_user_id` (FK `users.user_id`), `is_obsolete`, `created_at`, `obsolete_at`, `properties` (JSONB), `is_default_press_mode`
-  - `press_die_map`: composite PK (`press_id`, `die_id`), plus `is_matching_as_top`, `is_matching_as_bottom`, `is_matching_as_left`, `is_matching_as_right`, `owner_user_id`, `is_obsolete`, `created_at`, `obsolete_at`
-- Unified library table (mounted by `/library/*` router):
-  - `library`: `id`, `parent_id` (self FK), `type`, `name`, `props` (JSONB), `created_at`, `updated_at`, `is_obsolete`
-
-## JSONB internal structure (DB + code/seed verified)
-- All JSON-like columns are JSONB (no remaining `json` columns in `public`).
-- Localization name objects (`die_types.name`, `materials.name`, `dies.name`, `die_assemblies.name`, `presses.name`, `press_modes.name`) use a multilingual map structure:
-  - keys observed: `EN`, `RU`, `ZH_HANS`
-  - value type: localized string
-- `dies.properties` (seed structure):
-  - numeric keys observed: `total_length`, `total_width`, `height`, `straight_length`, `edge_radius`, `edge_angle`
-- `press_modes.properties` (seed structure):
-  - scalar keys: `is_left_manipulator`, `is_right_manipulator`, `automatic_feed_mode_is_on_when_bites_count`, `max_force`, `back_speed`, `idle_speed`, `working_speed`, `min_dwell_speed`, `max_dwell_time`, `min_idle_stroke`, `max_idle_stroke`, `approaching_distance`, `open_height_without_dies`
-  - array key: `power_limit` -> list of objects with keys `id`, `force`, `speed`
-- `blocks.props`:
-  - `document_heading`: stores block fields (`heat_no`, `finished_size`, `stock_size`, `stock_weight`, `remarks`, `preview_status`), then is enriched for read responses with document metadata (`name`, `project_id`, `source_document_id`, `editor_user_id`, `created_at`, `updated_at`) and optional nested `version`
-  - `input_workpiece`: `geometry_type_id`, `mesh_elements`, `weight`, `attributes` (dynamic object), and response-enriched fields (`title`, `available_geometry_types`, optional `selected_geometry`)
-  - basic text blocks (`paragraph`, `heading1`, `heading2`, `list`, `code`, `quote`): `text`; `todo` additionally uses `checked`; `divider` typically has empty props
-- `materials.properties`: schema-flexible JSONB payload. Migration/backfill preserves legacy keys such as `short_name`, `density`, and `legacy_material_path` when present.
-- `library.props`: schema-flexible payload keyed by `library.type`.
-- `settings.value`: schema-flexible JSONB payload (object/array/scalar).
+- Full database schema, table inventory, key columns, JSONB payload notes, and seeding-layout details are tracked in `.codex/context/DB_SCHEMA.md`.
 
 ## Access model summary
 - Project owner controls project CRUD and project-scoped document listing.
@@ -274,12 +242,30 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - `GET /library/operation-types`
   - `GET /library/operation-types/{item_id}`
   - `GET /library/db/users`
-  - `GET /library/db/die-types`
-  - `GET /library/db/materials`
+- `GET /library/db/die-types`
+- `GET /library/db/materials`
+- `GET /library/db/material-classification`
+- `GET /library/db/materials/{material_id}/visuals`
   - `GET /library/db/dies`
   - `GET /library/db/die-assemblies`
   - `GET /library/db/presses`
   - `GET /library/db/press-modes`
+
+## Materials parser service
+- Backend materials source-file parsing now lives under `backend/app/services/materials/`.
+- The structure is vendor-neutral and organized for multiple software families:
+  - `parsers/deform/`
+  - `parsers/forge/`
+  - `parsers/qform/`
+  - `parsers/simufact/`
+- Current implementation status:
+  - `deform` parser is implemented for `*.key` / `*.KEY` source files
+  - other parser directories are placeholders for future implementations
+- `Materials` currently visualizes only DEFORM-backed material data; source material files are resolved from `materials.deform_file_name`, and parser selection is currently fixed to the DEFORM parser with case-insensitive file lookup under `backend/data/materials/deform/` and fallback to `backend/data/materials/`.
+- Current DEFORM visual payloads are exposed via `GET /library/db/materials/{material_id}/visuals`.
+- Current DEFORM diagrams include:
+  - a default `Flow Stress vs Strain` slice derived from `FSTRES`
+  - temperature-based line diagrams when available for `YOUNG`, `POISON`, `EXPAND`, `THRCND`, and `HEATCP`
 
 ## Global coding constraints for this repo
 - Keep the primary product hierarchy as `Project -> Document -> Block`.
@@ -299,6 +285,12 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 - Active migration chain in `backend/alembic/versions/` is:
   - `9ac4e7b1d2f3_squashed_current_schema_baseline.py`
   - `3a4d8f2c1b90_reshape_materials_table.py`
+  - `7f7f9945c6f1_add_material_classification_tables.py`
+  - `b8c2e4f6a1d0_add_material_classification_hierarchy.py`
+  - `c1f4e28b9a7d_add_material_standards_tables.py`
+  - `e5d9c3a1b4f7_add_material_chemistry_tables.py`
+- `f7a2d4c8e1b3_add_material_property_tables.py`
+- `a3d7f1c2e9b4_slim_materials_root_table.py`
 - Historical migrations are archived in `backend/alembic/versions_backup/`.
-- Current head migration is `3a4d8f2c1b90`.
+- Current head migration is `a3d7f1c2e9b4`.
 - The baseline migration uses `Base.metadata.create_all(checkfirst=True)` / `drop_all(checkfirst=True)` against registered SQLAlchemy models; follow-up migrations must remain idempotent enough to coexist with the squashed baseline on fresh installs.

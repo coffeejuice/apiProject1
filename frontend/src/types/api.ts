@@ -175,15 +175,89 @@ export interface DieTypeRecord {
 
 export interface MaterialRecord {
   material_id: number
+  name: string
+  deform_file_name?: string | null
+  note?: string | null
+  classifications: Record<string, string[]>
+  designations: string[]
+  standards: string[]
+  designation_links: MaterialDesignationLinkRecord[]
+  test_records_count: number
+  is_obsolete: boolean
+  owner_id?: number | null
+}
+
+export interface MaterialDesignationLinkRecord {
+  designation: string
+  standard?: string | null
+  country?: string | null
+  chemistry_limits: Record<string, string>
+  is_main_designation: boolean
+}
+
+export interface MaterialClassificationValueRecord {
+  value_id: number
+  axis_id: number
+  key: string
   name: unknown
-  source: string
-  source_version: string
-  file_name: string
-  properties: unknown
+  color?: string | null
+  sort_order: number
   is_obsolete: boolean
   created_at: string
-  obsolete_at?: string | null
-  owner_id?: number | null
+  created_by_user_id?: number | null
+}
+
+export interface MaterialClassificationAxisRecord {
+  axis_id: number
+  key: string
+  name: unknown
+  description?: unknown | null
+  selection_mode: string
+  hierarchy_level: number
+  sort_order: number
+  is_filter_visible: boolean
+  is_obsolete: boolean
+  created_at: string
+  created_by_user_id?: number | null
+  values: MaterialClassificationValueRecord[]
+}
+
+export interface MaterialClassificationCatalogRecord {
+  axes: MaterialClassificationAxisRecord[]
+}
+
+export interface MaterialVisualAxisRecord {
+  key: string
+  label: string
+  unit?: string | null
+}
+
+export interface MaterialVisualPointRecord {
+  x: number
+  y: number
+}
+
+export interface MaterialVisualSeriesRecord {
+  key: string
+  label: string
+  points: MaterialVisualPointRecord[]
+}
+
+export interface MaterialVisualDiagramRecord {
+  key: string
+  title: string
+  kind: string
+  x_axis: MaterialVisualAxisRecord
+  y_axis: MaterialVisualAxisRecord
+  series: MaterialVisualSeriesRecord[]
+  controls?: Record<string, unknown> | null
+}
+
+export interface MaterialVisualRecord {
+  material_id: number
+  source: string
+  file_name: string
+  diagrams: MaterialVisualDiagramRecord[]
 }
 
 export interface DieRecord {

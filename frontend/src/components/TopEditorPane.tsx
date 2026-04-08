@@ -6,7 +6,7 @@ interface TopEditorPaneProps {
   view: MainEditorView
   isVisible: boolean
   visualEditorView: ReactNode
-  libraryActionsView: ReactNode
+  libraryActionsView: ReactNode | null
 }
 
 export default function TopEditorPane({
@@ -20,6 +20,10 @@ export default function TopEditorPane({
       return null
     }
     return <>{visualEditorView}</>
+  }
+
+  if (!libraryActionsView) {
+    return null
   }
 
   return (

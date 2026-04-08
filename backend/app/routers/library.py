@@ -5,12 +5,18 @@ from urllib.parse import quote
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.auth import get_current_user
 from app.database import get_db
 from app.models.library.die import Die, DieAssembly, DieType
 from app.models.library.material import Material
+from app.models.library.material_classification import (
+    MaterialClassificationAssignment,
+    MaterialClassificationAxis,
+    MaterialClassificationValue,
+)
+from app.models.library.material_standards import MaterialDesignation
 from app.models.library.library_item import Library, LibraryType
 from app.models.library.press import Press, PressMode
 from app.models.user import User as UserModel
@@ -18,13 +24,22 @@ from app.schemas import (
     LibraryDbDieAssemblyResponse,
     LibraryDbDieResponse,
     LibraryDbDieTypeResponse,
+    LibraryDbMaterialClassificationResponse,
     LibraryDbMaterialResponse,
+    LibraryDbMaterialVisualResponse,
     LibraryDbPressModeResponse,
     LibraryDbPressResponse,
     LibraryDbUserResponse,
     LibraryListItemResponse,
     LibraryResponse,
 )
+from app.services.materials.errors import (
+    MaterialFileNotFoundError,
+    MaterialParserError,
+    MaterialSourceNotSupportedError,
+)
+from app.services.materials.models import MaterialDiagram, MaterialVisualPayload
+from app.services.materials.service import get_material_visual_payload
 
 router = APIRouter(prefix="/library", tags=["library"])
 
@@ -50,6 +65,254 @@ def _get_by_type_or_404(db: Session, item_id: int, library_type: LibraryType) ->
     if not item:
         raise HTTPException(status_code=404, detail="Library item not found")
     return item
+
+
+def _get_db_material_or_404(db: Session, material_id: int) -> Material:
+    material = db.execute(
+        select(Material).filter(Material.material_id == material_id)
+    ).scalars().first()
+    if not material:
+        raise HTTPException(status_code=404, detail="Material not found")
+    return material
+
+
+def _serialize_material_visual_payload(payload: MaterialVisualPayload) -> dict:
+    return {
+        "material_id": payload.material_id,
+        "source": payload.source.value,
+        "file_name": payload.file_name,
+        "diagrams": [_serialize_material_diagram(diagram) for diagram in payload.diagrams],
+    }
+
+
+def _serialize_material_classifications(material: Material) -> dict[str, list[str]]:
+    grouped: dict[str, tuple[int, int, list[tuple[int, int, str]]]] = {}
+
+    for assignment in material.classification_assignments:
+        value = assignment.classification_value
+        axis = value.axis if value else None
+        if value is None or axis is None or axis.is_obsolete or value.is_obsolete:
+            continue
+
+        axis_hierarchy_level, axis_sort_order, values = grouped.setdefault(
+            axis.key,
+            (axis.hierarchy_level, axis.sort_order, []),
+        )
+        values.append((value.sort_order, value.value_id, value.key))
+        grouped[axis.key] = (axis_hierarchy_level, axis_sort_order, values)
+
+    serialized: dict[str, list[str]] = {}
+    for axis_key, payload in sorted(
+        grouped.items(),
+        key=lambda entry: (entry[1][0], entry[1][1], entry[0]),
+    ):
+        serialized[axis_key] = [
+            value_key
+            for _, _, value_key in sorted(payload[2], key=lambda item: (item[0], item[1], item[2]))
+        ]
+
+    return serialized
+
+
+def _serialize_material_designations(material: Material) -> list[str]:
+    designations = [
+        entry
+        for entry in material.designations
+        if not entry.is_obsolete and entry.designation and entry.designation.strip()
+    ]
+    designations.sort(
+        key=lambda entry: (
+            0 if entry.is_main_designation else 1,
+            entry.designation.casefold(),
+            entry.designation_id,
+        )
+    )
+    return [entry.designation.strip() for entry in designations]
+
+
+def _format_standard_label(designation: MaterialDesignation) -> str | None:
+    standard = designation.standard
+    if standard is None or standard.is_obsolete:
+        return None
+
+    number = (standard.standard_number or "").strip()
+    organization = (standard.issue_organization or "").strip()
+    if not number:
+        return None
+
+    if organization and not number.casefold().startswith(organization.casefold()):
+        return f"{organization} {number}"
+    return number
+
+
+def _format_material_chemistry_limit_value(value: float | None) -> str | None:
+    if value is None:
+        return None
+    return format(value, "g")
+
+
+def _serialize_material_designation_chemistry_limits(designation: MaterialDesignation) -> dict[str, str]:
+    rows = [
+        row
+        for row in designation.standard_chemistry_rows
+        if not row.is_obsolete and row.element_symbol and row.element_symbol.strip()
+    ]
+    rows.sort(key=lambda row: (row.element_symbol.casefold(), row.standard_chemistry_id))
+
+    limits: dict[str, str] = {}
+    for row in rows:
+        element_symbol = row.element_symbol.strip()
+
+        if row.is_balance:
+            limits[element_symbol] = "bal"
+            continue
+
+        min_value = _format_material_chemistry_limit_value(row.min_wt_pct)
+        max_value = _format_material_chemistry_limit_value(row.max_wt_pct)
+
+        if min_value is not None and max_value is not None:
+            limits[element_symbol] = min_value if min_value == max_value else f"{min_value}-{max_value}"
+        elif min_value is not None:
+            limits[element_symbol] = f">{min_value}"
+        elif max_value is not None:
+            limits[element_symbol] = f"<{max_value}"
+
+    return limits
+
+
+def _serialize_material_standards(material: Material) -> list[str]:
+    labels: list[str] = []
+    seen: set[str] = set()
+    for designation in sorted(
+        material.designations,
+        key=lambda entry: (
+            0 if entry.is_main_designation else 1,
+            entry.designation.casefold(),
+            entry.designation_id,
+        ),
+    ):
+        if designation.is_obsolete:
+            continue
+        label = _format_standard_label(designation)
+        if not label:
+            continue
+        normalized = label.casefold()
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        labels.append(label)
+    return labels
+
+
+def _serialize_material_designation_links(material: Material) -> list[dict[str, str | bool | None]]:
+    rows: list[dict[str, str | bool | None]] = []
+    for designation in material.designations:
+        if designation.is_obsolete or not designation.designation or not designation.designation.strip():
+            continue
+        standard = designation.standard
+        standard_label = _format_standard_label(designation)
+        country = None
+        if standard is not None and not standard.is_obsolete:
+            country = (standard.country_or_region or "").strip() or None
+        rows.append(
+            {
+                "designation": designation.designation.strip(),
+                "standard": standard_label,
+                "country": country,
+                "chemistry_limits": _serialize_material_designation_chemistry_limits(designation),
+                "is_main_designation": designation.is_main_designation,
+            }
+        )
+    rows.sort(
+        key=lambda entry: (
+            1 if entry["standard"] is None else 0,
+            (entry["standard"] or "").casefold(),
+            str(entry["designation"]).casefold(),
+        )
+    )
+    return rows
+
+
+def _count_material_test_records(material: Material) -> int:
+    return sum(1 for entry in material.test_records if not entry.is_obsolete)
+
+
+def _serialize_db_material(material: Material) -> dict:
+    return LibraryDbMaterialResponse(
+        material_id=material.material_id,
+        name=material.name,
+        deform_file_name=material.deform_file_name,
+        note=material.note,
+        classifications=_serialize_material_classifications(material),
+        designations=_serialize_material_designations(material),
+        standards=_serialize_material_standards(material),
+        designation_links=_serialize_material_designation_links(material),
+        test_records_count=_count_material_test_records(material),
+        is_obsolete=material.is_obsolete,
+        owner_id=material.owner_id,
+    ).model_dump()
+
+
+def _serialize_material_classification_catalog(axes: list[MaterialClassificationAxis]) -> dict:
+    return {
+        "axes": [
+            {
+                "axis_id": axis.axis_id,
+                "key": axis.key,
+                "name": axis.name,
+                "description": axis.description,
+                "selection_mode": axis.selection_mode,
+                "hierarchy_level": axis.hierarchy_level,
+                "sort_order": axis.sort_order,
+                "is_filter_visible": axis.is_filter_visible,
+                "is_obsolete": axis.is_obsolete,
+                "created_at": axis.created_at,
+                "created_by_user_id": axis.created_by_user_id,
+                "values": [
+                    {
+                        "value_id": value.value_id,
+                        "axis_id": value.axis_id,
+                        "key": value.key,
+                        "name": value.name,
+                        "color": value.color,
+                        "sort_order": value.sort_order,
+                        "is_obsolete": value.is_obsolete,
+                        "created_at": value.created_at,
+                        "created_by_user_id": value.created_by_user_id,
+                    }
+                    for value in sorted(axis.values, key=lambda entry: (entry.sort_order, entry.value_id))
+                ],
+            }
+            for axis in sorted(axes, key=lambda entry: (entry.hierarchy_level, entry.sort_order, entry.axis_id))
+        ]
+    }
+
+
+def _serialize_material_diagram(diagram: MaterialDiagram) -> dict:
+    return {
+        "key": diagram.key,
+        "title": diagram.title,
+        "kind": diagram.kind,
+        "x_axis": {
+            "key": diagram.x_axis.key,
+            "label": diagram.x_axis.label,
+            "unit": diagram.x_axis.unit,
+        },
+        "y_axis": {
+            "key": diagram.y_axis.key,
+            "label": diagram.y_axis.label,
+            "unit": diagram.y_axis.unit,
+        },
+        "series": [
+            {
+                "key": series.key,
+                "label": series.label,
+                "points": [{"x": point.x, "y": point.y} for point in series.points],
+            }
+            for series in diagram.series
+        ],
+        "controls": diagram.controls,
+    }
 
 
 def _build_die_stl_file_name(die_template_file_name: Optional[str]) -> Optional[str]:
@@ -225,9 +488,52 @@ def list_db_materials(
     _: UserModel = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return db.execute(
-        select(Material).order_by(Material.material_id.asc())
+    materials = db.execute(
+        select(Material)
+        .options(
+            selectinload(Material.classification_assignments)
+            .selectinload(MaterialClassificationAssignment.classification_value)
+            .selectinload(MaterialClassificationValue.axis),
+            selectinload(Material.designations).selectinload(MaterialDesignation.standard),
+            selectinload(Material.designations).selectinload(MaterialDesignation.standard_chemistry_rows),
+            selectinload(Material.test_records),
+        )
+        .order_by(Material.material_id.asc())
     ).scalars().all()
+    return [_serialize_db_material(material) for material in materials]
+
+
+@router.get("/db/material-classification", response_model=LibraryDbMaterialClassificationResponse)
+def get_db_material_classification(
+    _: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    axes = db.execute(
+        select(MaterialClassificationAxis)
+        .options(selectinload(MaterialClassificationAxis.values))
+        .order_by(MaterialClassificationAxis.sort_order.asc(), MaterialClassificationAxis.axis_id.asc())
+    ).scalars().all()
+    return _serialize_material_classification_catalog(axes)
+
+
+@router.get("/db/materials/{material_id}/visuals", response_model=LibraryDbMaterialVisualResponse)
+def get_db_material_visuals(
+    material_id: int,
+    _: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    material = _get_db_material_or_404(db, material_id)
+
+    try:
+        payload = get_material_visual_payload(material)
+    except MaterialFileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except MaterialSourceNotSupportedError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except MaterialParserError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    return _serialize_material_visual_payload(payload)
 
 
 @router.get("/db/dies", response_model=List[LibraryDbDieResponse])

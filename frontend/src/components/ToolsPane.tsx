@@ -128,8 +128,10 @@ export default function ToolsPane({
     return null
   }
 
+  const paneWidthClass = activeView === 'library' ? 'w-44 shrink-0' : 'w-80 shrink-0'
+
   return (
-    <aside className="ui-pane w-80">
+    <aside className={`ui-pane ${paneWidthClass}`}>
       <div className="ui-pane-header">
         <h2 className="ui-pane-title">
           {activeView === 'projects' && 'Projects'}

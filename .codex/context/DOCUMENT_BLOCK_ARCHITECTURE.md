@@ -186,10 +186,22 @@ Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockE
     - rows are sortable by clicking column headers (default sort by `id`)
     - horizontal scroll is synchronized across all press cards
 - `Materials` view behavior:
-  - one material card per `materials` record after active filters
-  - text filter matches `material_id`, localized `name`, `source`, `source_version`, and `file_name`
-  - owner filtering reuses the shared library owner filter controls
-  - selecting a card expands the raw `properties` JSON payload inline
+  - this is the only active materials view; it uses a dashboard-style comparison layout and the old standalone `Materials` card view has been removed
+  - it shows only parsed DEFORM file content from the file path referenced by `materials.deform_file_name`
+  - it preloads visuals for the visible filtered material set and overlays them on shared comparison charts
+  - left rail is a single shared scroll area containing text filter, owner filters, classification filters, placeholder material action buttons, and simplified material name cards
+  - if the Library tool pane is toggled hidden while `Materials` stays active, the left material rail is hidden and the charts expand to fill the main pane
+  - supports dashboard-local multi-selection with click, repeated-click clear, Ctrl/Cmd-toggle, and Shift-range selection
+  - selected material names are shown in a dense non-scrollable one-line summary above the charts; when nothing is selected it summarizes all visible materials as highlighted and labels the view as DEFORM materials
+  - dashboard title and active-material metadata live in the diagrams pane, render only for a single selected material, and scroll away with the diagram grid
+  - the single-material details section uses a compact two-column key/value layout for DEFORM file, owner, test count, note, and diagram load state
+  - designations and linked standards are rendered in that section as a compact table sorted by the standard column, with `Designation` / `Standard` / `Country` plus dynamic chemistry-limit element columns populated from designation standard-chemistry rows
+  - the classification subsection is rendered as a two-column axis/value comparison: selected-material values are highlighted and values present only on other currently visible materials are muted
+  - classification axes are hierarchy-aware: level 1 = object type, level 2 = composition base, level 3 = all other categories
+  - classification filter behavior is OR within one axis and AND across axes; when no classification chips are active, all materials that pass text/owner filters remain visible
+  - classification filter chips and comparison values are branch-scoped by hierarchy, so lower-level values are hidden when they do not belong to the currently active higher-level branch
+  - each dashboard chart supports `Auto / Manual / Reset` scaling; when manual mode is active, the first and last tick labels on each axis can be clicked and edited inline
+  - `TopEditorPane` does not render the shared library action strip for this view
 - `TopEditorPane` routes top content:
   - `VisualEditor` when `BlockEditor` is active
   - library action menu when a library view is active
@@ -308,6 +320,10 @@ Common characteristics:
   - `POST /blocks/{block_id}/move`
   - `DELETE /blocks/{block_id}`
   - `POST /documents/{document_id}/commit`
+- Library:
+  - `GET /library/db/materials`
+  - `GET /library/db/material-classification`
+  - `GET /library/db/materials/{material_id}/visuals`
 
 ## Commit operation model (`backend/app/services/commit_service.py`)
 - Commit endpoint accepts `ops[]` batches (revision-free commit pipeline).

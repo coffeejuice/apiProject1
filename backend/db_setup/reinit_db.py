@@ -37,10 +37,8 @@ def init_db_raw():
         mat = Material(
             material_id=1,
             name={"EN": "Default Material"},
-            source="system",
-            source_version="",
-            file_name="",
-            properties={},
+            deform_file_name=None,
+            note=None,
         )
         session.add(mat)
         session.flush() # Get IDs if they are serial

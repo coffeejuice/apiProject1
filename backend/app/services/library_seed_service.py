@@ -35,6 +35,28 @@ class LibrarySeedService:
     SEED_ORDER = [
         "users",
         "materials",
+        "material_standards_catalog",
+        "materials_designations",
+        "materials_designations_standard_chemistry",
+        "publications_catalog",
+        "materials_test_records",
+        "materials_chemistry_tests_results",
+        "materials_property_tables",
+        "materials_property_table_to_columns_connectivity",
+        "materials_property_column_values",
+        "material_classification_axes",
+        "material_classification_values",
+        "material_classification_assignments",
+        "die_types",
+        "dies",
+        "die_assemblies",
+        "presses",
+        "press_modes",
+        "press_die_map",
+    ]
+    MANDATORY_SEED_TABLES = [
+        "users",
+        "materials",
         "die_types",
         "dies",
         "die_assemblies",
@@ -43,25 +65,30 @@ class LibrarySeedService:
         "press_die_map",
     ]
 
-    def __init__(self, library_json_path: Optional[Path] = None) -> None:
+    def __init__(self, seed_root: Optional[Path] = None) -> None:
         backend_root = Path(__file__).resolve().parents[2]
-        self.library_json_path = library_json_path or backend_root / "data" / "config" / "library.json"
+        self.seed_root = seed_root or backend_root / "data" / "database_seeding"
+        self.library_json_path = self.seed_root / "library.json"
+        self.materials_json_path = self.seed_root / "materials.json"
 
     def get_status(self, db: Session) -> dict[str, Any]:
-        file_exists = self.library_json_path.exists()
-        file_hash = self._file_hash(self.library_json_path) if file_exists else None
+        seed_files = self._seed_files()
+        file_exists = all(path.exists() for path in seed_files)
+        file_hash = self._combined_file_hash(seed_files) if file_exists else None
 
         counts: dict[str, int] = {}
         for table_name in self.SEED_ORDER:
             counts[table_name] = self._count_rows(db, table_name)
 
-        needs_seed = any(counts[name] == 0 for name in self.SEED_ORDER)
+        expected_tables = self._expected_seed_tables(db) if file_exists else list(self.MANDATORY_SEED_TABLES)
+        needs_seed = any(counts[name] == 0 for name in expected_tables)
         can_seed_without_auth = counts.get("users", 0) == 0
         last_run = self._get_last_run(db)
 
         return {
             "file_exists": file_exists,
-            "file_path": str(self.library_json_path),
+            "file_path": str(self.seed_root),
+            "file_paths": [str(path) for path in seed_files],
             "file_hash": file_hash,
             "counts": counts,
             "needs_seed": needs_seed,
@@ -70,19 +97,35 @@ class LibrarySeedService:
             "last_run": last_run,
         }
 
+    def _expected_seed_tables(self, db: Session) -> list[str]:
+        expected = set(self.MANDATORY_SEED_TABLES)
+        try:
+            payload = self._load_payload()
+            self._normalize_payload(db, payload)
+        except Exception:
+            return [table_name for table_name in self.SEED_ORDER if table_name in expected]
+
+        for table_name in self.SEED_ORDER:
+            if payload.get(table_name):
+                expected.add(table_name)
+
+        return [table_name for table_name in self.SEED_ORDER if table_name in expected]
+
     def seed_library(
         self,
         db: Session,
         only_missing: bool = False,
         triggered_by_user_id: Optional[int] = None,
     ) -> dict[str, Any]:
-        if not self.library_json_path.exists():
-            raise LibrarySeedError(f"library.json not found: {self.library_json_path}")
+        missing_files = [path for path in self._seed_files() if not path.exists()]
+        if missing_files:
+            missing_paths = ", ".join(str(path) for path in missing_files)
+            raise LibrarySeedError(f"Seed file(s) not found: {missing_paths}")
 
         self._ensure_seed_runs_table(db)
         db.commit()
 
-        file_hash = self._file_hash(self.library_json_path)
+        file_hash = self._combined_file_hash(self._seed_files())
         run_id = self._insert_seed_run(
             db,
             seed_name="library",
@@ -135,25 +178,35 @@ class LibrarySeedService:
         }
 
     def _load_payload(self) -> dict[str, list[dict[str, Any]]]:
-        with self.library_json_path.open("r", encoding="utf-8") as fh:
-            raw = json.load(fh)
-
-        if not isinstance(raw, dict):
-            raise LibrarySeedError("Invalid library.json format: expected object at root")
-
         payload: dict[str, list[dict[str, Any]]] = {}
-        for raw_key, value in raw.items():
-            table_name = self.TABLE_ALIASES.get(raw_key, raw_key)
-            if table_name not in self.SEED_ORDER:
-                continue
-            if not isinstance(value, list):
-                raise LibrarySeedError(f"Invalid section '{raw_key}': expected list")
-            payload[table_name] = [dict(item) for item in value if isinstance(item, dict)]
+        for path in self._seed_files():
+            raw = self._load_seed_file(path)
+            for raw_key, value in raw.items():
+                table_name = self.TABLE_ALIASES.get(raw_key, raw_key)
+                if table_name not in self.SEED_ORDER:
+                    continue
+                if not isinstance(value, list):
+                    raise LibrarySeedError(f"Invalid section '{raw_key}' in {path.name}: expected list")
+                if table_name in payload:
+                    raise LibrarySeedError(
+                        f"Duplicate seed section '{raw_key}' detected while loading {path.name}"
+                    )
+                payload[table_name] = [dict(item) for item in value if isinstance(item, dict)]
 
         for table_name in self.SEED_ORDER:
             payload.setdefault(table_name, [])
 
         return payload
+
+    def _seed_files(self) -> list[Path]:
+        return [self.library_json_path, self.materials_json_path]
+
+    def _load_seed_file(self, path: Path) -> dict[str, Any]:
+        with path.open("r", encoding="utf-8") as fh:
+            raw = json.load(fh)
+        if not isinstance(raw, dict):
+            raise LibrarySeedError(f"Invalid {path.name} format: expected object at root")
+        return raw
 
     def _normalize_payload(self, db: Session, payload: dict[str, list[dict[str, Any]]]) -> None:
         users = payload.get("users", [])
@@ -181,8 +234,21 @@ class LibrarySeedService:
             for user_id, login in db.execute(select(User.user_id, User.login)).all()
         }
 
+        for row in payload.get("materials", []):
+            if "file_name" in row and "deform_file_name" not in row:
+                row["deform_file_name"] = row.pop("file_name")
+            deform_file_name = row.get("deform_file_name")
+            if isinstance(deform_file_name, str):
+                normalized_file_name = deform_file_name.strip()
+                row["deform_file_name"] = normalized_file_name or None
+
+        self._derive_material_classification_payload(db, payload)
+
         owner_sections = {
             "materials": "owner_id",
+            "material_classification_axes": "created_by_user_id",
+            "material_classification_values": "created_by_user_id",
+            "material_classification_assignments": "created_by_user_id",
             "dies": "owner_user_id",
             "die_assemblies": "owner_user_id",
             "presses": "owner_user_id",
@@ -212,6 +278,233 @@ class LibrarySeedService:
                 if "default_press_mode" in row and "default_press_mode" not in columns and "is_default_press_mode" in columns:
                     row["is_default_press_mode"] = row.pop("default_press_mode")
 
+    def _derive_material_classification_payload(self, db: Session, payload: dict[str, list[dict[str, Any]]]) -> None:
+        materials = payload.get("materials", [])
+        axis_rows = payload.setdefault("material_classification_axes", [])
+        value_rows = payload.setdefault("material_classification_values", [])
+        assignment_rows = payload.setdefault("material_classification_assignments", [])
+
+        axis_table = self._table_or_raise("material_classification_axes")
+        value_table = self._table_or_raise("material_classification_values")
+
+        existing_axis_id_by_key: dict[str, int] = {}
+        if self._table_exists(db, "material_classification_axes"):
+            for row in db.execute(
+                select(axis_table.c.axis_id, axis_table.c.key)
+            ).mappings().all():
+                axis_id = row.get("axis_id")
+                axis_key = row.get("key")
+                if isinstance(axis_id, int) and isinstance(axis_key, str) and axis_key.strip():
+                    existing_axis_id_by_key[axis_key.strip()] = axis_id
+
+        existing_value_id_by_ref: dict[tuple[int, str], int] = {}
+        if self._table_exists(db, "material_classification_values"):
+            for row in db.execute(
+                select(value_table.c.value_id, value_table.c.axis_id, value_table.c.key)
+            ).mappings().all():
+                value_id = row.get("value_id")
+                axis_id = row.get("axis_id")
+                value_key = row.get("key")
+                if (
+                    isinstance(value_id, int)
+                    and isinstance(axis_id, int)
+                    and isinstance(value_key, str)
+                    and value_key.strip()
+                ):
+                    existing_value_id_by_ref[(axis_id, value_key.strip())] = value_id
+
+        next_axis_id = max(self._available_ids(db, "material_classification_axes", "axis_id", axis_rows), default=0) + 1
+        next_value_id = max(self._available_ids(db, "material_classification_values", "value_id", value_rows), default=0) + 1
+
+        axis_rows_by_key: dict[str, dict[str, Any]] = {}
+        next_axis_sort_order = 0
+        for index, row in enumerate(axis_rows):
+            axis_key = self._normalize_classification_text(row.get("key"), f"material_classification_axes[{index}].key")
+            axis_id = row.get("axis_id")
+            if not isinstance(axis_id, int):
+                axis_id = existing_axis_id_by_key.get(axis_key)
+                if axis_id is None:
+                    axis_id = next_axis_id
+                    next_axis_id += 1
+                row["axis_id"] = axis_id
+            row["key"] = axis_key
+            row.setdefault("name", self._build_localized_label(self._humanize_classification_key(axis_key)))
+            row.setdefault("selection_mode", "multi")
+            row["hierarchy_level"] = self._normalize_classification_hierarchy_level(
+                row.get("hierarchy_level"),
+                f"material_classification_axes[{index}].hierarchy_level",
+                axis_key,
+            )
+            row.setdefault("sort_order", next_axis_sort_order)
+            row.setdefault("is_filter_visible", True)
+            row.setdefault("is_obsolete", False)
+            axis_rows_by_key[axis_key] = row
+            next_axis_sort_order = max(next_axis_sort_order, int(row.get("sort_order", 0)) + 1)
+
+        value_rows_by_ref: dict[tuple[int, str], dict[str, Any]] = {}
+        next_value_sort_order_by_axis: dict[int, int] = {}
+        for index, row in enumerate(value_rows):
+            value_key = self._normalize_classification_text(row.get("key"), f"material_classification_values[{index}].key")
+            axis_id = row.get("axis_id")
+            if not isinstance(axis_id, int):
+                raise LibrarySeedError(
+                    f"material_classification_values[{index}]: axis_id must be an integer"
+                )
+            value_id = row.get("value_id")
+            if not isinstance(value_id, int):
+                value_id = existing_value_id_by_ref.get((axis_id, value_key))
+                if value_id is None:
+                    value_id = next_value_id
+                    next_value_id += 1
+                row["value_id"] = value_id
+            row["axis_id"] = axis_id
+            row["key"] = value_key
+            row.setdefault("name", self._build_localized_label(value_key))
+            row.setdefault("sort_order", next_value_sort_order_by_axis.get(axis_id, 0))
+            row.setdefault("is_obsolete", False)
+            value_rows_by_ref[(axis_id, value_key)] = row
+            next_value_sort_order_by_axis[axis_id] = max(
+                next_value_sort_order_by_axis.get(axis_id, 0),
+                int(row.get("sort_order", 0)) + 1,
+            )
+
+        assignment_keys = {
+            (row.get("material_id"), row.get("value_id"))
+            for row in assignment_rows
+            if isinstance(row.get("material_id"), int) and isinstance(row.get("value_id"), int)
+        }
+
+        for material_index, row in enumerate(materials):
+            classification = row.get("classification")
+            if classification in (None, {}):
+                continue
+            if not isinstance(classification, dict):
+                raise LibrarySeedError(
+                    f"materials[{material_index}]: classification must be an object"
+                )
+
+            material_id = row.get("material_id")
+            if not isinstance(material_id, int):
+                raise LibrarySeedError(
+                    f"materials[{material_index}]: material_id is required for classification seeding"
+                )
+
+            for axis_key_raw, raw_values in classification.items():
+                axis_key = self._normalize_classification_text(
+                    axis_key_raw,
+                    f"materials[{material_index}].classification axis",
+                )
+                axis_row = axis_rows_by_key.get(axis_key)
+                if axis_row is None:
+                    axis_id = existing_axis_id_by_key.get(axis_key)
+                    if axis_id is None:
+                        axis_id = next_axis_id
+                        next_axis_id += 1
+                    axis_row = {
+                        "axis_id": axis_id,
+                        "key": axis_key,
+                        "name": self._build_localized_label(self._humanize_classification_key(axis_key)),
+                        "selection_mode": "multi",
+                        "hierarchy_level": self._default_classification_hierarchy_level(axis_key),
+                        "sort_order": next_axis_sort_order,
+                        "is_filter_visible": True,
+                        "is_obsolete": False,
+                    }
+                    next_axis_sort_order += 1
+                    axis_rows.append(axis_row)
+                    axis_rows_by_key[axis_key] = axis_row
+
+                axis_id = axis_row["axis_id"]
+                values = self._normalize_classification_values(
+                    raw_values,
+                    f"materials[{material_index}].classification.{axis_key}",
+                )
+
+                for value_key in values:
+                    ref = (axis_id, value_key)
+                    value_row = value_rows_by_ref.get(ref)
+                    if value_row is None:
+                        value_id = existing_value_id_by_ref.get(ref)
+                        if value_id is None:
+                            value_id = next_value_id
+                            next_value_id += 1
+                        value_row = {
+                            "value_id": value_id,
+                            "axis_id": axis_id,
+                            "key": value_key,
+                            "name": self._build_localized_label(value_key),
+                            "sort_order": next_value_sort_order_by_axis.get(axis_id, 0),
+                            "is_obsolete": False,
+                        }
+                        next_value_sort_order_by_axis[axis_id] = next_value_sort_order_by_axis.get(axis_id, 0) + 1
+                        value_rows.append(value_row)
+                        value_rows_by_ref[ref] = value_row
+
+                    assignment_key = (material_id, value_row["value_id"])
+                    if assignment_key in assignment_keys:
+                        continue
+                    assignment_rows.append(
+                        {
+                            "material_id": material_id,
+                            "value_id": value_row["value_id"],
+                            "created_by_user_id": row.get("owner_id"),
+                        }
+                    )
+                    assignment_keys.add(assignment_key)
+
+    def _normalize_classification_values(self, raw_values: Any, context: str) -> list[str]:
+        if isinstance(raw_values, str):
+            values = [raw_values]
+        elif isinstance(raw_values, list):
+            values = raw_values
+        else:
+            raise LibrarySeedError(f"{context}: expected string or list of strings")
+
+        normalized_values: list[str] = []
+        seen: set[str] = set()
+        for index, item in enumerate(values):
+            normalized = self._normalize_classification_text(item, f"{context}[{index}]")
+            if normalized in seen:
+                continue
+            normalized_values.append(normalized)
+            seen.add(normalized)
+        return normalized_values
+
+    def _normalize_classification_text(self, value: Any, context: str) -> str:
+        if not isinstance(value, str):
+            raise LibrarySeedError(f"{context}: expected non-empty string")
+        normalized = value.strip()
+        if not normalized:
+            raise LibrarySeedError(f"{context}: expected non-empty string")
+        return normalized
+
+    def _build_localized_label(self, value: str) -> dict[str, str]:
+        return {"EN": value}
+
+    def _default_classification_hierarchy_level(self, axis_key: str) -> int:
+        if axis_key == "object_type":
+            return 1
+        if axis_key == "composition":
+            return 2
+        return 3
+
+    def _normalize_classification_hierarchy_level(
+        self,
+        raw_value: Any,
+        context: str,
+        axis_key: str,
+    ) -> int:
+        if raw_value is None:
+            return self._default_classification_hierarchy_level(axis_key)
+        if not isinstance(raw_value, int):
+            raise LibrarySeedError(f"{context}: expected integer 1, 2, or 3")
+        if raw_value not in (1, 2, 3):
+            raise LibrarySeedError(f"{context}: expected integer 1, 2, or 3")
+        return raw_value
+
+    def _humanize_classification_key(self, axis_key: str) -> str:
+        return " ".join(token.capitalize() for token in axis_key.split("_"))
+
     def _validate_payload(self, db: Session, payload: dict[str, list[dict[str, Any]]]) -> None:
         errors: list[str] = []
 
@@ -231,6 +524,49 @@ class LibrarySeedService:
                 )
 
         user_ids = self._available_ids(db, "users", "user_id", payload["users"])
+        material_ids = self._available_ids(db, "materials", "material_id", payload["materials"])
+        material_standard_ids = self._available_ids(
+            db,
+            "material_standards_catalog",
+            "standard_id",
+            payload["material_standards_catalog"],
+        )
+        publication_ids = self._available_ids(
+            db,
+            "publications_catalog",
+            "publication_id",
+            payload["publications_catalog"],
+        )
+        material_test_record_ids = self._available_ids(
+            db,
+            "materials_test_records",
+            "test_record_id",
+            payload["materials_test_records"],
+        )
+        material_property_table_ids = self._available_ids(
+            db,
+            "materials_property_tables",
+            "table_id",
+            payload["materials_property_tables"],
+        )
+        material_property_column_ids = self._available_ids(
+            db,
+            "materials_property_table_to_columns_connectivity",
+            "column_id",
+            payload["materials_property_table_to_columns_connectivity"],
+        )
+        material_classification_axis_ids = self._available_ids(
+            db,
+            "material_classification_axes",
+            "axis_id",
+            payload["material_classification_axes"],
+        )
+        material_classification_value_ids = self._available_ids(
+            db,
+            "material_classification_values",
+            "value_id",
+            payload["material_classification_values"],
+        )
         die_type_ids = self._available_ids(db, "die_types", "id", payload["die_types"])
         die_ids = self._available_ids(db, "dies", "id", payload["dies"])
         press_ids = self._available_ids(db, "presses", "id", payload["presses"])
@@ -240,6 +576,129 @@ class LibrarySeedService:
             owner_id = row.get("owner_id")
             if owner_id is not None and owner_id not in user_ids:
                 errors.append(f"materials[{row.get('material_id')}]: owner_id '{owner_id}' not found")
+
+        for row in payload["material_standards_catalog"]:
+            predecessor_standard_id = row.get("predecessor_standard_id")
+            if predecessor_standard_id is not None and predecessor_standard_id not in material_standard_ids:
+                errors.append(
+                    "material_standards_catalog"
+                    f"[{row.get('standard_id')}]: predecessor_standard_id '{predecessor_standard_id}' not found"
+                )
+
+        for row in payload["materials_designations"]:
+            designation_id = row.get("designation_id")
+            material_id = row.get("material_id")
+            standard_id = row.get("standard_id")
+            if material_id not in material_ids:
+                errors.append(
+                    f"materials_designations[{designation_id}]: material_id '{material_id}' not found"
+                )
+            if standard_id is not None and standard_id not in material_standard_ids:
+                errors.append(
+                    f"materials_designations[{designation_id}]: standard_id '{standard_id}' not found"
+                )
+
+        designation_ids = self._available_ids(
+            db,
+            "materials_designations",
+            "designation_id",
+            payload["materials_designations"],
+        )
+
+        for row in payload["materials_designations_standard_chemistry"]:
+            designation_id = row.get("designation_id")
+            if designation_id not in designation_ids:
+                errors.append(
+                    "materials_designations_standard_chemistry"
+                    f"[{row.get('standard_chemistry_id')}]: designation_id '{designation_id}' not found"
+                )
+
+        for row in payload["materials_test_records"]:
+            test_record_id = row.get("test_record_id")
+            material_id = row.get("material_id")
+            designation_id = row.get("designation_id")
+            publication_id = row.get("publication_id")
+            if material_id not in material_ids:
+                errors.append(
+                    f"materials_test_records[{test_record_id}]: material_id '{material_id}' not found"
+                )
+            if designation_id is not None and designation_id not in designation_ids:
+                errors.append(
+                    f"materials_test_records[{test_record_id}]: designation_id '{designation_id}' not found"
+                )
+            if publication_id is not None and publication_id not in publication_ids:
+                errors.append(
+                    f"materials_test_records[{test_record_id}]: publication_id '{publication_id}' not found"
+                )
+
+        for row in payload["materials_chemistry_tests_results"]:
+            test_record_id = row.get("test_record_id")
+            if test_record_id not in material_test_record_ids:
+                errors.append(
+                    "materials_chemistry_tests_results"
+                    f"[{test_record_id},{row.get('element_symbol')}]: test_record_id '{test_record_id}' not found"
+                )
+
+        for row in payload["materials_property_tables"]:
+            table_id = row.get("table_id")
+            test_record_id = row.get("test_record_id")
+            if test_record_id not in material_test_record_ids:
+                errors.append(
+                    f"materials_property_tables[{table_id}]: test_record_id '{test_record_id}' not found"
+                )
+
+        for row in payload["materials_property_table_to_columns_connectivity"]:
+            column_id = row.get("column_id")
+            table_id = row.get("table_id")
+            if table_id not in material_property_table_ids:
+                errors.append(
+                    "materials_property_table_to_columns_connectivity"
+                    f"[{column_id}]: table_id '{table_id}' not found"
+                )
+
+        for row in payload["materials_property_column_values"]:
+            column_id = row.get("column_id")
+            if column_id not in material_property_column_ids:
+                errors.append(
+                    "materials_property_column_values"
+                    f"[{column_id},{row.get('point_index')}]: column_id '{column_id}' not found"
+                )
+
+        for row in payload["material_classification_axes"]:
+            created_by_user_id = row.get("created_by_user_id")
+            if created_by_user_id is not None and created_by_user_id not in user_ids:
+                errors.append(
+                    f"material_classification_axes[{row.get('axis_id')}]: created_by_user_id '{created_by_user_id}' not found"
+                )
+
+        for row in payload["material_classification_values"]:
+            axis_id = row.get("axis_id")
+            if axis_id not in material_classification_axis_ids:
+                errors.append(
+                    f"material_classification_values[{row.get('value_id')}]: axis_id '{axis_id}' not found"
+                )
+            created_by_user_id = row.get("created_by_user_id")
+            if created_by_user_id is not None and created_by_user_id not in user_ids:
+                errors.append(
+                    f"material_classification_values[{row.get('value_id')}]: created_by_user_id '{created_by_user_id}' not found"
+                )
+
+        for row in payload["material_classification_assignments"]:
+            material_id = row.get("material_id")
+            value_id = row.get("value_id")
+            if material_id not in material_ids:
+                errors.append(
+                    f"material_classification_assignments[{material_id},{value_id}]: material_id '{material_id}' not found"
+                )
+            if value_id not in material_classification_value_ids:
+                errors.append(
+                    f"material_classification_assignments[{material_id},{value_id}]: value_id '{value_id}' not found"
+                )
+            created_by_user_id = row.get("created_by_user_id")
+            if created_by_user_id is not None and created_by_user_id not in user_ids:
+                errors.append(
+                    f"material_classification_assignments[{material_id},{value_id}]: created_by_user_id '{created_by_user_id}' not found"
+                )
 
         for row in payload["dies"]:
             if row.get("die_type_id") not in die_type_ids:
@@ -345,7 +804,7 @@ class LibrarySeedService:
             self._sync_sequence(db, table)
 
         return SeedReport(
-            file_hash=self._file_hash(self.library_json_path),
+            file_hash=self._combined_file_hash(self._seed_files()),
             tables_processed=processed,
             only_missing=only_missing,
             triggered_by_user_id=triggered_by_user_id,
@@ -401,7 +860,7 @@ class LibrarySeedService:
                 continue
             if not col.nullable and col.default is None and col.server_default is None and not col.primary_key:
                 # Required column with no default and no value in payload.
-                if col.name == "created_at":
+                if col.name in {"created_at", "updated_at"}:
                     filtered[col.name] = datetime.utcnow()
         return filtered
 
@@ -439,6 +898,16 @@ class LibrarySeedService:
         h = sha256()
         with path.open("rb") as fh:
             h.update(fh.read())
+        return h.hexdigest()
+
+    def _combined_file_hash(self, paths: Iterable[Path]) -> str:
+        h = sha256()
+        for path in sorted(paths, key=lambda item: item.name):
+            h.update(path.name.encode("utf-8"))
+            h.update(b"\0")
+            with path.open("rb") as fh:
+                h.update(fh.read())
+            h.update(b"\0")
         return h.hexdigest()
 
     def _ensure_seed_runs_table(self, db: Session) -> None:

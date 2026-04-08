@@ -35,5 +35,9 @@ export default function MainEditorPane({
     return <div className="flex-1 min-h-0">{pressesView}</div>
   }
 
+  if (view === 'materials') {
+    return <div className="flex-1 min-h-0">{materialsView}</div>
+  }
+
   return <div className="flex-1 min-h-0">{materialsView}</div>
 }

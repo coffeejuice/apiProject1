@@ -1,0 +1,8093 @@
+{
+  "materials": [
+    {
+      "material_id": 1,
+      "name": "Inconel 718",
+      "is_obsolete": false,
+      "owner_id": 1,
+      "deform_file_name": "material_Inc718_20220602.key",
+      "note": "Inconel 718 is a precipitation-hardened Ni-Cr-Fe superalloy used as high-strength, corrosion-resistant billet and forging stock from cryogenic service to elevated-temperature aerospace, energy, and harsh-environment applications."
+    },
+    {
+      "material_id": 2,
+      "name": "Ti-6.5Al-2Zr-1Mo-1V",
+      "is_obsolete": false,
+      "owner_id": 1,
+      "deform_file_name": "material_TA15_20221024_RUSSIA_JMATPRO.KEY",
+      "note": null
+    },
+    {
+      "material_id": 3,
+      "name": "Ti-10V-2Fe-3Al",
+      "is_obsolete": false,
+      "owner_id": 1,
+      "deform_file_name": "material_TB6_20220717.key",
+      "note": null
+    },
+    {
+      "material_id": 4,
+      "name": "TB18",
+      "is_obsolete": false,
+      "owner_id": 1,
+      "deform_file_name": "material_TB18_20220602.key",
+      "note": null
+    },
+    {
+      "material_id": 5,
+      "name": "Ti-4Al-1.5Mn",
+      "is_obsolete": false,
+      "owner_id": 1,
+      "deform_file_name": "material_TC2_20220602.key",
+      "note": null
+    },
+    {
+      "material_id": 6,
+      "name": "Ti-6Al-4V",
+      "is_obsolete": false,
+      "owner_id": 1,
+      "deform_file_name": "material_TC4_20220602.key",
+      "note": "Ti-6Al-4V is the workhorse α+β titanium alloy used widely as billet, bar, and forging stock, combining high specific strength, corrosion resistance, weldability, and heat-treat response."
+    },
+    {
+      "material_id": 7,
+      "name": "Ti-5Al-2Sn-4Mo-2Zr-4Cr",
+      "is_obsolete": false,
+      "owner_id": 1,
+      "deform_file_name": "material_TC17_20220602.key",
+      "note": null
+    },
+    {
+      "material_id": 8,
+      "name": "Ti-5Al-5Mo-5V-1Cr-1Fe",
+      "is_obsolete": false,
+      "owner_id": 1,
+      "deform_file_name": "material_TC18_TC18-D500-T16-v04-sparse.KEY",
+      "note": null
+    },
+    {
+      "material_id": 9,
+      "name": "TC21",
+      "is_obsolete": false,
+      "owner_id": 1,
+      "deform_file_name": "material_TC21_20220622.KEY",
+      "note": null
+    },
+    {
+      "material_id": 10,
+      "name": "Ti-5Al-5Mo-5V-3Cr",
+      "is_obsolete": false,
+      "owner_id": 1,
+      "deform_file_name": "material_Ti5553_20220621.key",
+      "note": null
+    },
+    {
+      "material_id": 11,
+      "name": "Ti-6Al-3Nb-2Zr-1Mo",
+      "is_obsolete": false,
+      "owner_id": 1,
+      "deform_file_name": "material_Ti80_WST_20240528.KEY",
+      "note": null
+    },
+    {
+      "material_id": 12,
+      "name": "Waspaloy",
+      "is_obsolete": false,
+      "owner_id": 1,
+      "deform_file_name": null,
+      "note": "Waspaloy is a wrought, age-hardenable Ni-base superalloy billet material used for high-strength gas-turbine rotating hardware and other oxidation-resistant elevated-temperature components."
+    }
+  ],
+  "material_standards_catalog": [
+    {
+      "standard_id": 1,
+      "predecessor_standard_id": null,
+      "issue_organization": "ASTM",
+      "issue_year": 2024,
+      "geographic_level": "national",
+      "country_or_region": "USA",
+      "title": {
+        "EN": "Standard Specification for Titanium and Titanium Alloy Bars and Billets"
+      },
+      "standard_number": "B348-24",
+      "url": "https://www.astm.org/b0348-24.html",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 2,
+      "predecessor_standard_id": null,
+      "issue_organization": "ASTM",
+      "issue_year": 2024,
+      "geographic_level": "national",
+      "country_or_region": "USA",
+      "title": {
+        "EN": "Standard Specification for Titanium and Titanium Alloy Forgings"
+      },
+      "standard_number": "B381/B381M-24",
+      "url": "https://www.astm.org/b0381_b0381m-24.html",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 3,
+      "predecessor_standard_id": null,
+      "issue_organization": "SAE",
+      "issue_year": null,
+      "geographic_level": "national",
+      "country_or_region": "USA",
+      "title": {
+        "EN": "Titanium Alloy Bars, Wire, Forgings, Rings, and Drawn Shapes 6Al-4V, Annealed"
+      },
+      "standard_number": "AMS4928V",
+      "url": "https://www.sae.org/standards/ams4928v-titanium-alloy-bars-wire-forgings-rings-drawn-shapes-6al-4v-annealed",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 4,
+      "predecessor_standard_id": null,
+      "issue_organization": "MIL",
+      "issue_year": null,
+      "geographic_level": "national",
+      "country_or_region": "USA",
+      "title": {
+        "EN": "Legacy titanium bar and forging stock specification"
+      },
+      "standard_number": "MIL-T-9047",
+      "url": "https://quicksearch.dla.mil/WMX/Default.aspx?token=463050",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 5,
+      "predecessor_standard_id": null,
+      "issue_organization": "GB/T",
+      "issue_year": 2016,
+      "geographic_level": "national",
+      "country_or_region": "China",
+      "title": {
+        "EN": "Designation and composition of titanium and titanium alloys"
+      },
+      "standard_number": "3620.1-2016",
+      "url": "https://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=39C20E84B11D5788545EA6CAC2F9E459",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 6,
+      "predecessor_standard_id": null,
+      "issue_organization": "GB/T",
+      "issue_year": 2023,
+      "geographic_level": "national",
+      "country_or_region": "China",
+      "title": {
+        "EN": "Titanium and titanium alloy bars"
+      },
+      "standard_number": "2965-2023",
+      "url": "https://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=70A5BFF54B134A4FE05397BE0A0ABDD9",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 7,
+      "predecessor_standard_id": null,
+      "issue_organization": "DIN",
+      "issue_year": null,
+      "geographic_level": "national",
+      "country_or_region": "Germany",
+      "title": {
+        "EN": "Titanium alloys — chemical composition"
+      },
+      "standard_number": "17851",
+      "url": "https://www.dinmedia.de/en/standard/din-17851/91930128",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 8,
+      "predecessor_standard_id": null,
+      "issue_organization": "DIN EN",
+      "issue_year": 2012,
+      "geographic_level": "regional",
+      "country_or_region": "EU",
+      "title": {
+        "EN": "Aerospace series — Titanium alloy Ti-6Al-4V — Plate, annealed"
+      },
+      "standard_number": "3464",
+      "url": "https://www.dinmedia.de/de/norm/din-en-3464/155743640",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 9,
+      "predecessor_standard_id": null,
+      "issue_organization": "JIS",
+      "issue_year": 2016,
+      "geographic_level": "national",
+      "country_or_region": "Japan",
+      "title": {
+        "EN": "Titanium and titanium alloys — Bars"
+      },
+      "standard_number": "H 4650:2016",
+      "url": "https://webdesk.jsa.or.jp/books/W11M0090/index/?bunsyo_id=JIS+H+4650%3A2016",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 10,
+      "predecessor_standard_id": 11,
+      "issue_organization": "GOST",
+      "issue_year": 1991,
+      "geographic_level": "national",
+      "country_or_region": "Russia",
+      "title": {
+        "EN": "Wrought titanium and titanium alloys. Grades"
+      },
+      "standard_number": "19807-91",
+      "url": "https://protect.gost.ru/document.aspx?control=7&id=136379",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 11,
+      "predecessor_standard_id": null,
+      "issue_organization": "GOST",
+      "issue_year": 1974,
+      "geographic_level": "national",
+      "country_or_region": "USSR",
+      "title": {
+        "EN": "Wrought titanium and titanium alloys. Grades"
+      },
+      "standard_number": "19807-74",
+      "url": null,
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 12,
+      "predecessor_standard_id": null,
+      "issue_organization": "ASTM",
+      "issue_year": 2025,
+      "geographic_level": "national",
+      "country_or_region": "USA",
+      "title": {
+        "EN": "Standard Specification for Precipitation-Hardening and Cold Worked Nickel Alloy Bars, Forgings, and Forging Stock"
+      },
+      "standard_number": "B637-25",
+      "url": "https://store.astm.org/standards/b637",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 13,
+      "predecessor_standard_id": null,
+      "issue_organization": "ASTM",
+      "issue_year": 2025,
+      "geographic_level": "national",
+      "country_or_region": "USA",
+      "title": {
+        "EN": "Standard Specification for Precipitation-Hardening Nickel Alloy Plate, Sheet, and Strip"
+      },
+      "standard_number": "B670-25",
+      "url": "https://store.astm.org/b0670-25.html",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 14,
+      "predecessor_standard_id": null,
+      "issue_organization": "SAE",
+      "issue_year": null,
+      "geographic_level": "national",
+      "country_or_region": "USA",
+      "title": {
+        "EN": "Alloy bars, forgings, and rings; corrosion- and heat-resistant nickel base 19Cr - 3.1Mo - 5.1Cb(Ta) - 0.9Ti - 0.50Al; solution treated"
+      },
+      "standard_number": "AMS 5662",
+      "url": "https://www.sae.org/standards/ams5662-alloy-bars-forgings-rings-corrosion-heat-resistant-nickel-base-19cr-31mo-51-cb-ta-090ti-050al-consumable-electrode-vacuum-induction-melted-solution-treated",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 15,
+      "predecessor_standard_id": null,
+      "issue_organization": "SAE",
+      "issue_year": null,
+      "geographic_level": "national",
+      "country_or_region": "USA",
+      "title": {
+        "EN": "Alloy bars, forgings, and rings; corrosion- and heat-resistant nickel base 19Cr - 3.1Mo - 5.1Cb(Ta) - 0.9Ti - 0.50Al; solution and precipitation heat treated"
+      },
+      "standard_number": "AMS 5663",
+      "url": "https://www.sae.org/standards/ams5663-alloy-bars-forgings-rings-corrosion-heat-resistant-nickel-base-19cr-31mo-51-cb-ta-090ti-050al-solution-precipitation-heat-treated-consumable-electrode-vacuum-induction-melted",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 16,
+      "predecessor_standard_id": null,
+      "issue_organization": "DIN",
+      "issue_year": 2019,
+      "geographic_level": "national",
+      "country_or_region": "Germany",
+      "title": {
+        "EN": "Rods and bars of nickel and wrought nickel alloys — Properties"
+      },
+      "standard_number": "17752:2019-08",
+      "url": "https://www.dinmedia.de/en/standard/din-17752/306999762",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 17,
+      "predecessor_standard_id": null,
+      "issue_organization": "GB/T",
+      "issue_year": 2014,
+      "geographic_level": "national",
+      "country_or_region": "China",
+      "title": {
+        "EN": "GH4169 alloy bars, forgings and rings"
+      },
+      "standard_number": "30566-2014",
+      "url": "https://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=07105FCDE4E3833B2D8B7E2874CD66D3",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 18,
+      "predecessor_standard_id": null,
+      "issue_organization": "GB/T",
+      "issue_year": 2021,
+      "geographic_level": "national",
+      "country_or_region": "China",
+      "title": {
+        "EN": "General specification for GH4169 alloy bars"
+      },
+      "standard_number": "40303-2021",
+      "url": "https://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=A12748949004F11A40E3D25518D98529",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 19,
+      "predecessor_standard_id": null,
+      "issue_organization": "JIS",
+      "issue_year": 2023,
+      "geographic_level": "national",
+      "country_or_region": "Japan",
+      "title": {
+        "EN": "Corrosion-resistant and heat-resistant superalloy, nickel and nickel alloy — Bars"
+      },
+      "standard_number": "G 4901:2023",
+      "url": "https://webdesk.jsa.or.jp/preview/pre_jis_g_04901_000_000_2023_e_ed10_ch.pdf",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 20,
+      "predecessor_standard_id": null,
+      "issue_organization": "JIS",
+      "issue_year": 2019,
+      "geographic_level": "national",
+      "country_or_region": "Japan",
+      "title": {
+        "EN": "Corrosion-resistant and heat-resistant superalloy, nickel and nickel alloy — Plate, sheet and strip"
+      },
+      "standard_number": "G 4902:2019",
+      "url": "https://webdesk.jsa.or.jp/preview/pre_jis_g_04902_000_000_2019_e_ed10_ch.pdf",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 21,
+      "predecessor_standard_id": null,
+      "issue_organization": "GOST",
+      "issue_year": 2014,
+      "geographic_level": "national",
+      "country_or_region": "Russia",
+      "title": {
+        "EN": "Stainless steels and corrosion resisting, heat-resisting and creep resisting alloys — Grades"
+      },
+      "standard_number": "5632-2014",
+      "url": "https://protect.gost.ru/document.aspx?control=7&id=188254",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 22,
+      "predecessor_standard_id": null,
+      "issue_organization": "SAE",
+      "issue_year": null,
+      "geographic_level": "national",
+      "country_or_region": "USA",
+      "title": {
+        "EN": "Alloy bars, forgings, and rings; corrosion- and heat-resistant nickel base 19.5Cr - 13.5Co - 4.3Mo - 3.0Ti - 1.4Al; solution heat treated"
+      },
+      "standard_number": "AMS 5706",
+      "url": "https://www.sae.org/standards/ams5706-alloy-bars-forgings-rings-corrosion-heat-resistant-nickel-base-195cr-135co-43mo-30ti-14al-solution-heat-treated-1825-1900-f-9961-10378-c-treatment-consumable-electrode-vacuum-induction-melted",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 23,
+      "predecessor_standard_id": null,
+      "issue_organization": "SAE",
+      "issue_year": null,
+      "geographic_level": "national",
+      "country_or_region": "USA",
+      "title": {
+        "EN": "Alloy bars, forgings, and rings; corrosion- and heat-resistant nickel base 19.5Cr - 13.5Co - 4.3Mo - 3.0Ti - 1.4Al; solution, stabilization, and precipitation heat treated"
+      },
+      "standard_number": "AMS 5707",
+      "url": "https://www.sae.org/standards/ams5707-alloy-bars-forgings-rings-corrosion-heat-resistant-nickel-base-195cr-135co-43mo-30ti-14al-solution-stabilization-precipitation-heat-treated-1825-1900-f-9961-10378-c-treatment-consumable-electrode-vacuum-induction-melted",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 24,
+      "predecessor_standard_id": null,
+      "issue_organization": "SAE",
+      "issue_year": null,
+      "geographic_level": "national",
+      "country_or_region": "USA",
+      "title": {
+        "EN": "Nickel alloy corrosion- and heat-resistant bars, wire, forgings, and rings; solution heat treated"
+      },
+      "standard_number": "AMS 5708N",
+      "url": "https://www.sae.org/standards/ams5708n-nickel-alloy-corrosion-heat-resistant-bars-wire-forgings-rings-forging-flash-welded-rings-heading-stock-58ni-195cr-135co-43mo-30ti-14al-005zr-0006b-waspaloy-consumable-electrode-vacuum-induction-melted-1975-f-1079-c-solution-heat-treated",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 25,
+      "predecessor_standard_id": null,
+      "issue_organization": "SAE",
+      "issue_year": null,
+      "geographic_level": "national",
+      "country_or_region": "USA",
+      "title": {
+        "EN": "Alloy bars and forgings; corrosion- and heat-resistant nickel base 19.5Cr - 13.5Co - 4.3Mo - 3.0Ti - 1.4Al; solution, stabilization, and precipitation heat treated"
+      },
+      "standard_number": "AMS 5709",
+      "url": "https://www.sae.org/standards/ams5709-alloy-bars-forgings-corrosion-heat-resistant-nickel-base-195cr-135co-43mo-30ti-14al-solution-stabilization-precipitation-heat-treated-1975-f-10794-c-treatment-consumable-electrode-vacuum-induction-melted",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 26,
+      "predecessor_standard_id": null,
+      "issue_organization": "SAE",
+      "issue_year": null,
+      "geographic_level": "national",
+      "country_or_region": "USA",
+      "title": {
+        "EN": "Alloy forgings; corrosion- and heat-resistant nickel base 19.5Cr - 13.5Co - 4.3Mo - 3.0Ti - 1.4Al; solution, stabilization, and precipitation heat treated"
+      },
+      "standard_number": "AMS 5704",
+      "url": "https://www.sae.org/standards/ams5704-alloy-forgings-corrosion-heat-resistant-nickel-base-195cr-135co-43mo-30ti-14al-solution-stabilization-precipitation-heat-treated-1825-1900-f-9961-10378-c-treatment-consumable-electrode-vacuum-induction-melted",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 27,
+      "predecessor_standard_id": null,
+      "issue_organization": "SAE",
+      "issue_year": null,
+      "geographic_level": "national",
+      "country_or_region": "USA",
+      "title": {
+        "EN": "Alloy wire, welding, corrosion- and heat-resistant nickel base 19.5Cr - 13.5Co - 4.3Mo - 3.0Ti - 1.4Al, vacuum induction melted"
+      },
+      "standard_number": "AMS 5828",
+      "url": "https://www.sae.org/standards/ams5828-alloy-wire-welding-corrosion-heat-resistant-nickel-base-195cr-135co-43mo-30ti-14al-vacuum-induction-melted",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 28,
+      "predecessor_standard_id": null,
+      "issue_organization": "ASTM",
+      "issue_year": 2012,
+      "geographic_level": "national",
+      "country_or_region": "USA",
+      "title": {
+        "EN": "Standard Specification for Precipitation-Hardening and Cold Worked Nickel Alloy Bars, Forgings, and Forging Stock"
+      },
+      "standard_number": "B637-12",
+      "url": "https://www.astm.org/b0637-12.html",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 29,
+      "predecessor_standard_id": null,
+      "issue_organization": "ISO",
+      "issue_year": 1992,
+      "geographic_level": "international",
+      "country_or_region": "International",
+      "title": {
+        "EN": "Nickel and nickel alloy bars"
+      },
+      "standard_number": "ISO 9723:1992",
+      "url": "https://www.iso.org/standard/17581.html",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 30,
+      "predecessor_standard_id": null,
+      "issue_organization": "ISO",
+      "issue_year": 1992,
+      "geographic_level": "international",
+      "country_or_region": "International",
+      "title": {
+        "EN": "Nickel and nickel alloy wire and drawing stock"
+      },
+      "standard_number": "ISO 9724:1992",
+      "url": "https://www.iso.org/standard/17582.html",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 31,
+      "predecessor_standard_id": null,
+      "issue_organization": "ISO",
+      "issue_year": 1992,
+      "geographic_level": "international",
+      "country_or_region": "International",
+      "title": {
+        "EN": "Nickel and nickel alloy forgings"
+      },
+      "standard_number": "ISO 9725:1992",
+      "url": "https://www.iso.org/standard/17583.html",
+      "file_name": null,
+      "is_obsolete": true
+    },
+    {
+      "standard_id": 32,
+      "predecessor_standard_id": 31,
+      "issue_organization": "ISO",
+      "issue_year": 2017,
+      "geographic_level": "international",
+      "country_or_region": "International",
+      "title": {
+        "EN": "Nickel and nickel alloy forgings"
+      },
+      "standard_number": "ISO 9725:2017",
+      "url": "https://www.iso.org/standard/69353.html",
+      "file_name": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_id": 33,
+      "predecessor_standard_id": null,
+      "issue_organization": "GB/T",
+      "issue_year": 2021,
+      "geographic_level": "national",
+      "country_or_region": "China",
+      "title": {
+        "EN": "Specification for wrought superalloy forging disks"
+      },
+      "standard_number": "GB/T 40313-2021",
+      "url": "https://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=8D954836CA9D9BB95C0E661D4AEC7C7F",
+      "file_name": null,
+      "is_obsolete": false
+    }
+  ],
+  "materials_designations": [
+    {
+      "designation_id": 1,
+      "designation": "Ti-6Al-4V",
+      "material_id": 6,
+      "standard_id": null,
+      "is_main_designation": true,
+      "note": "Canonical material designation from TI64 source summary (S13).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 2,
+      "designation": "Ti64",
+      "material_id": 6,
+      "standard_id": null,
+      "is_main_designation": false,
+      "note": "Common industry shorthand (S13).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 3,
+      "designation": "6-4",
+      "material_id": 6,
+      "standard_id": null,
+      "is_main_designation": false,
+      "note": "Common industry shorthand (S13).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 4,
+      "designation": "Grade 5",
+      "material_id": 6,
+      "standard_id": 1,
+      "is_main_designation": false,
+      "note": "Common ASTM product-form designation for Ti-6Al-4V bars and billets (S01).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 5,
+      "designation": "Grade F-5",
+      "material_id": 6,
+      "standard_id": 2,
+      "is_main_designation": false,
+      "note": "ASTM B381 forging designation for Ti-6Al-4V (S02).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 6,
+      "designation": "UNS R56400",
+      "material_id": 6,
+      "standard_id": 2,
+      "is_main_designation": false,
+      "note": "UNS designation as stated on ASTM B381 and producer datasheets (S02, S07, S15).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 7,
+      "designation": "TC4",
+      "material_id": 6,
+      "standard_id": 5,
+      "is_main_designation": false,
+      "note": "Chinese grade naming under GB/T 3620.1-2016 (S05).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 8,
+      "designation": "TiAl6V4",
+      "material_id": 6,
+      "standard_id": 7,
+      "is_main_designation": false,
+      "note": "DIN alloy designation from Zapp Grade 5 datasheet (S07).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 9,
+      "designation": "3.7165",
+      "material_id": 6,
+      "standard_id": 7,
+      "is_main_designation": false,
+      "note": "DIN/Werkstoff number from Zapp Grade 5 datasheet (S07).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 10,
+      "designation": "VT6",
+      "material_id": 6,
+      "standard_id": 10,
+      "is_main_designation": false,
+      "note": "Russian alloy designation widely treated as Ti-6Al-4V analogue (S11, S14).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 11,
+      "designation": "ВТ6",
+      "material_id": 6,
+      "standard_id": 10,
+      "is_main_designation": false,
+      "note": "Russian Cyrillic designation for VT6 analogue family (S11, S14).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 12,
+      "designation": "TIMETAL 6-4",
+      "material_id": 6,
+      "standard_id": null,
+      "is_main_designation": false,
+      "note": "Producer trade name used by TIMET (S13).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 13,
+      "designation": "Inconel 718",
+      "material_id": 1,
+      "standard_id": null,
+      "is_main_designation": true,
+      "note": "Canonical trade-name designation from Special Metals technical bulletin (S1).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 14,
+      "designation": "IN718",
+      "material_id": 1,
+      "standard_id": null,
+      "is_main_designation": false,
+      "note": "Common industry shorthand used throughout the literature and datasheets (S1, S14, S15).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 15,
+      "designation": "UNS N07718",
+      "material_id": 1,
+      "standard_id": 12,
+      "is_main_designation": false,
+      "note": "UNS composition/system designation used for ASTM product-form standards and producer datasheets (S1, S3, S4).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 16,
+      "designation": "2.4668",
+      "material_id": 1,
+      "standard_id": 16,
+      "is_main_designation": false,
+      "note": "European material number / Werkstoffnummer linked to Alloy 718 (S1, S2).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 17,
+      "designation": "NiCr19Fe19Nb5Mo3",
+      "material_id": 1,
+      "standard_id": 16,
+      "is_main_designation": false,
+      "note": "EN material designation reported by VDM for Alloy 718 (S2).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 18,
+      "designation": "NiCr19Nb5Mo3",
+      "material_id": 1,
+      "standard_id": null,
+      "is_main_designation": false,
+      "note": "ISO material designation reported by VDM for Alloy 718 (S2).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 19,
+      "designation": "GH4169",
+      "material_id": 1,
+      "standard_id": 18,
+      "is_main_designation": false,
+      "note": "Chinese standard grade explicitly mapped to Inconel 718 in peer-reviewed literature and GB/T standards (S11, S20).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 20,
+      "designation": "ЭП718",
+      "material_id": 1,
+      "standard_id": null,
+      "is_main_designation": false,
+      "note": "Russian analogue grade compared directly to Inconel 718 in the corrosion-focused comparison literature (S19).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 21,
+      "designation": "ХН45МВТЮБР",
+      "material_id": 1,
+      "standard_id": null,
+      "is_main_designation": false,
+      "note": "Official VIAM catalogue entry for the Russian analogue grade family of EP718 / VZh105 (S18).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 22,
+      "designation": "ВЖ105",
+      "material_id": 1,
+      "standard_id": null,
+      "is_main_designation": false,
+      "note": "Alternate Russian analogue designation listed together with ХН45МВТЮБР / ЭП718 by VIAM (S18).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 23,
+      "designation": "Waspaloy",
+      "material_id": 12,
+      "standard_id": null,
+      "is_main_designation": true,
+      "note": "Canonical trade-name designation from Special Metals and Carpenter producer bulletins (S1, S2).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 24,
+      "designation": "UNS N07001",
+      "material_id": 12,
+      "standard_id": 28,
+      "is_main_designation": false,
+      "note": "UNS composition/system designation listed by Carpenter and tied to ASTM B637 producer applicability (S2, S12).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 25,
+      "designation": "AISI 685",
+      "material_id": 12,
+      "standard_id": null,
+      "is_main_designation": false,
+      "note": "AISI designation listed in Carpenter associated specifications (S2).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 26,
+      "designation": "2.4654",
+      "material_id": 12,
+      "standard_id": null,
+      "is_main_designation": false,
+      "note": "European Werkstoffnummer reported by Special Metals for Waspaloy (S1).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 27,
+      "designation": "AMS 5706",
+      "material_id": 12,
+      "standard_id": 22,
+      "is_main_designation": false,
+      "note": "SAE AMS standard designation for Waspaloy bars, forgings, and rings in solution-treated condition (S5).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 28,
+      "designation": "AMS 5707",
+      "material_id": 12,
+      "standard_id": 23,
+      "is_main_designation": false,
+      "note": "SAE AMS standard designation for solution-, stabilization-, and precipitation-treated Waspaloy bars, forgings, and rings (S6).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 29,
+      "designation": "AMS 5708",
+      "material_id": 12,
+      "standard_id": 24,
+      "is_main_designation": false,
+      "note": "SAE AMS standard designation for Waspaloy bars/wire/forgings/rings in solution-treated condition (S7).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 30,
+      "designation": "AMS 5709",
+      "material_id": 12,
+      "standard_id": 25,
+      "is_main_designation": false,
+      "note": "SAE AMS standard designation for precipitation-treated Waspaloy bars and forgings (S8).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 31,
+      "designation": "AMS 5704",
+      "material_id": 12,
+      "standard_id": 26,
+      "is_main_designation": false,
+      "note": "SAE AMS forging specification entry for Waspaloy (S9).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 32,
+      "designation": "AMS 5828",
+      "material_id": 12,
+      "standard_id": 27,
+      "is_main_designation": false,
+      "note": "SAE AMS welding wire / filler-metal specification entry for Waspaloy (S10).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 33,
+      "designation": "ASTM B637",
+      "material_id": 12,
+      "standard_id": 28,
+      "is_main_designation": false,
+      "note": "ASTM product-form standard commonly used for Waspaloy bars, forgings, and forging stock (S12).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 34,
+      "designation": "ISO 9723",
+      "material_id": 12,
+      "standard_id": 29,
+      "is_main_designation": false,
+      "note": "ISO bars specification listed as applicable series in Special Metals bulletin (S1, S13).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 35,
+      "designation": "ISO 9724",
+      "material_id": 12,
+      "standard_id": 30,
+      "is_main_designation": false,
+      "note": "ISO wire and drawing-stock specification listed as applicable series in Special Metals bulletin (S1, S14).",
+      "is_obsolete": false
+    },
+    {
+      "designation_id": 36,
+      "designation": "ISO 9725",
+      "material_id": 12,
+      "standard_id": 32,
+      "is_main_designation": false,
+      "note": "ISO forgings specification listed as applicable series in Special Metals bulletin (S1, S16).",
+      "is_obsolete": false
+    }
+  ],
+  "materials_designations_standard_chemistry": [
+    {
+      "standard_chemistry_id": 1,
+      "designation_id": 4,
+      "element_symbol": "Al",
+      "min_wt_pct": 5.5,
+      "max_wt_pct": 6.75,
+      "is_balance": false,
+      "note": "Typical 6.0 wt.% from TIMET producer datasheet (S13).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 2,
+      "designation_id": 4,
+      "element_symbol": "V",
+      "min_wt_pct": 3.5,
+      "max_wt_pct": 4.5,
+      "is_balance": false,
+      "note": "Typical 4.0 wt.% from TIMET producer datasheet (S13).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 3,
+      "designation_id": 4,
+      "element_symbol": "Fe",
+      "min_wt_pct": null,
+      "max_wt_pct": 0.4,
+      "is_balance": false,
+      "note": "Typical 0.2 wt.% from TIMET producer datasheet (S13).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 4,
+      "designation_id": 4,
+      "element_symbol": "O",
+      "min_wt_pct": null,
+      "max_wt_pct": 0.2,
+      "is_balance": false,
+      "note": "Typical 0.15 wt.% from TIMET producer datasheet (S13).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 5,
+      "designation_id": 4,
+      "element_symbol": "N",
+      "min_wt_pct": null,
+      "max_wt_pct": 0.05,
+      "is_balance": false,
+      "note": "Typical 0.02 wt.% from TIMET producer datasheet (S13).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 6,
+      "designation_id": 4,
+      "element_symbol": "C",
+      "min_wt_pct": null,
+      "max_wt_pct": 0.08,
+      "is_balance": false,
+      "note": "Typical 0.03 wt.% from TIMET producer datasheet (S13).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 7,
+      "designation_id": 4,
+      "element_symbol": "H",
+      "min_wt_pct": null,
+      "max_wt_pct": 0.015,
+      "is_balance": false,
+      "note": "Typical 0.005 wt.% from TIMET producer datasheet (S13).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 8,
+      "designation_id": 4,
+      "element_symbol": "Ti",
+      "min_wt_pct": null,
+      "max_wt_pct": null,
+      "is_balance": true,
+      "note": "Balance Ti (remainder).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 9,
+      "designation_id": 15,
+      "element_symbol": "Ni",
+      "min_wt_pct": 50.0,
+      "max_wt_pct": 55.0,
+      "is_balance": false,
+      "note": "Producer-bulletin composition limits for Alloy 718 / UNS N07718 (S1).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 10,
+      "designation_id": 15,
+      "element_symbol": "Cr",
+      "min_wt_pct": 17.0,
+      "max_wt_pct": 21.0,
+      "is_balance": false,
+      "note": "Producer-bulletin composition limits for Alloy 718 / UNS N07718 (S1).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 11,
+      "designation_id": 15,
+      "element_symbol": "Fe",
+      "min_wt_pct": null,
+      "max_wt_pct": null,
+      "is_balance": true,
+      "note": "Balance Fe as reported in the producer bulletin (S1).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 12,
+      "designation_id": 15,
+      "element_symbol": "Nb+Ta",
+      "min_wt_pct": 4.75,
+      "max_wt_pct": 5.5,
+      "is_balance": false,
+      "note": "Combined niobium plus tantalum limit from the producer bulletin (S1).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 13,
+      "designation_id": 15,
+      "element_symbol": "Mo",
+      "min_wt_pct": 2.8,
+      "max_wt_pct": 3.3,
+      "is_balance": false,
+      "note": "Producer-bulletin composition limits for Alloy 718 / UNS N07718 (S1).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 14,
+      "designation_id": 15,
+      "element_symbol": "Ti",
+      "min_wt_pct": 0.65,
+      "max_wt_pct": 1.15,
+      "is_balance": false,
+      "note": "Producer-bulletin composition limits for Alloy 718 / UNS N07718 (S1).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 15,
+      "designation_id": 15,
+      "element_symbol": "Al",
+      "min_wt_pct": 0.2,
+      "max_wt_pct": 0.8,
+      "is_balance": false,
+      "note": "Producer-bulletin composition limits for Alloy 718 / UNS N07718 (S1).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 16,
+      "designation_id": 15,
+      "element_symbol": "Co",
+      "min_wt_pct": null,
+      "max_wt_pct": 1.0,
+      "is_balance": false,
+      "note": "Maximum cobalt limit from the producer bulletin (S1).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 17,
+      "designation_id": 15,
+      "element_symbol": "C",
+      "min_wt_pct": null,
+      "max_wt_pct": 0.08,
+      "is_balance": false,
+      "note": "Maximum carbon limit from the producer bulletin (S1).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 18,
+      "designation_id": 15,
+      "element_symbol": "Mn",
+      "min_wt_pct": null,
+      "max_wt_pct": 0.35,
+      "is_balance": false,
+      "note": "Maximum manganese limit from the producer bulletin (S1).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 19,
+      "designation_id": 15,
+      "element_symbol": "Si",
+      "min_wt_pct": null,
+      "max_wt_pct": 0.35,
+      "is_balance": false,
+      "note": "Maximum silicon limit from the producer bulletin (S1).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 20,
+      "designation_id": 15,
+      "element_symbol": "P",
+      "min_wt_pct": null,
+      "max_wt_pct": 0.015,
+      "is_balance": false,
+      "note": "Maximum phosphorus limit from the producer bulletin (S1).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 21,
+      "designation_id": 15,
+      "element_symbol": "S",
+      "min_wt_pct": null,
+      "max_wt_pct": 0.015,
+      "is_balance": false,
+      "note": "Maximum sulfur limit from the producer bulletin (S1).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 22,
+      "designation_id": 15,
+      "element_symbol": "B",
+      "min_wt_pct": null,
+      "max_wt_pct": 0.006,
+      "is_balance": false,
+      "note": "Maximum boron limit from the producer bulletin (S1).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 23,
+      "designation_id": 15,
+      "element_symbol": "Cu",
+      "min_wt_pct": null,
+      "max_wt_pct": 0.3,
+      "is_balance": false,
+      "note": "Maximum copper limit from the producer bulletin (S1).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 24,
+      "designation_id": 24,
+      "element_symbol": "Ni",
+      "min_wt_pct": null,
+      "max_wt_pct": null,
+      "is_balance": true,
+      "note": "Nickel listed as balance in Carpenter datasheet chemistry table (S2).",
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 25,
+      "designation_id": 24,
+      "element_symbol": "Cr",
+      "min_wt_pct": 18.0,
+      "max_wt_pct": 21.0,
+      "is_balance": false,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 26,
+      "designation_id": 24,
+      "element_symbol": "Co",
+      "min_wt_pct": 12.0,
+      "max_wt_pct": 15.0,
+      "is_balance": false,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 27,
+      "designation_id": 24,
+      "element_symbol": "Mo",
+      "min_wt_pct": 3.5,
+      "max_wt_pct": 5.0,
+      "is_balance": false,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 28,
+      "designation_id": 24,
+      "element_symbol": "Ti",
+      "min_wt_pct": 2.75,
+      "max_wt_pct": 3.25,
+      "is_balance": false,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 29,
+      "designation_id": 24,
+      "element_symbol": "Al",
+      "min_wt_pct": 1.2,
+      "max_wt_pct": 1.5,
+      "is_balance": false,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 30,
+      "designation_id": 24,
+      "element_symbol": "Fe",
+      "min_wt_pct": 0.0,
+      "max_wt_pct": 2.0,
+      "is_balance": false,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 31,
+      "designation_id": 24,
+      "element_symbol": "Si",
+      "min_wt_pct": 0.0,
+      "max_wt_pct": 0.75,
+      "is_balance": false,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 32,
+      "designation_id": 24,
+      "element_symbol": "Mn",
+      "min_wt_pct": 0.0,
+      "max_wt_pct": 0.5,
+      "is_balance": false,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 33,
+      "designation_id": 24,
+      "element_symbol": "Zr",
+      "min_wt_pct": 0.02,
+      "max_wt_pct": 0.12,
+      "is_balance": false,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 34,
+      "designation_id": 24,
+      "element_symbol": "C",
+      "min_wt_pct": 0.02,
+      "max_wt_pct": 0.1,
+      "is_balance": false,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 35,
+      "designation_id": 24,
+      "element_symbol": "Cu",
+      "min_wt_pct": 0.0,
+      "max_wt_pct": 0.1,
+      "is_balance": false,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 36,
+      "designation_id": 24,
+      "element_symbol": "S",
+      "min_wt_pct": 0.0,
+      "max_wt_pct": 0.02,
+      "is_balance": false,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 37,
+      "designation_id": 24,
+      "element_symbol": "B",
+      "min_wt_pct": 0.003,
+      "max_wt_pct": 0.008,
+      "is_balance": false,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "standard_chemistry_id": 38,
+      "designation_id": 24,
+      "element_symbol": "P",
+      "min_wt_pct": null,
+      "max_wt_pct": 0.03,
+      "is_balance": false,
+      "note": "Carpenter table omitted phosphorus, so Special Metals max P value is used here (S1).",
+      "is_obsolete": false
+    }
+  ],
+  "publications_catalog": [
+    {
+      "publication_id": 1,
+      "source_type": "standard_listing",
+      "title": "ASTM B348-24 — Standard Specification for Titanium and Titanium Alloy Bars and Billets (listing page)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.astm.org/b0348-24.html",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 2,
+      "source_type": "standard_listing",
+      "title": "ASTM B381/B381M-24 — Standard Specification for Titanium and Titanium Alloy Forgings (listing page; includes Grade F-5, UNS R56400)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.astm.org/b0381_b0381m-24.html",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 3,
+      "source_type": "standard_listing",
+      "title": "SAE AMS4928V — Titanium Alloy Bars, Wire, Forgings, Rings, and Drawn Shapes 6Al-4V, Annealed (SAE standards listing page)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.sae.org/standards/ams4928v-titanium-alloy-bars-wire-forgings-rings-drawn-shapes-6al-4v-annealed",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 4,
+      "source_type": "government_notice",
+      "title": "DoD ASSIST Quick Search PDF — SAE-AMS-T-9047 supersedes MIL-T-9047G (cancellation/supersession notice)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://quicksearch.dla.mil/WMX/Default.aspx?token=463050",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 5,
+      "source_type": "standards_portal",
+      "title": "SAMR/OpenSTD — GB/T 3620.1-2016 — 钛及钛合金牌号和化学成分 (Designation and composition of titanium and titanium alloys) (official metadata page)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=39C20E84B11D5788545EA6CAC2F9E459",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 6,
+      "source_type": "standards_portal",
+      "title": "SAMR/OpenSTD — GB/T 2965-2023 — 钛及钛合金棒材 (Titanium and titanium alloy bars) (official metadata page)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=70A5BFF54B134A4FE05397BE0A0ABDD9",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 7,
+      "source_type": "producer_datasheet",
+      "title": "Zapp Precision Metals — TiAl6V4 (Grade 5) Datasheet (DIN designation TiAl6V4; material number 3.7165; UNS R56400; standards list)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.zapp.com/fileadmin/_documents/Downloads/materials/high_performance_alloys/en/TiAl6V4-Grade5-Datasheet.pdf",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 8,
+      "source_type": "standard_listing",
+      "title": "DIN Media — DIN 17851 (standard listing page)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.dinmedia.de/en/standard/din-17851/91930128",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 9,
+      "source_type": "standard_listing",
+      "title": "DIN Media — DIN EN 3464:2012-11 (standard listing page; Ti-6Al-4V aerospace series)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.dinmedia.de/de/norm/din-en-3464/155743640",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 10,
+      "source_type": "standard_listing",
+      "title": "Japanese Standards Association (JSA) Webdesk — JIS H 4650:2016 チタン及びチタン合金―棒 (Titanium and titanium alloys — Bars) (official listing page)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://webdesk.jsa.or.jp/books/W11M0090/index/?bunsyo_id=JIS+H+4650%3A2016",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 11,
+      "source_type": "standards_portal",
+      "title": "Russian official standards portal (FGIS/Protect GOST) — GOST 19807-91 (document page)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://protect.gost.ru/document.aspx?control=7&id=136379",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 12,
+      "source_type": "missing_reference",
+      "title": "USSR older GOST 19807-74 official portal page",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": null,
+      "file_name": null,
+      "note": "Not found as a freely accessible official portal URL during this pass; known to be superseded by GOST 19807-91 per multiple secondary mirrors.",
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 13,
+      "source_type": "producer_datasheet",
+      "title": "Titanium Metals Corporation (TIMET) — TIMETAL® 6-4, 6-4 ELI & 6-4-.1Ru Datasheet (chemistry + physical/thermal/elastic tables)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.timet.com/documents/datasheets/alpha-and-beta-alloys/timetal-6-4.pdf",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 14,
+      "source_type": "peer_reviewed_article",
+      "title": "NIH/PMC — Superplastic Behavior and Microstructural Features of the VT6 alloy (states VT6 is a Russian analogue of Ti-6Al-4V)",
+      "authors_text": null,
+      "publisher_or_journal": "PMC / NIH",
+      "issue_year": null,
+      "doi": null,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9965101/",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 15,
+      "source_type": "producer_datasheet",
+      "title": "ATI — ATI Ti-6Al-4V, Grade 5 (UNS R56400) Technical Data Sheet (melting range, beta transus, forgeability/formability guidance, precautions)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.atimaterials.com/Products/Documents/datasheets/titanium/alloyed/ati_6-4_tds_en_v1.pdf",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 16,
+      "source_type": "engineering_reference",
+      "title": "Omega Engineering — Table of Total Emissivity (infrared pyrometry guide; includes oxidized titanium alloy row)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.omegaengineering.cn/temperature/Z/pdf/z088-089.pdf",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 17,
+      "source_type": "peer_reviewed_article",
+      "title": "MDPI Materials (2022) — Chen et al., Constitutive Model Parameter Identification Based on Optimization Method and Formability Analysis for Ti6Al4V Alloy (hot processing map domains; flow curves figure)",
+      "authors_text": "Chen et al.",
+      "publisher_or_journal": "Materials (MDPI)",
+      "issue_year": 2022,
+      "doi": null,
+      "url": "https://www.mdpi.com/1996-1944/15/5/1748",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 18,
+      "source_type": "peer_reviewed_article",
+      "title": "MDPI Metals (2018) — Hu et al., Correction of Flow Curves and Constitutive Modelling of a Ti-6Al-4V Alloy (Arrhenius strain-compensated model coefficients; hot compression curves)",
+      "authors_text": "Hu et al.",
+      "publisher_or_journal": "Metals (MDPI)",
+      "issue_year": 2018,
+      "doi": null,
+      "url": "https://www.mdpi.com/2075-4701/8/4/256",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 19,
+      "source_type": "producer_datasheet",
+      "title": "Special Metals Corporation — INCONEL® alloy 718 Technical Bulletin (PDF)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.specialmetals.com/documents/technical-bulletins/inconel/inconel-alloy-718.pdf",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 20,
+      "source_type": "producer_datasheet",
+      "title": "VDM Metals — Data Sheet VDM® Alloy 718 (November 2020) (PDF)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": 2020,
+      "doi": null,
+      "url": "https://www.vdm-metals.com/fileadmin/user_upload/Downloads/Data_Sheets/Data_Sheet_VDM_Alloy_718.pdf",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 21,
+      "source_type": "standard_listing",
+      "title": "ASTM International — ASTM B637-25 store page (Active) Standard Specification for Precipitation-Hardening and Cold Worked Nickel Alloy Bars, Forgings, and Forging Stock",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": 2025,
+      "doi": null,
+      "url": "https://store.astm.org/standards/b637",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 22,
+      "source_type": "standard_listing",
+      "title": "ASTM International — ASTM B670-25 store page (Active) Standard Specification for Precipitation-Hardening Nickel Alloy Plate, Sheet, and Strip (UNS N07718)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": 2025,
+      "doi": null,
+      "url": "https://store.astm.org/b0670-25.html",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 23,
+      "source_type": "standard_listing",
+      "title": "SAE International — AMS 5662 standard page",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.sae.org/standards/ams5662-alloy-bars-forgings-rings-corrosion-heat-resistant-nickel-base-19cr-31mo-51-cb-ta-090ti-050al-consumable-electrode-vacuum-induction-melted-solution-treated",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 24,
+      "source_type": "standard_listing",
+      "title": "SAE International — AMS 5663 standard page",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.sae.org/standards/ams5663-alloy-bars-forgings-rings-corrosion-heat-resistant-nickel-base-19cr-31mo-51-cb-ta-090ti-050al-solution-precipitation-heat-treated-consumable-electrode-vacuum-induction-melted",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 25,
+      "source_type": "standard_listing",
+      "title": "DIN Media — DIN 17752:2019-08 standard landing page (Rods and bars of nickel and wrought nickel alloys — Properties)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": 2019,
+      "doi": null,
+      "url": "https://www.dinmedia.de/en/standard/din-17752/306999762",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 26,
+      "source_type": "standard_listing",
+      "title": "Japanese Standards Association — JIS G 4901:2023 preview (English) (PDF)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": 2023,
+      "doi": null,
+      "url": "https://webdesk.jsa.or.jp/preview/pre_jis_g_04901_000_000_2023_e_ed10_ch.pdf",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 27,
+      "source_type": "standard_listing",
+      "title": "Japanese Standards Association — JIS G 4902:2019 preview (English) (PDF)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": 2019,
+      "doi": null,
+      "url": "https://webdesk.jsa.or.jp/preview/pre_jis_g_04902_000_000_2019_e_ed10_ch.pdf",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 28,
+      "source_type": "standards_portal",
+      "title": "SAMR/SAC Open Standard platform — GB/T 30566-2014 GH4169 alloy bars, forgings and rings",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": 2014,
+      "doi": null,
+      "url": "https://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=07105FCDE4E3833B2D8B7E2874CD66D3",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 29,
+      "source_type": "standards_portal",
+      "title": "SAMR/SAC Open Standard platform — GB/T 40303-2021 General specification for GH4169 alloy bars",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": 2021,
+      "doi": null,
+      "url": "https://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=A12748949004F11A40E3D25518D98529",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 30,
+      "source_type": "engineering_reference",
+      "title": "NIST Cryogenics Technologies Group — Material Properties: Inconel 718 (thermal conductivity & linear expansion curve fits)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://trc.nist.gov/cryogenics/materials/Iconel%20718/Inconel718_rev.htm",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 31,
+      "source_type": "technical_report",
+      "title": "OSTI — 'Emissivity of Inconel-718' (BNL-52579) (PDF)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.osti.gov/servlets/purl/750781",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 32,
+      "source_type": "peer_reviewed_article",
+      "title": "Park et al., Metals (MDPI) 2022 — Flow Stress Optimization of Inconel 718 (open access PDF; Hansel–Spittel parameters)",
+      "authors_text": "Park et al.",
+      "publisher_or_journal": "Metals (MDPI)",
+      "issue_year": 2022,
+      "doi": null,
+      "url": "https://www.mdpi.com/2075-4701/12/12/2024/pdf?version=1669376038",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 33,
+      "source_type": "peer_reviewed_article",
+      "title": "Chen et al., Materials Science & Engineering A (author-accepted manuscript) — Flow characteristics and intrinsic workability of IN718 (processing maps) (PDF)",
+      "authors_text": "Chen et al.",
+      "publisher_or_journal": "Materials Science & Engineering A",
+      "issue_year": null,
+      "doi": null,
+      "url": "https://eprints.whiterose.ac.uk/id/eprint/103624/1/2015-07-06%20Chen%2C%20Liu%2C%20Ou%2C%20et%20al%20IN718%20workability%20and%20processing%20maps_OpenAccess.pdf",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 34,
+      "source_type": "standards_portal",
+      "title": "National Standards portal (Russia) — GOST 5632-2014 landing page",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": 2014,
+      "doi": null,
+      "url": "https://protect.gost.ru/document.aspx?control=7&id=188254",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 35,
+      "source_type": "institutional_catalog",
+      "title": "VIAM (Russia) — Catalog entry: alloy ХН45МВТЮБР (ЭП718, ВЖ105) (PDF)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.viam.ru/public/files/2019/2019-208732.pdf",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 36,
+      "source_type": "peer_reviewed_article",
+      "title": "Khar’kov et al., Chemical and Petroleum Engineering (Springer) 2019 — Comparative Analysis of Corrosion-Resistant Alloys Inconel 718 and ÉP718",
+      "authors_text": "Khar’kov et al.",
+      "publisher_or_journal": "Chemical and Petroleum Engineering (Springer)",
+      "issue_year": 2019,
+      "doi": null,
+      "url": "https://link.springer.com/article/10.1007/s10556-019-00546-4",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 37,
+      "source_type": "peer_reviewed_article",
+      "title": "Qin et al., Materials (MDPI) 2024 — GH4169 alloy/Inconel 718 (states GH4169 is Chinese standard with similar properties to Inconel 718)",
+      "authors_text": "Qin et al.",
+      "publisher_or_journal": "Materials (MDPI)",
+      "issue_year": 2024,
+      "doi": null,
+      "url": "https://www.mdpi.com/1996-1944/17/11/2729",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 38,
+      "source_type": "producer_datasheet",
+      "title": "Special Metals Corporation — Technical Bulletin SMC-011: Waspaloy (UNS N07001 / W. Nr. 2.4654)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.specialmetals.com/documents/technical-bulletins/waspoloy.pdf",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 39,
+      "source_type": "producer_datasheet",
+      "title": "Carpenter Technology — WASPALOY Datasheet (type analysis, forms, physical/thermal/elastic tables)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.carpentertechnology.com/hubfs/7407324/Material%20Saftey%20Data%20Sheets/Waspaloy.pdf",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 40,
+      "source_type": "producer_datasheet",
+      "title": "ATI (Allegheny Technologies Incorporated) — ATI Waspaloy Alloy Technical Data Sheet (melting range, density, forging range, processing notes)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.atimaterials.com/Products/Documents/datasheets/nickel-cobalt/nickel-based/ati_waspaloy_tds_en_v1.pdf",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 41,
+      "source_type": "producer_datasheet",
+      "title": "Haynes International — HAYNES® Waspaloy alloy datasheet (general properties and application guidance)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://haynesintl.com/wp-content/uploads/2024/08/waspaloy.pdf",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 42,
+      "source_type": "standards_portal",
+      "title": "SAE International — AMS5706 standard entry (Nickel alloy bars/forgings/rings; Waspaloy chemistry basis)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": 2012,
+      "doi": null,
+      "url": "https://www.sae.org/standards/ams5706-alloy-bars-forgings-rings-corrosion-heat-resistant-nickel-base-195cr-135co-43mo-30ti-14al-solution-heat-treated-1825-1900-f-9961-10378-c-treatment-consumable-electrode-vacuum-induction-melted",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 43,
+      "source_type": "standards_portal",
+      "title": "SAE International — AMS5707 standard entry (Nickel alloy bars/forgings/rings; solution+stabilization+precipitation heat treated)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": 1992,
+      "doi": null,
+      "url": "https://www.sae.org/standards/ams5707-alloy-bars-forgings-rings-corrosion-heat-resistant-nickel-base-195cr-135co-43mo-30ti-14al-solution-stabilization-precipitation-heat-treated-1825-1900-f-9961-10378-c-treatment-consumable-electrode-vacuum-induction-melted",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 44,
+      "source_type": "standards_portal",
+      "title": "SAE International — AMS5708N standard entry (Waspaloy; bars/wire/forgings/rings; solution heat treated)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": 1992,
+      "doi": null,
+      "url": "https://www.sae.org/standards/ams5708n-nickel-alloy-corrosion-heat-resistant-bars-wire-forgings-rings-forging-flash-welded-rings-heading-stock-58ni-195cr-135co-43mo-30ti-14al-005zr-0006b-waspaloy-consumable-electrode-vacuum-induction-melted-1975-f-1079-c-solution-heat-treated",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 45,
+      "source_type": "standards_portal",
+      "title": "SAE International — AMS5709 standard entry (Waspaloy; bars/forgings; solution+stabilization+precipitation heat treated)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": 1992,
+      "doi": null,
+      "url": "https://www.sae.org/standards/ams5709-alloy-bars-forgings-corrosion-heat-resistant-nickel-base-195cr-135co-43mo-30ti-14al-solution-stabilization-precipitation-heat-treated-1975-f-10794-c-treatment-consumable-electrode-vacuum-induction-melted",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 46,
+      "source_type": "standards_portal",
+      "title": "SAE International — AMS5704 standard entry (Waspaloy forgings; solution+stabilization+precipitation heat treated)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": 2017,
+      "doi": null,
+      "url": "https://www.sae.org/standards/ams5704-alloy-forgings-corrosion-heat-resistant-nickel-base-195cr-135co-43mo-30ti-14al-solution-stabilization-precipitation-heat-treated-1825-1900-f-9961-10378-c-treatment-consumable-electrode-vacuum-induction-melted",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 47,
+      "source_type": "standards_portal",
+      "title": "SAE International — AMS5828 standard entry (Waspaloy welding wire/filler metal)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.sae.org/standards/ams5828-alloy-wire-welding-corrosion-heat-resistant-nickel-base-195cr-135co-43mo-30ti-14al-vacuum-induction-melted",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 48,
+      "source_type": "peer_reviewed_article",
+      "title": "Wang et al. — 'Investigation on the Thermal Deformation Behavior of the Nickel-Based Superalloy Strengthened by γ′ Phase' (Crystals, MDPI, 2019) — flow curves, processing maps, Arrhenius constitutive model parameters",
+      "authors_text": "Wang et al.",
+      "publisher_or_journal": "Crystals (MDPI)",
+      "issue_year": 2019,
+      "doi": null,
+      "url": "https://www.mdpi.com/2073-4352/9/3/125",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 49,
+      "source_type": "standards_portal",
+      "title": "ASTM International — B637 standard listing page (Precipitation-Hardening Nickel Alloy Bars, Forgings, and Forging Stock)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.astm.org/b0637-12.html",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 50,
+      "source_type": "standards_portal",
+      "title": "ISO — ISO 9723:1992 Nickel and nickel alloy bars (standard listing page)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.iso.org/standard/17581.html",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 51,
+      "source_type": "standards_portal",
+      "title": "ISO — ISO 9724:1992 Nickel and nickel alloy wire and drawing stock (standard listing page)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.iso.org/standard/17582.html",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 52,
+      "source_type": "standards_portal",
+      "title": "ISO — ISO 9725:1992 Nickel and nickel alloy forgings (standard listing page; withdrawn; links to 2017 edition)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.iso.org/standard/17583.html",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 53,
+      "source_type": "standards_portal",
+      "title": "ISO — ISO 9725:2017 Nickel and nickel alloy forgings (current standard listing page)",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": null,
+      "doi": null,
+      "url": "https://www.iso.org/standard/69353.html",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 54,
+      "source_type": "peer_reviewed_article",
+      "title": "Kieruj, Przestacki, Chwalczuk — 'Determination of emissivity coefficient of heat-resistant super alloys and cemented carbide' (Archives of Mechanical Technology and Materials, Vol. 36, 2016; DOI:10.1515/amtm-2016-0006) — emissivity vs temperature including Waspaloy",
+      "authors_text": "Kieruj; Przestacki; Chwalczuk",
+      "publisher_or_journal": "Archives of Mechanical Technology and Materials",
+      "issue_year": 2016,
+      "doi": "10.1515/amtm-2016-0006",
+      "url": "https://yadda.icm.edu.pl/baztech/element/bwmeta1.element.baztech-c62c0075-02f2-49d3-aac4-0571f57ba556/c/kieruj_przestacki_chwalczuk_determination_06_2016.pdf",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    },
+    {
+      "publication_id": 55,
+      "source_type": "standards_portal",
+      "title": "SAMR / SAC OpenSTD — GB/T 40313-2021 (Specification for wrought superalloy forging disks) standard metadata and official access page",
+      "authors_text": null,
+      "publisher_or_journal": null,
+      "issue_year": 2021,
+      "doi": null,
+      "url": "https://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=8D954836CA9D9BB95C0E661D4AEC7C7F",
+      "file_name": null,
+      "note": null,
+      "is_obsolete": false
+    }
+  ],
+  "materials_test_records": [
+    {
+      "test_record_id": 1,
+      "material_id": 6,
+      "designation_id": 4,
+      "publication_id": 13,
+      "heat_number": null,
+      "batch_number": null,
+      "sample_label": "TIMET nominal chemistry and physical-property datasheet",
+      "test_date": null,
+      "note": "Producer datasheet source (S13). Values are nominal and typical datasheet values, not a heat-specific mill test certificate.",
+      "is_obsolete": false
+    },
+    {
+      "test_record_id": 2,
+      "material_id": 6,
+      "designation_id": 1,
+      "publication_id": 15,
+      "heat_number": null,
+      "batch_number": null,
+      "sample_label": "ATI Grade 5 producer data",
+      "test_date": null,
+      "note": "Producer technical data sheet source (S15) for melting range, beta transus, forge practice, and process-risk notes.",
+      "is_obsolete": false
+    },
+    {
+      "test_record_id": 3,
+      "material_id": 6,
+      "designation_id": 1,
+      "publication_id": 16,
+      "heat_number": null,
+      "batch_number": null,
+      "sample_label": "Oxidized titanium emissivity guide row",
+      "test_date": null,
+      "note": "Engineering pyrometry guide source (S16). This is a practical oxidized titanium-alloy default, not a Ti-6Al-4V-specific primary dataset.",
+      "is_obsolete": false
+    },
+    {
+      "test_record_id": 4,
+      "material_id": 6,
+      "designation_id": 1,
+      "publication_id": 17,
+      "heat_number": null,
+      "batch_number": null,
+      "sample_label": "Chen 2022 hot compression processing map",
+      "test_date": null,
+      "note": "Peer-reviewed hot-processing map source (S17) with two recommended hot-working domains and graphical flow-stress curves.",
+      "is_obsolete": false
+    },
+    {
+      "test_record_id": 5,
+      "material_id": 6,
+      "designation_id": 1,
+      "publication_id": 18,
+      "heat_number": null,
+      "batch_number": null,
+      "sample_label": "Hu 2018 Arrhenius constitutive model",
+      "test_date": null,
+      "note": "Peer-reviewed constitutive-model source (S18) with strain-compensated Arrhenius coefficients and graphical corrected flow curves.",
+      "is_obsolete": false
+    },
+    {
+      "test_record_id": 6,
+      "material_id": 1,
+      "designation_id": 13,
+      "publication_id": 19,
+      "heat_number": null,
+      "batch_number": null,
+      "sample_label": "Special Metals producer bulletin datasets",
+      "test_date": null,
+      "note": "Special Metals producer bulletin source for designation aliases, density, thermal conductivity, specific heat constant, elastic-property curves, and mean thermal expansion data (S1).",
+      "is_obsolete": false
+    },
+    {
+      "test_record_id": 7,
+      "material_id": 1,
+      "designation_id": 13,
+      "publication_id": 20,
+      "heat_number": null,
+      "batch_number": null,
+      "sample_label": "VDM Alloy 718 datasheet datasets",
+      "test_date": null,
+      "note": "VDM Alloy 718 datasheet source for density, conductivity, specific heat, modulus, thermal expansion, and process notes (S2).",
+      "is_obsolete": false
+    },
+    {
+      "test_record_id": 8,
+      "material_id": 1,
+      "designation_id": 13,
+      "publication_id": 30,
+      "heat_number": null,
+      "batch_number": null,
+      "sample_label": "NIST cryogenic curve-fit reference",
+      "test_date": null,
+      "note": "NIST cryogenic material-property curve-fit coefficients for thermal conductivity and linear expansion of Inconel 718 (S12).",
+      "is_obsolete": false
+    },
+    {
+      "test_record_id": 9,
+      "material_id": 1,
+      "designation_id": 13,
+      "publication_id": 31,
+      "heat_number": null,
+      "batch_number": null,
+      "sample_label": "OSTI oxidized-surface emissivity report",
+      "test_date": null,
+      "note": "Brookhaven / OSTI emissivity report for Inconel 718, seeded as oxidation-condition versus maximum hemispherical emissivity data (S13).",
+      "is_obsolete": false
+    },
+    {
+      "test_record_id": 10,
+      "material_id": 1,
+      "designation_id": 13,
+      "publication_id": 32,
+      "heat_number": null,
+      "batch_number": null,
+      "sample_label": "Park 2022 Hansel-Spittel fit",
+      "test_date": null,
+      "note": "Peer-reviewed Hansel-Spittel model coefficients for IN718 hot-compression data (S14).",
+      "is_obsolete": false
+    },
+    {
+      "test_record_id": 11,
+      "material_id": 1,
+      "designation_id": 13,
+      "publication_id": 33,
+      "heat_number": null,
+      "batch_number": null,
+      "sample_label": "Chen processing-map workability study",
+      "test_date": null,
+      "note": "Peer-reviewed IN718 processing-map study with recommended and instability hot-working windows (S15).",
+      "is_obsolete": false
+    },
+    {
+      "test_record_id": 12,
+      "material_id": 12,
+      "designation_id": 23,
+      "publication_id": 38,
+      "heat_number": null,
+      "batch_number": null,
+      "sample_label": "Special Metals producer bulletin datasets",
+      "test_date": null,
+      "note": "Special Metals technical bulletin source for density, melting range, mean CTE values, and baseline hot-working guidance (S1).",
+      "is_obsolete": false
+    },
+    {
+      "test_record_id": 13,
+      "material_id": 12,
+      "designation_id": 23,
+      "publication_id": 39,
+      "heat_number": null,
+      "batch_number": null,
+      "sample_label": "Carpenter datasheet datasets",
+      "test_date": null,
+      "note": "Carpenter Waspaloy datasheet source for chemistry limits, thermal conductivity, specific heat, and modulus data (S2).",
+      "is_obsolete": false
+    },
+    {
+      "test_record_id": 14,
+      "material_id": 12,
+      "designation_id": 23,
+      "publication_id": 40,
+      "heat_number": null,
+      "batch_number": null,
+      "sample_label": "ATI Waspaloy processing guidance",
+      "test_date": null,
+      "note": "ATI technical datasheet source for forging/process notes used to anchor qualitative hot-working guidance (S3).",
+      "is_obsolete": false
+    },
+    {
+      "test_record_id": 15,
+      "material_id": 12,
+      "designation_id": 23,
+      "publication_id": 48,
+      "heat_number": null,
+      "batch_number": null,
+      "sample_label": "Wang 2019 hot-compression study",
+      "test_date": null,
+      "note": "Peer-reviewed Waspaloy hot-deformation study with processing windows and Arrhenius constitutive parameters (S11).",
+      "is_obsolete": false
+    },
+    {
+      "test_record_id": 16,
+      "material_id": 12,
+      "designation_id": 23,
+      "publication_id": 54,
+      "heat_number": null,
+      "batch_number": null,
+      "sample_label": "Kieruj 2016 emissivity study",
+      "test_date": null,
+      "note": "Peer-reviewed emissivity-versus-temperature data for oxidized Waspaloy (S18).",
+      "is_obsolete": false
+    }
+  ],
+  "materials_chemistry_tests_results": [
+    {
+      "test_record_id": 1,
+      "element_symbol": "Al",
+      "actual_wt_pct": 6.0
+    },
+    {
+      "test_record_id": 1,
+      "element_symbol": "V",
+      "actual_wt_pct": 4.0
+    },
+    {
+      "test_record_id": 1,
+      "element_symbol": "Fe",
+      "actual_wt_pct": 0.2
+    },
+    {
+      "test_record_id": 1,
+      "element_symbol": "O",
+      "actual_wt_pct": 0.15
+    },
+    {
+      "test_record_id": 1,
+      "element_symbol": "N",
+      "actual_wt_pct": 0.02
+    },
+    {
+      "test_record_id": 1,
+      "element_symbol": "C",
+      "actual_wt_pct": 0.03
+    },
+    {
+      "test_record_id": 1,
+      "element_symbol": "H",
+      "actual_wt_pct": 0.005
+    }
+  ],
+  "materials_property_tables": [
+    {
+      "table_id": 1,
+      "test_record_id": 1,
+      "property_type": "density",
+      "representation_kind": "scalar",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S13",
+        "temperature_C": 22
+      },
+      "title": "Density at 22°C",
+      "note": "TIMET producer datasheet (S13).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 2,
+      "test_record_id": 1,
+      "property_type": "thermal_conductivity",
+      "representation_kind": "curve_2d",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S13"
+      },
+      "title": "Thermal conductivity vs temperature",
+      "note": "TIMET producer datasheet (S13).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 3,
+      "test_record_id": 1,
+      "property_type": "specific_heat",
+      "representation_kind": "curve_2d",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S13"
+      },
+      "title": "Specific heat vs temperature",
+      "note": "TIMET producer datasheet (S13).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 4,
+      "test_record_id": 1,
+      "property_type": "youngs_modulus",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S13"
+      },
+      "title": "Young's modulus range vs temperature",
+      "note": "TIMET producer datasheet (S13). Range due to texture and heat-treatment dependence.",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 5,
+      "test_record_id": 1,
+      "property_type": "shear_modulus",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S13"
+      },
+      "title": "Shear modulus range at 20°C",
+      "note": "TIMET producer datasheet (S13).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 6,
+      "test_record_id": 1,
+      "property_type": "poissons_ratio",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S13"
+      },
+      "title": "Poisson's ratio at 20°C",
+      "note": "TIMET producer datasheet (S13).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 7,
+      "test_record_id": 1,
+      "property_type": "thermal_expansion_coefficient_mean",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S13"
+      },
+      "title": "Mean thermal expansion coefficient",
+      "note": "TIMET producer datasheet (S13).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 8,
+      "test_record_id": 1,
+      "property_type": "beta_transus",
+      "representation_kind": "scalar",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S13"
+      },
+      "title": "Beta transus",
+      "note": "TIMET producer datasheet (S13).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 9,
+      "test_record_id": 2,
+      "property_type": "melting_range",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S15"
+      },
+      "title": "Melting range",
+      "note": "ATI producer technical data sheet (S15).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 10,
+      "test_record_id": 2,
+      "property_type": "forge_practice_guidance",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S15"
+      },
+      "title": "Forge practice guidance",
+      "note": "ATI producer technical data sheet (S15).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 11,
+      "test_record_id": 3,
+      "property_type": "emissivity_oxidized_surface",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S16",
+        "surface_condition": "oxidized at 538°C (1000°F)",
+        "material_row": "Titanium Alloy C110M (guide table)"
+      },
+      "title": "Oxidized-surface emissivity guide row",
+      "note": "Omega pyrometry guide row for oxidized titanium alloy (S16), used as a practical default rather than a Ti-6Al-4V-specific primary dataset.",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 12,
+      "test_record_id": 4,
+      "property_type": "hot_working_window",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S17"
+      },
+      "title": "Recommended hot-working windows",
+      "note": "Hot processing map domains from Chen et al. 2022 (S17).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 13,
+      "test_record_id": 5,
+      "property_type": "flow_stress_constitutive_model",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S18",
+        "model_id": "arrhenius_strain_compensated_hu2018_piecewise",
+        "temperature_range_C": [
+          800,
+          900
+        ],
+        "strain_rate_range_s^-1": [
+          0.001,
+          1.0
+        ],
+        "strain_range": [
+          0.1,
+          0.8
+        ]
+      },
+      "title": "Arrhenius polynomial coefficients for 800–900°C",
+      "note": "Hu et al. 2018 strain-compensated Arrhenius model (S18).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 14,
+      "test_record_id": 5,
+      "property_type": "flow_stress_constitutive_model",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S18",
+        "model_id": "arrhenius_strain_compensated_hu2018_piecewise",
+        "temperature_range_C": [
+          950,
+          1050
+        ],
+        "strain_rate_range_s^-1": [
+          0.001,
+          1.0
+        ],
+        "strain_range": [
+          0.1,
+          0.8
+        ]
+      },
+      "title": "Arrhenius polynomial coefficients for 950–1050°C",
+      "note": "Hu et al. 2018 strain-compensated Arrhenius model (S18).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 15,
+      "test_record_id": 6,
+      "property_type": "density",
+      "representation_kind": "scalar",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S1",
+        "condition": "annealed"
+      },
+      "title": "Density (annealed)",
+      "note": "Special Metals value converted from 0.296 lb/in^3 (S1).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 16,
+      "test_record_id": 7,
+      "property_type": "density",
+      "representation_kind": "scalar",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S2",
+        "temperature_C": 20
+      },
+      "title": "Density at 20°C",
+      "note": "VDM datasheet density value (S2).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 17,
+      "test_record_id": 6,
+      "property_type": "melting_range",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S1"
+      },
+      "title": "Melting range",
+      "note": "Solidus and liquidus interpreted from the Special Metals producer bulletin melting range (S1).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 18,
+      "test_record_id": 7,
+      "property_type": "thermal_conductivity",
+      "representation_kind": "curve_2d",
+      "replicate_no": 1,
+      "conditions": {
+        "publication_source_id": "S2",
+        "condition": "typical physical properties table"
+      },
+      "title": "Thermal conductivity vs temperature (VDM)",
+      "note": "VDM Alloy 718 datasheet typical physical properties table (S2).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 19,
+      "test_record_id": 6,
+      "property_type": "thermal_conductivity",
+      "representation_kind": "curve_2d",
+      "replicate_no": 1,
+      "conditions": {
+        "publication_source_id": "S1",
+        "condition": "annealed 1750°F/1h, air cool"
+      },
+      "title": "Thermal conductivity vs temperature (annealed)",
+      "note": "Special Metals Table 5 converted to W/(m·K) (S1).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 20,
+      "test_record_id": 6,
+      "property_type": "thermal_conductivity",
+      "representation_kind": "curve_2d",
+      "replicate_no": 2,
+      "conditions": {
+        "publication_source_id": "S1",
+        "condition": "annealed + aged"
+      },
+      "title": "Thermal conductivity vs temperature (annealed + aged)",
+      "note": "Special Metals Table 5 converted to W/(m·K) (S1).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 21,
+      "test_record_id": 6,
+      "property_type": "specific_heat",
+      "representation_kind": "scalar",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S1",
+        "temperature_C": 21
+      },
+      "title": "Specific heat at 21°C",
+      "note": "Special Metals bulletin constant value at 70°F (S1).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 22,
+      "test_record_id": 7,
+      "property_type": "specific_heat",
+      "representation_kind": "curve_2d",
+      "replicate_no": 1,
+      "conditions": {
+        "publication_source_id": "S2"
+      },
+      "title": "Specific heat vs temperature (VDM)",
+      "note": "VDM Alloy 718 datasheet typical physical properties table (S2).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 23,
+      "test_record_id": 9,
+      "property_type": "emissivity_hemispherical_total",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S13",
+        "surface_condition": "air oxidized",
+        "metric": "maximum emissivity at reported oxidation condition"
+      },
+      "title": "Maximum emissivity vs oxidation condition",
+      "note": "OSTI / BNL table of maximum hemispherical emissivity after oxidation in air (S13).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 24,
+      "test_record_id": 6,
+      "property_type": "youngs_modulus",
+      "representation_kind": "curve_2d",
+      "replicate_no": 1,
+      "conditions": {
+        "publication_source_id": "S1"
+      },
+      "title": "Young's modulus vs temperature (Special Metals)",
+      "note": "Special Metals Table 4, converted to GPa (S1).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 25,
+      "test_record_id": 7,
+      "property_type": "youngs_modulus",
+      "representation_kind": "curve_2d",
+      "replicate_no": 2,
+      "conditions": {
+        "publication_source_id": "S2"
+      },
+      "title": "Young's modulus vs temperature (VDM)",
+      "note": "VDM Alloy 718 datasheet modulus table (S2).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 26,
+      "test_record_id": 6,
+      "property_type": "shear_modulus",
+      "representation_kind": "curve_2d",
+      "replicate_no": 1,
+      "conditions": {
+        "publication_source_id": "S1"
+      },
+      "title": "Shear modulus vs temperature",
+      "note": "Special Metals Table 4, converted to GPa (S1).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 27,
+      "test_record_id": 6,
+      "property_type": "poissons_ratio",
+      "representation_kind": "curve_2d",
+      "replicate_no": 1,
+      "conditions": {
+        "publication_source_id": "S1"
+      },
+      "title": "Poisson's ratio vs temperature",
+      "note": "Special Metals Table 4 (S1).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 28,
+      "test_record_id": 7,
+      "property_type": "thermal_expansion",
+      "representation_kind": "curve_2d",
+      "replicate_no": 1,
+      "conditions": {
+        "publication_source_id": "S2",
+        "note": "blank values above 900°C omitted"
+      },
+      "title": "Thermal expansion coefficient vs temperature (VDM)",
+      "note": "VDM datasheet coefficient of thermal expansion table, populated only where numeric values are present (S2).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 29,
+      "test_record_id": 6,
+      "property_type": "thermal_expansion_coefficient_mean",
+      "representation_kind": "curve_2d",
+      "replicate_no": 1,
+      "conditions": {
+        "publication_source_id": "S1",
+        "reference_temperature_F": 70
+      },
+      "title": "Mean thermal expansion coefficient from 70°F",
+      "note": "Special Metals Table 5 converted to microstrain per K (S1).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 30,
+      "test_record_id": 8,
+      "property_type": "thermal_conductivity_equation_coefficients",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S12",
+        "equation_form": "log10(y)=a+b log10(T)+c log10(T)^2+...+h log10(T)^7+i log10(T)^8",
+        "temperature_unit": "K",
+        "equation_range_K": [
+          4,
+          300
+        ],
+        "fit_error_percent": 2.0
+      },
+      "title": "Cryogenic thermal conductivity equation coefficients",
+      "note": "NIST cryogenic conductivity curve-fit coefficients for Inconel 718 (S12).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 31,
+      "test_record_id": 8,
+      "property_type": "linear_expansion_equation_coefficients",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S12",
+        "equation_form": "y=a+bT+cT^2+dT^3+eT^4; y=f below T_low",
+        "temperature_unit": "K",
+        "equation_range_K": [
+          4,
+          300
+        ],
+        "fit_error_percent": 1.1
+      },
+      "title": "Cryogenic linear expansion equation coefficients",
+      "note": "NIST cryogenic linear-expansion curve-fit coefficients for Inconel 718 (S12).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 32,
+      "test_record_id": 11,
+      "property_type": "hot_working_window",
+      "representation_kind": "table_n",
+      "replicate_no": 1,
+      "conditions": {
+        "publication_source_id": "S15",
+        "window_kind": "recommended"
+      },
+      "title": "Recommended hot-working windows",
+      "note": "Processing-map favorable domains from Chen et al. (S15).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 33,
+      "test_record_id": 11,
+      "property_type": "hot_working_window",
+      "representation_kind": "table_n",
+      "replicate_no": 2,
+      "conditions": {
+        "publication_source_id": "S15",
+        "window_kind": "avoid"
+      },
+      "title": "Instability hot-working window",
+      "note": "Processing-map instability region from Chen et al. (S15).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 34,
+      "test_record_id": 10,
+      "property_type": "flow_stress_constitutive_model",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S14",
+        "model_id": "CM_IN718_PARK_2022_HANSEL_SPITTEL_MODIFIED",
+        "temperature_range_C": [
+          950,
+          1200
+        ],
+        "strain_rate_range_s^-1": [
+          0.1,
+          10
+        ]
+      },
+      "title": "Hansel-Spittel modified coefficients by temperature",
+      "note": "Park et al. 2022 modified Hansel-Spittel parameter sets for Inconel 718 (S14).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 35,
+      "test_record_id": 12,
+      "property_type": "density",
+      "representation_kind": "scalar",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S1",
+        "temperature_C": 21
+      },
+      "title": "Density at 21°C",
+      "note": "Special Metals bulletin density value (S1).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 36,
+      "test_record_id": 12,
+      "property_type": "melting_range",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S1"
+      },
+      "title": "Melting range",
+      "note": "Solidus and liquidus interpreted from the Special Metals bulletin melting range (S1).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 37,
+      "test_record_id": 13,
+      "property_type": "thermal_conductivity",
+      "representation_kind": "curve_2d",
+      "replicate_no": 1,
+      "conditions": {
+        "publication_source_id": "S2"
+      },
+      "title": "Thermal conductivity vs temperature (Carpenter)",
+      "note": "Carpenter Waspaloy datasheet conductivity table (S2).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 38,
+      "test_record_id": 13,
+      "property_type": "specific_heat",
+      "representation_kind": "curve_2d",
+      "replicate_no": 1,
+      "conditions": {
+        "publication_source_id": "S2"
+      },
+      "title": "Specific heat vs temperature (Carpenter)",
+      "note": "Carpenter Waspaloy datasheet mean specific-heat table (S2).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 39,
+      "test_record_id": 16,
+      "property_type": "emissivity_oxidized_surface",
+      "representation_kind": "curve_2d",
+      "replicate_no": 1,
+      "conditions": {
+        "publication_source_id": "S18",
+        "surface_condition": "oxidized",
+        "measurement_method": "pyrometry"
+      },
+      "title": "Oxidized-surface emissivity vs temperature",
+      "note": "Peer-reviewed pyrometry-based emissivity values for Waspaloy in oxidizing conditions (S18).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 40,
+      "test_record_id": 13,
+      "property_type": "youngs_modulus",
+      "representation_kind": "curve_2d",
+      "replicate_no": 1,
+      "conditions": {
+        "publication_source_id": "S2"
+      },
+      "title": "Young's modulus vs temperature (Carpenter)",
+      "note": "Visible Carpenter datasheet modulus points (S2).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 41,
+      "test_record_id": 12,
+      "property_type": "thermal_expansion_coefficient_mean",
+      "representation_kind": "curve_2d",
+      "replicate_no": 1,
+      "conditions": {
+        "publication_source_id": "S1",
+        "reference_temperature_C": 21
+      },
+      "title": "Mean thermal expansion coefficient from 21°C",
+      "note": "Special Metals bulletin mean CTE values converted to 10^-6/K (S1).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 42,
+      "test_record_id": 15,
+      "property_type": "hot_working_window",
+      "representation_kind": "table_n",
+      "replicate_no": 1,
+      "conditions": {
+        "publication_source_id": "S11",
+        "window_kind": "recommended"
+      },
+      "title": "Recommended hot-working windows",
+      "note": "Favorable Waspaloy processing-map domains from Wang et al. (S11).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 43,
+      "test_record_id": 15,
+      "property_type": "hot_working_window",
+      "representation_kind": "table_n",
+      "replicate_no": 2,
+      "conditions": {
+        "publication_source_id": "S11",
+        "window_kind": "avoid"
+      },
+      "title": "Instability hot-working windows",
+      "note": "Instability domains from the Waspaloy processing-map study (S11).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 44,
+      "test_record_id": 15,
+      "property_type": "flow_stress_constitutive_model",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S11",
+        "model_id": "CM_WASPALOY_WANG_2019_ARRHENIUS_HYPERBOLIC_SINE",
+        "temperature_range_C": [
+          1000,
+          1120
+        ],
+        "strain_rate_range_s^-1": [
+          0.01,
+          10
+        ]
+      },
+      "title": "Arrhenius hyperbolic-sine constitutive model parameters",
+      "note": "Peak-stress Arrhenius model parameters extracted from Wang et al. (S11).",
+      "is_obsolete": false
+    },
+    {
+      "table_id": 45,
+      "test_record_id": 14,
+      "property_type": "hot_working_temperature_range",
+      "representation_kind": "table_n",
+      "replicate_no": null,
+      "conditions": {
+        "publication_source_id": "S1"
+      },
+      "title": "Producer hot-working temperature range",
+      "note": "Special Metals recommended hot-working range with below-range cracking and above-range hot-shortness cautions (S1).",
+      "is_obsolete": false
+    }
+  ],
+  "materials_property_table_to_columns_connectivity": [
+    {
+      "column_id": 1,
+      "table_id": 1,
+      "column_property_type": "density",
+      "column_units": "g/cm^3",
+      "sort_order": 0
+    },
+    {
+      "column_id": 2,
+      "table_id": 2,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 3,
+      "table_id": 2,
+      "column_property_type": "thermal_conductivity",
+      "column_units": "W/(m·K)",
+      "sort_order": 1
+    },
+    {
+      "column_id": 4,
+      "table_id": 3,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 5,
+      "table_id": 3,
+      "column_property_type": "specific_heat",
+      "column_units": "J/(g·K)",
+      "sort_order": 1
+    },
+    {
+      "column_id": 6,
+      "table_id": 4,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 7,
+      "table_id": 4,
+      "column_property_type": "youngs_modulus_min",
+      "column_units": "GPa",
+      "sort_order": 1
+    },
+    {
+      "column_id": 8,
+      "table_id": 4,
+      "column_property_type": "youngs_modulus_max",
+      "column_units": "GPa",
+      "sort_order": 2
+    },
+    {
+      "column_id": 9,
+      "table_id": 5,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 10,
+      "table_id": 5,
+      "column_property_type": "shear_modulus_min",
+      "column_units": "GPa",
+      "sort_order": 1
+    },
+    {
+      "column_id": 11,
+      "table_id": 5,
+      "column_property_type": "shear_modulus_max",
+      "column_units": "GPa",
+      "sort_order": 2
+    },
+    {
+      "column_id": 12,
+      "table_id": 6,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 13,
+      "table_id": 6,
+      "column_property_type": "poissons_ratio",
+      "column_units": "dimensionless",
+      "sort_order": 1
+    },
+    {
+      "column_id": 14,
+      "table_id": 7,
+      "column_property_type": "temperature_range_start",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 15,
+      "table_id": 7,
+      "column_property_type": "temperature_range_end",
+      "column_units": "°C",
+      "sort_order": 1
+    },
+    {
+      "column_id": 16,
+      "table_id": 7,
+      "column_property_type": "thermal_expansion_coefficient_mean",
+      "column_units": "1/°C",
+      "sort_order": 2
+    },
+    {
+      "column_id": 17,
+      "table_id": 8,
+      "column_property_type": "beta_transus",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 18,
+      "table_id": 9,
+      "column_property_type": "solidus",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 19,
+      "table_id": 9,
+      "column_property_type": "liquidus",
+      "column_units": "°C",
+      "sort_order": 1
+    },
+    {
+      "column_id": 20,
+      "table_id": 10,
+      "column_property_type": "start_forging_temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 21,
+      "table_id": 10,
+      "column_property_type": "finishing_temperature",
+      "column_units": "°C",
+      "sort_order": 1
+    },
+    {
+      "column_id": 22,
+      "table_id": 10,
+      "column_property_type": "minimum_reduction",
+      "column_units": "%",
+      "sort_order": 2
+    },
+    {
+      "column_id": 23,
+      "table_id": 11,
+      "column_property_type": "temperature_range_start",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 24,
+      "table_id": 11,
+      "column_property_type": "temperature_range_end",
+      "column_units": "°C",
+      "sort_order": 1
+    },
+    {
+      "column_id": 25,
+      "table_id": 11,
+      "column_property_type": "emissivity_min",
+      "column_units": "dimensionless",
+      "sort_order": 2
+    },
+    {
+      "column_id": 26,
+      "table_id": 11,
+      "column_property_type": "emissivity_max",
+      "column_units": "dimensionless",
+      "sort_order": 3
+    },
+    {
+      "column_id": 27,
+      "table_id": 12,
+      "column_property_type": "temperature_min",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 28,
+      "table_id": 12,
+      "column_property_type": "temperature_max",
+      "column_units": "°C",
+      "sort_order": 1
+    },
+    {
+      "column_id": 29,
+      "table_id": 12,
+      "column_property_type": "strain_rate_min",
+      "column_units": "s^-1",
+      "sort_order": 2
+    },
+    {
+      "column_id": 30,
+      "table_id": 12,
+      "column_property_type": "strain_rate_max",
+      "column_units": "s^-1",
+      "sort_order": 3
+    },
+    {
+      "column_id": 31,
+      "table_id": 13,
+      "column_property_type": "polynomial_order",
+      "column_units": null,
+      "sort_order": 0
+    },
+    {
+      "column_id": 32,
+      "table_id": 13,
+      "column_property_type": "alpha_D",
+      "column_units": "1/MPa",
+      "sort_order": 1
+    },
+    {
+      "column_id": 33,
+      "table_id": 13,
+      "column_property_type": "n_E",
+      "column_units": "dimensionless",
+      "sort_order": 2
+    },
+    {
+      "column_id": 34,
+      "table_id": 13,
+      "column_property_type": "Q_F",
+      "column_units": "kJ/mol",
+      "sort_order": 3
+    },
+    {
+      "column_id": 35,
+      "table_id": 13,
+      "column_property_type": "lnA_H",
+      "column_units": "dimensionless",
+      "sort_order": 4
+    },
+    {
+      "column_id": 36,
+      "table_id": 14,
+      "column_property_type": "polynomial_order",
+      "column_units": null,
+      "sort_order": 0
+    },
+    {
+      "column_id": 37,
+      "table_id": 14,
+      "column_property_type": "alpha_D",
+      "column_units": "1/MPa",
+      "sort_order": 1
+    },
+    {
+      "column_id": 38,
+      "table_id": 14,
+      "column_property_type": "n_E",
+      "column_units": "dimensionless",
+      "sort_order": 2
+    },
+    {
+      "column_id": 39,
+      "table_id": 14,
+      "column_property_type": "Q_F",
+      "column_units": "kJ/mol",
+      "sort_order": 3
+    },
+    {
+      "column_id": 40,
+      "table_id": 14,
+      "column_property_type": "lnA_H",
+      "column_units": "dimensionless",
+      "sort_order": 4
+    },
+    {
+      "column_id": 41,
+      "table_id": 15,
+      "column_property_type": "density",
+      "column_units": "g/cm^3",
+      "sort_order": 0
+    },
+    {
+      "column_id": 42,
+      "table_id": 16,
+      "column_property_type": "density",
+      "column_units": "g/cm^3",
+      "sort_order": 0
+    },
+    {
+      "column_id": 43,
+      "table_id": 17,
+      "column_property_type": "solidus",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 44,
+      "table_id": 17,
+      "column_property_type": "liquidus",
+      "column_units": "°C",
+      "sort_order": 1
+    },
+    {
+      "column_id": 45,
+      "table_id": 18,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 46,
+      "table_id": 18,
+      "column_property_type": "thermal_conductivity",
+      "column_units": "W/(m·K)",
+      "sort_order": 1
+    },
+    {
+      "column_id": 47,
+      "table_id": 19,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 48,
+      "table_id": 19,
+      "column_property_type": "thermal_conductivity",
+      "column_units": "W/(m·K)",
+      "sort_order": 1
+    },
+    {
+      "column_id": 49,
+      "table_id": 20,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 50,
+      "table_id": 20,
+      "column_property_type": "thermal_conductivity",
+      "column_units": "W/(m·K)",
+      "sort_order": 1
+    },
+    {
+      "column_id": 51,
+      "table_id": 21,
+      "column_property_type": "specific_heat",
+      "column_units": "J/(kg·K)",
+      "sort_order": 0
+    },
+    {
+      "column_id": 52,
+      "table_id": 22,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 53,
+      "table_id": 22,
+      "column_property_type": "specific_heat",
+      "column_units": "J/(kg·K)",
+      "sort_order": 1
+    },
+    {
+      "column_id": 54,
+      "table_id": 23,
+      "column_property_type": "oxidation_temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 55,
+      "table_id": 23,
+      "column_property_type": "oxidation_time",
+      "column_units": "min",
+      "sort_order": 1
+    },
+    {
+      "column_id": 56,
+      "table_id": 23,
+      "column_property_type": "max_emissivity",
+      "column_units": "dimensionless",
+      "sort_order": 2
+    },
+    {
+      "column_id": 57,
+      "table_id": 24,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 58,
+      "table_id": 24,
+      "column_property_type": "youngs_modulus",
+      "column_units": "GPa",
+      "sort_order": 1
+    },
+    {
+      "column_id": 59,
+      "table_id": 25,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 60,
+      "table_id": 25,
+      "column_property_type": "youngs_modulus",
+      "column_units": "GPa",
+      "sort_order": 1
+    },
+    {
+      "column_id": 61,
+      "table_id": 26,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 62,
+      "table_id": 26,
+      "column_property_type": "shear_modulus",
+      "column_units": "GPa",
+      "sort_order": 1
+    },
+    {
+      "column_id": 63,
+      "table_id": 27,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 64,
+      "table_id": 27,
+      "column_property_type": "poissons_ratio",
+      "column_units": "dimensionless",
+      "sort_order": 1
+    },
+    {
+      "column_id": 65,
+      "table_id": 28,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 66,
+      "table_id": 28,
+      "column_property_type": "thermal_expansion",
+      "column_units": "10^-6/K",
+      "sort_order": 1
+    },
+    {
+      "column_id": 67,
+      "table_id": 29,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 68,
+      "table_id": 29,
+      "column_property_type": "thermal_expansion_coefficient_mean",
+      "column_units": "10^-6/K",
+      "sort_order": 1
+    },
+    {
+      "column_id": 69,
+      "table_id": 30,
+      "column_property_type": "coefficient_index",
+      "column_units": null,
+      "sort_order": 0
+    },
+    {
+      "column_id": 70,
+      "table_id": 30,
+      "column_property_type": "coefficient_value",
+      "column_units": "dimensionless",
+      "sort_order": 1
+    },
+    {
+      "column_id": 71,
+      "table_id": 31,
+      "column_property_type": "coefficient_index",
+      "column_units": null,
+      "sort_order": 0
+    },
+    {
+      "column_id": 72,
+      "table_id": 31,
+      "column_property_type": "coefficient_value",
+      "column_units": "dimensionless",
+      "sort_order": 1
+    },
+    {
+      "column_id": 73,
+      "table_id": 32,
+      "column_property_type": "temperature_min",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 74,
+      "table_id": 32,
+      "column_property_type": "temperature_max",
+      "column_units": "°C",
+      "sort_order": 1
+    },
+    {
+      "column_id": 75,
+      "table_id": 32,
+      "column_property_type": "strain_rate_min",
+      "column_units": "s^-1",
+      "sort_order": 2
+    },
+    {
+      "column_id": 76,
+      "table_id": 32,
+      "column_property_type": "strain_rate_max",
+      "column_units": "s^-1",
+      "sort_order": 3
+    },
+    {
+      "column_id": 77,
+      "table_id": 33,
+      "column_property_type": "temperature_min",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 78,
+      "table_id": 33,
+      "column_property_type": "temperature_max",
+      "column_units": "°C",
+      "sort_order": 1
+    },
+    {
+      "column_id": 79,
+      "table_id": 33,
+      "column_property_type": "strain_rate_min",
+      "column_units": "s^-1",
+      "sort_order": 2
+    },
+    {
+      "column_id": 80,
+      "table_id": 33,
+      "column_property_type": "strain_rate_max",
+      "column_units": "s^-1",
+      "sort_order": 3
+    },
+    {
+      "column_id": 81,
+      "table_id": 34,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 82,
+      "table_id": 34,
+      "column_property_type": "A",
+      "column_units": "MPa",
+      "sort_order": 1
+    },
+    {
+      "column_id": 83,
+      "table_id": 34,
+      "column_property_type": "m1",
+      "column_units": "1/°C",
+      "sort_order": 2
+    },
+    {
+      "column_id": 84,
+      "table_id": 34,
+      "column_property_type": "m2",
+      "column_units": "dimensionless",
+      "sort_order": 3
+    },
+    {
+      "column_id": 85,
+      "table_id": 34,
+      "column_property_type": "m3",
+      "column_units": "dimensionless",
+      "sort_order": 4
+    },
+    {
+      "column_id": 86,
+      "table_id": 34,
+      "column_property_type": "m4",
+      "column_units": "dimensionless",
+      "sort_order": 5
+    },
+    {
+      "column_id": 87,
+      "table_id": 35,
+      "column_property_type": "value",
+      "column_units": "g/cm^3",
+      "sort_order": 0
+    },
+    {
+      "column_id": 88,
+      "table_id": 36,
+      "column_property_type": "solidus",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 89,
+      "table_id": 36,
+      "column_property_type": "liquidus",
+      "column_units": "°C",
+      "sort_order": 1
+    },
+    {
+      "column_id": 90,
+      "table_id": 37,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 91,
+      "table_id": 37,
+      "column_property_type": "thermal_conductivity",
+      "column_units": "W/(m*K)",
+      "sort_order": 1
+    },
+    {
+      "column_id": 92,
+      "table_id": 38,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 93,
+      "table_id": 38,
+      "column_property_type": "specific_heat",
+      "column_units": "kJ/(kg*K)",
+      "sort_order": 1
+    },
+    {
+      "column_id": 94,
+      "table_id": 39,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 95,
+      "table_id": 39,
+      "column_property_type": "emissivity",
+      "column_units": "dimensionless",
+      "sort_order": 1
+    },
+    {
+      "column_id": 96,
+      "table_id": 40,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 97,
+      "table_id": 40,
+      "column_property_type": "youngs_modulus",
+      "column_units": "GPa",
+      "sort_order": 1
+    },
+    {
+      "column_id": 98,
+      "table_id": 41,
+      "column_property_type": "temperature",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 99,
+      "table_id": 41,
+      "column_property_type": "thermal_expansion_coefficient_mean",
+      "column_units": "10^-6/K",
+      "sort_order": 1
+    },
+    {
+      "column_id": 100,
+      "table_id": 42,
+      "column_property_type": "temperature_min",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 101,
+      "table_id": 42,
+      "column_property_type": "temperature_max",
+      "column_units": "°C",
+      "sort_order": 1
+    },
+    {
+      "column_id": 102,
+      "table_id": 42,
+      "column_property_type": "strain_rate_min",
+      "column_units": "s^-1",
+      "sort_order": 2
+    },
+    {
+      "column_id": 103,
+      "table_id": 42,
+      "column_property_type": "strain_rate_max",
+      "column_units": "s^-1",
+      "sort_order": 3
+    },
+    {
+      "column_id": 104,
+      "table_id": 43,
+      "column_property_type": "temperature_min",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 105,
+      "table_id": 43,
+      "column_property_type": "temperature_max",
+      "column_units": "°C",
+      "sort_order": 1
+    },
+    {
+      "column_id": 106,
+      "table_id": 43,
+      "column_property_type": "strain_rate_min",
+      "column_units": "s^-1",
+      "sort_order": 2
+    },
+    {
+      "column_id": 107,
+      "table_id": 43,
+      "column_property_type": "strain_rate_max",
+      "column_units": "s^-1",
+      "sort_order": 3
+    },
+    {
+      "column_id": 108,
+      "table_id": 44,
+      "column_property_type": "alpha",
+      "column_units": "MPa^-1",
+      "sort_order": 0
+    },
+    {
+      "column_id": 109,
+      "table_id": 44,
+      "column_property_type": "n",
+      "column_units": "dimensionless",
+      "sort_order": 1
+    },
+    {
+      "column_id": 110,
+      "table_id": 44,
+      "column_property_type": "Q",
+      "column_units": "kJ/mol",
+      "sort_order": 2
+    },
+    {
+      "column_id": 111,
+      "table_id": 44,
+      "column_property_type": "lnA",
+      "column_units": "dimensionless",
+      "sort_order": 3
+    },
+    {
+      "column_id": 112,
+      "table_id": 44,
+      "column_property_type": "A",
+      "column_units": "s^-1",
+      "sort_order": 4
+    },
+    {
+      "column_id": 113,
+      "table_id": 44,
+      "column_property_type": "n1",
+      "column_units": "dimensionless",
+      "sort_order": 5
+    },
+    {
+      "column_id": 114,
+      "table_id": 44,
+      "column_property_type": "beta",
+      "column_units": "MPa^-1",
+      "sort_order": 6
+    },
+    {
+      "column_id": 115,
+      "table_id": 45,
+      "column_property_type": "temperature_min",
+      "column_units": "°C",
+      "sort_order": 0
+    },
+    {
+      "column_id": 116,
+      "table_id": 45,
+      "column_property_type": "temperature_max",
+      "column_units": "°C",
+      "sort_order": 1
+    }
+  ],
+  "materials_property_column_values": [
+    {
+      "column_id": 1,
+      "point_index": 0,
+      "value": 4.42
+    },
+    {
+      "column_id": 2,
+      "point_index": 0,
+      "value": 20
+    },
+    {
+      "column_id": 3,
+      "point_index": 0,
+      "value": 6.6
+    },
+    {
+      "column_id": 2,
+      "point_index": 1,
+      "value": 315
+    },
+    {
+      "column_id": 3,
+      "point_index": 1,
+      "value": 10.6
+    },
+    {
+      "column_id": 2,
+      "point_index": 2,
+      "value": 650
+    },
+    {
+      "column_id": 3,
+      "point_index": 2,
+      "value": 17.5
+    },
+    {
+      "column_id": 4,
+      "point_index": 0,
+      "value": 20
+    },
+    {
+      "column_id": 5,
+      "point_index": 0,
+      "value": 0.58
+    },
+    {
+      "column_id": 4,
+      "point_index": 1,
+      "value": 425
+    },
+    {
+      "column_id": 5,
+      "point_index": 1,
+      "value": 0.67
+    },
+    {
+      "column_id": 4,
+      "point_index": 2,
+      "value": 870
+    },
+    {
+      "column_id": 5,
+      "point_index": 2,
+      "value": 0.93
+    },
+    {
+      "column_id": 6,
+      "point_index": 0,
+      "value": 20
+    },
+    {
+      "column_id": 7,
+      "point_index": 0,
+      "value": 107
+    },
+    {
+      "column_id": 8,
+      "point_index": 0,
+      "value": 122
+    },
+    {
+      "column_id": 6,
+      "point_index": 1,
+      "value": 230
+    },
+    {
+      "column_id": 7,
+      "point_index": 1,
+      "value": 95
+    },
+    {
+      "column_id": 8,
+      "point_index": 1,
+      "value": 111
+    },
+    {
+      "column_id": 9,
+      "point_index": 0,
+      "value": 20
+    },
+    {
+      "column_id": 10,
+      "point_index": 0,
+      "value": 41
+    },
+    {
+      "column_id": 11,
+      "point_index": 0,
+      "value": 45
+    },
+    {
+      "column_id": 12,
+      "point_index": 0,
+      "value": 20
+    },
+    {
+      "column_id": 13,
+      "point_index": 0,
+      "value": 0.31
+    },
+    {
+      "column_id": 14,
+      "point_index": 0,
+      "value": 0
+    },
+    {
+      "column_id": 15,
+      "point_index": 0,
+      "value": 100
+    },
+    {
+      "column_id": 16,
+      "point_index": 0,
+      "value": 9e-06
+    },
+    {
+      "column_id": 14,
+      "point_index": 1,
+      "value": 20
+    },
+    {
+      "column_id": 15,
+      "point_index": 1,
+      "value": 425
+    },
+    {
+      "column_id": 16,
+      "point_index": 1,
+      "value": 9.4e-06
+    },
+    {
+      "column_id": 14,
+      "point_index": 2,
+      "value": 20
+    },
+    {
+      "column_id": 15,
+      "point_index": 2,
+      "value": 650
+    },
+    {
+      "column_id": 16,
+      "point_index": 2,
+      "value": 9.7e-06
+    },
+    {
+      "column_id": 17,
+      "point_index": 0,
+      "value": 996
+    },
+    {
+      "column_id": 18,
+      "point_index": 0,
+      "value": 1538
+    },
+    {
+      "column_id": 19,
+      "point_index": 0,
+      "value": 1649
+    },
+    {
+      "column_id": 20,
+      "point_index": 0,
+      "value": 954
+    },
+    {
+      "column_id": 21,
+      "point_index": 0,
+      "value": 788
+    },
+    {
+      "column_id": 22,
+      "point_index": 0,
+      "value": 35
+    },
+    {
+      "column_id": 23,
+      "point_index": 0,
+      "value": 93
+    },
+    {
+      "column_id": 24,
+      "point_index": 0,
+      "value": 427
+    },
+    {
+      "column_id": 25,
+      "point_index": 0,
+      "value": 0.51
+    },
+    {
+      "column_id": 26,
+      "point_index": 0,
+      "value": 0.61
+    },
+    {
+      "column_id": 27,
+      "point_index": 0,
+      "value": 840
+    },
+    {
+      "column_id": 28,
+      "point_index": 0,
+      "value": 920
+    },
+    {
+      "column_id": 29,
+      "point_index": 0,
+      "value": 0.01
+    },
+    {
+      "column_id": 30,
+      "point_index": 0,
+      "value": 0.049
+    },
+    {
+      "column_id": 27,
+      "point_index": 1,
+      "value": 940
+    },
+    {
+      "column_id": 28,
+      "point_index": 1,
+      "value": 980
+    },
+    {
+      "column_id": 29,
+      "point_index": 1,
+      "value": 0.11
+    },
+    {
+      "column_id": 30,
+      "point_index": 1,
+      "value": 1.65
+    },
+    {
+      "column_id": 31,
+      "point_index": 0,
+      "value": 0
+    },
+    {
+      "column_id": 32,
+      "point_index": 0,
+      "value": 0.00694
+    },
+    {
+      "column_id": 33,
+      "point_index": 0,
+      "value": 4.59468
+    },
+    {
+      "column_id": 34,
+      "point_index": 0,
+      "value": 506.4186
+    },
+    {
+      "column_id": 35,
+      "point_index": 0,
+      "value": 50.30346
+    },
+    {
+      "column_id": 31,
+      "point_index": 1,
+      "value": 1
+    },
+    {
+      "column_id": 32,
+      "point_index": 1,
+      "value": 0.02219
+    },
+    {
+      "column_id": 33,
+      "point_index": 1,
+      "value": -11.8426
+    },
+    {
+      "column_id": 34,
+      "point_index": 1,
+      "value": 656.7189
+    },
+    {
+      "column_id": 35,
+      "point_index": 1,
+      "value": 64.77531
+    },
+    {
+      "column_id": 31,
+      "point_index": 2,
+      "value": 2
+    },
+    {
+      "column_id": 32,
+      "point_index": 2,
+      "value": -0.06088
+    },
+    {
+      "column_id": 33,
+      "point_index": 2,
+      "value": 35.76194
+    },
+    {
+      "column_id": 34,
+      "point_index": 2,
+      "value": -4249.11
+    },
+    {
+      "column_id": 35,
+      "point_index": 2,
+      "value": -434.195
+    },
+    {
+      "column_id": 31,
+      "point_index": 3,
+      "value": 3
+    },
+    {
+      "column_id": 32,
+      "point_index": 3,
+      "value": 0.09974
+    },
+    {
+      "column_id": 33,
+      "point_index": 3,
+      "value": -63.4781
+    },
+    {
+      "column_id": 34,
+      "point_index": 3,
+      "value": 8640.985
+    },
+    {
+      "column_id": 35,
+      "point_index": 3,
+      "value": 894.9239
+    },
+    {
+      "column_id": 31,
+      "point_index": 4,
+      "value": 4
+    },
+    {
+      "column_id": 32,
+      "point_index": 4,
+      "value": -0.05019
+    },
+    {
+      "column_id": 33,
+      "point_index": 4,
+      "value": 55.43269
+    },
+    {
+      "column_id": 34,
+      "point_index": 4,
+      "value": -7629.24
+    },
+    {
+      "column_id": 35,
+      "point_index": 4,
+      "value": -800.436
+    },
+    {
+      "column_id": 31,
+      "point_index": 5,
+      "value": 5
+    },
+    {
+      "column_id": 32,
+      "point_index": 5,
+      "value": -0.00901
+    },
+    {
+      "column_id": 33,
+      "point_index": 5,
+      "value": -17.3419
+    },
+    {
+      "column_id": 34,
+      "point_index": 5,
+      "value": 2514.97
+    },
+    {
+      "column_id": 35,
+      "point_index": 5,
+      "value": 267.9284
+    },
+    {
+      "column_id": 36,
+      "point_index": 0,
+      "value": 0
+    },
+    {
+      "column_id": 37,
+      "point_index": 0,
+      "value": 0.03364
+    },
+    {
+      "column_id": 38,
+      "point_index": 0,
+      "value": 4.09854
+    },
+    {
+      "column_id": 39,
+      "point_index": 0,
+      "value": 584.4601
+    },
+    {
+      "column_id": 40,
+      "point_index": 0,
+      "value": 53.59972
+    },
+    {
+      "column_id": 36,
+      "point_index": 1,
+      "value": 1
+    },
+    {
+      "column_id": 37,
+      "point_index": 1,
+      "value": 0.00887
+    },
+    {
+      "column_id": 38,
+      "point_index": 1,
+      "value": 10.5984
+    },
+    {
+      "column_id": 39,
+      "point_index": 1,
+      "value": -3732.22
+    },
+    {
+      "column_id": 40,
+      "point_index": 1,
+      "value": -396.407
+    },
+    {
+      "column_id": 36,
+      "point_index": 2,
+      "value": 2
+    },
+    {
+      "column_id": 37,
+      "point_index": 2,
+      "value": -0.00285
+    },
+    {
+      "column_id": 38,
+      "point_index": 2,
+      "value": -69.7254
+    },
+    {
+      "column_id": 39,
+      "point_index": 2,
+      "value": 18715.89
+    },
+    {
+      "column_id": 40,
+      "point_index": 2,
+      "value": 2033.636
+    },
+    {
+      "column_id": 36,
+      "point_index": 3,
+      "value": 3
+    },
+    {
+      "column_id": 37,
+      "point_index": 3,
+      "value": 0.22163
+    },
+    {
+      "column_id": 38,
+      "point_index": 3,
+      "value": 133.9525
+    },
+    {
+      "column_id": 39,
+      "point_index": 3,
+      "value": -41438.3
+    },
+    {
+      "column_id": 40,
+      "point_index": 3,
+      "value": -4591.96
+    },
+    {
+      "column_id": 36,
+      "point_index": 4,
+      "value": 4
+    },
+    {
+      "column_id": 37,
+      "point_index": 4,
+      "value": -0.4681
+    },
+    {
+      "column_id": 38,
+      "point_index": 4,
+      "value": -92.761
+    },
+    {
+      "column_id": 39,
+      "point_index": 4,
+      "value": 41030.41
+    },
+    {
+      "column_id": 40,
+      "point_index": 4,
+      "value": 4648.483
+    },
+    {
+      "column_id": 36,
+      "point_index": 5,
+      "value": 5
+    },
+    {
+      "column_id": 37,
+      "point_index": 5,
+      "value": 0.25605
+    },
+    {
+      "column_id": 38,
+      "point_index": 5,
+      "value": 15.50738
+    },
+    {
+      "column_id": 39,
+      "point_index": 5,
+      "value": -15175.7
+    },
+    {
+      "column_id": 40,
+      "point_index": 5,
+      "value": -1758.81
+    },
+    {
+      "column_id": 41,
+      "point_index": 0,
+      "value": 8.19
+    },
+    {
+      "column_id": 42,
+      "point_index": 0,
+      "value": 8.26
+    },
+    {
+      "column_id": 43,
+      "point_index": 0,
+      "value": 1260
+    },
+    {
+      "column_id": 44,
+      "point_index": 0,
+      "value": 1336
+    },
+    {
+      "column_id": 45,
+      "point_index": 0,
+      "value": 20
+    },
+    {
+      "column_id": 45,
+      "point_index": 1,
+      "value": 100
+    },
+    {
+      "column_id": 45,
+      "point_index": 2,
+      "value": 200
+    },
+    {
+      "column_id": 45,
+      "point_index": 3,
+      "value": 300
+    },
+    {
+      "column_id": 45,
+      "point_index": 4,
+      "value": 400
+    },
+    {
+      "column_id": 45,
+      "point_index": 5,
+      "value": 500
+    },
+    {
+      "column_id": 45,
+      "point_index": 6,
+      "value": 600
+    },
+    {
+      "column_id": 45,
+      "point_index": 7,
+      "value": 700
+    },
+    {
+      "column_id": 45,
+      "point_index": 8,
+      "value": 800
+    },
+    {
+      "column_id": 45,
+      "point_index": 9,
+      "value": 900
+    },
+    {
+      "column_id": 45,
+      "point_index": 10,
+      "value": 1000
+    },
+    {
+      "column_id": 45,
+      "point_index": 11,
+      "value": 1100
+    },
+    {
+      "column_id": 45,
+      "point_index": 12,
+      "value": 1200
+    },
+    {
+      "column_id": 46,
+      "point_index": 0,
+      "value": 11.5
+    },
+    {
+      "column_id": 46,
+      "point_index": 1,
+      "value": 12.1
+    },
+    {
+      "column_id": 46,
+      "point_index": 2,
+      "value": 13.5
+    },
+    {
+      "column_id": 46,
+      "point_index": 3,
+      "value": 15.2
+    },
+    {
+      "column_id": 46,
+      "point_index": 4,
+      "value": 17.1
+    },
+    {
+      "column_id": 46,
+      "point_index": 5,
+      "value": 18.8
+    },
+    {
+      "column_id": 46,
+      "point_index": 6,
+      "value": 20.6
+    },
+    {
+      "column_id": 46,
+      "point_index": 7,
+      "value": 24.1
+    },
+    {
+      "column_id": 46,
+      "point_index": 8,
+      "value": 24.2
+    },
+    {
+      "column_id": 46,
+      "point_index": 9,
+      "value": 25.0
+    },
+    {
+      "column_id": 46,
+      "point_index": 10,
+      "value": 25.8
+    },
+    {
+      "column_id": 46,
+      "point_index": 11,
+      "value": 26.6
+    },
+    {
+      "column_id": 46,
+      "point_index": 12,
+      "value": 28.7
+    },
+    {
+      "column_id": 47,
+      "point_index": 0,
+      "value": 21.1
+    },
+    {
+      "column_id": 47,
+      "point_index": 1,
+      "value": 93.3
+    },
+    {
+      "column_id": 47,
+      "point_index": 2,
+      "value": 204.4
+    },
+    {
+      "column_id": 47,
+      "point_index": 3,
+      "value": 315.6
+    },
+    {
+      "column_id": 47,
+      "point_index": 4,
+      "value": 426.7
+    },
+    {
+      "column_id": 47,
+      "point_index": 5,
+      "value": 537.8
+    },
+    {
+      "column_id": 47,
+      "point_index": 6,
+      "value": 648.9
+    },
+    {
+      "column_id": 47,
+      "point_index": 7,
+      "value": 760.0
+    },
+    {
+      "column_id": 47,
+      "point_index": 8,
+      "value": 871.1
+    },
+    {
+      "column_id": 47,
+      "point_index": 9,
+      "value": 982.2
+    },
+    {
+      "column_id": 47,
+      "point_index": 10,
+      "value": 1093.3
+    },
+    {
+      "column_id": 48,
+      "point_index": 0,
+      "value": 11.11
+    },
+    {
+      "column_id": 48,
+      "point_index": 1,
+      "value": 12.4
+    },
+    {
+      "column_id": 48,
+      "point_index": 2,
+      "value": 14.13
+    },
+    {
+      "column_id": 48,
+      "point_index": 3,
+      "value": 16.01
+    },
+    {
+      "column_id": 48,
+      "point_index": 4,
+      "value": 17.75
+    },
+    {
+      "column_id": 48,
+      "point_index": 5,
+      "value": 19.47
+    },
+    {
+      "column_id": 48,
+      "point_index": 6,
+      "value": 21.2
+    },
+    {
+      "column_id": 48,
+      "point_index": 7,
+      "value": 23.08
+    },
+    {
+      "column_id": 48,
+      "point_index": 8,
+      "value": 24.96
+    },
+    {
+      "column_id": 48,
+      "point_index": 9,
+      "value": 26.68
+    },
+    {
+      "column_id": 48,
+      "point_index": 10,
+      "value": 28.27
+    },
+    {
+      "column_id": 49,
+      "point_index": 0,
+      "value": 21.1
+    },
+    {
+      "column_id": 49,
+      "point_index": 1,
+      "value": 93.3
+    },
+    {
+      "column_id": 49,
+      "point_index": 2,
+      "value": 204.4
+    },
+    {
+      "column_id": 49,
+      "point_index": 3,
+      "value": 315.6
+    },
+    {
+      "column_id": 49,
+      "point_index": 4,
+      "value": 426.7
+    },
+    {
+      "column_id": 49,
+      "point_index": 5,
+      "value": 537.8
+    },
+    {
+      "column_id": 49,
+      "point_index": 6,
+      "value": 648.9
+    },
+    {
+      "column_id": 49,
+      "point_index": 7,
+      "value": 760.0
+    },
+    {
+      "column_id": 49,
+      "point_index": 8,
+      "value": 871.1
+    },
+    {
+      "column_id": 49,
+      "point_index": 9,
+      "value": 982.2
+    },
+    {
+      "column_id": 49,
+      "point_index": 10,
+      "value": 1093.3
+    },
+    {
+      "column_id": 50,
+      "point_index": 0,
+      "value": 11.39
+    },
+    {
+      "column_id": 50,
+      "point_index": 1,
+      "value": 12.55
+    },
+    {
+      "column_id": 50,
+      "point_index": 2,
+      "value": 14.42
+    },
+    {
+      "column_id": 50,
+      "point_index": 3,
+      "value": 16.15
+    },
+    {
+      "column_id": 50,
+      "point_index": 4,
+      "value": 17.89
+    },
+    {
+      "column_id": 50,
+      "point_index": 5,
+      "value": 19.61
+    },
+    {
+      "column_id": 50,
+      "point_index": 6,
+      "value": 21.34
+    },
+    {
+      "column_id": 50,
+      "point_index": 7,
+      "value": 23.23
+    },
+    {
+      "column_id": 50,
+      "point_index": 8,
+      "value": 24.96
+    },
+    {
+      "column_id": 50,
+      "point_index": 9,
+      "value": 26.83
+    },
+    {
+      "column_id": 50,
+      "point_index": 10,
+      "value": 28.7
+    },
+    {
+      "column_id": 51,
+      "point_index": 0,
+      "value": 435
+    },
+    {
+      "column_id": 52,
+      "point_index": 0,
+      "value": 20
+    },
+    {
+      "column_id": 52,
+      "point_index": 1,
+      "value": 100
+    },
+    {
+      "column_id": 52,
+      "point_index": 2,
+      "value": 200
+    },
+    {
+      "column_id": 52,
+      "point_index": 3,
+      "value": 300
+    },
+    {
+      "column_id": 52,
+      "point_index": 4,
+      "value": 400
+    },
+    {
+      "column_id": 52,
+      "point_index": 5,
+      "value": 500
+    },
+    {
+      "column_id": 52,
+      "point_index": 6,
+      "value": 600
+    },
+    {
+      "column_id": 52,
+      "point_index": 7,
+      "value": 700
+    },
+    {
+      "column_id": 52,
+      "point_index": 8,
+      "value": 800
+    },
+    {
+      "column_id": 52,
+      "point_index": 9,
+      "value": 900
+    },
+    {
+      "column_id": 52,
+      "point_index": 10,
+      "value": 1000
+    },
+    {
+      "column_id": 52,
+      "point_index": 11,
+      "value": 1100
+    },
+    {
+      "column_id": 52,
+      "point_index": 12,
+      "value": 1200
+    },
+    {
+      "column_id": 53,
+      "point_index": 0,
+      "value": 460
+    },
+    {
+      "column_id": 53,
+      "point_index": 1,
+      "value": 458
+    },
+    {
+      "column_id": 53,
+      "point_index": 2,
+      "value": 468
+    },
+    {
+      "column_id": 53,
+      "point_index": 3,
+      "value": 485
+    },
+    {
+      "column_id": 53,
+      "point_index": 4,
+      "value": 501
+    },
+    {
+      "column_id": 53,
+      "point_index": 5,
+      "value": 514
+    },
+    {
+      "column_id": 53,
+      "point_index": 6,
+      "value": 533
+    },
+    {
+      "column_id": 53,
+      "point_index": 7,
+      "value": 604
+    },
+    {
+      "column_id": 53,
+      "point_index": 8,
+      "value": 615
+    },
+    {
+      "column_id": 53,
+      "point_index": 9,
+      "value": 626
+    },
+    {
+      "column_id": 53,
+      "point_index": 10,
+      "value": 637
+    },
+    {
+      "column_id": 53,
+      "point_index": 11,
+      "value": 635
+    },
+    {
+      "column_id": 53,
+      "point_index": 12,
+      "value": 658
+    },
+    {
+      "column_id": 54,
+      "point_index": 0,
+      "value": 1000
+    },
+    {
+      "column_id": 54,
+      "point_index": 1,
+      "value": 1000
+    },
+    {
+      "column_id": 54,
+      "point_index": 2,
+      "value": 1000
+    },
+    {
+      "column_id": 54,
+      "point_index": 3,
+      "value": 1100
+    },
+    {
+      "column_id": 54,
+      "point_index": 4,
+      "value": 1100
+    },
+    {
+      "column_id": 54,
+      "point_index": 5,
+      "value": 1100
+    },
+    {
+      "column_id": 54,
+      "point_index": 6,
+      "value": 1142
+    },
+    {
+      "column_id": 54,
+      "point_index": 7,
+      "value": 1142
+    },
+    {
+      "column_id": 54,
+      "point_index": 8,
+      "value": 1142
+    },
+    {
+      "column_id": 55,
+      "point_index": 0,
+      "value": 15
+    },
+    {
+      "column_id": 55,
+      "point_index": 1,
+      "value": 30
+    },
+    {
+      "column_id": 55,
+      "point_index": 2,
+      "value": 60
+    },
+    {
+      "column_id": 55,
+      "point_index": 3,
+      "value": 15
+    },
+    {
+      "column_id": 55,
+      "point_index": 4,
+      "value": 30
+    },
+    {
+      "column_id": 55,
+      "point_index": 5,
+      "value": 60
+    },
+    {
+      "column_id": 55,
+      "point_index": 6,
+      "value": 15
+    },
+    {
+      "column_id": 55,
+      "point_index": 7,
+      "value": 30
+    },
+    {
+      "column_id": 55,
+      "point_index": 8,
+      "value": 60
+    },
+    {
+      "column_id": 56,
+      "point_index": 0,
+      "value": 0.86
+    },
+    {
+      "column_id": 56,
+      "point_index": 1,
+      "value": 0.84
+    },
+    {
+      "column_id": 56,
+      "point_index": 2,
+      "value": 0.88
+    },
+    {
+      "column_id": 56,
+      "point_index": 3,
+      "value": 0.9
+    },
+    {
+      "column_id": 56,
+      "point_index": 4,
+      "value": 0.9
+    },
+    {
+      "column_id": 56,
+      "point_index": 5,
+      "value": 0.89
+    },
+    {
+      "column_id": 56,
+      "point_index": 6,
+      "value": 0.89
+    },
+    {
+      "column_id": 56,
+      "point_index": 7,
+      "value": 0.91
+    },
+    {
+      "column_id": 56,
+      "point_index": 8,
+      "value": 0.91
+    },
+    {
+      "column_id": 57,
+      "point_index": 0,
+      "value": 21.1
+    },
+    {
+      "column_id": 57,
+      "point_index": 1,
+      "value": 37.8
+    },
+    {
+      "column_id": 57,
+      "point_index": 2,
+      "value": 93.3
+    },
+    {
+      "column_id": 57,
+      "point_index": 3,
+      "value": 148.9
+    },
+    {
+      "column_id": 57,
+      "point_index": 4,
+      "value": 204.4
+    },
+    {
+      "column_id": 57,
+      "point_index": 5,
+      "value": 260.0
+    },
+    {
+      "column_id": 57,
+      "point_index": 6,
+      "value": 315.6
+    },
+    {
+      "column_id": 57,
+      "point_index": 7,
+      "value": 371.1
+    },
+    {
+      "column_id": 57,
+      "point_index": 8,
+      "value": 426.7
+    },
+    {
+      "column_id": 57,
+      "point_index": 9,
+      "value": 482.2
+    },
+    {
+      "column_id": 57,
+      "point_index": 10,
+      "value": 537.8
+    },
+    {
+      "column_id": 57,
+      "point_index": 11,
+      "value": 593.3
+    },
+    {
+      "column_id": 57,
+      "point_index": 12,
+      "value": 648.9
+    },
+    {
+      "column_id": 57,
+      "point_index": 13,
+      "value": 704.4
+    },
+    {
+      "column_id": 57,
+      "point_index": 14,
+      "value": 760.0
+    },
+    {
+      "column_id": 57,
+      "point_index": 15,
+      "value": 815.6
+    },
+    {
+      "column_id": 57,
+      "point_index": 16,
+      "value": 871.1
+    },
+    {
+      "column_id": 57,
+      "point_index": 17,
+      "value": 926.7
+    },
+    {
+      "column_id": 57,
+      "point_index": 18,
+      "value": 982.2
+    },
+    {
+      "column_id": 57,
+      "point_index": 19,
+      "value": 1037.8
+    },
+    {
+      "column_id": 57,
+      "point_index": 20,
+      "value": 1093.3
+    },
+    {
+      "column_id": 58,
+      "point_index": 0,
+      "value": 199.9
+    },
+    {
+      "column_id": 58,
+      "point_index": 1,
+      "value": 198.6
+    },
+    {
+      "column_id": 58,
+      "point_index": 2,
+      "value": 195.8
+    },
+    {
+      "column_id": 58,
+      "point_index": 3,
+      "value": 193.1
+    },
+    {
+      "column_id": 58,
+      "point_index": 4,
+      "value": 190.3
+    },
+    {
+      "column_id": 58,
+      "point_index": 5,
+      "value": 186.9
+    },
+    {
+      "column_id": 58,
+      "point_index": 6,
+      "value": 184.1
+    },
+    {
+      "column_id": 58,
+      "point_index": 7,
+      "value": 180.6
+    },
+    {
+      "column_id": 58,
+      "point_index": 8,
+      "value": 177.9
+    },
+    {
+      "column_id": 58,
+      "point_index": 9,
+      "value": 174.4
+    },
+    {
+      "column_id": 58,
+      "point_index": 10,
+      "value": 171.0
+    },
+    {
+      "column_id": 58,
+      "point_index": 11,
+      "value": 166.8
+    },
+    {
+      "column_id": 58,
+      "point_index": 12,
+      "value": 163.4
+    },
+    {
+      "column_id": 58,
+      "point_index": 13,
+      "value": 158.6
+    },
+    {
+      "column_id": 58,
+      "point_index": 14,
+      "value": 153.7
+    },
+    {
+      "column_id": 58,
+      "point_index": 15,
+      "value": 146.8
+    },
+    {
+      "column_id": 58,
+      "point_index": 16,
+      "value": 139.2
+    },
+    {
+      "column_id": 58,
+      "point_index": 17,
+      "value": 129.6
+    },
+    {
+      "column_id": 58,
+      "point_index": 18,
+      "value": 120.0
+    },
+    {
+      "column_id": 58,
+      "point_index": 19,
+      "value": 109.6
+    },
+    {
+      "column_id": 58,
+      "point_index": 20,
+      "value": 98.6
+    },
+    {
+      "column_id": 59,
+      "point_index": 0,
+      "value": 20
+    },
+    {
+      "column_id": 59,
+      "point_index": 1,
+      "value": 100
+    },
+    {
+      "column_id": 59,
+      "point_index": 2,
+      "value": 200
+    },
+    {
+      "column_id": 59,
+      "point_index": 3,
+      "value": 300
+    },
+    {
+      "column_id": 59,
+      "point_index": 4,
+      "value": 400
+    },
+    {
+      "column_id": 59,
+      "point_index": 5,
+      "value": 500
+    },
+    {
+      "column_id": 59,
+      "point_index": 6,
+      "value": 600
+    },
+    {
+      "column_id": 59,
+      "point_index": 7,
+      "value": 700
+    },
+    {
+      "column_id": 59,
+      "point_index": 8,
+      "value": 800
+    },
+    {
+      "column_id": 59,
+      "point_index": 9,
+      "value": 900
+    },
+    {
+      "column_id": 59,
+      "point_index": 10,
+      "value": 1000
+    },
+    {
+      "column_id": 59,
+      "point_index": 11,
+      "value": 1100
+    },
+    {
+      "column_id": 59,
+      "point_index": 12,
+      "value": 1200
+    },
+    {
+      "column_id": 60,
+      "point_index": 0,
+      "value": 204
+    },
+    {
+      "column_id": 60,
+      "point_index": 1,
+      "value": 199
+    },
+    {
+      "column_id": 60,
+      "point_index": 2,
+      "value": 193
+    },
+    {
+      "column_id": 60,
+      "point_index": 3,
+      "value": 187
+    },
+    {
+      "column_id": 60,
+      "point_index": 4,
+      "value": 180
+    },
+    {
+      "column_id": 60,
+      "point_index": 5,
+      "value": 173
+    },
+    {
+      "column_id": 60,
+      "point_index": 6,
+      "value": 166
+    },
+    {
+      "column_id": 60,
+      "point_index": 7,
+      "value": 158
+    },
+    {
+      "column_id": 60,
+      "point_index": 8,
+      "value": 150
+    },
+    {
+      "column_id": 60,
+      "point_index": 9,
+      "value": 143
+    },
+    {
+      "column_id": 60,
+      "point_index": 10,
+      "value": 134
+    },
+    {
+      "column_id": 60,
+      "point_index": 11,
+      "value": 126
+    },
+    {
+      "column_id": 60,
+      "point_index": 12,
+      "value": 122
+    },
+    {
+      "column_id": 61,
+      "point_index": 0,
+      "value": 21.1
+    },
+    {
+      "column_id": 61,
+      "point_index": 1,
+      "value": 37.8
+    },
+    {
+      "column_id": 61,
+      "point_index": 2,
+      "value": 93.3
+    },
+    {
+      "column_id": 61,
+      "point_index": 3,
+      "value": 148.9
+    },
+    {
+      "column_id": 61,
+      "point_index": 4,
+      "value": 204.4
+    },
+    {
+      "column_id": 61,
+      "point_index": 5,
+      "value": 260.0
+    },
+    {
+      "column_id": 61,
+      "point_index": 6,
+      "value": 315.6
+    },
+    {
+      "column_id": 61,
+      "point_index": 7,
+      "value": 371.1
+    },
+    {
+      "column_id": 61,
+      "point_index": 8,
+      "value": 426.7
+    },
+    {
+      "column_id": 61,
+      "point_index": 9,
+      "value": 482.2
+    },
+    {
+      "column_id": 61,
+      "point_index": 10,
+      "value": 537.8
+    },
+    {
+      "column_id": 61,
+      "point_index": 11,
+      "value": 593.3
+    },
+    {
+      "column_id": 61,
+      "point_index": 12,
+      "value": 648.9
+    },
+    {
+      "column_id": 61,
+      "point_index": 13,
+      "value": 704.4
+    },
+    {
+      "column_id": 61,
+      "point_index": 14,
+      "value": 760.0
+    },
+    {
+      "column_id": 61,
+      "point_index": 15,
+      "value": 815.6
+    },
+    {
+      "column_id": 61,
+      "point_index": 16,
+      "value": 871.1
+    },
+    {
+      "column_id": 61,
+      "point_index": 17,
+      "value": 926.7
+    },
+    {
+      "column_id": 61,
+      "point_index": 18,
+      "value": 982.2
+    },
+    {
+      "column_id": 61,
+      "point_index": 19,
+      "value": 1037.8
+    },
+    {
+      "column_id": 61,
+      "point_index": 20,
+      "value": 1093.3
+    },
+    {
+      "column_id": 62,
+      "point_index": 0,
+      "value": 77.2
+    },
+    {
+      "column_id": 62,
+      "point_index": 1,
+      "value": 77.2
+    },
+    {
+      "column_id": 62,
+      "point_index": 2,
+      "value": 75.8
+    },
+    {
+      "column_id": 62,
+      "point_index": 3,
+      "value": 75.2
+    },
+    {
+      "column_id": 62,
+      "point_index": 4,
+      "value": 74.5
+    },
+    {
+      "column_id": 62,
+      "point_index": 5,
+      "value": 73.1
+    },
+    {
+      "column_id": 62,
+      "point_index": 6,
+      "value": 72.4
+    },
+    {
+      "column_id": 62,
+      "point_index": 7,
+      "value": 71.0
+    },
+    {
+      "column_id": 62,
+      "point_index": 8,
+      "value": 69.6
+    },
+    {
+      "column_id": 62,
+      "point_index": 9,
+      "value": 68.2
+    },
+    {
+      "column_id": 62,
+      "point_index": 10,
+      "value": 66.9
+    },
+    {
+      "column_id": 62,
+      "point_index": 11,
+      "value": 65.5
+    },
+    {
+      "column_id": 62,
+      "point_index": 12,
+      "value": 63.4
+    },
+    {
+      "column_id": 62,
+      "point_index": 13,
+      "value": 61.3
+    },
+    {
+      "column_id": 62,
+      "point_index": 14,
+      "value": 58.6
+    },
+    {
+      "column_id": 62,
+      "point_index": 15,
+      "value": 55.8
+    },
+    {
+      "column_id": 62,
+      "point_index": 16,
+      "value": 52.4
+    },
+    {
+      "column_id": 62,
+      "point_index": 17,
+      "value": 48.9
+    },
+    {
+      "column_id": 62,
+      "point_index": 18,
+      "value": 44.8
+    },
+    {
+      "column_id": 62,
+      "point_index": 19,
+      "value": 40.0
+    },
+    {
+      "column_id": 62,
+      "point_index": 20,
+      "value": 35.2
+    },
+    {
+      "column_id": 63,
+      "point_index": 0,
+      "value": 21.1
+    },
+    {
+      "column_id": 63,
+      "point_index": 1,
+      "value": 37.8
+    },
+    {
+      "column_id": 63,
+      "point_index": 2,
+      "value": 93.3
+    },
+    {
+      "column_id": 63,
+      "point_index": 3,
+      "value": 148.9
+    },
+    {
+      "column_id": 63,
+      "point_index": 4,
+      "value": 204.4
+    },
+    {
+      "column_id": 63,
+      "point_index": 5,
+      "value": 260.0
+    },
+    {
+      "column_id": 63,
+      "point_index": 6,
+      "value": 315.6
+    },
+    {
+      "column_id": 63,
+      "point_index": 7,
+      "value": 371.1
+    },
+    {
+      "column_id": 63,
+      "point_index": 8,
+      "value": 426.7
+    },
+    {
+      "column_id": 63,
+      "point_index": 9,
+      "value": 482.2
+    },
+    {
+      "column_id": 63,
+      "point_index": 10,
+      "value": 537.8
+    },
+    {
+      "column_id": 63,
+      "point_index": 11,
+      "value": 593.3
+    },
+    {
+      "column_id": 63,
+      "point_index": 12,
+      "value": 648.9
+    },
+    {
+      "column_id": 63,
+      "point_index": 13,
+      "value": 704.4
+    },
+    {
+      "column_id": 63,
+      "point_index": 14,
+      "value": 760.0
+    },
+    {
+      "column_id": 63,
+      "point_index": 15,
+      "value": 815.6
+    },
+    {
+      "column_id": 63,
+      "point_index": 16,
+      "value": 871.1
+    },
+    {
+      "column_id": 63,
+      "point_index": 17,
+      "value": 926.7
+    },
+    {
+      "column_id": 63,
+      "point_index": 18,
+      "value": 982.2
+    },
+    {
+      "column_id": 63,
+      "point_index": 19,
+      "value": 1037.8
+    },
+    {
+      "column_id": 63,
+      "point_index": 20,
+      "value": 1093.3
+    },
+    {
+      "column_id": 64,
+      "point_index": 0,
+      "value": 0.294
+    },
+    {
+      "column_id": 64,
+      "point_index": 1,
+      "value": 0.291
+    },
+    {
+      "column_id": 64,
+      "point_index": 2,
+      "value": 0.288
+    },
+    {
+      "column_id": 64,
+      "point_index": 3,
+      "value": 0.28
+    },
+    {
+      "column_id": 64,
+      "point_index": 4,
+      "value": 0.28
+    },
+    {
+      "column_id": 64,
+      "point_index": 5,
+      "value": 0.275
+    },
+    {
+      "column_id": 64,
+      "point_index": 6,
+      "value": 0.272
+    },
+    {
+      "column_id": 64,
+      "point_index": 7,
+      "value": 0.273
+    },
+    {
+      "column_id": 64,
+      "point_index": 8,
+      "value": 0.271
+    },
+    {
+      "column_id": 64,
+      "point_index": 9,
+      "value": 0.272
+    },
+    {
+      "column_id": 64,
+      "point_index": 10,
+      "value": 0.271
+    },
+    {
+      "column_id": 64,
+      "point_index": 11,
+      "value": 0.276
+    },
+    {
+      "column_id": 64,
+      "point_index": 12,
+      "value": 0.283
+    },
+    {
+      "column_id": 64,
+      "point_index": 13,
+      "value": 0.292
+    },
+    {
+      "column_id": 64,
+      "point_index": 14,
+      "value": 0.306
+    },
+    {
+      "column_id": 64,
+      "point_index": 15,
+      "value": 0.321
+    },
+    {
+      "column_id": 64,
+      "point_index": 16,
+      "value": 0.331
+    },
+    {
+      "column_id": 64,
+      "point_index": 17,
+      "value": 0.334
+    },
+    {
+      "column_id": 64,
+      "point_index": 18,
+      "value": 0.341
+    },
+    {
+      "column_id": 64,
+      "point_index": 19,
+      "value": 0.366
+    },
+    {
+      "column_id": 64,
+      "point_index": 20,
+      "value": 0.402
+    },
+    {
+      "column_id": 65,
+      "point_index": 0,
+      "value": 20
+    },
+    {
+      "column_id": 65,
+      "point_index": 1,
+      "value": 100
+    },
+    {
+      "column_id": 65,
+      "point_index": 2,
+      "value": 200
+    },
+    {
+      "column_id": 65,
+      "point_index": 3,
+      "value": 300
+    },
+    {
+      "column_id": 65,
+      "point_index": 4,
+      "value": 400
+    },
+    {
+      "column_id": 65,
+      "point_index": 5,
+      "value": 500
+    },
+    {
+      "column_id": 65,
+      "point_index": 6,
+      "value": 600
+    },
+    {
+      "column_id": 65,
+      "point_index": 7,
+      "value": 700
+    },
+    {
+      "column_id": 65,
+      "point_index": 8,
+      "value": 800
+    },
+    {
+      "column_id": 65,
+      "point_index": 9,
+      "value": 900
+    },
+    {
+      "column_id": 66,
+      "point_index": 0,
+      "value": 14.1
+    },
+    {
+      "column_id": 66,
+      "point_index": 1,
+      "value": 14.1
+    },
+    {
+      "column_id": 66,
+      "point_index": 2,
+      "value": 14.1
+    },
+    {
+      "column_id": 66,
+      "point_index": 3,
+      "value": 14.2
+    },
+    {
+      "column_id": 66,
+      "point_index": 4,
+      "value": 14.4
+    },
+    {
+      "column_id": 66,
+      "point_index": 5,
+      "value": 14.8
+    },
+    {
+      "column_id": 66,
+      "point_index": 6,
+      "value": 15.3
+    },
+    {
+      "column_id": 66,
+      "point_index": 7,
+      "value": 16.4
+    },
+    {
+      "column_id": 66,
+      "point_index": 8,
+      "value": 17.0
+    },
+    {
+      "column_id": 66,
+      "point_index": 9,
+      "value": 17.4
+    },
+    {
+      "column_id": 67,
+      "point_index": 0,
+      "value": -195.6
+    },
+    {
+      "column_id": 67,
+      "point_index": 1,
+      "value": 93.3
+    },
+    {
+      "column_id": 67,
+      "point_index": 2,
+      "value": 204.4
+    },
+    {
+      "column_id": 67,
+      "point_index": 3,
+      "value": 315.6
+    },
+    {
+      "column_id": 67,
+      "point_index": 4,
+      "value": 426.7
+    },
+    {
+      "column_id": 67,
+      "point_index": 5,
+      "value": 537.8
+    },
+    {
+      "column_id": 67,
+      "point_index": 6,
+      "value": 648.9
+    },
+    {
+      "column_id": 67,
+      "point_index": 7,
+      "value": 760.0
+    },
+    {
+      "column_id": 68,
+      "point_index": 0,
+      "value": 10.62
+    },
+    {
+      "column_id": 68,
+      "point_index": 1,
+      "value": 13.158
+    },
+    {
+      "column_id": 68,
+      "point_index": 2,
+      "value": 13.554
+    },
+    {
+      "column_id": 68,
+      "point_index": 3,
+      "value": 13.932
+    },
+    {
+      "column_id": 68,
+      "point_index": 4,
+      "value": 14.346
+    },
+    {
+      "column_id": 68,
+      "point_index": 5,
+      "value": 14.562
+    },
+    {
+      "column_id": 68,
+      "point_index": 6,
+      "value": 15.102
+    },
+    {
+      "column_id": 68,
+      "point_index": 7,
+      "value": 16.038
+    },
+    {
+      "column_id": 69,
+      "point_index": 0,
+      "value": 0
+    },
+    {
+      "column_id": 69,
+      "point_index": 1,
+      "value": 1
+    },
+    {
+      "column_id": 69,
+      "point_index": 2,
+      "value": 2
+    },
+    {
+      "column_id": 69,
+      "point_index": 3,
+      "value": 3
+    },
+    {
+      "column_id": 69,
+      "point_index": 4,
+      "value": 4
+    },
+    {
+      "column_id": 69,
+      "point_index": 5,
+      "value": 5
+    },
+    {
+      "column_id": 69,
+      "point_index": 6,
+      "value": 6
+    },
+    {
+      "column_id": 69,
+      "point_index": 7,
+      "value": 7
+    },
+    {
+      "column_id": 69,
+      "point_index": 8,
+      "value": 8
+    },
+    {
+      "column_id": 70,
+      "point_index": 0,
+      "value": -8.28921
+    },
+    {
+      "column_id": 70,
+      "point_index": 1,
+      "value": 39.447
+    },
+    {
+      "column_id": 70,
+      "point_index": 2,
+      "value": -83.4353
+    },
+    {
+      "column_id": 70,
+      "point_index": 3,
+      "value": 98.169
+    },
+    {
+      "column_id": 70,
+      "point_index": 4,
+      "value": -67.2088
+    },
+    {
+      "column_id": 70,
+      "point_index": 5,
+      "value": 26.7082
+    },
+    {
+      "column_id": 70,
+      "point_index": 6,
+      "value": -5.7205
+    },
+    {
+      "column_id": 70,
+      "point_index": 7,
+      "value": 0.51115
+    },
+    {
+      "column_id": 70,
+      "point_index": 8,
+      "value": 0.0
+    },
+    {
+      "column_id": 71,
+      "point_index": 0,
+      "value": 0
+    },
+    {
+      "column_id": 71,
+      "point_index": 1,
+      "value": 1
+    },
+    {
+      "column_id": 71,
+      "point_index": 2,
+      "value": 2
+    },
+    {
+      "column_id": 71,
+      "point_index": 3,
+      "value": 3
+    },
+    {
+      "column_id": 71,
+      "point_index": 4,
+      "value": 4
+    },
+    {
+      "column_id": 71,
+      "point_index": 5,
+      "value": 5
+    },
+    {
+      "column_id": 71,
+      "point_index": 6,
+      "value": 6
+    },
+    {
+      "column_id": 72,
+      "point_index": 0,
+      "value": -236.8
+    },
+    {
+      "column_id": 72,
+      "point_index": 1,
+      "value": -0.212
+    },
+    {
+      "column_id": 72,
+      "point_index": 2,
+      "value": 0.005497
+    },
+    {
+      "column_id": 72,
+      "point_index": 3,
+      "value": -6.882e-06
+    },
+    {
+      "column_id": 72,
+      "point_index": 4,
+      "value": 0.0
+    },
+    {
+      "column_id": 72,
+      "point_index": 5,
+      "value": -238.87
+    },
+    {
+      "column_id": 72,
+      "point_index": 6,
+      "value": 20.0
+    },
+    {
+      "column_id": 73,
+      "point_index": 0,
+      "value": 980
+    },
+    {
+      "column_id": 73,
+      "point_index": 1,
+      "value": 1100
+    },
+    {
+      "column_id": 74,
+      "point_index": 0,
+      "value": 1020
+    },
+    {
+      "column_id": 74,
+      "point_index": 1,
+      "value": 1100
+    },
+    {
+      "column_id": 75,
+      "point_index": 0,
+      "value": 0.001
+    },
+    {
+      "column_id": 75,
+      "point_index": 1,
+      "value": 0.001
+    },
+    {
+      "column_id": 76,
+      "point_index": 0,
+      "value": 0.001
+    },
+    {
+      "column_id": 76,
+      "point_index": 1,
+      "value": 0.01
+    },
+    {
+      "column_id": 77,
+      "point_index": 0,
+      "value": 900
+    },
+    {
+      "column_id": 78,
+      "point_index": 0,
+      "value": 1060
+    },
+    {
+      "column_id": 79,
+      "point_index": 0,
+      "value": 1
+    },
+    {
+      "column_id": 80,
+      "point_index": 0,
+      "value": 10
+    },
+    {
+      "column_id": 81,
+      "point_index": 0,
+      "value": 950
+    },
+    {
+      "column_id": 81,
+      "point_index": 1,
+      "value": 1050
+    },
+    {
+      "column_id": 81,
+      "point_index": 2,
+      "value": 1150
+    },
+    {
+      "column_id": 81,
+      "point_index": 3,
+      "value": 1200
+    },
+    {
+      "column_id": 82,
+      "point_index": 0,
+      "value": 2640.9
+    },
+    {
+      "column_id": 82,
+      "point_index": 1,
+      "value": 1746.9
+    },
+    {
+      "column_id": 82,
+      "point_index": 2,
+      "value": 1458.2
+    },
+    {
+      "column_id": 82,
+      "point_index": 3,
+      "value": 1390.0
+    },
+    {
+      "column_id": 83,
+      "point_index": 0,
+      "value": -0.00196
+    },
+    {
+      "column_id": 83,
+      "point_index": 1,
+      "value": -0.00193
+    },
+    {
+      "column_id": 83,
+      "point_index": 2,
+      "value": -0.00197
+    },
+    {
+      "column_id": 83,
+      "point_index": 3,
+      "value": -0.00197
+    },
+    {
+      "column_id": 84,
+      "point_index": 0,
+      "value": -0.1036
+    },
+    {
+      "column_id": 84,
+      "point_index": 1,
+      "value": -0.1378
+    },
+    {
+      "column_id": 84,
+      "point_index": 2,
+      "value": -0.1711
+    },
+    {
+      "column_id": 84,
+      "point_index": 3,
+      "value": -0.1382
+    },
+    {
+      "column_id": 85,
+      "point_index": 0,
+      "value": 0.15
+    },
+    {
+      "column_id": 85,
+      "point_index": 1,
+      "value": 0.1692
+    },
+    {
+      "column_id": 85,
+      "point_index": 2,
+      "value": 0.1788
+    },
+    {
+      "column_id": 85,
+      "point_index": 3,
+      "value": 0.1567
+    },
+    {
+      "column_id": 86,
+      "point_index": 0,
+      "value": -0.023
+    },
+    {
+      "column_id": 86,
+      "point_index": 1,
+      "value": -0.0197
+    },
+    {
+      "column_id": 86,
+      "point_index": 2,
+      "value": -0.0161
+    },
+    {
+      "column_id": 86,
+      "point_index": 3,
+      "value": -0.015
+    },
+    {
+      "column_id": 87,
+      "point_index": 0,
+      "value": 8.19
+    },
+    {
+      "column_id": 88,
+      "point_index": 0,
+      "value": 1330
+    },
+    {
+      "column_id": 89,
+      "point_index": 0,
+      "value": 1360
+    },
+    {
+      "column_id": 90,
+      "point_index": 0,
+      "value": 21.1
+    },
+    {
+      "column_id": 91,
+      "point_index": 0,
+      "value": 11
+    },
+    {
+      "column_id": 90,
+      "point_index": 1,
+      "value": 427
+    },
+    {
+      "column_id": 91,
+      "point_index": 1,
+      "value": 16
+    },
+    {
+      "column_id": 90,
+      "point_index": 2,
+      "value": 649
+    },
+    {
+      "column_id": 91,
+      "point_index": 2,
+      "value": 20
+    },
+    {
+      "column_id": 90,
+      "point_index": 3,
+      "value": 816
+    },
+    {
+      "column_id": 91,
+      "point_index": 3,
+      "value": 23
+    },
+    {
+      "column_id": 90,
+      "point_index": 4,
+      "value": 982
+    },
+    {
+      "column_id": 91,
+      "point_index": 4,
+      "value": 26
+    },
+    {
+      "column_id": 92,
+      "point_index": 0,
+      "value": 93
+    },
+    {
+      "column_id": 93,
+      "point_index": 0,
+      "value": 0.52
+    },
+    {
+      "column_id": 92,
+      "point_index": 1,
+      "value": 538
+    },
+    {
+      "column_id": 93,
+      "point_index": 1,
+      "value": 0.54
+    },
+    {
+      "column_id": 92,
+      "point_index": 2,
+      "value": 649
+    },
+    {
+      "column_id": 93,
+      "point_index": 2,
+      "value": 0.55
+    },
+    {
+      "column_id": 92,
+      "point_index": 3,
+      "value": 760
+    },
+    {
+      "column_id": 93,
+      "point_index": 3,
+      "value": 0.56
+    },
+    {
+      "column_id": 92,
+      "point_index": 4,
+      "value": 871
+    },
+    {
+      "column_id": 93,
+      "point_index": 4,
+      "value": 0.58
+    },
+    {
+      "column_id": 92,
+      "point_index": 5,
+      "value": 982
+    },
+    {
+      "column_id": 93,
+      "point_index": 5,
+      "value": 0.71
+    },
+    {
+      "column_id": 94,
+      "point_index": 0,
+      "value": 400
+    },
+    {
+      "column_id": 95,
+      "point_index": 0,
+      "value": 0.24
+    },
+    {
+      "column_id": 94,
+      "point_index": 1,
+      "value": 950
+    },
+    {
+      "column_id": 95,
+      "point_index": 1,
+      "value": 0.94
+    },
+    {
+      "column_id": 96,
+      "point_index": 0,
+      "value": 25
+    },
+    {
+      "column_id": 97,
+      "point_index": 0,
+      "value": 211.0
+    },
+    {
+      "column_id": 96,
+      "point_index": 1,
+      "value": 260
+    },
+    {
+      "column_id": 97,
+      "point_index": 1,
+      "value": 200.6
+    },
+    {
+      "column_id": 98,
+      "point_index": 0,
+      "value": 93
+    },
+    {
+      "column_id": 99,
+      "point_index": 0,
+      "value": 12.2
+    },
+    {
+      "column_id": 98,
+      "point_index": 1,
+      "value": 538
+    },
+    {
+      "column_id": 99,
+      "point_index": 1,
+      "value": 13.9
+    },
+    {
+      "column_id": 98,
+      "point_index": 2,
+      "value": 1093
+    },
+    {
+      "column_id": 99,
+      "point_index": 2,
+      "value": 18.7
+    },
+    {
+      "column_id": 100,
+      "point_index": 0,
+      "value": 1040
+    },
+    {
+      "column_id": 101,
+      "point_index": 0,
+      "value": 1120
+    },
+    {
+      "column_id": 102,
+      "point_index": 0,
+      "value": 0.01
+    },
+    {
+      "column_id": 103,
+      "point_index": 0,
+      "value": 0.01
+    },
+    {
+      "column_id": 100,
+      "point_index": 1,
+      "value": 1080
+    },
+    {
+      "column_id": 101,
+      "point_index": 1,
+      "value": 1100
+    },
+    {
+      "column_id": 102,
+      "point_index": 1,
+      "value": 0.1
+    },
+    {
+      "column_id": 103,
+      "point_index": 1,
+      "value": 1.0
+    },
+    {
+      "column_id": 104,
+      "point_index": 0,
+      "value": 1040
+    },
+    {
+      "column_id": 105,
+      "point_index": 0,
+      "value": 1120
+    },
+    {
+      "column_id": 106,
+      "point_index": 0,
+      "value": 1.5
+    },
+    {
+      "column_id": 107,
+      "point_index": 0,
+      "value": 10
+    },
+    {
+      "column_id": 104,
+      "point_index": 1,
+      "value": 1040
+    },
+    {
+      "column_id": 105,
+      "point_index": 1,
+      "value": 1080
+    },
+    {
+      "column_id": 106,
+      "point_index": 1,
+      "value": 0.02
+    },
+    {
+      "column_id": 107,
+      "point_index": 1,
+      "value": 0.1
+    },
+    {
+      "column_id": 104,
+      "point_index": 2,
+      "value": 1110
+    },
+    {
+      "column_id": 105,
+      "point_index": 2,
+      "value": 1120
+    },
+    {
+      "column_id": 106,
+      "point_index": 2,
+      "value": 0.02
+    },
+    {
+      "column_id": 107,
+      "point_index": 2,
+      "value": 0.3
+    },
+    {
+      "column_id": 108,
+      "point_index": 0,
+      "value": 0.0041
+    },
+    {
+      "column_id": 109,
+      "point_index": 0,
+      "value": 4.35
+    },
+    {
+      "column_id": 110,
+      "point_index": 0,
+      "value": 669.7
+    },
+    {
+      "column_id": 111,
+      "point_index": 0,
+      "value": 58.34
+    },
+    {
+      "column_id": 112,
+      "point_index": 0,
+      "value": 2.1714012036795453e+25
+    },
+    {
+      "column_id": 113,
+      "point_index": 0,
+      "value": 5.72134
+    },
+    {
+      "column_id": 114,
+      "point_index": 0,
+      "value": 0.025946
+    },
+    {
+      "column_id": 115,
+      "point_index": 0,
+      "value": 980
+    },
+    {
+      "column_id": 116,
+      "point_index": 0,
+      "value": 1170
+    }
+  ],
+  "material_classification_axes": [
+    {
+      "axis_id": 1,
+      "key": "object_type",
+      "name": {
+        "EN": "Object Type"
+      },
+      "selection_mode": "multi",
+      "hierarchy_level": 1,
+      "sort_order": 0,
+      "is_filter_visible": true,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "axis_id": 2,
+      "key": "composition",
+      "name": {
+        "EN": "Composition Base"
+      },
+      "selection_mode": "multi",
+      "hierarchy_level": 2,
+      "sort_order": 1,
+      "is_filter_visible": true,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "axis_id": 3,
+      "key": "microstructure_matrix",
+      "name": {
+        "EN": "Microstructure Matrix"
+      },
+      "selection_mode": "multi",
+      "hierarchy_level": 3,
+      "sort_order": 2,
+      "is_filter_visible": true,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "axis_id": 4,
+      "key": "microstructure_features",
+      "name": {
+        "EN": "Microstructure Features"
+      },
+      "selection_mode": "multi",
+      "hierarchy_level": 3,
+      "sort_order": 3,
+      "is_filter_visible": true,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "axis_id": 5,
+      "key": "strengthening_mechanisms",
+      "name": {
+        "EN": "Strengthening Mechanisms"
+      },
+      "selection_mode": "multi",
+      "hierarchy_level": 3,
+      "sort_order": 4,
+      "is_filter_visible": true,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "axis_id": 6,
+      "key": "processing_history",
+      "name": {
+        "EN": "Processing History"
+      },
+      "selection_mode": "multi",
+      "hierarchy_level": 3,
+      "sort_order": 5,
+      "is_filter_visible": true,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "axis_id": 7,
+      "key": "industrial_use",
+      "name": {
+        "EN": "Industrial Use"
+      },
+      "selection_mode": "multi",
+      "hierarchy_level": 3,
+      "sort_order": 6,
+      "is_filter_visible": true,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    }
+  ],
+  "material_classification_values": [
+    {
+      "value_id": 1,
+      "axis_id": 1,
+      "key": "billet",
+      "name": {
+        "EN": "billet"
+      },
+      "sort_order": 0,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 2,
+      "axis_id": 2,
+      "key": "Ni-based",
+      "name": {
+        "EN": "Ni-based"
+      },
+      "sort_order": 0,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 3,
+      "axis_id": 3,
+      "key": "γ",
+      "name": {
+        "EN": "γ"
+      },
+      "sort_order": 0,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 4,
+      "axis_id": 4,
+      "key": "γ″",
+      "name": {
+        "EN": "γ″"
+      },
+      "sort_order": 0,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 5,
+      "axis_id": 4,
+      "key": "γ′",
+      "name": {
+        "EN": "γ′"
+      },
+      "sort_order": 1,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 6,
+      "axis_id": 4,
+      "key": "carbides",
+      "name": {
+        "EN": "carbides"
+      },
+      "sort_order": 2,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 7,
+      "axis_id": 5,
+      "key": "precipitation γ″",
+      "name": {
+        "EN": "precipitation γ″"
+      },
+      "sort_order": 0,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 8,
+      "axis_id": 5,
+      "key": "precipitation γ′",
+      "name": {
+        "EN": "precipitation γ′"
+      },
+      "sort_order": 1,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 9,
+      "axis_id": 5,
+      "key": "solid solution",
+      "name": {
+        "EN": "solid solution"
+      },
+      "sort_order": 2,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 10,
+      "axis_id": 5,
+      "key": "grain boundary",
+      "name": {
+        "EN": "grain boundary"
+      },
+      "sort_order": 3,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 11,
+      "axis_id": 6,
+      "key": "wrought",
+      "name": {
+        "EN": "wrought"
+      },
+      "sort_order": 0,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 12,
+      "axis_id": 6,
+      "key": "hot worked",
+      "name": {
+        "EN": "hot worked"
+      },
+      "sort_order": 1,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 13,
+      "axis_id": 6,
+      "key": "solution treated",
+      "name": {
+        "EN": "solution treated"
+      },
+      "sort_order": 2,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 14,
+      "axis_id": 6,
+      "key": "aged",
+      "name": {
+        "EN": "aged"
+      },
+      "sort_order": 3,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 15,
+      "axis_id": 7,
+      "key": "turbine disk",
+      "name": {
+        "EN": "turbine disk"
+      },
+      "sort_order": 0,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 16,
+      "axis_id": 7,
+      "key": "aerospace forging",
+      "name": {
+        "EN": "aerospace forging"
+      },
+      "sort_order": 1,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 17,
+      "axis_id": 7,
+      "key": "high-temperature components",
+      "name": {
+        "EN": "high-temperature components"
+      },
+      "sort_order": 2,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 18,
+      "axis_id": 2,
+      "key": "Ti-based",
+      "name": {
+        "EN": "Ti-based"
+      },
+      "sort_order": 1,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 19,
+      "axis_id": 3,
+      "key": "α",
+      "name": {
+        "EN": "α"
+      },
+      "sort_order": 1,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 20,
+      "axis_id": 4,
+      "key": "α+β",
+      "name": {
+        "EN": "α+β"
+      },
+      "sort_order": 3,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 21,
+      "axis_id": 4,
+      "key": "lamellar",
+      "name": {
+        "EN": "lamellar"
+      },
+      "sort_order": 4,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 22,
+      "axis_id": 4,
+      "key": "equiaxed",
+      "name": {
+        "EN": "equiaxed"
+      },
+      "sort_order": 5,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 23,
+      "axis_id": 5,
+      "key": "phase boundary",
+      "name": {
+        "EN": "phase boundary"
+      },
+      "sort_order": 4,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 24,
+      "axis_id": 6,
+      "key": "annealed",
+      "name": {
+        "EN": "annealed"
+      },
+      "sort_order": 4,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 25,
+      "axis_id": 7,
+      "key": "compressor components",
+      "name": {
+        "EN": "compressor components"
+      },
+      "sort_order": 3,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 26,
+      "axis_id": 3,
+      "key": "β",
+      "name": {
+        "EN": "β"
+      },
+      "sort_order": 2,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 27,
+      "axis_id": 4,
+      "key": "metastable β",
+      "name": {
+        "EN": "metastable β"
+      },
+      "sort_order": 6,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 28,
+      "axis_id": 4,
+      "key": "fine precipitates",
+      "name": {
+        "EN": "fine precipitates"
+      },
+      "sort_order": 7,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 29,
+      "axis_id": 5,
+      "key": "precipitation",
+      "name": {
+        "EN": "precipitation"
+      },
+      "sort_order": 5,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 30,
+      "axis_id": 7,
+      "key": "high-strength aerospace forgings",
+      "name": {
+        "EN": "high-strength aerospace forgings"
+      },
+      "sort_order": 4,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 31,
+      "axis_id": 7,
+      "key": "aerospace structural components",
+      "name": {
+        "EN": "aerospace structural components"
+      },
+      "sort_order": 5,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 32,
+      "axis_id": 7,
+      "key": "sheet and forging applications",
+      "name": {
+        "EN": "sheet and forging applications"
+      },
+      "sort_order": 6,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 33,
+      "axis_id": 7,
+      "key": "medical implants",
+      "name": {
+        "EN": "medical implants"
+      },
+      "sort_order": 7,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 34,
+      "axis_id": 7,
+      "key": "structural components",
+      "name": {
+        "EN": "structural components"
+      },
+      "sort_order": 8,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 35,
+      "axis_id": 3,
+      "key": "α+β",
+      "name": {
+        "EN": "α+β"
+      },
+      "sort_order": 3,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 36,
+      "axis_id": 4,
+      "key": "bimodal",
+      "name": {
+        "EN": "bimodal"
+      },
+      "sort_order": 8,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 37,
+      "axis_id": 6,
+      "key": "thermomechanical processing",
+      "name": {
+        "EN": "thermomechanical processing"
+      },
+      "sort_order": 5,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 38,
+      "axis_id": 7,
+      "key": "landing gear",
+      "name": {
+        "EN": "landing gear"
+      },
+      "sort_order": 9,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 39,
+      "axis_id": 7,
+      "key": "high-strength forgings",
+      "name": {
+        "EN": "high-strength forgings"
+      },
+      "sort_order": 10,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 40,
+      "axis_id": 4,
+      "key": "fine grain",
+      "name": {
+        "EN": "fine grain"
+      },
+      "sort_order": 9,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 41,
+      "axis_id": 7,
+      "key": "damage-tolerant aerospace structures",
+      "name": {
+        "EN": "damage-tolerant aerospace structures"
+      },
+      "sort_order": 11,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 42,
+      "axis_id": 7,
+      "key": "high-temperature titanium components",
+      "name": {
+        "EN": "high-temperature titanium components"
+      },
+      "sort_order": 12,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 43,
+      "axis_id": 4,
+      "key": "delta phase",
+      "name": {
+        "EN": "delta phase"
+      },
+      "sort_order": 10,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 44,
+      "axis_id": 6,
+      "key": "forged",
+      "name": {
+        "EN": "forged"
+      },
+      "sort_order": 6,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 45,
+      "axis_id": 7,
+      "key": "gas turbine components",
+      "name": {
+        "EN": "gas turbine components"
+      },
+      "sort_order": 13,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 46,
+      "axis_id": 7,
+      "key": "rocket engine components",
+      "name": {
+        "EN": "rocket engine components"
+      },
+      "sort_order": 14,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 47,
+      "axis_id": 7,
+      "key": "oil and gas downhole components",
+      "name": {
+        "EN": "oil and gas downhole components"
+      },
+      "sort_order": 15,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 48,
+      "axis_id": 7,
+      "key": "cryogenic service components",
+      "name": {
+        "EN": "cryogenic service components"
+      },
+      "sort_order": 16,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 49,
+      "axis_id": 4,
+      "key": "γ′ precipitates",
+      "name": {
+        "EN": "γ′ precipitates"
+      },
+      "sort_order": 11,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 50,
+      "axis_id": 6,
+      "key": "VIM",
+      "name": {
+        "EN": "VIM"
+      },
+      "sort_order": 7,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 51,
+      "axis_id": 6,
+      "key": "VAR/ESR",
+      "name": {
+        "EN": "VAR/ESR"
+      },
+      "sort_order": 8,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 52,
+      "axis_id": 6,
+      "key": "stabilized",
+      "name": {
+        "EN": "stabilized"
+      },
+      "sort_order": 9,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 53,
+      "axis_id": 7,
+      "key": "gas turbine rotating parts",
+      "name": {
+        "EN": "gas turbine rotating parts"
+      },
+      "sort_order": 17,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 54,
+      "axis_id": 7,
+      "key": "compressor disks",
+      "name": {
+        "EN": "compressor disks"
+      },
+      "sort_order": 18,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 55,
+      "axis_id": 7,
+      "key": "shafts and spacers",
+      "name": {
+        "EN": "shafts and spacers"
+      },
+      "sort_order": 19,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    },
+    {
+      "value_id": 56,
+      "axis_id": 7,
+      "key": "high-temperature fasteners",
+      "name": {
+        "EN": "high-temperature fasteners"
+      },
+      "sort_order": 20,
+      "is_obsolete": false,
+      "created_by_user_id": 1
+    }
+  ],
+  "material_classification_assignments": [
+    {
+      "material_id": 1,
+      "value_id": 1,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 2,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 3,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 4,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 5,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 6,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 7,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 8,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 9,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 10,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 11,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 12,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 13,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 14,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 15,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 16,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 17,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 2,
+      "value_id": 1,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 2,
+      "value_id": 18,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 2,
+      "value_id": 19,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 2,
+      "value_id": 20,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 2,
+      "value_id": 21,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 2,
+      "value_id": 22,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 2,
+      "value_id": 9,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 2,
+      "value_id": 10,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 2,
+      "value_id": 23,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 2,
+      "value_id": 11,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 2,
+      "value_id": 12,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 2,
+      "value_id": 24,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 2,
+      "value_id": 16,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 2,
+      "value_id": 25,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 3,
+      "value_id": 1,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 3,
+      "value_id": 18,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 3,
+      "value_id": 26,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 3,
+      "value_id": 27,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 3,
+      "value_id": 28,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 3,
+      "value_id": 9,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 3,
+      "value_id": 29,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 3,
+      "value_id": 10,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 3,
+      "value_id": 11,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 3,
+      "value_id": 13,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 3,
+      "value_id": 14,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 3,
+      "value_id": 30,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 4,
+      "value_id": 1,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 4,
+      "value_id": 18,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 4,
+      "value_id": 26,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 4,
+      "value_id": 27,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 4,
+      "value_id": 28,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 4,
+      "value_id": 9,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 4,
+      "value_id": 29,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 4,
+      "value_id": 11,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 4,
+      "value_id": 13,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 4,
+      "value_id": 14,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 4,
+      "value_id": 31,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 5,
+      "value_id": 1,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 5,
+      "value_id": 18,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 5,
+      "value_id": 19,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 5,
+      "value_id": 20,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 5,
+      "value_id": 9,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 5,
+      "value_id": 10,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 5,
+      "value_id": 11,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 5,
+      "value_id": 12,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 5,
+      "value_id": 24,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 5,
+      "value_id": 32,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 1,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 18,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 19,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 20,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 21,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 22,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 9,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 10,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 23,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 11,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 12,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 24,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 13,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 14,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 16,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 33,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 6,
+      "value_id": 34,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 7,
+      "value_id": 1,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 7,
+      "value_id": 18,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 7,
+      "value_id": 35,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 7,
+      "value_id": 36,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 7,
+      "value_id": 21,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 7,
+      "value_id": 9,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 7,
+      "value_id": 29,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 7,
+      "value_id": 10,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 7,
+      "value_id": 11,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 7,
+      "value_id": 37,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 7,
+      "value_id": 13,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 7,
+      "value_id": 14,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 7,
+      "value_id": 30,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 8,
+      "value_id": 1,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 8,
+      "value_id": 18,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 8,
+      "value_id": 26,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 8,
+      "value_id": 27,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 8,
+      "value_id": 28,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 8,
+      "value_id": 29,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 8,
+      "value_id": 9,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 8,
+      "value_id": 11,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 8,
+      "value_id": 13,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 8,
+      "value_id": 14,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 8,
+      "value_id": 38,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 8,
+      "value_id": 39,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 9,
+      "value_id": 1,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 9,
+      "value_id": 18,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 9,
+      "value_id": 35,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 9,
+      "value_id": 36,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 9,
+      "value_id": 40,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 9,
+      "value_id": 9,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 9,
+      "value_id": 29,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 9,
+      "value_id": 10,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 9,
+      "value_id": 11,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 9,
+      "value_id": 37,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 9,
+      "value_id": 14,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 9,
+      "value_id": 41,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 10,
+      "value_id": 1,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 10,
+      "value_id": 18,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 10,
+      "value_id": 26,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 10,
+      "value_id": 27,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 10,
+      "value_id": 28,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 10,
+      "value_id": 29,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 10,
+      "value_id": 9,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 10,
+      "value_id": 11,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 10,
+      "value_id": 13,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 10,
+      "value_id": 14,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 10,
+      "value_id": 30,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 11,
+      "value_id": 1,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 11,
+      "value_id": 18,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 11,
+      "value_id": 19,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 11,
+      "value_id": 20,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 11,
+      "value_id": 9,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 11,
+      "value_id": 10,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 11,
+      "value_id": 11,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 11,
+      "value_id": 12,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 11,
+      "value_id": 24,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 11,
+      "value_id": 42,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 43,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 44,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 45,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 46,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 47,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 1,
+      "value_id": 48,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 1,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 2,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 3,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 49,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 6,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 8,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 9,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 10,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 11,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 12,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 13,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 14,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 50,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 51,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 52,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 53,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 54,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 15,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 55,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 56,
+      "created_by_user_id": 1
+    },
+    {
+      "material_id": 12,
+      "value_id": 17,
+      "created_by_user_id": 1
+    }
+  ]
+}

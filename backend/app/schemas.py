@@ -332,18 +332,98 @@ class LibraryDbDieTypeResponse(BaseModel):
 
 class LibraryDbMaterialResponse(BaseModel):
     material_id: int
-    name: Any
-    source: str
-    source_version: str
-    file_name: str
-    properties: Any
+    name: str
+    deform_file_name: Optional[str]
+    note: Optional[str]
+    classifications: Dict[str, List[str]] = Field(default_factory=dict)
+    designations: List[str] = Field(default_factory=list)
+    standards: List[str] = Field(default_factory=list)
+    designation_links: List["MaterialDesignationLinkResponse"] = Field(default_factory=list)
+    test_records_count: int = 0
     is_obsolete: bool
-    created_at: datetime
-    obsolete_at: Optional[datetime]
     owner_id: Optional[int]
 
     class Config:
         from_attributes = True
+
+
+class MaterialDesignationLinkResponse(BaseModel):
+    designation: str
+    standard: Optional[str] = None
+    country: Optional[str] = None
+    chemistry_limits: Dict[str, str] = Field(default_factory=dict)
+    is_main_designation: bool = False
+
+
+class MaterialVisualAxisResponse(BaseModel):
+    key: str
+    label: str
+    unit: Optional[str] = None
+
+
+class MaterialVisualPointResponse(BaseModel):
+    x: float
+    y: float
+
+
+class MaterialVisualSeriesResponse(BaseModel):
+    key: str
+    label: str
+    points: List[MaterialVisualPointResponse]
+
+
+class MaterialVisualDiagramResponse(BaseModel):
+    key: str
+    title: str
+    kind: str
+    x_axis: MaterialVisualAxisResponse
+    y_axis: MaterialVisualAxisResponse
+    series: List[MaterialVisualSeriesResponse]
+    controls: Optional[Dict[str, Any]] = None
+
+
+class LibraryDbMaterialVisualResponse(BaseModel):
+    material_id: int
+    source: str
+    file_name: str
+    diagrams: List[MaterialVisualDiagramResponse]
+
+
+class MaterialClassificationValueResponse(BaseModel):
+    value_id: int
+    axis_id: int
+    key: str
+    name: Any
+    color: Optional[str]
+    sort_order: int
+    is_obsolete: bool
+    created_at: datetime
+    created_by_user_id: Optional[int]
+
+    class Config:
+        from_attributes = True
+
+
+class MaterialClassificationAxisResponse(BaseModel):
+    axis_id: int
+    key: str
+    name: Any
+    description: Optional[Any]
+    selection_mode: str
+    hierarchy_level: int
+    sort_order: int
+    is_filter_visible: bool
+    is_obsolete: bool
+    created_at: datetime
+    created_by_user_id: Optional[int]
+    values: List[MaterialClassificationValueResponse] = Field(default_factory=list)
+
+    class Config:
+        from_attributes = True
+
+
+class LibraryDbMaterialClassificationResponse(BaseModel):
+    axes: List[MaterialClassificationAxisResponse] = Field(default_factory=list)
 
 
 class LibraryDbDieResponse(BaseModel):

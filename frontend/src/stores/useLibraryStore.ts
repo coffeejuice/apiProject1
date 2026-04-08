@@ -5,6 +5,7 @@ import type {
   DieRecord,
   DieTypeRecord,
   LibraryDbUserRecord,
+  MaterialClassificationCatalogRecord,
   MaterialRecord,
   PressModeRecord,
   PressRecord,
@@ -14,6 +15,7 @@ interface LibraryState {
   users: LibraryDbUserRecord[]
   dieTypes: DieTypeRecord[]
   materials: MaterialRecord[]
+  materialClassificationCatalog: MaterialClassificationCatalogRecord | null
   dies: DieRecord[]
   dieAssemblies: DieAssemblyRecord[]
   presses: PressRecord[]
@@ -29,6 +31,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
   users: [],
   dieTypes: [],
   materials: [],
+  materialClassificationCatalog: null,
   dies: [],
   dieAssemblies: [],
   presses: [],
@@ -44,6 +47,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       usersResponse,
       dieTypesResponse,
       materialsResponse,
+      materialClassificationResponse,
       diesResponse,
       dieAssembliesResponse,
       pressesResponse,
@@ -52,6 +56,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       apiClient.get<LibraryDbUserRecord[]>('/library/db/users'),
       apiClient.get<DieTypeRecord[]>('/library/db/die-types'),
       apiClient.get<MaterialRecord[]>('/library/db/materials'),
+      apiClient.get<MaterialClassificationCatalogRecord>('/library/db/material-classification'),
       apiClient.get<DieRecord[]>('/library/db/dies'),
       apiClient.get<DieAssemblyRecord[]>('/library/db/die-assemblies'),
       apiClient.get<PressRecord[]>('/library/db/presses'),
@@ -62,6 +67,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       usersResponse,
       dieTypesResponse,
       materialsResponse,
+      materialClassificationResponse,
       diesResponse,
       dieAssembliesResponse,
       pressesResponse,
@@ -72,6 +78,10 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       users: usersResponse.ok && usersResponse.data ? usersResponse.data : [],
       dieTypes: dieTypesResponse.ok && dieTypesResponse.data ? dieTypesResponse.data : [],
       materials: materialsResponse.ok && materialsResponse.data ? materialsResponse.data : [],
+      materialClassificationCatalog:
+        materialClassificationResponse.ok && materialClassificationResponse.data
+          ? materialClassificationResponse.data
+          : null,
       dies: diesResponse.ok && diesResponse.data ? diesResponse.data : [],
       dieAssemblies: dieAssembliesResponse.ok && dieAssembliesResponse.data ? dieAssembliesResponse.data : [],
       presses: pressesResponse.ok && pressesResponse.data ? pressesResponse.data : [],

@@ -5,6 +5,7 @@ This repository uses Codex-specific context files in `.codex/context/`.
 Read order for every session:
 1. `.codex/context/PROJECT_CONTEXT.md`
 2. `.codex/context/DOCUMENT_BLOCK_ARCHITECTURE.md`
+3. `.codex/context/DB_SCHEMA.md`
 
 Scope:
 - Backend rules apply to `backend/`.

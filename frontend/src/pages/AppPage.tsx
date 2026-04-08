@@ -10,9 +10,9 @@ import VisualEditor from '../components/VisualEditor'
 import type { BlockData } from '../components/blocks'
 import type { LibraryEditorView, MainEditorView } from '../components/editorPaneTypes'
 import {
+  LibraryMaterialsView,
   LibraryDieAssembliesView,
   LibraryDiesView,
-  LibraryMaterialsView,
   LibraryPressesView,
 } from '../components/library/LibraryViews'
 import { useDocumentsStore } from '../stores/useDocumentsStore'
@@ -94,6 +94,7 @@ export default function AppPage() {
     users,
     dieTypes,
     materials,
+    materialClassificationCatalog,
     dies,
     dieAssemblies,
     presses,
@@ -244,35 +245,39 @@ export default function AppPage() {
                   }}
                 />
               )}
-              libraryActionsView={(
-                <div className="ui-pane-header flex items-center justify-between gap-3">
-                  <div className="ui-pane-title">TopEditorPane</div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button type="button" className="ui-btn-primary" onClick={() => undefined}>
-                      {libraryActions.createLabel}
-                    </button>
-                    <button
-                      type="button"
-                      className="ui-btn"
-                      disabled={libraryActions.selectedId === null}
-                      onClick={() => undefined}
-                    >
-                      {libraryActions.cloneLabel}
-                    </button>
-                    <button
-                      type="button"
-                      className="ui-btn-danger"
-                      disabled={libraryActions.selectedId === null}
-                      onClick={() => undefined}
-                    >
-                      {libraryActions.deleteLabel}
-                    </button>
-                    <div className="ui-badge">
-                      Selected: {libraryActions.selectedId ?? 'none'}
-                    </div>
-                  </div>
-                </div>
-              )}
+              libraryActionsView={
+                mainEditorView === 'materials'
+                  ? null
+                  : (
+                      <div className="ui-pane-header flex items-center justify-between gap-3">
+                        <div className="ui-pane-title">TopEditorPane</div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button type="button" className="ui-btn-primary" onClick={() => undefined}>
+                            {libraryActions.createLabel}
+                          </button>
+                          <button
+                            type="button"
+                            className="ui-btn"
+                            disabled={libraryActions.selectedId === null}
+                            onClick={() => undefined}
+                          >
+                            {libraryActions.cloneLabel}
+                          </button>
+                          <button
+                            type="button"
+                            className="ui-btn-danger"
+                            disabled={libraryActions.selectedId === null}
+                            onClick={() => undefined}
+                          >
+                            {libraryActions.deleteLabel}
+                          </button>
+                          <div className="ui-badge">
+                            Selected: {libraryActions.selectedId ?? 'none'}
+                          </div>
+                        </div>
+                      </div>
+                    )
+              }
             />
 
             <MainEditorPane
@@ -322,10 +327,12 @@ export default function AppPage() {
               materialsView={(
                 <LibraryMaterialsView
                   materials={materials}
+                  materialClassificationCatalog={materialClassificationCatalog}
                   users={users}
                   currentUserId={user?.user_id ?? null}
                   selectedMaterialId={selectedMaterialId}
                   onSelectMaterialId={setSelectedMaterialId}
+                  isMaterialListVisible={activeToolView === 'library'}
                   isLoading={isLibraryLoading}
                   error={libraryError}
                 />
