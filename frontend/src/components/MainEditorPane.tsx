@@ -9,6 +9,7 @@ interface MainEditorPaneProps {
   dieAssembliesView: ReactNode
   pressesView: ReactNode
   materialsView: ReactNode
+  simulationView: ReactNode
 }
 
 export default function MainEditorPane({
@@ -18,6 +19,7 @@ export default function MainEditorPane({
   dieAssembliesView,
   pressesView,
   materialsView,
+  simulationView,
 }: MainEditorPaneProps) {
   if (view === 'blockEditor') {
     return <div className="flex-1 min-h-0">{blockEditorView}</div>
@@ -39,5 +41,9 @@ export default function MainEditorPane({
     return <div className="flex-1 min-h-0">{materialsView}</div>
   }
 
-  return <div className="flex-1 min-h-0">{materialsView}</div>
+  if (view === 'simulation') {
+    return <div className="flex-1 min-h-0">{simulationView}</div>
+  }
+
+  return <div className="flex-1 min-h-0">{blockEditorView}</div>
 }

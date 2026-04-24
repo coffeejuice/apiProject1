@@ -2,7 +2,7 @@ from app.models.library.library_item import Library, LibraryType
 from app.models.library.library import OperationsLibrary, TimeBetweenOperations
 from app.models.library.die import Die, DieAssembly, DieType
 from app.models.library.press_die_map import PressDieMap
-from app.models.library.material import Material
+from app.models.library.material import Material, MaterialVersion
 from app.models.library.material_classification import (
     MaterialClassificationAssignment,
     MaterialClassificationAxis,
@@ -36,6 +36,7 @@ __all__ = [
     "DieType",
     "PressDieMap",
     "Material",
+    "MaterialVersion",
     "MaterialClassificationAxis",
     "MaterialClassificationValue",
     "MaterialClassificationAssignment",

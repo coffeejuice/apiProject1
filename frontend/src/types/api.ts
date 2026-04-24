@@ -132,6 +132,136 @@ export interface CopyDocumentRequest {
   editor_user_id?: number
 }
 
+export type WorkflowSimulationStatus = 'stop' | 'run' | 'pause' | 'error' | 'done'
+
+export interface DocumentWorkflowRecord {
+  document_id: number
+  document_version_id?: number | null
+  parent_document_version_id?: number | null
+  document_fixed: boolean
+  workflow_state: string
+  preprocess_requested: boolean
+  automation_active: boolean
+  is_editable?: boolean | null
+  simulation_status?: WorkflowSimulationStatus | null
+  document_priority_enum?: string | null
+  simulation_priority?: number | null
+  operations_count?: number | null
+  simulation_percent?: number | null
+  simulation_expected_duration_days?: number | null
+  simulation_server_id?: number | null
+  created_at?: string | null
+  last_modified?: string | null
+  ran_at?: string | null
+  finished_at?: string | null
+}
+
+export interface WorkflowDocumentStatusRow {
+  document_id: number
+  document_name: string
+  project_id: number
+  project_name: string
+  owner_user_id: number
+  owner_login: string
+  source_document_id?: number | null
+  document_version_id?: number | null
+  workflow_state: string
+  document_fixed: boolean
+  preprocess_requested: boolean
+  automation_active: boolean
+  is_editable?: boolean | null
+  simulation_status?: WorkflowSimulationStatus | null
+  simulation_priority?: number | null
+  queue_position?: number | null
+  operations_count?: number | null
+  simulation_percent?: number | null
+  last_modified?: string | null
+}
+
+export interface WorkflowDocumentStatusListResponse {
+  documents: WorkflowDocumentStatusRow[]
+}
+
+export interface WorkflowSimulationStatusRow {
+  document_version_id: number
+  document_id: number
+  document_name: string
+  version_name: string
+  project_id: number
+  project_name: string
+  owner_user_id: number
+  owner_login: string
+  workflow_state: string
+  document_fixed: boolean
+  preprocess_requested: boolean
+  automation_active: boolean
+  is_editable: boolean
+  simulation_status: WorkflowSimulationStatus
+  simulation_priority?: number | null
+  queue_position?: number | null
+  operations_count?: number | null
+  simulation_percent?: number | null
+  simulation_expected_duration_days?: number | null
+  simulation_server_id?: number | null
+  simulation_server_name?: string | null
+  last_modified?: string | null
+  ran_at?: string | null
+  finished_at?: string | null
+}
+
+export interface WorkflowSimulationStatusListResponse {
+  simulations: WorkflowSimulationStatusRow[]
+}
+
+export interface WorkflowSolverPcStatusRow {
+  server_id: number
+  name: string
+  hostname: string
+  ip: string
+  is_active: boolean
+  worker_state: 'offline' | 'idle' | 'busy' | string
+  document_version_id?: number | null
+  document_name?: string | null
+  version_name?: string | null
+  time_started?: string | null
+  time_updated?: string | null
+  time_finished?: string | null
+  version: string
+  cpu_count?: number | null
+  max_threads_count?: number | null
+  ram_free_size_gb?: number | null
+  hdd_free_size_gb?: number | null
+  timeout_counter: number
+}
+
+export interface WorkflowSolverPcStatusListResponse {
+  solver_pcs: WorkflowSolverPcStatusRow[]
+}
+
+export interface WorkflowQueueRequest {
+  simulation_priority?: number
+  document_priority_enum?: string
+}
+
+export interface WorkflowPriorityUpdateRequest {
+  simulation_priority?: number
+  document_priority_enum?: string
+}
+
+export interface WorkflowSimulationReorderRequest {
+  ordered_document_version_ids: number[]
+}
+
+export interface WorkflowSimulationReorderResponse {
+  updated_document_version_ids: number[]
+}
+
+export interface WorkflowForkRequest {
+  name?: string
+  notes?: string
+  editor_user_id?: number
+}
+
 // Blocks
 export interface BlockData {
   block_id: string
@@ -148,7 +278,7 @@ export interface BlockData {
 }
 
 export interface Operation {
-  op_type: 'insert_block' | 'delete_block' | 'move_block' | 'update_text' | 'update_props'
+  op_type: 'insert_block' | 'delete_block' | 'move_block' | 'update_props'
   data: Record<string, unknown>
 }
 
@@ -162,6 +292,43 @@ export interface CommitResponse {
 }
 
 // Library DB tables
+export interface OperationBlockTypeRecord {
+  type_id: number
+  parent_type_id?: number | null
+  row: number
+  process_fixed_row?: number | null
+  allow_copies: boolean
+  text_id: string
+  library_name: string
+  process_name: string
+  labels: string[]
+  db_column_names: string[]
+  foreign_keys: string[]
+  is_simulation: boolean
+  is_geometry: boolean
+  is_die_assembly: boolean
+  is_custom_die_assembly: boolean
+  is_press: boolean
+  is_feed: boolean
+  is_top_die: boolean
+  is_bottom_die: boolean
+  is_speed: boolean
+  is_billet_category: boolean
+  is_heating_category: boolean
+  is_forming_category: boolean
+  is_forming_operation: boolean
+  is_surface_treatment_operation: boolean
+  deformation_type?: string | null
+  speed_column_name?: string | null
+  trigger?: string | null
+  is_initialize: boolean
+  is_accumulate: boolean
+  is_keep: boolean
+  is_obsolete: boolean
+  has_children: boolean
+  insertable: boolean
+}
+
 export interface LibraryDbUserRecord {
   user_id: number
   login: string
@@ -193,6 +360,102 @@ export interface MaterialDesignationLinkRecord {
   country?: string | null
   chemistry_limits: Record<string, string>
   is_main_designation: boolean
+}
+
+export interface MaterialStandardCatalogItemRecord {
+  standard_id: number
+  standard_number: string
+  issue_organization?: string | null
+  country_or_region?: string | null
+  geographic_level?: string | null
+  label: string
+}
+
+export interface MaterialWorkspaceDesignationRecord {
+  designation_id: number
+  designation: string
+  standard_id?: number | null
+  standard_label?: string | null
+  country?: string | null
+  note?: string | null
+  is_main_designation: boolean
+}
+
+export interface MaterialWorkspaceTestRecordSummaryRecord {
+  test_record_id: number
+  designation_id?: number | null
+  designation?: string | null
+  publication_id?: number | null
+  publication_title?: string | null
+  heat_number?: string | null
+  batch_number?: string | null
+  sample_label?: string | null
+  note?: string | null
+  chemistry_results_count: number
+  property_tables_count: number
+}
+
+export interface MaterialWorkspaceRecord {
+  material_id: number
+  name: string
+  deform_file_name?: string | null
+  note?: string | null
+  classifications: Record<string, string[]>
+  designations: MaterialWorkspaceDesignationRecord[]
+  test_records: MaterialWorkspaceTestRecordSummaryRecord[]
+  is_obsolete: boolean
+  owner_id?: number | null
+}
+
+export interface MaterialWorkspaceDesignationInput {
+  designation_id?: number | null
+  designation: string
+  standard_id?: number | null
+  note?: string | null
+  is_main_designation: boolean
+}
+
+export interface MaterialWorkspaceUpsertRequest {
+  name: string
+  deform_file_name?: string | null
+  note?: string | null
+  classifications: Record<string, string[]>
+  designations: MaterialWorkspaceDesignationInput[]
+  is_obsolete: boolean
+}
+
+export interface MaterialCopyRequest {
+  source_material_id: number
+  target_material_id: number
+  copy_identity_fields: string[]
+  copy_classifications: boolean
+  replace_classifications: boolean
+  copy_designations: boolean
+  designation_ids: number[]
+  replace_designations: boolean
+  copy_test_records: boolean
+  test_record_ids: number[]
+}
+
+export interface MaterialCopyResponse {
+  target_material_id: number
+  copied_identity_fields: string[]
+  copied_designations_count: number
+  copied_test_records_count: number
+  copied_classification_assignments_count: number
+}
+
+export interface MaterialDeleteRequest {
+  material_ids: number[]
+}
+
+export interface MaterialDeleteResponse {
+  deleted_material_ids: number[]
+  deleted_count: number
+}
+
+export interface MaterialDeformFileUploadResponse {
+  file_name: string
 }
 
 export interface MaterialClassificationValueRecord {
@@ -266,6 +529,7 @@ export interface DieRecord {
   die_type_id: number
   owner_user_id?: number | null
   die_template_file_name?: string | null
+  classification_path?: string | null
   stl_file_name?: string | null
   stl_file_url?: string | null
   stl_file_exists?: boolean
@@ -284,6 +548,7 @@ export interface DieAssemblyRecord {
   bottom_die_id?: number | null
   left_die_id?: number | null
   right_die_id?: number | null
+  classification_path?: string | null
   is_obsolete?: boolean | null
   created_at: string
   obsolete_at?: string | null

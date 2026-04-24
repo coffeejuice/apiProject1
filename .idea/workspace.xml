@@ -7,25 +7,358 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Add simple Material view">
+    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Add blocks, blocks list and blocks clipboard">
+      <change afterPath="$PROJECT_DIR$/.codex/context/OLD_BACKEND_MIGRATION_MAP.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/alembic/versions/4f91c2a6b8d3_add_simulation_runtime_tables.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/alembic/versions/6c2b8f1e4a9d_rename_block_tables_add_material_versions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/alembic/versions/8d4a1f6c2b7e_add_preprocess_runtime_state_to_document_versions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/alembic/versions/a6e4c8f2b9d5_split_deformation_feed_directions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/alembic/versions/b2d6f8a1c4e9_add_die_classification_paths.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/alembic/versions/b7e2c9a4d6f1_seed_document_blocks_library_from_old_operations.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/alembic/versions/c4a9d2e7b8f3_prune_billet_catalog_blocks.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/alembic/versions/c9e2a7d4f6b1_split_deformation_bundle_blocks.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/alembic/versions/d4f8b2c7e9a1_reorganize_deformation_feed_speed_blocks.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/alembic/versions/d8f1b6c3a9e2_merge_furnace_catalog_blocks.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/alembic/versions/e2f4a6b8c9d1_merge_deformation_catalog_blocks.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/alembic/versions/e7c9a1d4f8b2_merge_setup_blocks_into_title_and_deformation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/alembic/versions/f9a7c3d2e1b4_rename_full_die_speed_to_transversal_cogging.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/models/workflow_runtime.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/orchestration/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/orchestration/channels.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/orchestration/claims.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/orchestration/coordinator.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/orchestration/leases.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/orchestration/pg_notify.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/orchestration/runtime_backend.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/orchestration/state_machine.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/routers/workflow.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/files/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/files/paths.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/files/storage.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/operation_blocks.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/postprocess/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/postprocess/image_generation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/postprocess/ppt_builder.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/postprocess/reporter.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/compiler.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/control_program_builder.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/geometry.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/prolongation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/prolongation_geometry.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/upsetting.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/solver/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/solver/boundary_conditions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/solver/deform_io.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/solver/operations/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/solver/operations/billet.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/solver/operations/cogging_bite.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/solver/operations/cut.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/solver/operations/forming_frozen_speed_window_boxes.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/solver/operations/heat.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/solver/operations/offset_and_rotation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/solver/operations/remesh.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/solver/runner.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/solver/step_executor.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/services/workflow_commands.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/workers/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/workers/base.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/workers/post_worker.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/workers/pre_worker.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/workers/solver_worker.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/data/materials/A-286[1800F(980C)]_s000002.KEY" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/data/materials/A-286[1800F(980C)]_s000002_1.KEY" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/data/materials/A-286[1800F(980C)]_s000002_2.KEY" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/data/materials/WASPALOY[1800-2050F(980-1120C)]_s000006.KEY" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/deploy/windows/install_api_host.ps1" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/deploy/windows/install_solver_host.ps1" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/deploy/windows/nssm/.gitkeep" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/DB Migration.ods" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/common/boundary_conditions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/common/common_funcs.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/common/file_operations.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/common/fluent_bit_logger.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/common/library_sql_query.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/common/matlib.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/common/plot_funcs.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/common/queries.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/common/read_deform_keyfile.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/common/shapely_2d_funcs.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/common/time_between_operations.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/config.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/config/Testing Alex network config.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/config/config.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_bottom.stl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_bottom.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_minus_y.stl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_minus_y.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_plus_y.stl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_plus_y.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_top.stl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_top.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_45_flat_550_bottom.STL" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_45_flat_550_bottom.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_45_flat_550_top.STL" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_45_flat_550_top.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_650_bottom.STL" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_650_bottom.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_650_top.STL" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_650_top.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_900_bottom.STL" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_900_bottom.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_900_top.STL" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_900_top.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_v_a122_d355_d180_bottom.stl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_v_a122_d355_d180_bottom.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_v_a122_d355_d180_top.stl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_v_a122_d355_d180_top.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_Inc718_20220602.key" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TA15_20221024_RUSSIA_JMATPRO.KEY" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TB18_20220602.key" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TB6_20220717.key" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TC17_20220602.key" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TC18_TC18-D500-T16-v04-sparse.KEY" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TC21_20220622.KEY" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TC2_20220602.key" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TC4_20220602.key" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_Ti5553_20220621.key" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_Ti80_WST_20240528.KEY" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/operations/cogging_bite_01.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/operations/cut_0002.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/operations/forming_frozen_speed_window_boxes_01.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/operations/heat_0004.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/operations/offset_rotation_z_y_x_01.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/operations/remesh_0001.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/data/ppt/template.pptx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/notifications_listener_service.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/plot_service.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/plot_service_2.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/server.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/service_file_remover.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/connections.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_admin_management_functions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_functions_and_triggers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_functions_communicate_with_client.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_operations.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_operations_table_functions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_queue_functions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_run_stop_buttons_functions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_tables.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_tooltip_images.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/hash_password.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_1.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_10.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_11.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_12.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_13.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_14.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_15.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_16.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_17.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_18.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_19.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_2.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_20.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_21.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_22.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_23.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_24.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_25.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_26.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_27.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_28.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_29.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_3.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_30.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_31.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_32.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_33.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_34.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_35.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_36.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_37.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_38.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_39.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_4.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_40.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_41.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_42.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_43.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_44.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_45.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_46.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_47.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_48.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_49.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_5.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_50.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_51.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_52.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_53.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_54.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_55.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_56.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_57.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_58.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_59.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_6.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_60.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_61.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_62.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_63.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_64.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_65.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_66.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_67.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_68.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_69.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_7.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_70.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_71.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_72.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_73.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_74.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_75.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_76.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_77.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_78.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_79.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_8.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_80.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_81.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_82.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_83.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_84.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_85.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_86.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_87.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_88.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_89.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_9.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_90.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_91.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_92.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_93.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_94.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_95.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_96.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_97.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_98.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_99.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/import_json.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_die_records_from_library.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_feed_direction_records.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_material_records.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_or_update_table_from_library.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_press_records_from_library.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_time_records.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/library_dictionary.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/operations.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/query_operation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/query_press.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/test_records_add.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_post/gen_ppt.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_post/mayavi_worker_class.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_post/post_worker_class.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_post/tensor_variables.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_pre/geometry_class.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_pre/pre_worker_class.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/import_last_step_parameters.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/billet.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/cogging_bite.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/cut.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/forming_frozen_speed_window_boxes.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/heat.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/offset_and_rotation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/remesh.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/plot_2d.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/pre_functions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/shapely_functions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/simulation_worker_class.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/solver_functions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/main.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/requirements.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/add_attributes_to_operations_json.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/add_die_records_from_library.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/add_operations.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/add_press_records_from_library.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/autostart.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/convert.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/die_test.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/fluent-bit.conf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/freeze_packages.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/get_available_lybrary_type_id_numbers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/install.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/install_initial.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/install_update.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/operations_old.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/pb_dumpall.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/query_and_file_functions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/refresh_time_between_operations.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/rot4.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/setup_sql.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/srv_post/server.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/srv_pre/server.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/test_psql.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend_old/utils/triggers.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/blocks/OperationBlock.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/clipboard/ClipboardPane.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/simulation/SimulationView.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/ui/Tooltip.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/stores/useBlockClipboardStore.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.codex/context/DB_SCHEMA.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/DB_SCHEMA.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.codex/context/DOCUMENT_BLOCK_ARCHITECTURE.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/DOCUMENT_BLOCK_ARCHITECTURE.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.codex/context/PROJECT_CONTEXT.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/PROJECT_CONTEXT.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/apiProject1.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/apiProject1.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/document/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block_types/document_heading.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/document_heading.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block_types/input_workpiece.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/input_workpiece.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/document/document.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/document.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/models/library/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/library/die.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/die.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/library/library.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/library.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/models/library/material.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/material.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/routers/blocks.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/blocks.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/routers/document.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/document.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/routers/library.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/library.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/library_seed_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/library_seed_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/config/library.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/db_setup/reinit_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/db_setup/reinit_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/block_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/block_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/block_type_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/block_type_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/commit_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/commit_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/search_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/search_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/database_seeding/library.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/database_seeding/library.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data/database_seeding/materials.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/database_seeding/materials.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/scripts/operations.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/operations.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/scripts/operations.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/operations.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend_obsolete/waspaloy.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/BlockEditor.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/BlockEditor.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/MainEditorPane.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/MainEditorPane.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/MenuBar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/MenuBar.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/ToolsPane.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ToolsPane.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/TopEditorPane.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/TopEditorPane.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/ToolsSwitcher.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ToolsSwitcher.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/VisualEditor.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/VisualEditor.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/BasicContentBlock.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/BlockRegistry.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/blocks/BlockRegistry.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/DocumentHeadingBlock.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/blocks/DocumentHeadingBlock.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/InputWorkpieceBlock.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/blocks/InputWorkpieceBlock.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/blocks/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/editorPaneTypes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/editorPaneTypes.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/library/LibraryViews.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/library/LibraryViews.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/index.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/lib/apiClient.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/apiClient.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/lib/blockTypeMeta.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/blockTypeMeta.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/AppPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AppPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/stores/useLibraryStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/stores/useLibraryStore.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/stores/useDocumentsStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/stores/useDocumentsStore.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/types/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/types/api.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -34,7 +367,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="482" />
+    <option name="cachedIndexableFilesCount" value="782" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="FileTemplateManagerImpl">
@@ -90,7 +423,7 @@
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;npm.Dev Server.executor&quot;: &quot;Run&quot;,
     &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;/home/alextub/Documents/apiProject1/frontend/node_modules/prettier&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.idesettings.debugger.python&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;,
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
     &quot;ts.external.directory.path&quot;: &quot;/home/alextub/Documents/apiProject1/frontend/node_modules/typescript/lib&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
@@ -195,7 +528,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-3bd3a6803838-JavaScript-WS-261.22158.274" />
+        <option value="bundled-js-predefined-d6986cc7102b-3bd3a6803838-JavaScript-PY-261.22158.340" />
+        <option value="bundled-python-sdk-b63d5a1f7c97-b61e75351b1f-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.22158.340" />
       </set>
     </attachedChunks>
   </component>
@@ -271,7 +605,19 @@
       <workItem from="1775294703998" duration="2177000" />
       <workItem from="1775439388839" duration="1373000" />
       <workItem from="1775521811307" duration="1946000" />
-      <workItem from="1775606035838" duration="2737000" />
+      <workItem from="1775606035838" duration="3409000" />
+      <workItem from="1776053811859" duration="647000" />
+      <workItem from="1776123121236" duration="1232000" />
+      <workItem from="1776178586951" duration="36000" />
+      <workItem from="1776218580615" duration="1242000" />
+      <workItem from="1776248019834" duration="792000" />
+      <workItem from="1776307055778" duration="4451000" />
+      <workItem from="1776386260089" duration="629000" />
+      <workItem from="1776649089850" duration="1218000" />
+      <workItem from="1776689703673" duration="2423000" />
+      <workItem from="1776904389803" duration="644000" />
+      <workItem from="1777001754670" duration="734000" />
+      <workItem from="1777018185841" duration="1550000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -441,7 +787,15 @@
       <option name="project" value="LOCAL" />
       <updated>1775294613296</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="Add materials view">
+      <option name="closed" value="true" />
+      <created>1775630652493</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1775630652493</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
@@ -492,12 +846,14 @@
     <MESSAGE value="Create and apply new visual style (more dense)" />
     <MESSAGE value="Add *_FILES_ROOT variables into .env.example file" />
     <MESSAGE value="Add simple Material view" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add simple Material view" />
+    <MESSAGE value="Add materials view" />
+    <MESSAGE value="Add blocks, blocks list and blocks clipboard" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add blocks, blocks list and blocks clipboard" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/apiProject1$gui_client.coverage" NAME="gui_client Coverage Results" MODIFIED="1768468851893" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/apiProject1$main.coverage" NAME="main Coverage Results" MODIFIED="1768523636270" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/gui_client_v2" />
     <SUITE FILE_PATH="coverage/apiProject1$example.coverage" NAME="example Coverage Results" MODIFIED="1768285098953" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/apiProject1$Backend_Server.coverage" NAME="Backend Server Coverage Results" MODIFIED="1775521924729" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend" />
+    <SUITE FILE_PATH="coverage/apiProject1$Backend_Server.coverage" NAME="Backend Server Coverage Results" MODIFIED="1777018654160" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend" />
   </component>
 </project>

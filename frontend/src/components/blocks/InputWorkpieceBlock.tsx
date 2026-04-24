@@ -4,6 +4,7 @@
  */
 
 import type { BlockComponentProps } from './BlockRegistry'
+import Tooltip from '../ui/Tooltip'
 
 interface GeometryType {
   id: string
@@ -98,14 +99,16 @@ export default function InputWorkpieceBlock({
     }
 
     return (
-      <button
-        type="button"
-        onClick={onClick}
-        className="ui-btn-danger h-8 w-8 p-0 flex-shrink-0"
-        title="Revert this parameter"
-      >
-        ↺
-      </button>
+      <Tooltip content="Revert this parameter">
+        <button
+          type="button"
+          onClick={onClick}
+          className="ui-btn-danger h-8 w-8 p-0 flex-shrink-0"
+          aria-label="Revert this parameter"
+        >
+          ↺
+        </button>
+      </Tooltip>
     )
   }
 
@@ -121,9 +124,9 @@ export default function InputWorkpieceBlock({
             <td className="py-1 px-2 font-semibold bg-gray-50 w-1/2">Geometry Type:</td>
             <td className="py-1 px-2">
               {isReadOnly ? (
-                <span className="text-gray-900">
+                <div className="ui-field-readonly">
                   {selectedGeometry ? selectedGeometry.library_name : 'Not set'}
-                </span>
+                </div>
               ) : (
                 <div className="flex items-start gap-2">
                   <select
@@ -162,7 +165,7 @@ export default function InputWorkpieceBlock({
                   <td className="py-1 px-2 font-semibold bg-gray-50">{label}</td>
                   <td className="py-1 px-2">
                     {isReadOnly ? (
-                      <span className="text-gray-900">{currentValue || '-'}</span>
+                      <div className="ui-field-readonly">{currentValue || '-'}</div>
                     ) : (
                       <div className="flex items-start gap-2">
                         <input
@@ -187,7 +190,7 @@ export default function InputWorkpieceBlock({
             <td className="py-1 px-2 font-semibold bg-gray-50">Weight [kg]:</td>
             <td className="py-1 px-2">
               {isReadOnly ? (
-                <span className="text-gray-900">{block.props.weight ?? 0}</span>
+                <div className="ui-field-readonly">{block.props.weight ?? 0}</div>
               ) : (
                 <div className="flex items-start gap-2">
                   <input
@@ -206,35 +209,6 @@ export default function InputWorkpieceBlock({
             </td>
           </tr>
 
-          <tr>
-            <td className="py-1 px-2 font-semibold bg-gray-50">
-              Elements across width [pcs]:
-            </td>
-            <td className="py-1 px-2">
-              {isReadOnly ? (
-                <span className="text-gray-900">{block.props.mesh_elements ?? 0}</span>
-              ) : (
-                <div className="flex items-start gap-2">
-                  <input
-                    type="number"
-                    step="1"
-                    min="0"
-                    value={normalizeComparable(block.props.mesh_elements)}
-                    onChange={(event) => handleFieldChange('mesh_elements', event.target.value)}
-                    className={`ui-input ${
-                      isFieldDirty('mesh_elements')
-                        ? 'border-red-300 bg-red-50'
-                        : 'border-gray-300'
-                    }`}
-                  />
-                  {renderResetButton(
-                    () => resetField('mesh_elements'),
-                    isFieldDirty('mesh_elements')
-                  )}
-                </div>
-              )}
-            </td>
-          </tr>
         </tbody>
       </table>
 

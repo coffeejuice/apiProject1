@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from app.models.document.block import Block
     from app.models.server import Server
     from app.models.project import Project
+    from app.models.library.material import MaterialVersion
 
 
 class Role(enum.Enum):
@@ -49,6 +50,13 @@ class SimulationStatus(enum.Enum):
     done = "done"
 
 
+class PreprocessStatus(enum.Enum):
+    queued = "queued"
+    running = "running"
+    ready = "ready"
+    failed = "failed"
+
+
 class Document(Base):
     __tablename__ = "documents"
 
@@ -63,7 +71,13 @@ class Document(Base):
         Integer, ForeignKey("users.user_id", ondelete="SET NULL"), nullable=True, default=None
     )
     first_block_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("blocks.block_id", ondelete="SET NULL"), nullable=True, default=None
+        UUID(as_uuid=True), ForeignKey("document_blocks.block_id", ondelete="SET NULL"), nullable=True, default=None
+    )
+    material_version_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey("material_versions.material_version_id", ondelete="SET NULL"),
+        nullable=True,
+        default=None,
     )
 
     name: Mapped[str] = mapped_column(String(1024), nullable=False)
@@ -75,6 +89,10 @@ class Document(Base):
     deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     project: Mapped["Project"] = relationship("Project", back_populates="documents")
+    material_version: Mapped[Optional["MaterialVersion"]] = relationship(
+        "MaterialVersion",
+        back_populates="documents",
+    )
     editor: Mapped[Optional["User"]] = relationship(
         "User", back_populates="document_editor", foreign_keys=[editor_user_id]
     )
@@ -157,6 +175,15 @@ class DocumentVersion(Base):
 
     run_switch_status: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     run_switch_is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    preprocess_status: Mapped[PreprocessStatus] = mapped_column(
+        SQLEnum(PreprocessStatus, name="preprocess_status_enum"),
+        nullable=False,
+        default=PreprocessStatus.ready,
+    )
+    preprocess_worker_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default=None)
+    preprocess_started_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, default=None)
+    preprocess_finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, default=None)
+    preprocess_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True, default=None)
     simulation_status: Mapped[SimulationStatus] = mapped_column(
         SQLEnum(SimulationStatus, name="simulation_status_enum"),
         nullable=False,

@@ -27,6 +27,7 @@ class DieAssembly(Base):
     bottom_die_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("dies.id", ondelete="SET NULL"), nullable=True)
     left_die_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("dies.id", ondelete="SET NULL"), nullable=True)
     right_die_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("dies.id", ondelete="SET NULL"), nullable=True)
+    classification_path: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     is_obsolete: Mapped[bool] = mapped_column(Boolean, default=False, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=func.now(), server_default=func.now())
@@ -53,6 +54,7 @@ class Die(Base):
 
     die_template_file_name: Mapped[str] = mapped_column(String(1023), default="", nullable=True)
     inventory_number: Mapped[str] = mapped_column(String(127), default="", nullable=True)
+    classification_path: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     properties: Mapped[Optional[Any]] = mapped_column(JSONB, nullable=True)
 

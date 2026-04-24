@@ -1,9 +1,14 @@
-from typing import Optional
+from datetime import datetime
+from typing import Optional, TYPE_CHECKING
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.document.document import Document
+    from app.models.workflow_runtime import SimulationStep
 
 
 class Material(Base):
@@ -42,4 +47,49 @@ class Material(Base):
         "MaterialTestRecord",
         back_populates="material",
         cascade="all, delete-orphan",
+    )
+    versions: Mapped[list["MaterialVersion"]] = relationship(
+        "MaterialVersion",
+        back_populates="material",
+        cascade="all, delete-orphan",
+    )
+
+
+class MaterialVersion(Base):
+    __tablename__ = "material_versions"
+
+    material_version_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    material_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("materials.material_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    version_no: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default=text("1"))
+    name_snapshot: Mapped[str] = mapped_column(String(1023), nullable=False)
+    deform_file_name: Mapped[Optional[str]] = mapped_column(String(1023), nullable=True)
+    note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        server_default=text("now()"),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        server_default=text("now()"),
+    )
+
+    material: Mapped["Material"] = relationship("Material", back_populates="versions")
+    documents: Mapped[list["Document"]] = relationship("Document", back_populates="material_version")
+    simulation_steps: Mapped[list["SimulationStep"]] = relationship(
+        "SimulationStep",
+        back_populates="material_version",
+    )
+
+    __table_args__ = (
+        UniqueConstraint("material_id", "version_no", name="uq_material_versions_material_version_no"),
     )

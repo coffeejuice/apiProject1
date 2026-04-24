@@ -21,6 +21,7 @@ interface DocumentsState {
   error: string | null
   showDeleted: boolean
   selectedDocIds: Set<string>
+  documentSelectionInitialized: boolean
 
   fetchProjects: () => Promise<void>
   createProject: (name: string, notes?: string) => Promise<Project | null>
@@ -38,6 +39,7 @@ interface DocumentsState {
   getDiff: (leftId: string, rightId: string) => Promise<DocumentDiffResponse | null>
 
   setShowDeleted: (show: boolean) => void
+  initializeDocumentSelection: () => void
   toggleDocSelection: (id: string) => void
   clearSelection: () => void
   selectAll: (docIds: string[]) => void
@@ -65,6 +67,29 @@ function normalizeDocument(document: Partial<Document>): Document {
   } as Document
 }
 
+function syncDocumentSelection(
+  documents: Document[],
+  requestedSelection: Iterable<string>,
+): {
+  selectedDocIds: Set<string>
+  currentDocId: string | null
+  currentDoc: Document | null
+} {
+  const documentIds = new Set(documents.map((document) => document.id))
+  const selectedDocIds = new Set(
+    Array.from(requestedSelection)
+      .map((id) => String(id))
+      .filter((id) => documentIds.has(id))
+  )
+  const selectedIds = Array.from(selectedDocIds)
+  const currentDocId = selectedIds.length === 1 ? selectedIds[0] : null
+  const currentDoc = currentDocId
+    ? documents.find((document) => document.id === currentDocId) || null
+    : null
+
+  return { selectedDocIds, currentDocId, currentDoc }
+}
+
 export const useDocumentsStore = create<DocumentsState>((set, get) => ({
   projects: [],
   currentProjectId: null,
@@ -75,6 +100,7 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
   error: null,
   showDeleted: false,
   selectedDocIds: new Set<string>(),
+  documentSelectionInitialized: false,
 
   fetchProjects: async () => {
     set({ isLoading: true, error: null })
@@ -112,7 +138,13 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
     if (nextProjectId) {
       await get().fetchDocuments(nextProjectId)
     } else {
-      set({ documents: [], currentDoc: null, currentDocId: null })
+      set({
+        documents: [],
+        currentDoc: null,
+        currentDocId: null,
+        selectedDocIds: new Set<string>(),
+        documentSelectionInitialized: false,
+      })
     }
   },
 
@@ -133,6 +165,11 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
     set((state) => ({
       projects: [project, ...state.projects],
       currentProjectId: project.id,
+      documents: [],
+      currentDocId: null,
+      currentDoc: null,
+      selectedDocIds: new Set<string>(),
+      documentSelectionInitialized: false,
       isLoading: false,
       error: null,
     }))
@@ -147,6 +184,7 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
       currentDocId: null,
       currentDoc: null,
       selectedDocIds: new Set<string>(),
+      documentSelectionInitialized: false,
     })
     if (id) {
       get().fetchDocuments(id)
@@ -156,7 +194,13 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
   fetchDocuments: async (projectId?: string | null) => {
     const targetProjectId = projectId ?? get().currentProjectId
     if (!targetProjectId) {
-      set({ documents: [], currentDoc: null, currentDocId: null })
+      set({
+        documents: [],
+        currentDoc: null,
+        currentDocId: null,
+        selectedDocIds: new Set<string>(),
+        documentSelectionInitialized: false,
+      })
       return
     }
 
@@ -181,12 +225,17 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
     ) || []
 
     const normalized = documents.map((document) => normalizeDocument(document))
-    const currentDoc = normalized.find((document) => document.id === get().currentDocId) || null
+    const state = get()
+    const requestedSelection = state.selectedDocIds.size > 0
+      ? state.selectedDocIds
+      : state.currentDocId
+        ? [state.currentDocId]
+        : []
+    const selection = syncDocumentSelection(normalized, requestedSelection)
 
     set({
       documents: normalized,
-      currentDoc,
-      currentDocId: currentDoc?.id || null,
+      ...selection,
       isLoading: false,
       error: null,
     })
@@ -221,6 +270,8 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
       documents: [document, ...state.documents],
       currentDoc: document,
       currentDocId: document.id,
+      selectedDocIds: new Set<string>([document.id]),
+      documentSelectionInitialized: true,
       isLoading: false,
       error: null,
     }))
@@ -241,6 +292,8 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
       documents: [copied, ...state.documents],
       currentDoc: copied,
       currentDocId: copied.id,
+      selectedDocIds: new Set<string>([copied.id]),
+      documentSelectionInitialized: true,
       error: null,
     }))
     return copied
@@ -262,6 +315,8 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
     set({
       currentDoc: document,
       currentDocId: document.id,
+      selectedDocIds: new Set<string>([document.id]),
+      documentSelectionInitialized: true,
       isLoading: false,
       error: null,
     })
@@ -270,12 +325,22 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
 
   setCurrentDoc: (id: string | null) => {
     if (id === null) {
-      set({ currentDocId: null, currentDoc: null })
+      set({
+        currentDocId: null,
+        currentDoc: null,
+        selectedDocIds: new Set<string>(),
+        documentSelectionInitialized: true,
+      })
       return
     }
     const document = get().documents.find((entry) => entry.id === id)
     if (document) {
-      set({ currentDocId: document.id, currentDoc: document })
+      set({
+        currentDocId: document.id,
+        currentDoc: document,
+        selectedDocIds: new Set<string>([document.id]),
+        documentSelectionInitialized: true,
+      })
       return
     }
     get().fetchDocument(id)
@@ -326,7 +391,12 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
   deleteMultipleDocuments: async (ids: string[]) => {
     const requests = ids.map((id) => apiClient.delete(`/documents/${id}`))
     await Promise.all(requests)
-    set({ selectedDocIds: new Set<string>() })
+    set({
+      selectedDocIds: new Set<string>(),
+      currentDocId: null,
+      currentDoc: null,
+      documentSelectionInitialized: true,
+    })
     await get().fetchDocuments()
   },
 
@@ -344,6 +414,20 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
     get().fetchDocuments()
   },
 
+  initializeDocumentSelection: () => {
+    const state = get()
+    if (state.documentSelectionInitialized || state.documents.length === 0) {
+      return
+    }
+    const firstDocument = state.documents[0]
+    set({
+      selectedDocIds: new Set<string>([firstDocument.id]),
+      currentDocId: firstDocument.id,
+      currentDoc: firstDocument,
+      documentSelectionInitialized: true,
+    })
+  },
+
   toggleDocSelection: (id: string) => {
     set((state) => {
       const updated = new Set(state.selectedDocIds)
@@ -352,15 +436,26 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
       } else {
         updated.add(id)
       }
-      return { selectedDocIds: updated }
+      return {
+        ...syncDocumentSelection(state.documents, updated),
+        documentSelectionInitialized: true,
+      }
     })
   },
 
   clearSelection: () => {
-    set({ selectedDocIds: new Set<string>() })
+    set({
+      selectedDocIds: new Set<string>(),
+      currentDocId: null,
+      currentDoc: null,
+      documentSelectionInitialized: true,
+    })
   },
 
   selectAll: (docIds: string[]) => {
-    set({ selectedDocIds: new Set<string>(docIds) })
+    set((state) => ({
+      ...syncDocumentSelection(state.documents, docIds),
+      documentSelectionInitialized: true,
+    }))
   },
 }))

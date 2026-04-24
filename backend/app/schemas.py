@@ -4,9 +4,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
 
-from app.models.document.document import Role
+from app.models.document.document import Role, SimulationStatus
 from app.models.library.library_item import LibraryType
 from app.models.settings import SettingScope
+from app.models.user import UserPriority
 
 
 # Auth schemas
@@ -91,6 +92,7 @@ class DocumentResponse(BaseModel):
     source_document_id: Optional[int]
     editor_user_id: Optional[int]
     first_block_id: Optional[UUID]
+    material_version_id: Optional[int] = None
     name: str
     notes: Optional[str]
     created_at: datetime
@@ -148,6 +150,134 @@ class DocumentDiffResponse(BaseModel):
     right_name: str
     total_changes: int
     changes: List[BlockDiffEntry]
+
+
+class DocumentWorkflowResponse(BaseModel):
+    document_id: int
+    document_version_id: Optional[int] = None
+    parent_document_version_id: Optional[int] = None
+    document_fixed: bool
+    workflow_state: str
+    preprocess_requested: bool
+    automation_active: bool
+    is_editable: Optional[bool] = None
+    simulation_status: Optional[SimulationStatus] = None
+    document_priority_enum: Optional[UserPriority] = None
+    simulation_priority: Optional[int] = None
+    operations_count: Optional[int] = None
+    simulation_percent: Optional[int] = None
+    simulation_expected_duration_days: Optional[float] = None
+    simulation_server_id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    last_modified: Optional[datetime] = None
+    ran_at: Optional[datetime] = None
+    finished_at: Optional[datetime] = None
+
+
+class DocumentQueueRequest(BaseModel):
+    simulation_priority: Optional[int] = Field(default=None, ge=1, le=32767)
+    document_priority_enum: Optional[UserPriority] = None
+
+
+class DocumentVersionPriorityUpdate(BaseModel):
+    simulation_priority: Optional[int] = Field(default=None, ge=1, le=32767)
+    document_priority_enum: Optional[UserPriority] = None
+
+
+class DocumentForkRequest(BaseModel):
+    name: Optional[str] = Field(default=None, max_length=1024)
+    notes: Optional[str] = None
+    editor_user_id: Optional[int] = None
+
+
+class WorkflowDocumentStatusRow(BaseModel):
+    document_id: int
+    document_name: str
+    project_id: int
+    project_name: str
+    owner_user_id: int
+    owner_login: str
+    source_document_id: Optional[int] = None
+    document_version_id: Optional[int] = None
+    workflow_state: str
+    document_fixed: bool
+    preprocess_requested: bool
+    automation_active: bool
+    is_editable: Optional[bool] = None
+    simulation_status: Optional[SimulationStatus] = None
+    simulation_priority: Optional[int] = None
+    queue_position: Optional[int] = None
+    operations_count: Optional[int] = None
+    simulation_percent: Optional[int] = None
+    last_modified: Optional[datetime] = None
+
+
+class WorkflowSimulationStatusRow(BaseModel):
+    document_version_id: int
+    document_id: int
+    document_name: str
+    version_name: str
+    project_id: int
+    project_name: str
+    owner_user_id: int
+    owner_login: str
+    workflow_state: str
+    document_fixed: bool
+    preprocess_requested: bool
+    automation_active: bool
+    is_editable: bool
+    simulation_status: SimulationStatus
+    simulation_priority: Optional[int] = None
+    queue_position: Optional[int] = None
+    operations_count: Optional[int] = None
+    simulation_percent: Optional[int] = None
+    simulation_expected_duration_days: Optional[float] = None
+    simulation_server_id: Optional[int] = None
+    simulation_server_name: Optional[str] = None
+    last_modified: Optional[datetime] = None
+    ran_at: Optional[datetime] = None
+    finished_at: Optional[datetime] = None
+
+
+class WorkflowSolverPcStatusRow(BaseModel):
+    server_id: int
+    name: str
+    hostname: str
+    ip: str
+    is_active: bool
+    worker_state: str
+    document_version_id: Optional[int] = None
+    document_name: Optional[str] = None
+    version_name: Optional[str] = None
+    time_started: Optional[datetime] = None
+    time_updated: Optional[datetime] = None
+    time_finished: Optional[datetime] = None
+    version: str
+    cpu_count: Optional[int] = None
+    max_threads_count: Optional[int] = None
+    ram_free_size_gb: Optional[float] = None
+    hdd_free_size_gb: Optional[float] = None
+    timeout_counter: int
+
+
+class WorkflowDocumentStatusListResponse(BaseModel):
+    documents: List[WorkflowDocumentStatusRow]
+
+
+class WorkflowSimulationStatusListResponse(BaseModel):
+    simulations: List[WorkflowSimulationStatusRow]
+
+
+class WorkflowSolverPcStatusListResponse(BaseModel):
+    solver_pcs: List[WorkflowSolverPcStatusRow]
+
+
+class WorkflowSimulationReorderRequest(BaseModel):
+    ordered_document_version_ids: List[int]
+
+
+class WorkflowSimulationReorderResponse(BaseModel):
+    updated_document_version_ids: List[int]
 
 
 # Block schemas
@@ -322,6 +452,43 @@ class LibraryDbUserResponse(BaseModel):
         from_attributes = True
 
 
+class LibraryDbDocumentBlockTypeResponse(BaseModel):
+    type_id: int
+    parent_type_id: Optional[int]
+    row: int
+    process_fixed_row: Optional[int] = None
+    allow_copies: bool
+    text_id: str
+    library_name: str
+    process_name: str
+    labels: List[str] = Field(default_factory=list)
+    db_column_names: List[str] = Field(default_factory=list)
+    foreign_keys: List[str] = Field(default_factory=list)
+    is_simulation: bool
+    is_geometry: bool
+    is_die_assembly: bool
+    is_custom_die_assembly: bool
+    is_press: bool
+    is_feed: bool
+    is_top_die: bool
+    is_bottom_die: bool
+    is_speed: bool
+    is_billet_category: bool
+    is_heating_category: bool
+    is_forming_category: bool
+    is_forming_operation: bool
+    is_surface_treatment_operation: bool
+    deformation_type: Optional[str] = None
+    speed_column_name: Optional[str] = None
+    trigger: Optional[str] = None
+    is_initialize: bool
+    is_accumulate: bool
+    is_keep: bool
+    is_obsolete: bool
+    has_children: bool
+    insertable: bool
+
+
 class LibraryDbDieTypeResponse(BaseModel):
     id: int
     name: Any
@@ -353,6 +520,102 @@ class MaterialDesignationLinkResponse(BaseModel):
     country: Optional[str] = None
     chemistry_limits: Dict[str, str] = Field(default_factory=dict)
     is_main_designation: bool = False
+
+
+class MaterialStandardCatalogItemResponse(BaseModel):
+    standard_id: int
+    standard_number: str
+    issue_organization: Optional[str] = None
+    country_or_region: Optional[str] = None
+    geographic_level: Optional[str] = None
+    label: str
+
+
+class MaterialWorkspaceDesignationResponse(BaseModel):
+    designation_id: int
+    designation: str
+    standard_id: Optional[int] = None
+    standard_label: Optional[str] = None
+    country: Optional[str] = None
+    note: Optional[str] = None
+    is_main_designation: bool = False
+
+
+class MaterialWorkspaceTestRecordSummaryResponse(BaseModel):
+    test_record_id: int
+    designation_id: Optional[int] = None
+    designation: Optional[str] = None
+    publication_id: Optional[int] = None
+    publication_title: Optional[str] = None
+    heat_number: Optional[str] = None
+    batch_number: Optional[str] = None
+    sample_label: Optional[str] = None
+    note: Optional[str] = None
+    chemistry_results_count: int = 0
+    property_tables_count: int = 0
+
+
+class MaterialWorkspaceResponse(BaseModel):
+    material_id: int
+    name: str
+    deform_file_name: Optional[str] = None
+    note: Optional[str] = None
+    classifications: Dict[str, List[str]] = Field(default_factory=dict)
+    designations: List[MaterialWorkspaceDesignationResponse] = Field(default_factory=list)
+    test_records: List[MaterialWorkspaceTestRecordSummaryResponse] = Field(default_factory=list)
+    is_obsolete: bool = False
+    owner_id: Optional[int] = None
+
+
+class MaterialWorkspaceDesignationInput(BaseModel):
+    designation_id: Optional[int] = None
+    designation: str = Field(min_length=1, max_length=255)
+    standard_id: Optional[int] = None
+    note: Optional[str] = None
+    is_main_designation: bool = False
+
+
+class MaterialWorkspaceUpsertRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=1023)
+    deform_file_name: Optional[str] = Field(default=None, max_length=1023)
+    note: Optional[str] = None
+    classifications: Dict[str, List[str]] = Field(default_factory=dict)
+    designations: List[MaterialWorkspaceDesignationInput] = Field(default_factory=list)
+    is_obsolete: bool = False
+
+
+class MaterialCopyRequest(BaseModel):
+    source_material_id: int
+    target_material_id: int
+    copy_identity_fields: List[str] = Field(default_factory=list)
+    copy_classifications: bool = False
+    replace_classifications: bool = False
+    copy_designations: bool = False
+    designation_ids: List[int] = Field(default_factory=list)
+    replace_designations: bool = False
+    copy_test_records: bool = False
+    test_record_ids: List[int] = Field(default_factory=list)
+
+
+class MaterialCopyResponse(BaseModel):
+    target_material_id: int
+    copied_identity_fields: List[str] = Field(default_factory=list)
+    copied_designations_count: int = 0
+    copied_test_records_count: int = 0
+    copied_classification_assignments_count: int = 0
+
+
+class MaterialDeleteRequest(BaseModel):
+    material_ids: List[int] = Field(min_length=1)
+
+
+class MaterialDeleteResponse(BaseModel):
+    deleted_material_ids: List[int] = Field(default_factory=list)
+    deleted_count: int = 0
+
+
+class MaterialDeformFileUploadResponse(BaseModel):
+    file_name: str
 
 
 class MaterialVisualAxisResponse(BaseModel):
@@ -432,6 +695,7 @@ class LibraryDbDieResponse(BaseModel):
     die_type_id: int
     owner_user_id: Optional[int]
     die_template_file_name: Optional[str]
+    classification_path: Optional[str] = None
     stl_file_name: Optional[str] = None
     stl_file_url: Optional[str] = None
     stl_file_exists: bool = False
@@ -453,6 +717,7 @@ class LibraryDbDieAssemblyResponse(BaseModel):
     bottom_die_id: Optional[int]
     left_die_id: Optional[int]
     right_die_id: Optional[int]
+    classification_path: Optional[str] = None
     is_obsolete: Optional[bool]
     created_at: datetime
     obsolete_at: Optional[datetime]

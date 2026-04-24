@@ -15,7 +15,9 @@ import {
   LibraryDiesView,
   LibraryPressesView,
 } from '../components/library/LibraryViews'
+import SimulationView from '../components/simulation/SimulationView'
 import { useDocumentsStore } from '../stores/useDocumentsStore'
+import { useBlockClipboardStore } from '../stores/useBlockClipboardStore'
 import { useLibraryStore } from '../stores/useLibraryStore'
 import { useSessionStore } from '../stores/useSessionStore'
 
@@ -23,6 +25,7 @@ const EMPTY_EDITOR_META: BlockEditorMeta = {
   isLoading: false,
   draftDocumentName: '',
   sourceDocumentId: null,
+  activeDocumentBlockId: null,
   saveStatus: 'idle',
   saveError: null,
   hasUnsavedChanges: false,
@@ -85,7 +88,47 @@ function resolveMainEditorView(toolView: ToolView, libraryView: LibraryEditorVie
   if (toolView === 'library') {
     return libraryView
   }
+  if (toolView === 'simulation') {
+    return 'simulation'
+  }
   return 'blockEditor'
+}
+
+function getBlockClipboardLabel(block: BlockData): string {
+  const title = block.props?.title
+  if (typeof title === 'string' && title.trim()) {
+    return title
+  }
+
+  const operationType = block.props?.operation_type
+  if (operationType && typeof operationType === 'object') {
+    const libraryName = (operationType as { library_name?: unknown }).library_name
+    if (typeof libraryName === 'string' && libraryName.trim()) {
+      return libraryName
+    }
+  }
+
+  if (block.block_type_id === 'document_heading') {
+    return 'Document'
+  }
+  if (block.block_type_id === '10') {
+    return 'Furnace'
+  }
+  if (block.block_type_id === '24') {
+    return 'Deformation'
+  }
+  return `Block ${block.block_type_id}`
+}
+
+function getClipboardClipLabel(
+  clip: ReturnType<typeof useBlockClipboardStore.getState>['clips'][number] | null
+): string | null {
+  if (!clip) {
+    return null
+  }
+  const firstBlockLabel = clip.blocks[0] ? getBlockClipboardLabel(clip.blocks[0]) : 'Empty clip'
+  const suffix = clip.blocks.length > 1 ? ` +${clip.blocks.length - 1}` : ''
+  return `${clip.mode === 'cut' ? 'Cut' : 'Copy'}: ${firstBlockLabel}${suffix}`
 }
 
 export default function AppPage() {
@@ -105,6 +148,9 @@ export default function AppPage() {
     fetchAll: fetchLibrary,
   } = useLibraryStore()
   const { user } = useSessionStore()
+  const activeClipboardClip = useBlockClipboardStore((state) =>
+    state.clips.find((clip) => clip.id === state.activeClipId) ?? null
+  )
 
   const editorRef = useRef<BlockEditorHandle | null>(null)
 
@@ -156,12 +202,60 @@ export default function AppPage() {
 
   const handleInsertBlockFromToolsPane = (blockTypeId: string) => {
     callEditor(async (editor) => {
-      const previousBlockId = editorBlocks.length > 0 ? editorBlocks[editorBlocks.length - 1].block_id : null
-      await editor.insertBlock(blockTypeId, previousBlockId)
+      await editor.insertBlock(blockTypeId)
     })
   }
 
+  const handlePasteClipboardClip = (clipId?: string) => {
+    const editor = editorRef.current
+    if (!editor) {
+      return
+    }
+    setMainEditorView('blockEditor')
+    void editor.pasteClipboardClip(clipId)
+  }
+
+  const handleCopyBlocksToClipboard = async (blockIds: string[]): Promise<boolean> => {
+    const editor = editorRef.current
+    if (!editor) {
+      return false
+    }
+
+    const copied = await editor.copyBlocksToClipboard(blockIds)
+    if (copied) {
+      setActiveToolView('blocks')
+      setMainEditorView('blockEditor')
+    }
+    return copied
+  }
+
+  const handleCutBlocksToClipboard = async (blockIds: string[]): Promise<boolean> => {
+    const editor = editorRef.current
+    if (!editor) {
+      return false
+    }
+
+    const cut = await editor.cutBlocksToClipboard(blockIds)
+    if (cut) {
+      setActiveToolView('blocks')
+      setMainEditorView('blockEditor')
+    }
+    return cut
+  }
+
+  const handlePasteActiveClipboard = async (): Promise<boolean> => {
+    const editor = editorRef.current
+    if (!editor) {
+      return false
+    }
+    return editor.pasteClipboardClip()
+  }
+
   const hasDocument = mainEditorView === 'blockEditor' && Boolean(currentDoc?.id)
+  const activeClipboardLabel = useMemo(
+    () => getClipboardClipLabel(activeClipboardClip),
+    [activeClipboardClip]
+  )
 
   const libraryActions = useMemo(() => {
     return getLibraryActions(mainEditorView, {
@@ -197,6 +291,7 @@ export default function AppPage() {
             libraryView={activeLibraryView}
             onLibraryViewChange={setActiveLibraryView}
             onInsertBlockType={handleInsertBlockFromToolsPane}
+            onPasteClipboardClip={handlePasteClipboardClip}
           />
 
           <div className="flex-1 min-w-0 flex flex-col">
@@ -208,6 +303,7 @@ export default function AppPage() {
                   blocks={editorBlocks}
                   isVisible
                   hasUnsavedChanges={editorMeta.hasUnsavedChanges}
+                  activeDocumentBlockId={editorMeta.activeDocumentBlockId}
                   onNavigate={(blockId) => {
                     const editor = editorRef.current
                     if (!editor) {
@@ -243,10 +339,15 @@ export default function AppPage() {
                     }
                     await editor.deleteBlocks(blockIds)
                   }}
+                  hasActiveClipboardClip={Boolean(activeClipboardClip)}
+                  activeClipboardLabel={activeClipboardLabel}
+                  onCopyBlocksToClipboard={handleCopyBlocksToClipboard}
+                  onCutBlocksToClipboard={handleCutBlocksToClipboard}
+                  onPasteActiveClipboard={handlePasteActiveClipboard}
                 />
               )}
               libraryActionsView={
-                mainEditorView === 'materials'
+                mainEditorView === 'materials' || mainEditorView === 'simulation'
                   ? null
                   : (
                       <div className="ui-pane-header flex items-center justify-between gap-3">
@@ -332,9 +433,16 @@ export default function AppPage() {
                   currentUserId={user?.user_id ?? null}
                   selectedMaterialId={selectedMaterialId}
                   onSelectMaterialId={setSelectedMaterialId}
+                  onRefreshLibrary={fetchLibrary}
                   isMaterialListVisible={activeToolView === 'library'}
                   isLoading={isLibraryLoading}
                   error={libraryError}
+                />
+              )}
+              simulationView={(
+                <SimulationView
+                  users={users}
+                  currentUserId={user?.user_id ?? null}
                 />
               )}
             />

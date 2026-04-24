@@ -6,6 +6,11 @@ from sqlalchemy.orm import Session
 
 from app.models.document.block import Block
 from app.models.document.document import Document
+from app.services.operation_blocks import build_default_operation_props
+
+
+DEFORMATION_BUNDLE_TYPE_ORDER = ("24",)
+DEFORMATION_BUNDLE_TYPE_SET = set(DEFORMATION_BUNDLE_TYPE_ORDER)
 
 
 def _get_document_or_none(db: Session, document_id: int) -> Optional[Document]:
@@ -122,6 +127,47 @@ def create_block(
             next_block.previous_block_id = new_block.block_id
 
     return new_block
+
+
+def create_block_or_bundle(
+    db: Session,
+    document_id: int,
+    block_type_id: str,
+    props: dict,
+    previous_block_id: Optional[UUID] = None,
+    block_id: Optional[UUID] = None,
+) -> Block:
+    if str(block_type_id) != DEFORMATION_BUNDLE_TYPE_ORDER[0]:
+        return create_block(
+            db=db,
+            document_id=document_id,
+            block_type_id=block_type_id,
+            props=props,
+            previous_block_id=previous_block_id,
+            block_id=block_id,
+        )
+
+    leader = create_block(
+        db=db,
+        document_id=document_id,
+        block_type_id=DEFORMATION_BUNDLE_TYPE_ORDER[0],
+        props=build_default_operation_props(db, DEFORMATION_BUNDLE_TYPE_ORDER[0], props),
+        previous_block_id=previous_block_id,
+        block_id=block_id,
+    )
+    previous_id = leader.block_id
+    for member_type_id in DEFORMATION_BUNDLE_TYPE_ORDER[1:]:
+        member_props = build_default_operation_props(db, member_type_id, props)
+        member = create_block(
+            db=db,
+            document_id=document_id,
+            block_type_id=member_type_id,
+            props=member_props,
+            previous_block_id=previous_id,
+        )
+        previous_id = member.block_id
+
+    return leader
 
 
 def move_block_after(
@@ -277,3 +323,56 @@ def delete_block(db: Session, document_id: int, block_id: UUID) -> bool:
 
     db.delete(block)
     return True
+
+
+def _get_block_by_id(db: Session, document_id: int, block_id: UUID | None) -> Block | None:
+    if block_id is None:
+        return None
+    return db.execute(
+        select(Block).filter(
+            Block.block_id == block_id,
+            Block.document_id == document_id,
+        )
+    ).scalars().first()
+
+
+def _previous_block(db: Session, document_id: int, block: Block | None) -> Block | None:
+    return _get_block_by_id(db, document_id, block.previous_block_id if block else None)
+
+
+def _next_block(db: Session, document_id: int, block: Block | None) -> Block | None:
+    return _get_block_by_id(db, document_id, block.next_block_id if block else None)
+
+
+def get_deformation_bundle_blocks(db: Session, document_id: int, block_id: UUID) -> list[Block]:
+    block = _get_block_by_id(db, document_id, block_id)
+    if block is None or block.block_type_id not in DEFORMATION_BUNDLE_TYPE_SET:
+        return []
+
+    leader = block
+    while leader.block_type_id != DEFORMATION_BUNDLE_TYPE_ORDER[0]:
+        previous = _previous_block(db, document_id, leader)
+        if previous is None or previous.block_type_id not in DEFORMATION_BUNDLE_TYPE_SET:
+            return [block]
+        leader = previous
+
+    bundle = [leader]
+    current = leader
+    for expected_type_id in DEFORMATION_BUNDLE_TYPE_ORDER[1:]:
+        current = _next_block(db, document_id, current)
+        if current is None or current.block_type_id != expected_type_id:
+            return [block]
+        bundle.append(current)
+
+    return bundle
+
+
+def delete_block_or_bundle(db: Session, document_id: int, block_id: UUID) -> bool:
+    bundle = get_deformation_bundle_blocks(db, document_id, block_id)
+    if not bundle:
+        return delete_block(db, document_id, block_id)
+
+    deleted_any = False
+    for block in bundle:
+        deleted_any = delete_block(db, document_id, block.block_id) or deleted_any
+    return deleted_any

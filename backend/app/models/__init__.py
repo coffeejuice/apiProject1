@@ -1,7 +1,7 @@
 from app.models.user import User, Device, UserPriority
 from app.models.project import Project
 from app.models.document import (
-    Document, DocumentACL, ShareLink, Role, DocumentVersion, DocumentEditSession, SimulationStatus, Status,
+    Document, DocumentACL, ShareLink, Role, DocumentVersion, DocumentEditSession, SimulationStatus, PreprocessStatus, Status,
     Block, BlockType, IngotSide, FeedDirection, DeformationType
 )
 from app.models.library import (
@@ -14,6 +14,7 @@ from app.models.library import (
     DieType,
     PressDieMap,
     Material,
+    MaterialVersion,
     MaterialClassificationAxis,
     MaterialClassificationValue,
     MaterialClassificationAssignment,
@@ -31,6 +32,13 @@ from app.models.library import (
     PressMode,
 )
 from app.models.server import Server, PhysicalMachine, ServerType
+from app.models.workflow_runtime import (
+    SimulationStep,
+    SimulationStepStatus,
+    SimulationStepStatusEnum,
+    PostprocessingTask,
+    PostprocessingTaskStatusEnum,
+)
 from app.models.config import Config
 from app.models.log import Log, LogLevel
 from app.models.settings import Setting, SettingScope
@@ -46,6 +54,7 @@ __all__ = [
     "DocumentVersion",
     "DocumentEditSession",
     "SimulationStatus",
+    "PreprocessStatus",
     "Status",
     "ShareLink",
     "Role",
@@ -62,6 +71,7 @@ __all__ = [
     "Log",
     "LogLevel",
     "Material",
+    "MaterialVersion",
     "MaterialClassificationAxis",
     "MaterialClassificationValue",
     "MaterialClassificationAssignment",
@@ -83,6 +93,11 @@ __all__ = [
     "DieType",
     "Server",
     "PhysicalMachine",
+    "SimulationStep",
+    "SimulationStepStatus",
+    "SimulationStepStatusEnum",
+    "PostprocessingTask",
+    "PostprocessingTaskStatusEnum",
     "Setting",
     "SettingScope",
 ]

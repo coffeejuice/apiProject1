@@ -60,6 +60,7 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - `search` and `document_search_router`
   - `settings`
   - `library`
+  - `workflow`
 - Not mounted in current `main.py`:
   - legacy `revisions`, `sharing`, `import_export`, `migration` routers
 
@@ -81,15 +82,41 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 - `ToolsPane` provides views:
   - `Projects`: project list, filter, create modal
   - `Documents`: project-scoped document list, filter, new/copy modals
-  - `Blocks`: block icon palette for drag-and-drop or insert into `BlockEditor`
-  - `Library`: selector for `Dies`, `Die Assemblies`, `Presses`, and `Materials` main editor views
+    - supports zero, one, or many selected documents
+    - first opening the Documents tool selects the first document in the current list if no explicit selection exists
+    - only exactly one selected document populates `currentDoc` and enables document-related views; zero or multiple selections make document-related views behave as if no document is selected
+    - document selection is stored in `useDocumentsStore` and survives switching tool views
+  - `Blocks`: shared pane with `Catalog` and `Clipboard` tabs
+    - `Catalog` is the default tab and lists database-backed operation types from `document_blocks_library`; the whole catalog card is draggable, and double-click inserts the operation after the active document block
+    - `Clipboard` is frontend-session-only memory for block cut/copy/paste; new cut/copy sessions open this tab automatically
+  - `Library`: narrow icon-only selector for `Dies`, `Die Assemblies`, `Presses`, and `Materials` main editor views; this pane omits a title/header and uses shared tooltips for labels
+  - `Simulation`: no middle pane; selecting the tool switches the main editor area to a simulation dashboard
   - `Users`: active user/session info
 - `MainEditorPane` routes active content:
   - default main view: `BlockEditor` (for `Projects`, `Documents`, `Blocks`, `Users`)
   - library main views: `Dies`, `Die Assemblies`, `Presses`, `Materials` (for `Library`)
+  - simulation main view: `Simulation` dashboard (for `Simulation`)
+- `BlockEditor` renders a visual document hierarchy over the flat `document_blocks` linked list:
+  - `document_heading` is shown as the document canvas/title area and contains Material, Input Workpiece, and Mesh setup properties
+  - operation types `10` (`Furnace`) and `24` (`Deformation`) are shown as second-level sections inside the document canvas
+  - non-top-level operation blocks following a `Deformation` block are visually nested under that Deformation until the next Furnace/Deformation section
+  - this hierarchy is visual only; DB storage remains a flat linked list with no `parent_block_id`
+  - one non-title block can be the active block; it is shown with a strong outline and acts as the default insertion/paste anchor
+  - direct block click, input focus/click/change inside a block, successful drag/drop, insert, and paste make a block active; selection checkbox clicks and drag-handle clicks alone do not
+  - document block selection is separate from active state and is used for batch copy, cut, remove, and drag-group preparation
+  - during drag, dense zero-height insertion markers show a thin blue `Insert here` line at the current drop target; hovering a block previews insertion after that block without adding permanent document spacing
+  - document block move uses optimistic local reorder plus lightweight `framer-motion` position animation on block wrappers, so lower blocks slide smoothly to new positions instead of waiting for a backend refresh jump
+  - catalog insert, document copy, and clipboard paste keep a short-lived `Inserted here` confirmation line at the final anchor and briefly highlight the inserted block group so the actual new position stays visible after backend refresh
+- `Simulation` main view characteristics:
+  - owner filter uses icon-only controls for `Current user`, `All users`, or `Selected user`, with a dropdown shown only for the selected-user mode
+  - renders three main tables: `Documents`, `Simulations`, and `Solver PCs`
+  - `Documents` and `Simulations` rows include run/stop toggle, read-only workflow status, queue position, and pause/continue action where applicable
+  - `Simulations` table supports drag-and-drop queue reordering by row grab handle and submits the reordered version list through the workflow API
+  - `Solver PCs` table is read-only and summarizes worker occupancy and machine resource data
 - `Dies` library view characteristics:
   - die card layout: top row = die name; second row = square STL preview on the left and die metadata on the right
   - each die card includes a small interactive STL preview window (camera-only interaction)
+  - `dies.classification_path` and `die_assemblies.classification_path` store open dot-separated classification keys such as `flat.top`, `vdie.bottom`, `gfm.left`, and `gfm.assembly`
   - controls: drag to rotate, right-drag to pan, wheel to zoom, and reset-view button
   - initial camera is isometric (Z up, X left-down, Y right-down), model centered and fitted to ~90% of viewport
   - STL source is derived from `dies.die_template_file_name` (`*.zip` stem -> `*.stl`) and served by backend endpoint `/library/db/dies/stl/{file_name}`
@@ -104,23 +131,40 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - `Power Limit Table` shows values only for the currently selected press mode
   - `Press Modes Table` horizontal scroll is synchronized across all press cards to simplify cross-press comparison
 - `Materials` library view characteristics:
-  - this is the only active materials UI in the Library tool; it uses a dashboard-style comparison layout and the older standalone `Materials` card view has been removed
+  - this is the only active materials UI in the Library tool; it uses one mode-based workspace with `dashboard`, `editor`, and `copy` modes, and the older standalone `Materials` card view has been removed
   - it renders only parsed DEFORM source-file content referenced by `materials.deform_file_name`
   - it overlays the visible material set on shared dashboard charts built from `GET /library/db/materials/{material_id}/visuals`
   - left rail is a dense full-height scroll area that contains text filter, owner filters, classification filters, placeholder material actions, and simplified material name cards in one shared scroll flow
+  - left-rail actions now open in-place workspace modes instead of placeholder buttons:
+    - `New material` -> editor mode with an empty root-material draft
+    - `Edit selected material` -> editor mode for the selected material
+    - `Copy into selected material` -> copy-wizard mode with the selected material as target
   - when the Library tool is toggled closed while `Materials` remains active, the left material rail is hidden and the diagrams pane expands to the full main-pane width
   - supports dashboard-local multi-selection: click for single selection, repeated click to clear, Ctrl/Cmd-click to toggle, and Shift-click for range selection
   - highlighted charts are driven by the view's selected material set; a non-scrollable single-line abstract summary above the charts shows selected names with line colors, or all visible materials when nothing is selected, and explicitly labels the view as DEFORM materials
   - dashboard title/metadata details live in the diagrams pane, are shown only for a single active material, and render as a compact two-column key/value layout summarizing DEFORM file, owner, test-record count, note, and diagram load state
+  - materials without `deform_file_name` remain visible in the material browser and editor/copy workflows, but they are excluded from DEFORM chart loading and dashboard plot overlays
   - material designations and linked standards in that single-material header are rendered as a compact table with `Designation`, `Standard`, `Country`, and dynamic chemistry-limit element columns; chemistry cells use compact display strings such as `min-max`, `<max`, `>min`, or `bal`
   - the classification section in that single-material header is a two-column comparison layout: axis labels on the left, all visible-set values on the right, with selected-material values highlighted and other visible-material values muted
   - classification axes are hierarchy-aware: level 1 = object type, level 2 = composition base, level 3 = all other categories
+  - the level-3 classification axis `manufacturing_route` is restricted to the approved value set `cast`, `wrought`, `powder`, `additive`
   - material list filtering is classification-aware: no active classification chips means all visible materials remain included; within one axis values are ORed, across axes filters are ANDed
   - classification filter chips and the single-material comparison header are branch-scoped by hierarchy: level 2 values are limited by the active level 1 branch, and level 3 values are limited by the active level 1 + level 2 branch
+  - materials filtering also includes a frontend-only pseudo category `Standard level`, derived from non-empty designation-country values exposed through `designation_links.country` (backed by `material_standards_catalog.country_or_region`); it is not stored in the normalized classification tables
+  - `Standard level` is single-select, defaults to `None`, is treated as a minor branch under `Object type` + `Composition Base`, and is rendered below the regular classification categories in the material rail
+  - when `Standard level = None`, material list cards and the dashboard summary line use the canonical `materials.name`; when a concrete standard-level value is active, they switch to a compound label built from the material's designation rows that match that selected country/level
   - dashboard lazily loads visuals for the visible filtered material set through repeated `GET /library/db/materials/{material_id}/visuals` calls
   - chart rendering is frontend-inline SVG and reuses the same backend diagram payload shape for all visible materials
   - each dashboard chart has `Auto / Manual / Reset` scale controls; in manual mode the first and last tick values on each axis become inline-editable
   - the shared library action strip in `TopEditorPane` is hidden for `Materials`; its placeholder buttons are rendered inside the material rail instead
+  - editor mode currently saves the normalized material root, classification assignments, and designation rows in one workspace payload
+  - in editor mode, `DEFORM file` is no longer a free-text input; it is shown as a read-only stored file name plus a staged local-file upload flow
+  - the staged upload flow accepts one `.key` / `.KEY` file from the user’s local machine, requires explicit `Upload` / `Cancel`, and stores the uploaded file under `backend/data/materials/`; the returned stored file name is then written into `materials.deform_file_name` on save
+  - copy mode currently copies selected normalized subtrees between materials:
+    - note and/or `deform_file_name`
+    - classification assignments
+    - designation rows plus linked standard chemistry rows
+    - test-record subtrees including chemistry results and property tables
 - `TopEditorPane` routes top content:
   - `VisualEditor` view when `BlockEditor` is active in `MainEditorPane`
   - library action menu when a library main view is active
@@ -129,7 +173,8 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - visibility is controlled from `MenuBar` (`Show TopEditorPane` / `Hide TopEditorPane`) for block-editor mode
   - click-to-scroll navigation into `BlockEditor`
   - viewer/editor modes
-  - multi-select, move/copy (Ctrl/Cmd-drop), insert, delete for block structure edits
+  - multi-select, move/copy (Ctrl/Cmd-drop), insert, delete, and frontend clipboard copy/cut/paste for block structure edits
+  - clipboard paste uses one active clipboard container as source and the active document block as insertion anchor; clipboard selection is separate and is used only for removing containers
 
 ## Frontend visual standard (VisualEditor-based)
 - The frontend uses a compact, VisualEditor-derived standard style across panes, controls, cards, lists, and modals.
@@ -139,7 +184,7 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - toolbar: `ui-toolbar`, `ui-toolbar-title`, `ui-toolbar-meta`
   - surfaces: `ui-card`, `ui-card-body`
   - controls: `ui-btn`, `ui-btn-primary`, `ui-btn-secondary`, `ui-btn-danger`
-  - form fields: `ui-input`, `ui-select`, `ui-textarea`
+  - form fields: `ui-input`, `ui-select`, `ui-textarea`, `ui-field-readonly`, `ui-field-readonly-multiline`
   - lists/modals/status: `ui-list-item`, `ui-list-item-active`, `ui-modal-overlay`, `ui-modal`, `ui-badge`
 - Text scale is centrally defined in `frontend/tailwind.config.js` (`fontSize`) with only four sizes:
   - `text-xs` = 11px/15px
@@ -148,17 +193,21 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - `text-lg` = 15px/20px
 - Rule for future UI edits:
   - prefer shared `ui-*` classes and the 4-size text palette; avoid introducing ad-hoc spacing/button/input styles unless the standard itself is intentionally updated.
+  - field-state standard is centralized in `frontend/src/index.css`: editable resting uses `ui-input` / `ui-select` / `ui-textarea`, focused editing uses their built-in accent border/ring state, and read-only values should render with `ui-field-readonly` (plus `ui-field-readonly-multiline` for wrapped content) instead of ad-hoc gray `span` / `div` styling
+  - tooltip/hint standard is the shared `frontend/src/components/ui/Tooltip.tsx` component; do not introduce native `title` tooltips for new UI work
+  - shared tooltip behavior must render above all panes via portal, use viewport-aware positioning, and avoid cursor overlap when possible
 
 ## Domain model summary
 - Core runtime entities:
   - Users (`users`)
   - Projects (`projects`)
   - Documents (`documents`)
-  - Blocks (`blocks`)
+  - Document Blocks (`document_blocks`)
   - Settings (`settings`)
   - Unified library catalog (`library`)
 - Project model:
   - `project_id`, `user_id`, optional `material_id` (FK to `materials.material_id`), `name`, `notes`, timestamps, soft delete
+  - version-specific material state is now stored in `material_versions`; documents carry `material_version_id`
 - Library API model (currently mounted):
   - table `library`: `id`, `parent_id`, `type`, `name`, `props` (JSONB), timestamps, `is_obsolete`
   - enum values in code: `die`, `die_assembly`, `press`, `press_mode`, `time_between_operations`, `material`, `operation_type`
@@ -166,14 +215,25 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - `die_types`, `materials`, `dies`, `die_assemblies`, `presses`, `press_modes`, `press_die_map`
   - mounted `/library/db/*` routes read from these normalized tables, while the older `/library/*` list/detail routes still serve from the unified `library` table
 - `materials.name` is plain text; national/regional material naming is expected to live in `materials_designations`
-- `backend/data/database_seeding/materials.json` now includes fully populated normalized-material seed examples for Ti-6Al-4V, Inconel 718, and Waspaloy across the standards, designations, publications, standard chemistry, test-record, and property-table sections
-- Waspaloy is currently a normalized seed-only material with `deform_file_name = null`, so it does not contribute DEFORM charts until a DEFORM source file is added
+- `backend/data/database_seeding/materials.json` now includes fully populated or partial normalized-material seed examples for Ti-6Al-4V, Ti80, Ti-10V-2Fe-3Al, Inconel 718, Inconel 600, Inconel 625, Inconel 690, Inconel 706, Haynes 188, Haynes 230, Haynes 282, Hastelloy X, Alloy 263, Waspaloy, Nimonic 90, GH4698, GH4720Li, A286, FGH96, FGH4097, Alloy 901, Incoloy 903, Incoloy 907, Incoloy 909, Incoloy 925, GH710, GH4780, K4169, K418B, K417G, K648, GH4099, and A-100 across the standards, designations, publications, standard chemistry, test-record, and property-table sections
+- `backend_obsolete/GBT3620.1-2016_Table1.json`, `backend_obsolete/GBT3620.1-2016_Table2.json`, and `backend_obsolete/GBT3620.1-2016_Table3.json` are the current source-of-truth inputs for GB/T 3620.1 titanium designation chemistry; the corresponding designations and standard-chemistry rows in `materials.json` are now generated from those extracted tables, including all listed TA*, TB*, and TC* grades
+- The `nominal_composition` column from those GB/T Table 1–3 extracts is also imported as additional `materials_designations` rows under `standard_id = 5`, attached to the same materials as the base GB/T designation rows
+- `backend_obsolete/GBT3620.1-2016_TableB1.json` is the current source-of-truth cross-reference table for mapping GB/T commercially pure titanium grades to ASTM Grade / UNS designation pairs; the matching ASTM designation rows for `TA1G`, `TA2G`, `TA3G`, and `TA4G` are seeded from it
+- The current batch also merged designation-only aliases into existing cards for `GH4738 -> Waspaloy`, `GH3625 -> Inconel 625`, `GH907 -> Incoloy 907`, and `GH4169G -> Inconel 718`, using explicit caveats where only secondary cross-reference evidence was accessible.
+- Inconel 600, Inconel 625, Inconel 690, Inconel 706, Haynes 188, Haynes 230, Haynes 282, Hastelloy X, Alloy 263, Waspaloy, Nimonic 90, GH4698, GH4720Li, A286, FGH96, FGH4097, Alloy 901, Incoloy 903, Incoloy 907, Incoloy 909, Incoloy 925, GH710, GH4780, K4169, K418B, K417G, K648, GH4099, and A-100 are currently normalized seed-only materials with `deform_file_name = null`, so they do not contribute DEFORM charts until DEFORM source files are added
 - Document model:
   - `document_id`, required `project_id`, optional `source_document_id`, optional `editor_user_id`, `first_block_id`, `name`, `notes`, timestamps, soft delete
   - supports inheritance/lineage through `source_document_id`
 - Block model:
   - linked-list ordering with `previous_block_id` and `next_block_id`
-  - block type is stored as `block_type_id`
+  - block type is stored as `block_type_id`; current user-insertable operation blocks use numeric old operation `type_id` values from `document_blocks_library`
+  - new documents auto-create one fixed non-removable block: `document_heading`
+  - `document_heading` now owns the former setup fields from `Material`, `input_workpiece`, and `Mesh`: `material_id`, `geometry_type_id`, `weight`, `attributes`, and `mesh_elements`
+  - operation type `10` is the active `Furnace` block and stores both `furnace_class_id` and initial furnace `temperature`; old operation type `62` is obsolete/hidden
+  - operation type `24` is the active user-insertable `Deformation` block; it now owns the former `Press`, `Die`, `Prolongation feed and speed`, `Upsetting feed and speed`, and `Transversal cogging feed and speed` fields
+  - old operation types `5`, `84`, `26`, `8`, `15`, `13`, and `14` are obsolete/hidden; existing stored chains are migrated into `document_heading` or `24`
+  - `Deformation` stores `press_id`, the three feed-direction fields, the three speed fields, and first/middle/last feed lengths
+  - feed directions render as `<--`, `<->`, and `-->` arrow buttons with default `<--`
   - metadata flags: `is_system`, `is_removable`, `fixed_position`
 - Legacy ACL/share/version/server/log tables remain in models and DB for compatibility and existing flows.
 - Full database schema, table inventory, key columns, JSONB payload notes, and seeding-layout details are tracked in `.codex/context/DB_SCHEMA.md`.
@@ -244,6 +304,15 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - `GET /library/db/users`
 - `GET /library/db/die-types`
 - `GET /library/db/materials`
+  - returns only non-obsolete materials
+- `GET /library/db/materials/{material_id}/workspace`
+- `POST /library/db/materials/workspace`
+- `PATCH /library/db/materials/{material_id}/workspace`
+- `DELETE /library/db/materials`
+  - soft-deletes the selected materials and marks nested designation / chemistry / test-record / property-table rows obsolete where those tables support `is_obsolete`
+- `POST /library/db/materials/copy`
+- `POST /library/db/materials/upload-deform-file`
+- `GET /library/db/material-standards`
 - `GET /library/db/material-classification`
 - `GET /library/db/materials/{material_id}/visuals`
   - `GET /library/db/dies`
@@ -286,11 +355,25 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - `9ac4e7b1d2f3_squashed_current_schema_baseline.py`
   - `3a4d8f2c1b90_reshape_materials_table.py`
   - `7f7f9945c6f1_add_material_classification_tables.py`
-  - `b8c2e4f6a1d0_add_material_classification_hierarchy.py`
   - `c1f4e28b9a7d_add_material_standards_tables.py`
   - `e5d9c3a1b4f7_add_material_chemistry_tables.py`
-- `f7a2d4c8e1b3_add_material_property_tables.py`
-- `a3d7f1c2e9b4_slim_materials_root_table.py`
+  - `f7a2d4c8e1b3_add_material_property_tables.py`
+  - `a3d7f1c2e9b4_slim_materials_root_table.py`
+  - `b8c2e4f6a1d0_add_material_classification_hierarchy.py`
+  - `d2c6e8a4b9f1_change_material_name_to_varchar.py`
+  - `4f91c2a6b8d3_add_simulation_runtime_tables.py`
+  - `6c2b8f1e4a9d_rename_block_tables_add_material_versions.py`
+  - `8d4a1f6c2b7e_add_preprocess_runtime_state_to_document_versions.py`
+  - `b7e2c9a4d6f1_seed_document_blocks_library_from_old_operations.py`
+  - `c4a9d2e7b8f3_prune_billet_catalog_blocks.py`
+  - `d8f1b6c3a9e2_merge_furnace_catalog_blocks.py`
+  - `e2f4a6b8c9d1_merge_deformation_catalog_blocks.py`
+  - `f9a7c3d2e1b4_rename_full_die_speed_to_transversal_cogging.py`
+  - `a6e4c8f2b9d5_split_deformation_feed_directions.py`
+  - `b2d6f8a1c4e9_add_die_classification_paths.py`
+  - `c9e2a7d4f6b1_split_deformation_bundle_blocks.py`
+  - `d4f8b2c7e9a1_reorganize_deformation_feed_speed_blocks.py`
+  - `e7c9a1d4f8b2_merge_setup_blocks_into_title_and_deformation.py`
 - Historical migrations are archived in `backend/alembic/versions_backup/`.
-- Current head migration is `a3d7f1c2e9b4`.
+- Current head migration is `e7c9a1d4f8b2`.
 - The baseline migration uses `Base.metadata.create_all(checkfirst=True)` / `drop_all(checkfirst=True)` against registered SQLAlchemy models; follow-up migrations must remain idempotent enough to coexist with the squashed baseline on fresh installs.

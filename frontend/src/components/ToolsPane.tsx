@@ -1,22 +1,94 @@
-import { DragEvent, useMemo, useState } from 'react'
+import { DragEvent, useEffect, useMemo, useState } from 'react'
 import { useDocumentsStore } from '../stores/useDocumentsStore'
 import { useSessionStore } from '../stores/useSessionStore'
-import { BLOCK_LIBRARY_TYPES, getBlockTypeIcon, getBlockTypeLabel } from '../lib/blockTypeMeta'
+import { useBlockClipboardStore } from '../stores/useBlockClipboardStore'
+import { apiClient } from '../lib/apiClient'
+import Tooltip from './ui/Tooltip'
+import ClipboardPane from './clipboard/ClipboardPane'
 import type { ToolView } from './ToolsSwitcher'
 import type { LibraryEditorView } from './editorPaneTypes'
+import type { OperationBlockTypeRecord } from '../types/api'
 
 interface ToolsPaneProps {
   activeView: ToolView | null
   libraryView: LibraryEditorView
   onLibraryViewChange: (view: LibraryEditorView) => void
   onInsertBlockType: (blockTypeId: string) => void
+  onPasteClipboardClip: (clipId?: string) => void
 }
+
+function LibraryDiesIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M4 6.5h12v2.25c0 .97-.78 1.75-1.75 1.75h-1v3h-6.5v-3h-1A1.75 1.75 0 0 1 4 8.75V6.5Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M6.75 13.5h6.5M8 16h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function LibraryDieAssembliesIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <rect x="3.5" y="4" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="11.5" y="4" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="7.5" y="11" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M8.5 6.5h3M10 9v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function LibraryPressesIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M6 3.5h8M7 3.5v4m6-4v4M5 7.5h10v2H5v-2Zm1 2v7h8v-7M8.25 12.5h3.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function LibraryMaterialsIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M4.5 14V6.75c0-.44.2-.86.54-1.14L9.5 2.5l5 3.11c.34.28.54.7.54 1.14V14l-5 3-5-3Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M7.5 9.25h5M10 6.75v5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+const LIBRARY_VIEW_ITEMS: Array<{
+  id: LibraryEditorView
+  label: string
+  icon: ({ className }: { className?: string }) => React.ReactNode
+}> = [
+  { id: 'dies', label: 'Dies', icon: LibraryDiesIcon },
+  { id: 'dieAssemblies', label: 'Die Assemblies', icon: LibraryDieAssembliesIcon },
+  { id: 'presses', label: 'Presses', icon: LibraryPressesIcon },
+  { id: 'materials', label: 'Materials', icon: LibraryMaterialsIcon },
+]
 
 export default function ToolsPane({
   activeView,
   libraryView,
   onLibraryViewChange,
   onInsertBlockType,
+  onPasteClipboardClip,
 }: ToolsPaneProps) {
   const [projectsFilter, setProjectsFilter] = useState('')
   const [documentsFilter, setDocumentsFilter] = useState('')
@@ -27,6 +99,10 @@ export default function ToolsPane({
   const [newDocName, setNewDocName] = useState('')
   const [copySourceDocId, setCopySourceDocId] = useState('')
   const [copyName, setCopyName] = useState('')
+  const [blocksFilter, setBlocksFilter] = useState('')
+  const [operationTypes, setOperationTypes] = useState<OperationBlockTypeRecord[]>([])
+  const [operationTypesLoading, setOperationTypesLoading] = useState(false)
+  const [operationTypesError, setOperationTypesError] = useState<string | null>(null)
   const [isCreatingProject, setIsCreatingProject] = useState(false)
   const [isCreatingDocument, setIsCreatingDocument] = useState(false)
   const [isCopyingDocument, setIsCopyingDocument] = useState(false)
@@ -39,12 +115,18 @@ export default function ToolsPane({
     documents,
     currentDocId,
     setCurrentDoc,
+    selectedDocIds,
+    initializeDocumentSelection,
+    toggleDocSelection,
     createDocument,
     copyDocument,
     isLoading,
   } = useDocumentsStore()
 
   const { user, baseUrl, logout } = useSessionStore()
+  const activeBlocksPaneTab = useBlockClipboardStore((state) => state.activePaneTab)
+  const setActiveBlocksPaneTab = useBlockClipboardStore((state) => state.setActivePaneTab)
+  const clipboardClipsCount = useBlockClipboardStore((state) => state.clips.length)
 
   const filteredProjects = useMemo(() => {
     const needle = projectsFilter.trim().toLowerCase()
@@ -62,8 +144,71 @@ export default function ToolsPane({
     return documents.filter((entry) => entry.name.toLowerCase().includes(needle))
   }, [documents, documentsFilter])
 
+  const selectedDocumentIds = useMemo(() => Array.from(selectedDocIds), [selectedDocIds])
+
+  const filteredOperationTypes = useMemo(() => {
+    const needle = blocksFilter.trim().toLowerCase()
+    if (!needle) {
+      return operationTypes
+    }
+    return operationTypes.filter((entry) => {
+      const haystack = [
+        String(entry.type_id),
+        entry.library_name,
+        entry.process_name,
+        entry.text_id,
+        ...entry.db_column_names,
+      ].join(' ').toLowerCase()
+      return haystack.includes(needle)
+    })
+  }, [blocksFilter, operationTypes])
+
+  useEffect(() => {
+    if (activeView !== 'blocks') {
+      return
+    }
+
+    let isActive = true
+    setOperationTypesLoading(true)
+    setOperationTypesError(null)
+
+    const loadOperationTypes = async () => {
+      const response = await apiClient.get<OperationBlockTypeRecord[]>(
+        '/library/db/document-block-types',
+        {
+          params: {
+            insertable_only: true,
+          },
+        }
+      )
+
+      if (!isActive) {
+        return
+      }
+
+      if (response.ok && response.data) {
+        setOperationTypes(response.data)
+      } else {
+        setOperationTypesError(response.errorMessage || 'Failed to load operation block types')
+      }
+      setOperationTypesLoading(false)
+    }
+
+    void loadOperationTypes()
+
+    return () => {
+      isActive = false
+    }
+  }, [activeView])
+
+  useEffect(() => {
+    if (activeView === 'documents') {
+      initializeDocumentSelection()
+    }
+  }, [activeView, documents.length, initializeDocumentSelection])
+
   const openCopyModal = () => {
-    setCopySourceDocId(currentDocId || documents[0]?.id || '')
+    setCopySourceDocId(selectedDocumentIds.length === 1 ? selectedDocumentIds[0] : '')
     setCopyName('')
     setShowCopyModal(true)
   }
@@ -119,8 +264,9 @@ export default function ToolsPane({
     }
   }
 
-  const handleBlockDragStart = (event: DragEvent<HTMLButtonElement>, blockTypeId: string) => {
+  const handleBlockDragStart = (event: DragEvent<HTMLElement>, blockTypeId: string) => {
     event.dataTransfer.setData('application/x-forgelab-block-type', blockTypeId)
+    event.dataTransfer.setData('text/plain', blockTypeId)
     event.dataTransfer.effectAllowed = 'copy'
   }
 
@@ -128,19 +274,24 @@ export default function ToolsPane({
     return null
   }
 
-  const paneWidthClass = activeView === 'library' ? 'w-44 shrink-0' : 'w-80 shrink-0'
+  if (activeView === 'simulation') {
+    return null
+  }
+
+  const paneWidthClass = activeView === 'library' ? 'w-16 shrink-0' : 'w-80 shrink-0'
 
   return (
     <aside className={`ui-pane ${paneWidthClass}`}>
-      <div className="ui-pane-header">
-        <h2 className="ui-pane-title">
-          {activeView === 'projects' && 'Projects'}
-          {activeView === 'documents' && 'Documents'}
-          {activeView === 'blocks' && 'Blocks'}
-          {activeView === 'library' && 'Library'}
-          {activeView === 'users' && 'Users'}
-        </h2>
-      </div>
+      {activeView !== 'library' ? (
+        <div className="ui-pane-header">
+          <h2 className="ui-pane-title">
+            {activeView === 'projects' && 'Projects'}
+            {activeView === 'documents' && 'Documents'}
+            {activeView === 'blocks' && 'Blocks'}
+            {activeView === 'users' && 'Users'}
+          </h2>
+        </div>
+      ) : null}
 
       {activeView === 'projects' && (
         <div className="ui-pane-body">
@@ -214,11 +365,16 @@ export default function ToolsPane({
             <button
               type="button"
               onClick={openCopyModal}
-              disabled={!currentProjectId || documents.length === 0}
+              disabled={!currentProjectId || selectedDocIds.size !== 1}
               className="ui-btn-secondary flex-1"
             >
               Copy
             </button>
+          </div>
+
+          <div className="text-xs text-gray-500">
+            Selected: {selectedDocIds.size}
+            {selectedDocIds.size === 1 ? ` | active document ${currentDocId}` : ' | editor disabled'}
           </div>
 
           <div className="space-y-2">
@@ -229,14 +385,15 @@ export default function ToolsPane({
             ) : (
               filteredDocuments.map((entry) => {
                 const entryId = String(entry.id)
-                const isActive = currentDocId === entryId
+                const isSelected = selectedDocIds.has(entryId)
 
                 return (
                   <button
                     key={entryId}
                     type="button"
-                    onClick={() => setCurrentDoc(entryId)}
-                    className={`ui-list-item ${isActive ? 'ui-list-item-active' : ''}`}
+                    onClick={() => toggleDocSelection(entryId)}
+                    aria-pressed={isSelected}
+                    className={`ui-list-item ${isSelected ? 'ui-list-item-active' : ''}`}
                   >
                     <div className="font-medium text-sm truncate">{entry.name}</div>
                     <div className="text-xs text-gray-500">
@@ -253,73 +410,119 @@ export default function ToolsPane({
 
       {activeView === 'blocks' && (
         <div className="ui-pane-body">
-          <div className="text-xs text-gray-500">
-            Drag a block type into BlockEditor or use Insert.
+          <div className="grid grid-cols-2 gap-1 rounded border border-gray-200 bg-gray-50 p-1">
+            <button
+              type="button"
+              onClick={() => setActiveBlocksPaneTab('catalog')}
+              className={activeBlocksPaneTab === 'catalog' ? 'ui-btn-primary' : 'ui-btn'}
+            >
+              Catalog
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveBlocksPaneTab('clipboard')}
+              className={activeBlocksPaneTab === 'clipboard' ? 'ui-btn-primary' : 'ui-btn'}
+            >
+              Clipboard {clipboardClipsCount > 0 ? `(${clipboardClipsCount})` : ''}
+            </button>
           </div>
 
-          <div className="space-y-2">
-            {BLOCK_LIBRARY_TYPES.map((entry) => (
-              <div key={entry.id} className="ui-card ui-card-body flex items-center gap-2">
-                <button
-                  type="button"
-                  draggable
-                  onDragStart={(event) => handleBlockDragStart(event, entry.id)}
-                  className="ui-btn w-10 h-10 p-0 font-semibold"
-                  title={`Drag ${getBlockTypeLabel(entry.id)}`}
-                >
-                  {getBlockTypeIcon(entry.id)}
-                </button>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">{getBlockTypeLabel(entry.id)}</div>
-                  <div className="text-xs text-gray-500">{entry.id}</div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onInsertBlockType(entry.id)}
-                  className="ui-btn"
-                >
-                  Insert
-                </button>
+          {activeBlocksPaneTab === 'catalog' ? (
+            <>
+              <div className="text-xs text-gray-500">
+                Drag an operation card into BlockEditor, or double-click it to insert.
               </div>
-            ))}
-          </div>
+
+              <input
+                type="text"
+                value={blocksFilter}
+                onChange={(event) => setBlocksFilter(event.target.value)}
+                placeholder="Filter operations..."
+                className="ui-input"
+              />
+
+              {operationTypesError && (
+                <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-2 py-1">
+                  {operationTypesError}
+                </div>
+              )}
+
+              {operationTypesLoading && operationTypes.length === 0 ? (
+                <div className="text-sm text-gray-500">Loading operation types...</div>
+              ) : null}
+
+              {!operationTypesLoading && filteredOperationTypes.length === 0 ? (
+                <div className="text-sm text-gray-500">No operation types found.</div>
+              ) : null}
+
+              <div className="space-y-2">
+                {filteredOperationTypes.map((entry) => {
+                  const blockTypeId = String(entry.type_id)
+                  const columnSummary = entry.db_column_names.length > 0
+                    ? entry.db_column_names.join(', ')
+                    : 'no fields'
+
+                  return (
+                    <Tooltip key={entry.type_id} content={`Drag or double-click ${entry.library_name}`}>
+                      <div
+                        draggable
+                        role="button"
+                        tabIndex={0}
+                        onDragStart={(event) => handleBlockDragStart(event, blockTypeId)}
+                        onDoubleClick={() => onInsertBlockType(blockTypeId)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            onInsertBlockType(blockTypeId)
+                          }
+                        }}
+                        className="ui-card ui-card-body flex cursor-grab items-center gap-2 active:cursor-grabbing hover:border-blue-300 hover:bg-blue-50/30"
+                        aria-label={`Drag or double-click ${entry.library_name}`}
+                      >
+                        <div className="ui-btn pointer-events-none w-10 h-10 p-0 font-semibold">
+                          OP
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium truncate">{entry.library_name}</div>
+                          <div className="text-xs text-gray-500 truncate">
+                            #{entry.type_id} | {columnSummary}
+                          </div>
+                        </div>
+                      </div>
+                    </Tooltip>
+                  )
+                })}
+              </div>
+            </>
+          ) : (
+            <ClipboardPane onPasteClip={onPasteClipboardClip} />
+          )}
         </div>
       )}
 
       {activeView === 'library' && (
-        <div className="ui-pane-body">
-          <div className="text-xs text-gray-500">
-            Select Library editor view.
-          </div>
-          <div className="space-y-2">
-            <button
-              type="button"
-              onClick={() => onLibraryViewChange('dies')}
-              className={`ui-list-item ${libraryView === 'dies' ? 'ui-list-item-active' : ''}`}
-            >
-              Dies
-            </button>
-            <button
-              type="button"
-              onClick={() => onLibraryViewChange('dieAssemblies')}
-              className={`ui-list-item ${libraryView === 'dieAssemblies' ? 'ui-list-item-active' : ''}`}
-            >
-              Die Assemblies
-            </button>
-            <button
-              type="button"
-              onClick={() => onLibraryViewChange('presses')}
-              className={`ui-list-item ${libraryView === 'presses' ? 'ui-list-item-active' : ''}`}
-            >
-              Presses
-            </button>
-            <button
-              type="button"
-              onClick={() => onLibraryViewChange('materials')}
-              className={`ui-list-item ${libraryView === 'materials' ? 'ui-list-item-active' : ''}`}
-            >
-              Materials
-            </button>
+        <div className="ui-pane-body items-center py-2">
+          <div className="flex flex-col items-center gap-2">
+            {LIBRARY_VIEW_ITEMS.map((item) => {
+              const isActive = libraryView === item.id
+              const Icon = item.icon
+
+              return (
+                <Tooltip key={item.id} content={item.label}>
+                  <button
+                    type="button"
+                    onClick={() => onLibraryViewChange(item.id)}
+                    aria-label={item.label}
+                    className={`ui-btn w-10 h-10 p-0 ${
+                      isActive
+                        ? 'border-blue-600 bg-blue-50 text-blue-700'
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </button>
+                </Tooltip>
+              )
+            })}
           </div>
         </div>
       )}

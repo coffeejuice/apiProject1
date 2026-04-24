@@ -1,6 +1,7 @@
-import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, Fragment, ReactNode, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 
 import DieStlPreview from './DieStlPreview'
+import Tooltip from '../ui/Tooltip'
 import { apiClient } from '../../lib/apiClient'
 import { formatLibraryName, formatTimestamp } from '../../lib/libraryDisplay'
 import type {
@@ -8,35 +9,31 @@ import type {
   DieRecord,
   DieTypeRecord,
   LibraryDbUserRecord,
+  MaterialCopyRequest,
+  MaterialCopyResponse,
   MaterialClassificationAxisRecord,
   MaterialClassificationCatalogRecord,
+  MaterialDeleteRequest,
+  MaterialDeleteResponse,
+  MaterialDeformFileUploadResponse,
   MaterialRecord,
+  MaterialStandardCatalogItemRecord,
   MaterialVisualAxisRecord,
   MaterialVisualDiagramRecord,
   MaterialVisualRecord,
   MaterialVisualSeriesRecord,
+  MaterialWorkspaceDesignationInput,
+  MaterialWorkspaceRecord,
   PressModeRecord,
   PressRecord,
 } from '../../types/api'
 
 type OwnerFilterKey =
-  | 'all'
   | 'builtIn'
-  | 'builtInAndCurrentUser'
   | 'allUsers'
-  | 'currentUser'
   | 'selectedUser'
 
-const OWNER_FILTER_ITEMS: Array<{ id: OwnerFilterKey; label: string }> = [
-  { id: 'all', label: 'All' },
-  { id: 'builtIn', label: 'Build-in' },
-  { id: 'builtInAndCurrentUser', label: 'Build-in and Current user' },
-  { id: 'allUsers', label: 'All users' },
-  { id: 'currentUser', label: 'Current user' },
-  { id: 'selectedUser', label: 'Selected user' },
-]
-
-const DEFAULT_OWNER_FILTERS: Set<OwnerFilterKey> = new Set(['builtInAndCurrentUser'])
+const DEFAULT_OWNER_FILTERS: Set<OwnerFilterKey> = new Set(['builtIn', 'selectedUser'])
 
 function toggleFilter<T>(current: Set<T>, value: T): Set<T> {
   if (current.has(value)) {
@@ -91,13 +88,8 @@ function getOwnerLabel(ownerUserId: number | null | undefined, usersById: Map<nu
 function matchesOwnerFilter(
   ownerUserId: number | null | undefined,
   activeOwnerFilters: Set<OwnerFilterKey>,
-  currentUserId: number | null,
   selectedUserId: number | null
 ): boolean {
-  if (activeOwnerFilters.has('all')) {
-    return true
-  }
-
   const isBuiltInOwner = ownerUserId === null || ownerUserId === undefined || ownerUserId === 1
   let matches = false
 
@@ -105,19 +97,8 @@ function matchesOwnerFilter(
     matches = matches || isBuiltInOwner
   }
 
-  if (activeOwnerFilters.has('builtInAndCurrentUser')) {
-    matches =
-      matches ||
-      isBuiltInOwner ||
-      (currentUserId !== null && ownerUserId === currentUserId)
-  }
-
   if (activeOwnerFilters.has('allUsers')) {
     matches = matches || !isBuiltInOwner
-  }
-
-  if (activeOwnerFilters.has('currentUser')) {
-    matches = matches || (currentUserId !== null && ownerUserId === currentUserId)
   }
 
   if (activeOwnerFilters.has('selectedUser')) {
@@ -159,6 +140,109 @@ function useSelectedUserState(
   return [selectedUserId, setSelected]
 }
 
+function toggleOwnerFilterState(current: Set<OwnerFilterKey>, filterKey: OwnerFilterKey): Set<OwnerFilterKey> {
+  const next = new Set(current)
+
+  if (filterKey === 'allUsers') {
+    if (next.has('allUsers')) {
+      next.delete('allUsers')
+      return next
+    }
+    next.add('allUsers')
+    next.delete('selectedUser')
+    return next
+  }
+
+  if (filterKey === 'selectedUser') {
+    if (next.has('selectedUser')) {
+      next.delete('selectedUser')
+      return next
+    }
+    next.add('selectedUser')
+    next.delete('allUsers')
+    return next
+  }
+
+  if (next.has(filterKey)) {
+    next.delete(filterKey)
+    return next
+  }
+
+  next.add(filterKey)
+  return next
+}
+
+function OwnerBuiltInIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M3.75 6.25 10 3l6.25 3.25M3.75 6.25V13.75L10 17l6.25-3.25V6.25M3.75 6.25 10 9.5m6.25-3.25L10 9.5m0 0V17"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function OwnerAllUsersIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M6.75 8.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Zm6.5 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm-10 7v-.75c0-2.07 1.68-3.75 3.75-3.75s3.75 1.68 3.75 3.75v.75m.5 0v-.5c0-1.75 1.42-3.17 3.17-3.17 1.75 0 3.17 1.42 3.17 3.17v.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function OwnerSelectedUserIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M10 8.25a2.75 2.75 0 1 0 0-5.5 2.75 2.75 0 0 0 0 5.5Zm-4.5 8V15.5A4.5 4.5 0 0 1 10 11a4.5 4.5 0 0 1 4.5 4.5v.75"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function OwnerFilterToggleButton({
+  active,
+  label,
+  onClick,
+  children,
+}: {
+  active: boolean
+  label: string
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <Tooltip content={label}>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={label}
+        className={`flex h-8 w-8 items-center justify-center rounded-full border transition ${
+          active
+            ? 'border-sky-400 bg-sky-50 text-sky-700'
+            : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700'
+        }`}
+      >
+        {children}
+      </button>
+    </Tooltip>
+  )
+}
+
 function OwnerFilters({
   activeOwnerFilters,
   onToggleOwnerFilter,
@@ -172,51 +256,49 @@ function OwnerFilters({
   selectedUserId: number | null
   onSelectedUserChange: (nextUserId: number) => void
 }) {
+  const selectedUserActive = activeOwnerFilters.has('selectedUser')
+
   return (
     <div className="space-y-1">
       <div className="text-xs font-semibold text-gray-700">Owner filter</div>
       <div className="flex flex-wrap items-center gap-2">
-        {OWNER_FILTER_ITEMS.map((entry) => {
-          const isActive = activeOwnerFilters.has(entry.id)
-
-          if (entry.id === 'selectedUser') {
-            const isSelectedUserActive = activeOwnerFilters.has('selectedUser')
-            return (
-              <div key={entry.id} className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => onToggleOwnerFilter(entry.id)}
-                  className={`ui-btn ${isActive ? 'border-blue-600 bg-blue-50 text-blue-700' : ''}`}
-                >
-                  {entry.label}
-                </button>
-                <select
-                  className="ui-select w-48"
-                  value={selectedUserId ?? ''}
-                  onChange={(event) => onSelectedUserChange(Number(event.target.value))}
-                  disabled={!isSelectedUserActive || users.length === 0}
-                >
-                  {users.map((user) => (
-                    <option key={user.user_id} value={user.user_id}>
-                      {buildUserLabel(user)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )
-          }
-
-          return (
-            <button
-              key={entry.id}
-              type="button"
-              onClick={() => onToggleOwnerFilter(entry.id)}
-              className={`ui-btn ${isActive ? 'border-blue-600 bg-blue-50 text-blue-700' : ''}`}
+        <OwnerFilterToggleButton
+          active={activeOwnerFilters.has('builtIn')}
+          label="Built-in materials"
+          onClick={() => onToggleOwnerFilter('builtIn')}
+        >
+          <OwnerBuiltInIcon className="h-4 w-4" />
+        </OwnerFilterToggleButton>
+        <OwnerFilterToggleButton
+          active={activeOwnerFilters.has('allUsers')}
+          label="All user-owned materials"
+          onClick={() => onToggleOwnerFilter('allUsers')}
+        >
+          <OwnerAllUsersIcon className="h-4 w-4" />
+        </OwnerFilterToggleButton>
+        <div className="flex items-center gap-2">
+          <OwnerFilterToggleButton
+            active={selectedUserActive}
+            label="Selected user materials"
+            onClick={() => onToggleOwnerFilter('selectedUser')}
+          >
+            <OwnerSelectedUserIcon className="h-4 w-4" />
+          </OwnerFilterToggleButton>
+          {selectedUserActive ? (
+            <select
+              className="ui-select w-40"
+              value={selectedUserId ?? ''}
+              onChange={(event) => onSelectedUserChange(Number(event.target.value))}
+              disabled={users.length === 0}
             >
-              {entry.label}
-            </button>
-          )
-        })}
+              {users.map((user) => (
+                <option key={user.user_id} value={user.user_id}>
+                  {buildUserLabel(user)}
+                </option>
+              ))}
+            </select>
+          ) : null}
+        </div>
       </div>
     </div>
   )
@@ -1116,7 +1198,6 @@ export function LibraryDiesView({
       const ownerMatch = matchesOwnerFilter(
         entry.owner_user_id,
         ownerFilters,
-        currentUserId,
         selectedUserId
       )
       if (!ownerMatch) {
@@ -1129,7 +1210,8 @@ export function LibraryDiesView({
 
       const name = formatLibraryName(entry.name).toLowerCase()
       const inventory = (entry.inventory_number || '').toLowerCase()
-      const haystack = `${entry.id} ${name} ${inventory}`
+      const classificationPath = (entry.classification_path || '').toLowerCase()
+      const haystack = `${entry.id} ${name} ${inventory} ${classificationPath}`
       return haystack.includes(normalizedFilter)
     })
   }, [currentUserId, dies, normalizedFilter, ownerFilters, selectedTypeFilters, selectedUserId])
@@ -1139,7 +1221,7 @@ export function LibraryDiesView({
   }
 
   const toggleOwnerFilter = (filterKey: OwnerFilterKey) => {
-    setOwnerFilters((previous) => toggleFilter(previous, filterKey))
+    setOwnerFilters((previous) => toggleOwnerFilterState(previous, filterKey))
   }
 
   return (
@@ -1230,6 +1312,7 @@ export function LibraryDiesView({
                   <div className="flex-1 min-w-0 space-y-1 text-xs text-gray-700">
                     <div>ID: {entry.id}</div>
                     <div>Type: {dieTypeName}</div>
+                    <div>Classification: {entry.classification_path || '-'}</div>
                     <div>Owner: {getOwnerLabel(entry.owner_user_id, usersById)}</div>
                     <div>Inventory: {entry.inventory_number || '-'}</div>
                     <div>Template: {entry.die_template_file_name || '-'}</div>
@@ -1279,7 +1362,6 @@ export function LibraryDieAssembliesView({
       const ownerMatch = matchesOwnerFilter(
         entry.owner_user_id,
         ownerFilters,
-        currentUserId,
         selectedUserId
       )
       if (!ownerMatch) {
@@ -1291,13 +1373,14 @@ export function LibraryDieAssembliesView({
       }
 
       const name = formatLibraryName(entry.name).toLowerCase()
-      const haystack = `${entry.id} ${name}`
+      const classificationPath = (entry.classification_path || '').toLowerCase()
+      const haystack = `${entry.id} ${name} ${classificationPath}`
       return haystack.includes(normalizedFilter)
     })
   }, [currentUserId, dieAssemblies, normalizedFilter, ownerFilters, selectedUserId])
 
   const toggleOwnerFilter = (filterKey: OwnerFilterKey) => {
-    setOwnerFilters((previous) => toggleFilter(previous, filterKey))
+    setOwnerFilters((previous) => toggleOwnerFilterState(previous, filterKey))
   }
 
   return (
@@ -1345,6 +1428,7 @@ export function LibraryDieAssembliesView({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-700">
                   <div>Owner: {getOwnerLabel(entry.owner_user_id, usersById)}</div>
+                  <div>Classification: {entry.classification_path || '-'}</div>
                   <div>Obsolete: {entry.is_obsolete ? 'Yes' : 'No'}</div>
                   <div>Top die: {entry.top_die_id ?? '-'}</div>
                   <div>Bottom die: {entry.bottom_die_id ?? '-'}</div>
@@ -1367,6 +1451,7 @@ export interface LibraryMaterialsViewProps {
   currentUserId: number | null
   selectedMaterialId: number | null
   onSelectMaterialId: (nextId: number | null) => void
+  onRefreshLibrary: () => Promise<void>
   isMaterialListVisible: boolean
   isLoading: boolean
   error: string | null
@@ -1413,16 +1498,10 @@ function filterMaterialsForLibrary(
   materials: MaterialRecord[],
   normalizedFilter: string,
   ownerFilters: Set<OwnerFilterKey>,
-  currentUserId: number | null,
   selectedUserId: number | null
 ): MaterialRecord[] {
   return materials.filter((entry) => {
-    const ownerMatch = matchesOwnerFilter(
-      entry.owner_id,
-      ownerFilters,
-      currentUserId,
-      selectedUserId
-    )
+    const ownerMatch = matchesOwnerFilter(entry.owner_id, ownerFilters, selectedUserId)
     if (!ownerMatch) {
       return false
     }
@@ -1436,6 +1515,8 @@ function filterMaterialsForLibrary(
 }
 
 type MaterialClassificationFilterState = Record<string, string[]>
+const MATERIAL_STANDARD_LEVEL_NONE = 'none'
+type MaterialStandardLevelFilterValue = string
 
 function getMaterialClassificationHierarchyLevel(
   axis: Pick<MaterialClassificationAxisRecord, 'hierarchy_level'> | null | undefined
@@ -1604,6 +1685,97 @@ function pruneMaterialClassificationFilters(
   return next
 }
 
+function normalizeMaterialStandardLevelValue(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') {
+    return null
+  }
+  const normalized = value.trim()
+  return normalized.length > 0 ? normalized : null
+}
+
+function extractMaterialStandardLevels(material: MaterialRecord): string[] {
+  const seen = new Set<string>()
+  const levels: string[] = []
+
+  material.designation_links.forEach((entry) => {
+    const level = normalizeMaterialStandardLevelValue(entry.country)
+    if (!level) {
+      return
+    }
+    const dedupeKey = level.toLocaleLowerCase()
+    if (seen.has(dedupeKey)) {
+      return
+    }
+    seen.add(dedupeKey)
+    levels.push(level)
+  })
+
+  return levels
+}
+
+function buildMaterialStandardLevelOptions(materials: MaterialRecord[]): string[] {
+  const seen = new Set<string>()
+  const values: string[] = []
+
+  materials.forEach((material) => {
+    extractMaterialStandardLevels(material).forEach((value) => {
+      const dedupeKey = value.toLocaleLowerCase()
+      if (seen.has(dedupeKey)) {
+        return
+      }
+      seen.add(dedupeKey)
+      values.push(value)
+    })
+  })
+
+  values.sort((left, right) => left.localeCompare(right))
+  return values
+}
+
+function matchesMaterialStandardLevelFilter(
+  material: MaterialRecord,
+  selectedStandardLevel: MaterialStandardLevelFilterValue
+): boolean {
+  if (selectedStandardLevel === MATERIAL_STANDARD_LEVEL_NONE) {
+    return true
+  }
+
+  return material.designation_links.some(
+    (entry) => normalizeMaterialStandardLevelValue(entry.country) === selectedStandardLevel
+  )
+}
+
+function formatMaterialLabelForStandardLevel(
+  material: MaterialRecord,
+  selectedStandardLevel: MaterialStandardLevelFilterValue
+): string {
+  if (selectedStandardLevel === MATERIAL_STANDARD_LEVEL_NONE) {
+    return formatLibraryName(material.name)
+  }
+
+  const seen = new Set<string>()
+  const matchingDesignations = material.designation_links
+    .filter((entry) => normalizeMaterialStandardLevelValue(entry.country) === selectedStandardLevel)
+    .map((entry) => entry.designation.trim())
+    .filter((designation) => {
+      if (!designation) {
+        return false
+      }
+      const dedupeKey = designation.toLocaleLowerCase()
+      if (seen.has(dedupeKey)) {
+        return false
+      }
+      seen.add(dedupeKey)
+      return true
+    })
+
+  if (matchingDesignations.length === 0) {
+    return formatLibraryName(material.name)
+  }
+
+  return matchingDesignations.join(' · ')
+}
+
 interface MaterialClassificationComparisonValue {
   key: string
   label: string
@@ -1707,6 +1879,75 @@ function buildMaterialClassificationComparisonRows(
       values,
     }
   })
+}
+
+function MaterialStandardLevelFilter({
+  options,
+  selectedValue,
+  onSelect,
+}: {
+  options: string[]
+  selectedValue: MaterialStandardLevelFilterValue
+  onSelect: (nextValue: MaterialStandardLevelFilterValue) => void
+}) {
+  const values = [MATERIAL_STANDARD_LEVEL_NONE, ...options]
+
+  return (
+    <div className="space-y-1.5">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+        Standard level
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {values.map((value) => {
+          const isActive = selectedValue === value
+          return (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onSelect(value)}
+              className={`rounded-full border px-2.5 py-1 text-[11px] transition ${
+                isActive
+                  ? 'border-sky-400 bg-sky-50 text-sky-700'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-800'
+              }`}
+            >
+              {value === MATERIAL_STANDARD_LEVEL_NONE ? 'None' : value}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function buildMaterialEditorStandardsOptions(
+  standardsCatalog: MaterialStandardCatalogItemRecord[],
+  designations: MaterialWorkspaceDesignationDraft[]
+) {
+  const options = standardsCatalog.map((standard) => ({
+    standard_id: standard.standard_id,
+    label: standard.label,
+  }))
+  const seen = new Set(options.map((option) => option.standard_id))
+
+  designations.forEach((entry) => {
+    if (entry.standard_id == null || seen.has(entry.standard_id)) {
+      return
+    }
+
+    const baseLabel =
+      entry.standard_label?.trim() ||
+      entry.country?.trim() ||
+      `Linked standard #${entry.standard_id}`
+
+    options.push({
+      standard_id: entry.standard_id,
+      label: `${baseLabel} (historical)`,
+    })
+    seen.add(entry.standard_id)
+  })
+
+  return options.sort((left, right) => left.label.localeCompare(right.label))
 }
 
 function useMaterialVisualStore() {
@@ -2214,6 +2455,847 @@ function MaterialDashboardDiagramCard({
   )
 }
 
+type MaterialWorkspaceMode = 'dashboard' | 'editor' | 'copy'
+
+interface MaterialWorkspaceDesignationDraft extends MaterialWorkspaceDesignationInput {
+  standard_label?: string | null
+  country?: string | null
+}
+
+interface MaterialEditorDraft {
+  materialId: number | null
+  name: string
+  deform_file_name: string
+  note: string
+  classifications: Record<string, string[]>
+  designations: MaterialWorkspaceDesignationDraft[]
+  is_obsolete: boolean
+  owner_id: number | null
+  test_records: MaterialWorkspaceRecord['test_records']
+}
+
+interface MaterialCopyDraft {
+  sourceMaterialId: number | null
+  copyIdentityNote: boolean
+  copyIdentityDeformFileName: boolean
+  copyClassifications: boolean
+  replaceClassifications: boolean
+  copyDesignations: boolean
+  replaceDesignations: boolean
+  selectedDesignationIds: number[]
+  copyTestRecords: boolean
+  selectedTestRecordIds: number[]
+}
+
+function buildEmptyMaterialEditorDraft(currentUserId: number | null): MaterialEditorDraft {
+  return {
+    materialId: null,
+    name: '',
+    deform_file_name: '',
+    note: '',
+    classifications: {},
+    designations: [],
+    is_obsolete: false,
+    owner_id: currentUserId,
+    test_records: [],
+  }
+}
+
+function buildMaterialEditorDraftFromWorkspace(workspace: MaterialWorkspaceRecord): MaterialEditorDraft {
+  return {
+    materialId: workspace.material_id,
+    name: workspace.name,
+    deform_file_name: workspace.deform_file_name ?? '',
+    note: workspace.note ?? '',
+    classifications: workspace.classifications,
+    designations: workspace.designations.map((entry) => ({
+      designation_id: entry.designation_id,
+      designation: entry.designation,
+      standard_id: entry.standard_id ?? null,
+      standard_label: entry.standard_label ?? null,
+      country: entry.country ?? null,
+      note: entry.note ?? '',
+      is_main_designation: entry.is_main_designation,
+    })),
+    is_obsolete: workspace.is_obsolete,
+    owner_id: workspace.owner_id ?? null,
+    test_records: workspace.test_records,
+  }
+}
+
+function buildDefaultMaterialCopyDraft(
+  sourceWorkspace: MaterialWorkspaceRecord | null
+): MaterialCopyDraft {
+  return {
+    sourceMaterialId: sourceWorkspace?.material_id ?? null,
+    copyIdentityNote: false,
+    copyIdentityDeformFileName: false,
+    copyClassifications: false,
+    replaceClassifications: false,
+    copyDesignations: false,
+    replaceDesignations: false,
+    selectedDesignationIds: sourceWorkspace?.designations.map((entry) => entry.designation_id) ?? [],
+    copyTestRecords: false,
+    selectedTestRecordIds: sourceWorkspace?.test_records.map((entry) => entry.test_record_id) ?? [],
+  }
+}
+
+function toggleValueInRecord(values: Record<string, string[]>, axisKey: string, valueKey: string) {
+  return toggleMaterialClassificationFilterValue(values, axisKey, valueKey)
+}
+
+function sanitizeMaterialEditorDraft(
+  draft: MaterialEditorDraft
+) {
+  return {
+    name: draft.name.trim(),
+    deform_file_name: draft.deform_file_name.trim() || null,
+    note: draft.note.trim() || null,
+    classifications: Object.fromEntries(
+      Object.entries(draft.classifications)
+        .map(([axisKey, valueKeys]) => [axisKey, valueKeys.filter((valueKey) => valueKey.trim().length > 0)])
+        .filter(([, valueKeys]) => valueKeys.length > 0)
+    ),
+    designations: draft.designations
+      .map((entry) => ({
+        designation_id: entry.designation_id ?? null,
+        designation: entry.designation.trim(),
+        standard_id: entry.standard_id ?? null,
+        note: entry.note?.trim() || null,
+        is_main_designation: entry.is_main_designation,
+      }))
+      .filter((entry) => entry.designation.length > 0),
+    is_obsolete: draft.is_obsolete,
+  }
+}
+
+function MaterialEditorReadonlyField({
+  children,
+  className = '',
+  multiline = false,
+}: {
+  children: ReactNode
+  className?: string
+  multiline?: boolean
+}) {
+  return (
+    <div
+      className={`ui-field-readonly ${multiline ? 'ui-field-readonly-multiline' : ''} ${className}`.trim()}
+    >
+      {children}
+    </div>
+  )
+}
+
+function MaterialEditorReadonlyItem({
+  label,
+  children,
+  multiline = false,
+  className = '',
+}: {
+  label: string
+  children: ReactNode
+  multiline?: boolean
+  className?: string
+}) {
+  return (
+    <div className={`space-y-1 ${className}`.trim()}>
+      <div className="text-xs font-medium text-slate-500">{label}</div>
+      <MaterialEditorReadonlyField multiline={multiline}>{children}</MaterialEditorReadonlyField>
+    </div>
+  )
+}
+
+function MaterialWorkspaceEditorPanel({
+  draft,
+  classificationCatalog,
+  standardsCatalog,
+  usersById,
+  isLoading,
+  isSaving,
+  error,
+  onChange,
+  onSave,
+  onCancel,
+}: {
+  draft: MaterialEditorDraft | null
+  classificationCatalog: MaterialClassificationCatalogRecord | null
+  standardsCatalog: MaterialStandardCatalogItemRecord[]
+  usersById: Map<number, LibraryDbUserRecord>
+  isLoading: boolean
+  isSaving: boolean
+  error: string | null
+  onChange: (next: MaterialEditorDraft) => void
+  onSave: () => void
+  onCancel: () => void
+}) {
+  const axes = useMemo(() => {
+    return sortMaterialClassificationAxes((classificationCatalog?.axes ?? []).filter((axis) => !axis.is_obsolete))
+  }, [classificationCatalog])
+  const materialEditorStandardOptions = useMemo(
+    () => buildMaterialEditorStandardsOptions(standardsCatalog, draft?.designations ?? []),
+    [draft?.designations, standardsCatalog]
+  )
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [pendingDeformFile, setPendingDeformFile] = useState<File | null>(null)
+  const [isUploadingDeformFile, setIsUploadingDeformFile] = useState(false)
+  const [deformFileUploadError, setDeformFileUploadError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setPendingDeformFile(null)
+    setIsUploadingDeformFile(false)
+    setDeformFileUploadError(null)
+  }, [draft?.materialId])
+
+  const openDeformFileDialog = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleDeformFileSelection = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextFile = event.target.files?.[0] ?? null
+    setPendingDeformFile(nextFile)
+    setDeformFileUploadError(null)
+    event.target.value = ''
+  }
+
+  const cancelPendingDeformFile = () => {
+    setPendingDeformFile(null)
+    setDeformFileUploadError(null)
+  }
+
+  const uploadPendingDeformFile = async () => {
+    if (!pendingDeformFile || !draft) {
+      return
+    }
+
+    const currentDraft = draft
+
+    const formData = new FormData()
+    formData.append('file', pendingDeformFile)
+
+    setIsUploadingDeformFile(true)
+    setDeformFileUploadError(null)
+
+    try {
+      const response = await apiClient.post<MaterialDeformFileUploadResponse>(
+        '/library/db/materials/upload-deform-file',
+        { body: formData }
+      )
+
+      if (!response.ok || !response.data) {
+        throw new Error(response.errorMessage || 'Failed to upload DEFORM file.')
+      }
+
+      onChange({
+        ...currentDraft,
+        deform_file_name: response.data.file_name,
+      })
+      setPendingDeformFile(null)
+    } catch (uploadError) {
+      setDeformFileUploadError(
+        uploadError instanceof Error ? uploadError.message : 'Failed to upload DEFORM file.'
+      )
+    } finally {
+      setIsUploadingDeformFile(false)
+    }
+  }
+
+  if (isLoading || !draft) {
+    return (
+      <div className="flex-1 min-h-0 overflow-y-auto bg-white/55">
+        <div className="p-6">
+          <EmptyState message="Loading material editor..." />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex-1 min-h-0 overflow-y-auto bg-white/55">
+      <div className="px-5 py-5">
+        <div className="rounded-3xl border border-slate-200 bg-white/90 p-5 shadow-sm backdrop-blur">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              {draft.materialId === null ? 'New Material' : 'Edit Material'}
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-slate-900">
+              {draft.materialId === null ? 'Create material' : draft.name}
+            </div>
+            <div className="mt-2 text-sm text-slate-600">
+              Edit the material root, classifications, and designation links in one workspace.
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button type="button" className="ui-btn" onClick={onCancel}>
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="ui-btn-primary"
+              onClick={onSave}
+              disabled={isSaving || draft.name.trim().length === 0}
+            >
+              {isSaving ? 'Saving...' : 'Save material'}
+            </button>
+          </div>
+        </div>
+
+        {error ? (
+          <div className="mt-4 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            {error}
+          </div>
+        ) : null}
+
+        <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,0.9fr)_minmax(360px,1.1fr)]">
+          <div className="space-y-5">
+            <section className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+              <div className="text-sm font-semibold text-slate-900">Identity</div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <label className="space-y-1">
+                  <div className="text-xs font-medium text-slate-500">Name</div>
+                  <input
+                    type="text"
+                    className="ui-input"
+                    value={draft.name}
+                    onChange={(event) => onChange({ ...draft, name: event.target.value })}
+                    placeholder="Canonical material name"
+                  />
+                </label>
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-slate-500">DEFORM file</div>
+                  <div className="flex flex-wrap items-start gap-2">
+                    <MaterialEditorReadonlyField className="min-w-0 flex-1 px-3 py-2 text-sm text-slate-700">
+                      <div className="truncate">{draft.deform_file_name || '-'}</div>
+                    </MaterialEditorReadonlyField>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".key,.KEY"
+                      className="hidden"
+                      onChange={handleDeformFileSelection}
+                    />
+                    <button
+                      type="button"
+                      className="ui-btn"
+                      onClick={openDeformFileDialog}
+                      disabled={isUploadingDeformFile}
+                    >
+                      Upload...
+                    </button>
+                  </div>
+                  {pendingDeformFile ? (
+                    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                      <MaterialEditorReadonlyItem label="Selected file" className="mt-0">
+                        <span className="truncate text-sm text-slate-700">{pendingDeformFile.name}</span>
+                      </MaterialEditorReadonlyItem>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          className="ui-btn-primary"
+                          onClick={() => void uploadPendingDeformFile()}
+                          disabled={isUploadingDeformFile}
+                        >
+                          {isUploadingDeformFile ? 'Uploading...' : 'Upload'}
+                        </button>
+                        <button
+                          type="button"
+                          className="ui-btn"
+                          onClick={cancelPendingDeformFile}
+                          disabled={isUploadingDeformFile}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                  {deformFileUploadError ? (
+                    <div className="text-xs text-rose-600">{deformFileUploadError}</div>
+                  ) : null}
+                </div>
+              </div>
+              <label className="space-y-1">
+                <div className="text-xs font-medium text-slate-500">Note</div>
+                <textarea
+                  className="ui-textarea min-h-28"
+                  value={draft.note}
+                  onChange={(event) => onChange({ ...draft, note: event.target.value })}
+                  placeholder="Short material note or editor context..."
+                />
+              </label>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <MaterialEditorReadonlyItem label="Owner">
+                  {getOwnerLabel(draft.owner_id, usersById)}
+                </MaterialEditorReadonlyItem>
+                <MaterialEditorReadonlyItem label="Tests">
+                  {draft.test_records.length}
+                </MaterialEditorReadonlyItem>
+              </div>
+            </section>
+
+            <section className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+              <div className="text-sm font-semibold text-slate-900">Classification</div>
+              <div className="space-y-3">
+                {axes.map((axis) => (
+                  <div key={axis.axis_id} className="space-y-1.5">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                      {formatLibraryName(axis.name)}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {axis.values
+                        .filter((value) => !value.is_obsolete)
+                        .sort((left, right) => left.sort_order - right.sort_order || left.value_id - right.value_id)
+                        .map((value) => {
+                          const isActive = (draft.classifications[axis.key] ?? []).includes(value.key)
+                          return (
+                            <button
+                              key={value.value_id}
+                              type="button"
+                              onClick={() => onChange({
+                                ...draft,
+                                classifications: toggleValueInRecord(draft.classifications, axis.key, value.key),
+                              })}
+                              className={`rounded-full border px-2.5 py-1 text-[11px] transition ${
+                                isActive
+                                  ? 'border-sky-400 bg-sky-50 text-sky-700'
+                                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-800'
+                              }`}
+                            >
+                              {formatLibraryName(value.name)}
+                            </button>
+                          )
+                        })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          <div className="space-y-5">
+            <section className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-sm font-semibold text-slate-900">Designations</div>
+                <button
+                  type="button"
+                  className="ui-btn"
+                  onClick={() =>
+                    onChange({
+                      ...draft,
+                      designations: [
+                        ...draft.designations,
+                        {
+                          designation: '',
+                          standard_id: null,
+                          note: '',
+                          is_main_designation: draft.designations.length === 0,
+                        },
+                      ],
+                    })
+                  }
+                >
+                  Add designation
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {draft.designations.length === 0 ? (
+                  <div className="text-sm text-slate-500">No designations yet.</div>
+                ) : (
+                  draft.designations.map((entry, index) => (
+                    <div key={entry.designation_id ?? `new-${index}`} className="rounded-2xl border border-slate-200 bg-white p-3">
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
+                        <label className="space-y-1">
+                          <div className="text-xs font-medium text-slate-500">Designation</div>
+                          <input
+                            type="text"
+                            className="ui-input"
+                            value={entry.designation}
+                            onChange={(event) => {
+                              const next = [...draft.designations]
+                              next[index] = { ...entry, designation: event.target.value }
+                              onChange({ ...draft, designations: next })
+                            }}
+                            placeholder="TC4, Grade 5, UNS R56400..."
+                          />
+                        </label>
+                        <label className="space-y-1">
+                          <div className="text-xs font-medium text-slate-500">Linked standard</div>
+                          <select
+                            className="ui-select"
+                            value={entry.standard_id ?? ''}
+                            onChange={(event) => {
+                              const raw = event.target.value
+                              const next = [...draft.designations]
+                              next[index] = {
+                                ...entry,
+                                standard_id: raw ? Number(raw) : null,
+                              }
+                              onChange({ ...draft, designations: next })
+                            }}
+                          >
+                            <option value="">Unlinked</option>
+                            {materialEditorStandardOptions.map((standard) => (
+                              <option key={standard.standard_id} value={standard.standard_id}>
+                                {standard.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                      <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_auto] md:items-end">
+                        <label className="space-y-1">
+                          <div className="text-xs font-medium text-slate-500">Note</div>
+                          <input
+                            type="text"
+                            className="ui-input"
+                            value={entry.note ?? ''}
+                            onChange={(event) => {
+                              const next = [...draft.designations]
+                              next[index] = { ...entry, note: event.target.value }
+                              onChange({ ...draft, designations: next })
+                            }}
+                            placeholder="Optional designation note"
+                          />
+                        </label>
+                        <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                          <input
+                            type="radio"
+                            name="main-designation"
+                            checked={entry.is_main_designation}
+                            onChange={() => {
+                              const next = draft.designations.map((designation, designationIndex) => ({
+                                ...designation,
+                                is_main_designation: designationIndex === index,
+                              }))
+                              onChange({ ...draft, designations: next })
+                            }}
+                          />
+                          Main
+                        </label>
+                        <button
+                          type="button"
+                          className="ui-btn-danger"
+                          onClick={() => {
+                            const next = draft.designations.filter((_, designationIndex) => designationIndex !== index)
+                            if (next.length > 0 && !next.some((designation) => designation.is_main_designation)) {
+                              next[0] = { ...next[0], is_main_designation: true }
+                            }
+                            onChange({ ...draft, designations: next })
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+
+            <section className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+              <div className="text-sm font-semibold text-slate-900">Existing test records</div>
+              {draft.test_records.length === 0 ? (
+                <div className="text-sm text-slate-500">No test records linked yet.</div>
+              ) : (
+                <div className="space-y-2">
+                  {draft.test_records.map((entry) => (
+                    <div key={entry.test_record_id} className="rounded-2xl border border-slate-200 bg-white p-3">
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <MaterialEditorReadonlyItem label="Designation">
+                          {entry.designation || 'Unlinked designation'}
+                        </MaterialEditorReadonlyItem>
+                        <MaterialEditorReadonlyItem label="Publication">
+                          {entry.publication_title || '-'}
+                        </MaterialEditorReadonlyItem>
+                        <MaterialEditorReadonlyItem label="Test record ID">
+                          {entry.test_record_id}
+                        </MaterialEditorReadonlyItem>
+                        <MaterialEditorReadonlyItem label="Sample">
+                          {entry.sample_label || '-'}
+                        </MaterialEditorReadonlyItem>
+                        <MaterialEditorReadonlyItem label="Heat / batch">
+                          {entry.heat_number || entry.batch_number
+                            ? `${entry.heat_number ? `heat ${entry.heat_number}` : ''}${
+                                entry.heat_number && entry.batch_number ? ' · ' : ''
+                              }${entry.batch_number ? `batch ${entry.batch_number}` : ''}`
+                            : '-'}
+                        </MaterialEditorReadonlyItem>
+                        <MaterialEditorReadonlyItem label="Coverage">
+                          {`chemistry ${entry.chemistry_results_count}, property tables ${entry.property_tables_count}`}
+                        </MaterialEditorReadonlyItem>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+  )
+}
+
+function MaterialCopyWizardPanel({
+  targetMaterial,
+  sourceMaterials,
+  sourceWorkspace,
+  copyDraft,
+  isLoading,
+  isSubmitting,
+  error,
+  onChange,
+  onSubmit,
+  onCancel,
+}: {
+  targetMaterial: MaterialRecord | null
+  sourceMaterials: MaterialRecord[]
+  sourceWorkspace: MaterialWorkspaceRecord | null
+  copyDraft: MaterialCopyDraft | null
+  isLoading: boolean
+  isSubmitting: boolean
+  error: string | null
+  onChange: (next: MaterialCopyDraft) => void
+  onSubmit: () => void
+  onCancel: () => void
+}) {
+  if (!targetMaterial || !copyDraft) {
+    return (
+      <div className="flex-1 min-h-0 overflow-y-auto bg-white/55">
+        <div className="p-6">
+          <EmptyState message="Select one target material to open the copy workspace." />
+        </div>
+      </div>
+    )
+  }
+
+  const hasAnyScope =
+    copyDraft.copyIdentityNote ||
+    copyDraft.copyIdentityDeformFileName ||
+    copyDraft.copyClassifications ||
+    copyDraft.copyDesignations ||
+    copyDraft.copyTestRecords
+
+  return (
+    <div className="flex-1 min-h-0 overflow-y-auto bg-white/55">
+      <div className="px-5 py-5">
+        <div className="rounded-3xl border border-slate-200 bg-white/90 p-5 shadow-sm backdrop-blur">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Copy Material Data
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-slate-900">
+              Into {formatLibraryName(targetMaterial.name)}
+            </div>
+            <div className="mt-2 text-sm text-slate-600">
+              Copy selected normalized subtrees from one material to another. Test-record copy includes chemistry results and property tables.
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button type="button" className="ui-btn" onClick={onCancel}>
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="ui-btn-primary"
+              onClick={onSubmit}
+              disabled={isSubmitting || !hasAnyScope || !copyDraft.sourceMaterialId}
+            >
+              {isSubmitting ? 'Copying...' : 'Copy selected data'}
+            </button>
+          </div>
+        </div>
+
+        {error ? (
+          <div className="mt-4 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            {error}
+          </div>
+        ) : null}
+
+        <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,0.72fr)_minmax(360px,1.28fr)]">
+          <section className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+            <label className="space-y-1">
+              <div className="text-xs font-medium text-slate-500">Source material</div>
+              <select
+                className="ui-select"
+                value={copyDraft.sourceMaterialId ?? ''}
+                onChange={(event) =>
+                  onChange({
+                    ...copyDraft,
+                    sourceMaterialId: event.target.value ? Number(event.target.value) : null,
+                    selectedDesignationIds: [],
+                    selectedTestRecordIds: [],
+                  })
+                }
+              >
+                <option value="">Select source material</option>
+                {sourceMaterials.map((entry) => (
+                  <option key={entry.material_id} value={entry.material_id}>
+                    {formatLibraryName(entry.name)}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="space-y-3">
+              <div className="text-sm font-semibold text-slate-900">Copy scopes</div>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={copyDraft.copyIdentityNote}
+                  onChange={(event) => onChange({ ...copyDraft, copyIdentityNote: event.target.checked })}
+                />
+                Note
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={copyDraft.copyIdentityDeformFileName}
+                  onChange={(event) => onChange({ ...copyDraft, copyIdentityDeformFileName: event.target.checked })}
+                />
+                DEFORM file reference
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={copyDraft.copyClassifications}
+                  onChange={(event) => onChange({ ...copyDraft, copyClassifications: event.target.checked })}
+                />
+                Classifications
+              </label>
+              <label className="ml-6 flex items-center gap-2 text-sm text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={copyDraft.replaceClassifications}
+                  onChange={(event) => onChange({ ...copyDraft, replaceClassifications: event.target.checked })}
+                  disabled={!copyDraft.copyClassifications}
+                />
+                Replace target classifications before copy
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={copyDraft.copyDesignations}
+                  onChange={(event) => onChange({ ...copyDraft, copyDesignations: event.target.checked })}
+                />
+                Designations and linked standard chemistry
+              </label>
+              <label className="ml-6 flex items-center gap-2 text-sm text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={copyDraft.replaceDesignations}
+                  onChange={(event) => onChange({ ...copyDraft, replaceDesignations: event.target.checked })}
+                  disabled={!copyDraft.copyDesignations}
+                />
+                Mark current target designations obsolete before copy
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={copyDraft.copyTestRecords}
+                  onChange={(event) => onChange({ ...copyDraft, copyTestRecords: event.target.checked })}
+                />
+                Test records subtree
+              </label>
+            </div>
+          </section>
+
+          <section className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+            {isLoading ? (
+              <EmptyState message="Loading source material details..." />
+            ) : !sourceWorkspace ? (
+              <div className="text-sm text-slate-500">Choose a source material to preview copyable data.</div>
+            ) : (
+              <>
+                <div className="text-sm font-semibold text-slate-900">Preview</div>
+                <div className="grid grid-cols-[160px_1fr] gap-x-4 gap-y-2 text-sm text-slate-700">
+                  <div className="font-medium text-slate-500">Source</div>
+                  <div>{sourceWorkspace.name}</div>
+                  <div className="font-medium text-slate-500">Designations</div>
+                  <div>{sourceWorkspace.designations.length}</div>
+                  <div className="font-medium text-slate-500">Tests</div>
+                  <div>{sourceWorkspace.test_records.length}</div>
+                </div>
+
+                {copyDraft.copyDesignations ? (
+                  <div className="space-y-2">
+                    <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                      Designation subtree selection
+                    </div>
+                    <div className="space-y-2">
+                      {sourceWorkspace.designations.map((entry) => {
+                        const isActive = copyDraft.selectedDesignationIds.includes(entry.designation_id)
+                        return (
+                          <label key={entry.designation_id} className="flex items-start gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+                            <input
+                              type="checkbox"
+                              checked={isActive}
+                              onChange={(event) => {
+                                const nextIds = event.target.checked
+                                  ? [...copyDraft.selectedDesignationIds, entry.designation_id]
+                                  : copyDraft.selectedDesignationIds.filter((id) => id !== entry.designation_id)
+                                onChange({ ...copyDraft, selectedDesignationIds: nextIds })
+                              }}
+                            />
+                            <span>
+                              <span className="font-medium text-slate-900">{entry.designation}</span>
+                              {entry.standard_label ? ` · ${entry.standard_label}` : ''}
+                            </span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+
+                {copyDraft.copyTestRecords ? (
+                  <div className="space-y-2">
+                    <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                      Test record subtree selection
+                    </div>
+                    <div className="space-y-2">
+                      {sourceWorkspace.test_records.map((entry) => {
+                        const isActive = copyDraft.selectedTestRecordIds.includes(entry.test_record_id)
+                        return (
+                          <label key={entry.test_record_id} className="flex items-start gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+                            <input
+                              type="checkbox"
+                              checked={isActive}
+                              onChange={(event) => {
+                                const nextIds = event.target.checked
+                                  ? [...copyDraft.selectedTestRecordIds, entry.test_record_id]
+                                  : copyDraft.selectedTestRecordIds.filter((id) => id !== entry.test_record_id)
+                                onChange({ ...copyDraft, selectedTestRecordIds: nextIds })
+                              }}
+                            />
+                            <span>
+                              <span className="font-medium text-slate-900">
+                                {entry.designation || 'Unlinked designation'}
+                              </span>
+                              {entry.publication_title ? ` · ${entry.publication_title}` : ''}
+                              <span className="block text-xs text-slate-500">
+                                Test #{entry.test_record_id} · chemistry {entry.chemistry_results_count} · property tables {entry.property_tables_count}
+                              </span>
+                            </span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            )}
+          </section>
+        </div>
+      </div>
+      </div>
+    </div>
+  )
+}
+
 export function LibraryMaterialsView({
   materials,
   materialClassificationCatalog,
@@ -2221,6 +3303,7 @@ export function LibraryMaterialsView({
   currentUserId,
   selectedMaterialId,
   onSelectMaterialId,
+  onRefreshLibrary,
   isMaterialListVisible,
   isLoading,
   error,
@@ -2228,16 +3311,51 @@ export function LibraryMaterialsView({
   const [textFilter, setTextFilter] = useState('')
   const [ownerFilters, setOwnerFilters] = useState<Set<OwnerFilterKey>>(new Set(DEFAULT_OWNER_FILTERS))
   const [classificationFilters, setClassificationFilters] = useState<MaterialClassificationFilterState>({})
+  const [selectedStandardLevel, setSelectedStandardLevel] =
+    useState<MaterialStandardLevelFilterValue>(MATERIAL_STANDARD_LEVEL_NONE)
   const [selectedUserId, setSelectedUserId] = useSelectedUserState(users, currentUserId)
   const { materialVisualStates, fetchMaterialVisuals } = useMaterialVisualStore()
   const [selectedMaterialIds, setSelectedMaterialIds] = useState<number[]>(() => {
     return selectedMaterialId !== null ? [selectedMaterialId] : []
   })
   const [selectionAnchorMaterialId, setSelectionAnchorMaterialId] = useState<number | null>(selectedMaterialId)
+  const [workspaceMode, setWorkspaceMode] = useState<MaterialWorkspaceMode>('dashboard')
+  const [workspaceNotice, setWorkspaceNotice] = useState<string | null>(null)
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null)
+  const [isWorkspaceLoading, setIsWorkspaceLoading] = useState(false)
+  const [isWorkspaceSubmitting, setIsWorkspaceSubmitting] = useState(false)
+  const [standardsCatalog, setStandardsCatalog] = useState<MaterialStandardCatalogItemRecord[]>([])
+  const [editorDraft, setEditorDraft] = useState<MaterialEditorDraft | null>(null)
+  const [copyDraft, setCopyDraft] = useState<MaterialCopyDraft | null>(null)
+  const [copySourceWorkspace, setCopySourceWorkspace] = useState<MaterialWorkspaceRecord | null>(null)
 
   const usersById = useMemo(() => {
     return new Map(users.map((entry) => [entry.user_id, entry]))
   }, [users])
+
+  const loadStandardsCatalog = useCallback(async () => {
+    const response = await apiClient.get<MaterialStandardCatalogItemRecord[]>('/library/db/material-standards')
+    if (!response.ok || !response.data) {
+      throw new Error(response.errorMessage || 'Failed to load material standards.')
+    }
+    setStandardsCatalog(response.data)
+    return response.data
+  }, [])
+
+  const ensureStandardsCatalog = useCallback(async () => {
+    if (standardsCatalog.length > 0) {
+      return standardsCatalog
+    }
+    return loadStandardsCatalog()
+  }, [loadStandardsCatalog, standardsCatalog])
+
+  const loadMaterialWorkspace = useCallback(async (materialId: number) => {
+    const response = await apiClient.get<MaterialWorkspaceRecord>(`/library/db/materials/${materialId}/workspace`)
+    if (!response.ok || !response.data) {
+      throw new Error(response.errorMessage || 'Failed to load material workspace.')
+    }
+    return response.data
+  }, [])
 
   const normalizedFilter = textFilter.trim().toLowerCase()
 
@@ -2246,10 +3364,9 @@ export function LibraryMaterialsView({
       materials,
       normalizedFilter,
       ownerFilters,
-      currentUserId,
       selectedUserId
     )
-  }, [currentUserId, materials, normalizedFilter, ownerFilters, selectedUserId])
+  }, [materials, normalizedFilter, ownerFilters, selectedUserId])
 
   const classificationAxisByKey = useMemo(() => {
     return buildMaterialClassificationAxisByKey(materialClassificationCatalog)
@@ -2274,15 +3391,53 @@ export function LibraryMaterialsView({
     setClassificationFilters(effectiveClassificationFilters)
   }, [classificationFilters, effectiveClassificationFilters])
 
-  const filteredMaterials = useMemo(() => {
+  const standardLevelScopeMaterials = useMemo(() => {
     return ownerAndTextFilteredMaterials.filter((entry) =>
       matchesMaterialClassificationFilters(
         entry,
         effectiveClassificationFilters,
-        classificationAxisByKey
+        classificationAxisByKey,
+        2
       )
     )
   }, [classificationAxisByKey, effectiveClassificationFilters, ownerAndTextFilteredMaterials])
+
+  const standardLevelOptions = useMemo(() => {
+    return buildMaterialStandardLevelOptions(standardLevelScopeMaterials)
+  }, [standardLevelScopeMaterials])
+
+  useEffect(() => {
+    if (
+      selectedStandardLevel === MATERIAL_STANDARD_LEVEL_NONE ||
+      standardLevelOptions.includes(selectedStandardLevel)
+    ) {
+      return
+    }
+    setSelectedStandardLevel(MATERIAL_STANDARD_LEVEL_NONE)
+  }, [selectedStandardLevel, standardLevelOptions])
+
+  const filteredMaterials = useMemo(() => {
+    return ownerAndTextFilteredMaterials.filter(
+      (entry) =>
+        matchesMaterialClassificationFilters(
+          entry,
+          effectiveClassificationFilters,
+          classificationAxisByKey
+        ) && matchesMaterialStandardLevelFilter(entry, selectedStandardLevel)
+    )
+  }, [
+    classificationAxisByKey,
+    effectiveClassificationFilters,
+    ownerAndTextFilteredMaterials,
+    selectedStandardLevel,
+  ])
+
+  const sourceMaterialsForCopy = useMemo(() => {
+    const activeTargetId = selectedMaterialId ?? selectedMaterialIds[selectedMaterialIds.length - 1] ?? null
+    return materials
+      .filter((entry) => entry.material_id !== activeTargetId)
+      .sort((left, right) => formatLibraryName(left.name).localeCompare(formatLibraryName(right.name)))
+  }, [materials, selectedMaterialId, selectedMaterialIds])
 
   useEffect(() => {
     const visibleIds = new Set(filteredMaterials.map((entry) => entry.material_id))
@@ -2335,6 +3490,9 @@ export function LibraryMaterialsView({
     }
 
     filteredMaterials.forEach((entry) => {
+      if (!entry.deform_file_name || entry.deform_file_name.trim().length === 0) {
+        return
+      }
       const currentState = materialVisualStates[entry.material_id]
       if (!currentState) {
         void fetchMaterialVisuals(entry.material_id)
@@ -2343,7 +3501,7 @@ export function LibraryMaterialsView({
   }, [fetchMaterialVisuals, filteredMaterials, isLoading, materialVisualStates])
 
   const toggleOwnerFilter = (filterKey: OwnerFilterKey) => {
-    setOwnerFilters((previous) => toggleFilter(previous, filterKey))
+    setOwnerFilters((previous) => toggleOwnerFilterState(previous, filterKey))
   }
 
   const toggleClassificationFilterValue = (axisKey: string, valueKey: string) => {
@@ -2356,6 +3514,15 @@ export function LibraryMaterialsView({
     setClassificationFilters({})
   }
 
+  const materialLabelById = useMemo(() => {
+    return new Map(
+      filteredMaterials.map((entry) => [
+        entry.material_id,
+        formatMaterialLabelForStandardLevel(entry, selectedStandardLevel),
+      ])
+    )
+  }, [filteredMaterials, selectedStandardLevel])
+
   const activeMaterialId = useMemo(() => {
     if (selectedMaterialId !== null && selectedMaterialIds.includes(selectedMaterialId)) {
       return selectedMaterialId
@@ -2364,7 +3531,9 @@ export function LibraryMaterialsView({
   }, [selectedMaterialId, selectedMaterialIds])
 
   const diagramMaterials = useMemo(() => {
-    return filteredMaterials
+    return filteredMaterials.filter(
+      (entry) => Boolean(entry.deform_file_name && entry.deform_file_name.trim().length > 0)
+    )
   }, [filteredMaterials])
 
   const selectedMaterialIdSet = useMemo(() => {
@@ -2379,8 +3548,8 @@ export function LibraryMaterialsView({
   }, [selectedMaterials])
 
   const selectedMaterial = useMemo(() => {
-    return diagramMaterials.find((entry) => entry.material_id === activeMaterialId) ?? null
-  }, [activeMaterialId, diagramMaterials])
+    return filteredMaterials.find((entry) => entry.material_id === activeMaterialId) ?? null
+  }, [activeMaterialId, filteredMaterials])
 
   const dashboardDiagrams = useMemo(() => {
     return buildDashboardMaterialDiagrams(diagramMaterials, materialVisualStates)
@@ -2395,17 +3564,19 @@ export function LibraryMaterialsView({
   const errorCount = diagramMaterials.filter((entry) => materialVisualStates[entry.material_id]?.status === 'error').length
 
   const selectedMaterialState =
-    selectedMaterial !== null ? materialVisualStates[selectedMaterial.material_id] : undefined
+    selectedMaterial !== null && selectedMaterial.deform_file_name
+      ? materialVisualStates[selectedMaterial.material_id]
+      : undefined
   const selectedMaterialClassificationRows = useMemo(() => {
     if (selectedMaterial === null) {
       return []
     }
     return buildMaterialClassificationComparisonRows(
       selectedMaterial,
-      diagramMaterials,
+      filteredMaterials,
       materialClassificationCatalog
     )
-  }, [diagramMaterials, materialClassificationCatalog, selectedMaterial])
+  }, [filteredMaterials, materialClassificationCatalog, selectedMaterial])
   const selectedMaterialChemistryColumns = useMemo(() => {
     if (selectedMaterial === null) {
       return []
@@ -2423,7 +3594,7 @@ export function LibraryMaterialsView({
   }, [selectedMaterial])
 
   const summaryMaterials = selectedMaterials.length > 0 ? selectedMaterials : diagramMaterials
-  const showSingleMaterialDetails = selectedMaterials.length === 1 && selectedMaterial !== null
+  const showSingleMaterialDetails = selectedMaterialIds.length === 1 && selectedMaterial !== null
 
   const handleMaterialCardClick = (event: React.MouseEvent<HTMLButtonElement>, materialId: number) => {
     const visibleIds = filteredMaterials.map((entry) => entry.material_id)
@@ -2486,6 +3657,273 @@ export function LibraryMaterialsView({
     onSelectMaterialId(materialId)
   }
 
+  const openCreateMaterialEditor = useCallback(async () => {
+    setWorkspaceError(null)
+    setWorkspaceNotice(null)
+    setIsWorkspaceLoading(true)
+    try {
+      await ensureStandardsCatalog()
+      setEditorDraft(buildEmptyMaterialEditorDraft(currentUserId))
+      setWorkspaceMode('editor')
+    } catch (error) {
+      setWorkspaceError(error instanceof Error ? error.message : 'Failed to open material editor.')
+    } finally {
+      setIsWorkspaceLoading(false)
+    }
+  }, [currentUserId, ensureStandardsCatalog])
+
+  const openEditMaterialEditor = useCallback(async () => {
+    if (activeMaterialId === null) {
+      return
+    }
+    setWorkspaceError(null)
+    setWorkspaceNotice(null)
+    setIsWorkspaceLoading(true)
+    try {
+      const [workspace] = await Promise.all([
+        loadMaterialWorkspace(activeMaterialId),
+        ensureStandardsCatalog(),
+      ])
+      setEditorDraft(buildMaterialEditorDraftFromWorkspace(workspace))
+      setWorkspaceMode('editor')
+    } catch (error) {
+      setWorkspaceError(error instanceof Error ? error.message : 'Failed to open material editor.')
+    } finally {
+      setIsWorkspaceLoading(false)
+    }
+  }, [activeMaterialId, ensureStandardsCatalog, loadMaterialWorkspace])
+
+  const openCopyWorkspace = useCallback(() => {
+    if (activeMaterialId === null) {
+      return
+    }
+    setWorkspaceError(null)
+    setWorkspaceNotice(null)
+    setCopySourceWorkspace(null)
+    setCopyDraft(null)
+    setWorkspaceMode('copy')
+  }, [activeMaterialId])
+
+  useEffect(() => {
+    if (workspaceMode !== 'copy') {
+      return
+    }
+
+    const targetMaterialId = activeMaterialId
+    const sourceMaterialId =
+      copyDraft?.sourceMaterialId ??
+      sourceMaterialsForCopy.find((entry) => entry.material_id !== targetMaterialId)?.material_id ??
+      null
+
+    if (sourceMaterialId === null) {
+      setCopySourceWorkspace(null)
+      setCopyDraft(buildDefaultMaterialCopyDraft(null))
+      return
+    }
+
+    if (copyDraft?.sourceMaterialId !== sourceMaterialId) {
+      setCopyDraft((previous) => ({
+        ...(previous ?? buildDefaultMaterialCopyDraft(null)),
+        sourceMaterialId,
+      }))
+      return
+    }
+
+    let isCancelled = false
+    setIsWorkspaceLoading(true)
+    loadMaterialWorkspace(sourceMaterialId)
+      .then((workspace) => {
+        if (isCancelled) {
+          return
+        }
+        setCopySourceWorkspace(workspace)
+        setCopyDraft((previous) => {
+          const next = previous ?? buildDefaultMaterialCopyDraft(workspace)
+          const nextDesignationIds =
+            previous && previous.selectedDesignationIds.length > 0
+              ? previous.selectedDesignationIds.filter((id) =>
+                  workspace.designations.some((entry) => entry.designation_id === id)
+                )
+              : workspace.designations.map((entry) => entry.designation_id)
+          const nextTestRecordIds =
+            previous && previous.selectedTestRecordIds.length > 0
+              ? previous.selectedTestRecordIds.filter((id) =>
+                  workspace.test_records.some((entry) => entry.test_record_id === id)
+                )
+              : workspace.test_records.map((entry) => entry.test_record_id)
+
+          return {
+            ...next,
+            sourceMaterialId,
+            selectedDesignationIds: nextDesignationIds,
+            selectedTestRecordIds: nextTestRecordIds,
+          }
+        })
+      })
+      .catch((error) => {
+        if (!isCancelled) {
+          setWorkspaceError(error instanceof Error ? error.message : 'Failed to load source material.')
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsWorkspaceLoading(false)
+        }
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [activeMaterialId, copyDraft?.sourceMaterialId, loadMaterialWorkspace, sourceMaterialsForCopy, workspaceMode])
+
+  const saveMaterialEditor = useCallback(async () => {
+    if (!editorDraft) {
+      return
+    }
+
+    const payload = sanitizeMaterialEditorDraft(editorDraft)
+    if (!payload.name) {
+      setWorkspaceError('Material name is required.')
+      return
+    }
+
+    setWorkspaceError(null)
+    setIsWorkspaceSubmitting(true)
+    try {
+      const response =
+        editorDraft.materialId === null
+          ? await apiClient.post<MaterialWorkspaceRecord>('/library/db/materials/workspace', {
+              body: payload,
+            })
+          : await apiClient.patch<MaterialWorkspaceRecord>(`/library/db/materials/${editorDraft.materialId}/workspace`, {
+              body: payload,
+            })
+
+      if (!response.ok || !response.data) {
+        throw new Error(response.errorMessage || 'Failed to save material.')
+      }
+
+      await onRefreshLibrary()
+      setSelectedMaterialIds([response.data.material_id])
+      setSelectionAnchorMaterialId(response.data.material_id)
+      onSelectMaterialId(response.data.material_id)
+      setWorkspaceMode('dashboard')
+      setWorkspaceNotice(`Saved material ${response.data.name}.`)
+      setEditorDraft(null)
+    } catch (error) {
+      setWorkspaceError(error instanceof Error ? error.message : 'Failed to save material.')
+    } finally {
+      setIsWorkspaceSubmitting(false)
+    }
+  }, [editorDraft, onRefreshLibrary, onSelectMaterialId])
+
+  const submitMaterialCopy = useCallback(async () => {
+    if (!copyDraft || !activeMaterialId || !copyDraft.sourceMaterialId) {
+      return
+    }
+
+    const payload: MaterialCopyRequest = {
+      source_material_id: copyDraft.sourceMaterialId,
+      target_material_id: activeMaterialId,
+      copy_identity_fields: [
+        ...(copyDraft.copyIdentityNote ? ['note'] : []),
+        ...(copyDraft.copyIdentityDeformFileName ? ['deform_file_name'] : []),
+      ],
+      copy_classifications: copyDraft.copyClassifications,
+      replace_classifications: copyDraft.replaceClassifications,
+      copy_designations: copyDraft.copyDesignations,
+      designation_ids: copyDraft.copyDesignations ? copyDraft.selectedDesignationIds : [],
+      replace_designations: copyDraft.replaceDesignations,
+      copy_test_records: copyDraft.copyTestRecords,
+      test_record_ids: copyDraft.copyTestRecords ? copyDraft.selectedTestRecordIds : [],
+    }
+
+    setWorkspaceError(null)
+    setIsWorkspaceSubmitting(true)
+    try {
+      const response = await apiClient.post<MaterialCopyResponse>('/library/db/materials/copy', {
+        body: payload,
+      })
+      if (!response.ok || !response.data) {
+        throw new Error(response.errorMessage || 'Failed to copy material data.')
+      }
+
+      await onRefreshLibrary()
+      setSelectedMaterialIds([activeMaterialId])
+      setSelectionAnchorMaterialId(activeMaterialId)
+      onSelectMaterialId(activeMaterialId)
+      setWorkspaceMode('dashboard')
+      setWorkspaceNotice(
+        `Copied ${response.data.copied_designations_count} designations, ${response.data.copied_test_records_count} test records, and ${response.data.copied_classification_assignments_count} classification assignments.`
+      )
+    } catch (error) {
+      setWorkspaceError(error instanceof Error ? error.message : 'Failed to copy material data.')
+    } finally {
+      setIsWorkspaceSubmitting(false)
+    }
+  }, [activeMaterialId, copyDraft, onRefreshLibrary, onSelectMaterialId])
+
+  const deleteSelectedMaterials = useCallback(async () => {
+    if (selectedMaterialIds.length === 0) {
+      return
+    }
+
+    const materialLabel =
+      selectedMaterialIds.length === 1
+        ? 'the selected material'
+        : `${selectedMaterialIds.length} selected materials`
+    const confirmed = window.confirm(`Delete ${materialLabel}?`)
+    if (!confirmed) {
+      return
+    }
+
+    const payload: MaterialDeleteRequest = {
+      material_ids: selectedMaterialIds,
+    }
+
+    setWorkspaceNotice(null)
+    setWorkspaceError(null)
+    setIsWorkspaceSubmitting(true)
+
+    try {
+      const response = await apiClient.delete<MaterialDeleteResponse>('/library/db/materials', {
+        body: payload,
+      })
+
+      if (!response.ok || !response.data) {
+        throw new Error(response.errorMessage || 'Failed to delete selected materials.')
+      }
+
+      await onRefreshLibrary()
+      setSelectedMaterialIds([])
+      setSelectionAnchorMaterialId(null)
+      onSelectMaterialId(null)
+      setWorkspaceMode('dashboard')
+      setEditorDraft(null)
+      setCopyDraft(null)
+      setCopySourceWorkspace(null)
+      setWorkspaceNotice(
+        response.data.deleted_count === 1
+          ? 'Deleted 1 material.'
+          : `Deleted ${response.data.deleted_count} materials.`
+      )
+    } catch (error) {
+      setWorkspaceError(
+        error instanceof Error ? error.message : 'Failed to delete selected materials.'
+      )
+    } finally {
+      setIsWorkspaceSubmitting(false)
+    }
+  }, [onRefreshLibrary, onSelectMaterialId, selectedMaterialIds])
+
+  const closeWorkspace = useCallback(() => {
+    setWorkspaceMode('dashboard')
+    setWorkspaceError(null)
+    setEditorDraft(null)
+    setCopyDraft(null)
+    setCopySourceWorkspace(null)
+  }, [])
+
   return (
     <div className="h-full min-h-0 flex overflow-hidden bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_42%,#f8fafc_100%)]">
       {isMaterialListVisible ? (
@@ -2514,28 +3952,42 @@ export function LibraryMaterialsView({
               onClear={clearClassificationFilters}
             />
 
-            <div className="flex flex-wrap items-center gap-2">
-              <button type="button" className="ui-btn-primary" onClick={() => undefined}>
-                New material
-              </button>
-              <button
-                type="button"
-                className="ui-btn"
-                disabled={selectedMaterialIds.length !== 1}
-                onClick={() => undefined}
-              >
-                Clone selected material
-              </button>
-              <button
-                type="button"
-                className="ui-btn-danger"
-                disabled={selectedMaterialIds.length === 0}
-                onClick={() => undefined}
-              >
-                Delete selected material
-              </button>
-              <div className="ui-badge">
-                Selected: {selectedMaterialIds.length}
+            <MaterialStandardLevelFilter
+              options={standardLevelOptions}
+              selectedValue={selectedStandardLevel}
+              onSelect={setSelectedStandardLevel}
+            />
+
+            <div className="space-y-1.5">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Actions</div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button type="button" className="ui-btn" onClick={() => void openCreateMaterialEditor()}>
+                  New
+                </button>
+                <button
+                  type="button"
+                  className="ui-btn"
+                  disabled={selectedMaterialIds.length !== 1}
+                  onClick={() => void openEditMaterialEditor()}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  className="ui-btn"
+                  disabled={selectedMaterialIds.length !== 1}
+                  onClick={() => openCopyWorkspace()}
+                >
+                  Copy
+                </button>
+                <button
+                  type="button"
+                  className="ui-btn"
+                  disabled={selectedMaterialIds.length === 0 || isWorkspaceSubmitting}
+                  onClick={() => void deleteSelectedMaterials()}
+                >
+                  {isWorkspaceSubmitting ? 'Deleting...' : 'Delete'}
+                </button>
               </div>
             </div>
 
@@ -2567,7 +4019,7 @@ export function LibraryMaterialsView({
                         }}
                       />
                       <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">
-                        {formatLibraryName(entry.name)}
+                        {materialLabelById.get(entry.material_id) || formatLibraryName(entry.name)}
                       </span>
                       <span
                         className={`h-2.5 w-2.5 rounded-full ${
@@ -2589,25 +4041,73 @@ export function LibraryMaterialsView({
       ) : null}
 
       <section className="flex-1 min-w-0 min-h-0 flex flex-col">
+        {workspaceNotice ? (
+          <div className="shrink-0 border-b border-emerald-200 bg-emerald-50 px-5 py-2 text-sm text-emerald-700">
+            {workspaceNotice}
+          </div>
+        ) : null}
+
+        {workspaceError ? (
+          <div className="shrink-0 border-b border-rose-200 bg-rose-50 px-5 py-2 text-sm text-rose-700">
+            {workspaceError}
+          </div>
+        ) : null}
+
+        {workspaceMode === 'editor' ? (
+          <MaterialWorkspaceEditorPanel
+            draft={editorDraft}
+            classificationCatalog={materialClassificationCatalog}
+            standardsCatalog={standardsCatalog}
+            usersById={usersById}
+            isLoading={isWorkspaceLoading}
+            isSaving={isWorkspaceSubmitting}
+            error={workspaceError}
+            onChange={setEditorDraft}
+            onSave={() => void saveMaterialEditor()}
+            onCancel={closeWorkspace}
+          />
+        ) : workspaceMode === 'copy' ? (
+          <MaterialCopyWizardPanel
+            targetMaterial={selectedMaterial}
+            sourceMaterials={sourceMaterialsForCopy}
+            sourceWorkspace={copySourceWorkspace}
+            copyDraft={copyDraft}
+            isLoading={isWorkspaceLoading}
+            isSubmitting={isWorkspaceSubmitting}
+            error={workspaceError}
+            onChange={setCopyDraft}
+            onSubmit={() => void submitMaterialCopy()}
+            onCancel={closeWorkspace}
+          />
+        ) : (
+          <>
         <div className="shrink-0 border-b border-slate-200 bg-white/75 px-5 py-4 backdrop-blur">
               <div className="text-sm leading-6 text-slate-700">
-            <span className="font-medium text-slate-900">
-              {selectedMaterials.length > 0
-                ? `DEFORM materials. Selected ${selectedMaterials.length} of ${diagramMaterials.length} materials: `
-                : `DEFORM materials. Select a material to highlight it. Now all ${diagramMaterials.length} materials highlighted: `}
-            </span>
-            {summaryMaterials.map((entry, index) => (
-              <span key={entry.material_id} className="inline">
-                <span className="inline-flex items-center gap-1.5">
-                  <span
-                    className="inline-block h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: materialColorById.get(entry.material_id) || '#2563eb' }}
-                  />
-                  <span>{formatLibraryName(entry.name)}</span>
-                </span>
-                {index < summaryMaterials.length - 1 ? <span className="text-slate-400">, </span> : null}
+            {diagramMaterials.length === 0 ? (
+              <span className="font-medium text-slate-900">
+                DEFORM materials. No DEFORM-backed materials are available for the current filters.
               </span>
-            ))}
+            ) : (
+              <>
+                <span className="font-medium text-slate-900">
+                  {selectedMaterials.length > 0
+                    ? `DEFORM materials. Selected ${selectedMaterials.length} of ${diagramMaterials.length} materials: `
+                    : `DEFORM materials. Select a material to highlight it. Now all ${diagramMaterials.length} materials highlighted: `}
+                </span>
+                {summaryMaterials.map((entry, index) => (
+                  <span key={entry.material_id} className="inline">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span
+                        className="inline-block h-2.5 w-2.5 rounded-full"
+                        style={{ backgroundColor: materialColorById.get(entry.material_id) || '#2563eb' }}
+                      />
+                      <span>{materialLabelById.get(entry.material_id) || formatLibraryName(entry.name)}</span>
+                    </span>
+                    {index < summaryMaterials.length - 1 ? <span className="text-slate-400">, </span> : null}
+                  </span>
+                ))}
+              </>
+            )}
           </div>
         </div>
 
@@ -2643,7 +4143,9 @@ export function LibraryMaterialsView({
 
                   <div className="font-medium text-slate-500">Diagrams</div>
                   <div>
-                    {selectedMaterialState?.status === 'loaded'
+                    {!selectedMaterial.deform_file_name
+                      ? 'No DEFORM file'
+                      : selectedMaterialState?.status === 'loaded'
                       ? selectedMaterialState.data.diagrams.length
                       : selectedMaterialState?.status === 'error'
                         ? 'Load error'
@@ -2814,6 +4316,8 @@ export function LibraryMaterialsView({
             )}
           </div>
         </div>
+          </>
+        )}
       </section>
     </div>
   )
@@ -3375,7 +4879,6 @@ export function LibraryPressesView({
       const ownerMatch = matchesOwnerFilter(
         entry.owner_user_id,
         ownerFilters,
-        currentUserId,
         selectedUserId
       )
       if (!ownerMatch) {
@@ -3393,7 +4896,7 @@ export function LibraryPressesView({
   }, [currentUserId, normalizedFilter, ownerFilters, presses, selectedUserId])
 
   const toggleOwnerFilter = (filterKey: OwnerFilterKey) => {
-    setOwnerFilters((previous) => toggleFilter(previous, filterKey))
+    setOwnerFilters((previous) => toggleOwnerFilterState(previous, filterKey))
   }
 
   const registerPressModesTableContainer = useCallback((pressId: number, element: HTMLDivElement | null) => {

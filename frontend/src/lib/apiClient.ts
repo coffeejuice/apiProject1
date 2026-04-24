@@ -156,12 +156,16 @@ class ApiClient {
       headers.Authorization = `Bearer ${this.token}`
     }
 
-    let body: string | undefined
+    let body: BodyInit | undefined
     if (options?.body !== undefined) {
-      if (!headers['Content-Type']) {
-        headers['Content-Type'] = 'application/json'
+      if (typeof FormData !== 'undefined' && options.body instanceof FormData) {
+        body = options.body
+      } else {
+        if (!headers['Content-Type']) {
+          headers['Content-Type'] = 'application/json'
+        }
+        body = JSON.stringify(options.body)
       }
-      body = JSON.stringify(options.body)
     }
 
     try {

@@ -1,22 +1,32 @@
-import { DragEvent, MouseEvent, useMemo, useState } from 'react'
+import { DragEvent, MouseEvent, useEffect, useMemo, useState } from 'react'
 import type { BlockData } from './blocks'
-import { BLOCK_LIBRARY_TYPES, getBlockTypeIcon, getBlockTypeLabel } from '../lib/blockTypeMeta'
+import { getBlockTypeIcon, getBlockTypeLabel } from '../lib/blockTypeMeta'
+import { apiClient } from '../lib/apiClient'
+import Tooltip from './ui/Tooltip'
+import type { OperationBlockTypeRecord } from '../types/api'
 
 type VisualEditorMode = 'viewer' | 'editor'
+const VISUAL_BLOCK_DRAG_MIME = 'application/x-forgelab-visual-block-ids'
 
 interface VisualEditorProps {
   blocks: BlockData[]
   isVisible: boolean
   hasUnsavedChanges: boolean
+  activeDocumentBlockId: string | null
   onNavigate: (blockId: string) => void
   onInsertBlock: (blockTypeId: string, previousBlockId: string | null) => Promise<void>
   onMoveBlocks: (blockIds: string[], previousBlockId: string | null) => Promise<void>
   onCopyBlocks: (blockIds: string[], previousBlockId: string | null) => Promise<void>
   onDeleteBlocks: (blockIds: string[]) => Promise<void>
+  hasActiveClipboardClip: boolean
+  activeClipboardLabel?: string | null
+  onCopyBlocksToClipboard: (blockIds: string[]) => Promise<boolean>
+  onCutBlocksToClipboard: (blockIds: string[]) => Promise<boolean>
+  onPasteActiveClipboard: () => Promise<boolean>
 }
 
 function getDropPayload(event: DragEvent<HTMLElement>): string[] {
-  const payload = event.dataTransfer.getData('application/x-forgelab-visual-block-ids')
+  const payload = event.dataTransfer.getData(VISUAL_BLOCK_DRAG_MIME)
   if (!payload) {
     return []
   }
@@ -32,20 +42,50 @@ function getDropPayload(event: DragEvent<HTMLElement>): string[] {
   }
 }
 
+function hasVisualDragPayload(event: DragEvent<HTMLElement>): boolean {
+  return Array.from(event.dataTransfer.types).includes(VISUAL_BLOCK_DRAG_MIME)
+}
+
+function getOperationLibraryName(block: BlockData): string | null {
+  const operationType = block.props?.operation_type
+  if (!operationType || typeof operationType !== 'object') {
+    return null
+  }
+  const libraryName = (operationType as { library_name?: unknown }).library_name
+  return typeof libraryName === 'string' && libraryName.trim() ? libraryName : null
+}
+
+function getBlockDisplayLabel(block: BlockData): string {
+  return getOperationLibraryName(block) || getBlockTypeLabel(block.block_type_id)
+}
+
+function getBlockDisplayIcon(block: BlockData): string {
+  return /^\d+$/.test(block.block_type_id) ? 'OP' : getBlockTypeIcon(block.block_type_id)
+}
+
 export default function VisualEditor({
   blocks,
   isVisible,
   hasUnsavedChanges,
+  activeDocumentBlockId,
   onNavigate,
   onInsertBlock,
   onMoveBlocks,
   onCopyBlocks,
   onDeleteBlocks,
+  hasActiveClipboardClip,
+  activeClipboardLabel,
+  onCopyBlocksToClipboard,
+  onCutBlocksToClipboard,
+  onPasteActiveClipboard,
 }: VisualEditorProps) {
   const [mode, setMode] = useState<VisualEditorMode>('viewer')
   const [hiddenTypes, setHiddenTypes] = useState<Set<string>>(new Set())
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [insertType, setInsertType] = useState<string>(BLOCK_LIBRARY_TYPES[0]?.id || 'paragraph')
+  const [insertType, setInsertType] = useState<string>('')
+  const [operationTypes, setOperationTypes] = useState<OperationBlockTypeRecord[]>([])
+  const [operationTypesLoading, setOperationTypesLoading] = useState(false)
+  const [operationTypesError, setOperationTypesError] = useState<string | null>(null)
   const [isMutating, setIsMutating] = useState(false)
 
   const uniqueTypes = useMemo(() => {
@@ -66,6 +106,51 @@ export default function VisualEditor({
   }, [blocks, selectedIds])
 
   const structureEditDisabled = hasUnsavedChanges || isMutating
+  const insertDisabled =
+    structureEditDisabled || !insertType || operationTypes.length === 0 || !activeDocumentBlockId
+  const selectionActionDisabled = structureEditDisabled || selectedBlocksInOrder.length === 0
+
+  useEffect(() => {
+    if (!isVisible) {
+      return
+    }
+
+    let isActive = true
+    setOperationTypesLoading(true)
+    setOperationTypesError(null)
+
+    const loadOperationTypes = async () => {
+      const response = await apiClient.get<OperationBlockTypeRecord[]>(
+        '/library/db/document-block-types',
+        {
+          params: {
+            insertable_only: true,
+          },
+        }
+      )
+
+      if (!isActive) {
+        return
+      }
+
+      if (response.ok && response.data) {
+        const loadedOperationTypes = response.data
+        setOperationTypes(loadedOperationTypes)
+        setInsertType((current) =>
+          current || (loadedOperationTypes.length > 0 ? String(loadedOperationTypes[0].type_id) : '')
+        )
+      } else {
+        setOperationTypesError(response.errorMessage || 'Failed to load operation block types')
+      }
+      setOperationTypesLoading(false)
+    }
+
+    void loadOperationTypes()
+
+    return () => {
+      isActive = false
+    }
+  }, [isVisible])
 
   const runMutation = async (task: () => Promise<void>) => {
     setIsMutating(true)
@@ -109,7 +194,8 @@ export default function VisualEditor({
       return
     }
 
-    event.dataTransfer.setData('application/x-forgelab-visual-block-ids', JSON.stringify(payloadIds))
+    event.dataTransfer.setData(VISUAL_BLOCK_DRAG_MIME, JSON.stringify(payloadIds))
+    event.dataTransfer.setData('text/plain', payloadIds.join(','))
     event.dataTransfer.effectAllowed = 'copyMove'
   }
 
@@ -139,11 +225,11 @@ export default function VisualEditor({
   }
 
   const handleDropOver = (event: DragEvent<HTMLDivElement>) => {
-    const payloadIds = getDropPayload(event)
-    if (payloadIds.length === 0) {
+    if (!hasVisualDragPayload(event)) {
       return
     }
     event.preventDefault()
+    event.dataTransfer.dropEffect = event.ctrlKey || event.metaKey ? 'copy' : 'move'
   }
 
   const toggleTypeVisibility = (blockTypeId: string) => {
@@ -158,18 +244,13 @@ export default function VisualEditor({
     })
   }
 
-  const insertAfterCurrentSelection = async () => {
-    if (structureEditDisabled) {
+  const insertAfterActiveBlock = async () => {
+    if (insertDisabled || !activeDocumentBlockId) {
       return
     }
 
-    const insertionPoint =
-      selectedBlocksInOrder[selectedBlocksInOrder.length - 1]?.block_id ||
-      blocks[blocks.length - 1]?.block_id ||
-      null
-
     await runMutation(async () => {
-      await onInsertBlock(insertType, insertionPoint)
+      await onInsertBlock(insertType, activeDocumentBlockId)
     })
   }
 
@@ -182,6 +263,40 @@ export default function VisualEditor({
       await onDeleteBlocks(selectedBlocksInOrder.map((block) => block.block_id))
     })
     setSelectedIds(new Set())
+  }
+
+  const copyCurrentSelectionToClipboard = async () => {
+    if (selectionActionDisabled) {
+      return
+    }
+
+    await runMutation(async () => {
+      await onCopyBlocksToClipboard(selectedBlocksInOrder.map((block) => block.block_id))
+    })
+  }
+
+  const cutCurrentSelectionToClipboard = async () => {
+    if (selectionActionDisabled) {
+      return
+    }
+
+    let didCut = false
+    await runMutation(async () => {
+      didCut = await onCutBlocksToClipboard(selectedBlocksInOrder.map((block) => block.block_id))
+    })
+    if (didCut) {
+      setSelectedIds(new Set())
+    }
+  }
+
+  const pasteActiveClipboardAfterActiveBlock = async () => {
+    if (structureEditDisabled || !hasActiveClipboardClip || !activeDocumentBlockId) {
+      return
+    }
+
+    await runMutation(async () => {
+      await onPasteActiveClipboard()
+    })
   }
 
   if (!isVisible) {
@@ -208,16 +323,10 @@ export default function VisualEditor({
       </div>
 
       <div className="px-4 pb-3 space-y-3">
-          {hasUnsavedChanges && (
-            <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
-              Save or cancel draft changes before using VisualEditor structural actions.
-            </div>
-          )}
-
           {mode === 'viewer' && uniqueTypes.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
-              {uniqueTypes.map((blockTypeId) => {
-                const isHidden = hiddenTypes.has(blockTypeId)
+                {uniqueTypes.map((blockTypeId) => {
+                  const isHidden = hiddenTypes.has(blockTypeId)
                 return (
                   <button
                     key={blockTypeId}
@@ -249,30 +358,71 @@ export default function VisualEditor({
                 value={insertType}
                 onChange={(event) => setInsertType(event.target.value)}
                 className="ui-select w-auto"
-                disabled={structureEditDisabled}
+                disabled={structureEditDisabled || operationTypes.length === 0}
               >
-                {BLOCK_LIBRARY_TYPES.map((entry) => (
-                  <option key={entry.id} value={entry.id}>
-                    {entry.label}
+                {operationTypes.map((entry) => (
+                  <option key={entry.type_id} value={String(entry.type_id)}>
+                    {entry.library_name}
                   </option>
                 ))}
               </select>
               <button
                 type="button"
                 onClick={() => {
-                  void insertAfterCurrentSelection()
+                  void insertAfterActiveBlock()
                 }}
-                disabled={structureEditDisabled}
+                disabled={insertDisabled}
                 className="ui-btn"
               >
-                Insert after selection
+                Insert after active
               </button>
+              {operationTypesLoading && (
+                <span className="text-xs text-gray-500">Loading operations...</span>
+              )}
+              {operationTypesError && (
+                <span className="text-xs text-red-700">{operationTypesError}</span>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  void copyCurrentSelectionToClipboard()
+                }}
+                disabled={selectionActionDisabled}
+                className="ui-btn"
+              >
+                Copy
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void cutCurrentSelectionToClipboard()
+                }}
+                disabled={selectionActionDisabled}
+                className="ui-btn-danger"
+              >
+                Cut
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void pasteActiveClipboardAfterActiveBlock()
+                }}
+                disabled={structureEditDisabled || !hasActiveClipboardClip || !activeDocumentBlockId}
+                className="ui-btn-primary"
+              >
+                Paste active
+              </button>
+              {activeClipboardLabel && (
+                <span className="max-w-[160px] truncate text-xs text-gray-500">
+                  {activeClipboardLabel}
+                </span>
+              )}
               <button
                 type="button"
                 onClick={() => {
                   void deleteCurrentSelection()
                 }}
-                disabled={structureEditDisabled || selectedBlocksInOrder.length === 0}
+                disabled={selectionActionDisabled}
                 className="ui-btn-danger"
               >
                 Delete selected
@@ -290,46 +440,55 @@ export default function VisualEditor({
 
           <div className="overflow-x-auto">
             <div className="inline-flex items-center gap-2 min-w-full pb-1">
-              <div
-                className="w-4 h-8 rounded border border-dashed border-gray-300"
-                onDragOver={handleDropOver}
-                onDrop={(event) => {
-                  void handleDropAt(event, null)
-                }}
-                title={mode === 'editor' ? 'Drop before first block' : undefined}
-              />
+              <Tooltip content={mode === 'editor' ? 'Drop before first block' : null}>
+                <div
+                  className="w-4 h-8 rounded border border-dashed border-gray-300"
+                  onDragOver={handleDropOver}
+                  onDrop={(event) => {
+                    void handleDropAt(event, null)
+                  }}
+                  aria-label={mode === 'editor' ? 'Drop before first block' : undefined}
+                />
+              </Tooltip>
 
               {visibleBlocks.map((block) => {
                 const isSelected = selectedIds.has(block.block_id)
+                const isActive = activeDocumentBlockId === block.block_id
 
                 return (
                   <div key={block.block_id} className="inline-flex items-center gap-2">
-                    <button
-                      type="button"
-                      draggable={mode === 'editor' && !structureEditDisabled}
-                      onDragStart={(event) => handleDragStart(event, block.block_id)}
-                      onClick={(event) => handleBlockClick(event, block.block_id)}
-                      className={`min-w-[64px] h-12 px-2 rounded border text-xs font-semibold flex flex-col items-center justify-center ${
-                        isSelected
-                          ? 'border-blue-600 bg-blue-50 text-blue-700'
-                          : 'border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100'
-                      }`}
-                      title={`${getBlockTypeLabel(block.block_type_id)} (${block.block_id})`}
-                    >
-                      <span>{getBlockTypeIcon(block.block_type_id)}</span>
-                      <span className="text-xs truncate max-w-[52px]">
-                        {getBlockTypeLabel(block.block_type_id)}
-                      </span>
-                    </button>
+                    <Tooltip content={`${getBlockDisplayLabel(block)} (${block.block_id})`}>
+                      <button
+                        type="button"
+                        draggable={mode === 'editor' && !structureEditDisabled}
+                        onDragStart={(event) => handleDragStart(event, block.block_id)}
+                        onClick={(event) => handleBlockClick(event, block.block_id)}
+                        className={`min-w-[64px] h-12 px-2 rounded border text-xs font-semibold flex flex-col items-center justify-center ${
+                          isActive
+                            ? 'border-blue-700 bg-blue-100 text-blue-900 ring-2 ring-blue-600 ring-offset-1'
+                            : isSelected
+                            ? 'border-blue-600 bg-blue-50 text-blue-700'
+                            : 'border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100'
+                        }`}
+                        aria-label={`${getBlockDisplayLabel(block)} (${block.block_id})`}
+                      >
+                        <span>{getBlockDisplayIcon(block)}</span>
+                        <span className="text-xs truncate max-w-[52px]">
+                          {getBlockDisplayLabel(block)}
+                        </span>
+                      </button>
+                    </Tooltip>
 
-                    <div
-                      className="w-4 h-8 rounded border border-dashed border-gray-300"
-                      onDragOver={handleDropOver}
-                      onDrop={(event) => {
-                        void handleDropAt(event, block.block_id)
-                      }}
-                      title={mode === 'editor' ? 'Drop after this block' : undefined}
-                    />
+                    <Tooltip content={mode === 'editor' ? 'Drop after this block' : null}>
+                      <div
+                        className="w-4 h-8 rounded border border-dashed border-gray-300"
+                        onDragOver={handleDropOver}
+                        onDrop={(event) => {
+                          void handleDropAt(event, block.block_id)
+                        }}
+                        aria-label={mode === 'editor' ? 'Drop after this block' : undefined}
+                      />
+                    </Tooltip>
                   </div>
                 )
               })}

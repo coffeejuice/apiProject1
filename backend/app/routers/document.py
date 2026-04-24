@@ -10,6 +10,7 @@ from app.auth import get_current_user
 from app.database import get_db
 from app.models.document.block import Block
 from app.models.document.document import Document, DocumentEditSession
+from app.models.library.material import MaterialVersion
 from app.models.project import Project
 from app.models.user import User
 from app.schemas import (
@@ -28,6 +29,13 @@ from app.schemas import (
 )
 from app.services.block_service import create_block, get_ordered_blocks
 from app.services.block_type_service import initialize_system_blocks
+from app.services.workflow_commands import (
+    WorkflowCommandError,
+    assert_document_editable,
+    create_initial_working_version,
+    get_latest_document_version,
+    notify_after_edit,
+)
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -64,6 +72,16 @@ def _get_project_or_404(db: Session, project_id: int) -> Project:
     return project
 
 
+def _get_default_material_version_id_for_project(db: Session, project: Project) -> int | None:
+    if project.material_id is None:
+        return None
+    return db.execute(
+        select(MaterialVersion.material_version_id)
+        .filter(MaterialVersion.material_id == project.material_id)
+        .order_by(MaterialVersion.version_no.desc(), MaterialVersion.material_version_id.desc())
+    ).scalar()
+
+
 @router.post("", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
 def create_document(
     payload: DocumentCreate,
@@ -91,6 +109,11 @@ def create_document(
         project_id=payload.project_id,
         source_document_id=payload.source_document_id,
         editor_user_id=editor_user_id,
+        material_version_id=(
+            source.material_version_id
+            if source is not None
+            else _get_default_material_version_id_for_project(db, project)
+        ),
         name=payload.name,
         notes=payload.notes,
     )
@@ -116,8 +139,18 @@ def create_document(
         # Keep system blocks initialized for non-copy documents.
         initialize_system_blocks(db, document.document_id)
 
+    create_initial_working_version(
+        db,
+        document,
+        current_user=current_user,
+        parent_version=get_latest_document_version(db, source.document_id) if source is not None else None,
+        preprocess_requested=source is not None and len([block for block in source_blocks if not block.is_system]) > 0,
+    )
+
     db.commit()
     db.refresh(document)
+    if source is not None:
+        notify_after_edit()
     return document
 
 
@@ -171,11 +204,24 @@ def update_document(
     db: Session = Depends(get_db),
 ):
     document = check_document_access(db, document_id, current_user.user_id)
-    updates = payload.model_dump(exclude_unset=True)
-    for key, value in updates.items():
-        setattr(document, key, value)
-    document.updated_at = datetime.utcnow()
-    db.commit()
+    try:
+        assert_document_editable(db, document.document_id)
+        updates = payload.model_dump(exclude_unset=True)
+        for key, value in updates.items():
+            setattr(document, key, value)
+        document.updated_at = datetime.utcnow()
+        editable_version = create_initial_working_version(
+            db,
+            document,
+            current_user=current_user,
+            preprocess_requested=False,
+        )
+        editable_version.last_modified = document.updated_at
+        db.commit()
+    except WorkflowCommandError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     db.refresh(document)
     return document
 
@@ -214,11 +260,13 @@ def copy_document(
 ):
     source = check_document_access(db, document_id, current_user.user_id)
     project = _get_project_or_404(db, source.project_id)
+    parent_version = get_latest_document_version(db, source.document_id)
 
     copied = Document(
         project_id=source.project_id,
         source_document_id=source.document_id,
         editor_user_id=payload.editor_user_id or source.editor_user_id or project.user_id,
+        material_version_id=source.material_version_id,
         name=payload.name or f"{source.name} (copy)",
         notes=payload.notes if payload.notes is not None else source.notes,
     )
@@ -240,8 +288,17 @@ def copy_document(
         )
         previous_new_id = created.block_id
 
+    create_initial_working_version(
+        db,
+        copied,
+        current_user=current_user,
+        parent_version=parent_version,
+        preprocess_requested=len([block for block in ordered_blocks if not block.is_system]) > 0,
+    )
+
     db.commit()
     db.refresh(copied)
+    notify_after_edit()
     return copied
 
 

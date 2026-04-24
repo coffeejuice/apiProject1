@@ -32,17 +32,29 @@ type BlockComponent = ComponentType<BlockComponentProps>
 
 class BlockTypeRegistry {
   private components: Map<string, BlockComponent> = new Map()
+  private operationComponent: BlockComponent | null = null
 
   register(blockType: string, component: BlockComponent): void {
     this.components.set(blockType, component)
   }
 
+  registerOperationComponent(component: BlockComponent): void {
+    this.operationComponent = component
+  }
+
   get(blockType: string): BlockComponent | undefined {
-    return this.components.get(blockType)
+    const component = this.components.get(blockType)
+    if (component) {
+      return component
+    }
+    if (/^\d+$/.test(blockType)) {
+      return this.operationComponent ?? undefined
+    }
+    return undefined
   }
 
   has(blockType: string): boolean {
-    return this.components.has(blockType)
+    return this.components.has(blockType) || (/^\d+$/.test(blockType) && this.operationComponent !== null)
   }
 
   getAll(): Map<string, BlockComponent> {
@@ -58,6 +70,10 @@ export function registerBlockType(
   component: BlockComponent
 ): void {
   registry.register(blockType, component)
+}
+
+export function registerOperationBlockType(component: BlockComponent): void {
+  registry.registerOperationComponent(component)
 }
 
 export function getBlockComponent(blockType: string): BlockComponent | undefined {

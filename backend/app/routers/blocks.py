@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.auth import get_current_user
 from app.database import get_db
 from app.models.document.block import Block
+from app.models.document.document import Document
 from app.models.user import User
 from app.routers.document import check_document_access
 from app.schemas import (
@@ -18,16 +19,35 @@ from app.schemas import (
     CommitRequest,
     CommitResponse,
 )
-from app.services.block_service import create_block, delete_block, get_root_blocks, move_block_after, update_block_props
+from app.services.block_service import create_block_or_bundle, delete_block_or_bundle, get_root_blocks, move_block_after, update_block_props
 from app.services.block_type_service import (
+    can_place_block_after,
     can_delete_block,
     can_reorder_block,
     enrich_block_data_for_frontend,
     validate_block_constraints,
 )
 from app.services.commit_service import commit_operations
+from app.services.operation_blocks import (
+    build_default_operation_props,
+    is_operation_block_type,
+    sanitize_operation_props,
+)
+from app.services.workflow_commands import (
+    WorkflowCommandError,
+    assert_document_editable,
+    mark_document_edited,
+    notify_after_edit,
+)
 
 router = APIRouter(tags=["blocks"])
+
+
+def _get_document_or_404(db: Session, document_id: int) -> Document:
+    document = db.get(Document, document_id)
+    if document is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return document
 
 
 @router.get("/documents/{document_id}/blocks/root", response_model=List[BlockResponse])
@@ -49,19 +69,35 @@ def insert_block(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    check_document_access(db, document_id, current_user.user_id)
-    if not validate_block_constraints(db, document_id, payload.block_type_id):
-        raise HTTPException(status_code=400, detail="Block constraints violated")
+    document = check_document_access(db, document_id, current_user.user_id)
+    try:
+        assert_document_editable(db, document_id)
+        if not validate_block_constraints(db, document_id, payload.block_type_id):
+            raise HTTPException(status_code=400, detail="Block constraints violated")
+        if not can_place_block_after(db, document_id, payload.previous_block_id):
+            raise HTTPException(status_code=400, detail="Cannot insert before fixed system blocks")
 
-    block = create_block(
-        db=db,
-        document_id=document_id,
-        block_type_id=payload.block_type_id,
-        props=payload.props,
-        previous_block_id=payload.previous_block_id,
-    )
-    db.commit()
+        props = (
+            build_default_operation_props(db, payload.block_type_id, payload.props)
+            if is_operation_block_type(db, payload.block_type_id)
+            else payload.props
+        )
+
+        block = create_block_or_bundle(
+            db=db,
+            document_id=document_id,
+            block_type_id=payload.block_type_id,
+            props=props,
+            previous_block_id=payload.previous_block_id,
+        )
+        mark_document_edited(db, document, current_user=current_user)
+        db.commit()
+    except WorkflowCommandError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     db.refresh(block)
+    notify_after_edit()
     enriched = enrich_block_data_for_frontend(db, block)
     return BlockResponse.model_validate(enriched)
 
@@ -78,21 +114,34 @@ def update_block(
     ).scalars().first()
     if not block:
         raise HTTPException(status_code=404, detail="Block not found")
-    check_document_access(db, block.document_id, current_user.user_id)
+    document = check_document_access(db, block.document_id, current_user.user_id)
 
-    updated = update_block_props(db, block_id, payload.props)
-    if not updated:
-        raise HTTPException(status_code=404, detail="Block not found")
+    try:
+        assert_document_editable(db, block.document_id)
+        props = (
+            sanitize_operation_props(db, block.block_type_id, payload.props)
+            if is_operation_block_type(db, block.block_type_id)
+            else payload.props
+        )
+        updated = update_block_props(db, block_id, props)
+        if not updated:
+            raise HTTPException(status_code=404, detail="Block not found")
 
-    # Run block handler update hook when available.
-    from app.models.document.block_types import get_block_type_handler
+        # Run block handler update hook when available.
+        from app.models.document.block_types import get_block_type_handler
 
-    handler = get_block_type_handler(updated.block_type_id)
-    if handler:
-        handler.on_update(db, updated.block_id, updated.document_id, updated.props)
+        handler = get_block_type_handler(updated.block_type_id)
+        if handler:
+            handler.on_update(db, updated.block_id, updated.document_id, updated.props)
 
-    db.commit()
+        mark_document_edited(db, document, current_user=current_user)
+        db.commit()
+    except WorkflowCommandError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     db.refresh(updated)
+    notify_after_edit()
     return BlockResponse.model_validate(enrich_block_data_for_frontend(db, updated))
 
 
@@ -108,22 +157,32 @@ def move_block(
     ).scalars().first()
     if not block:
         raise HTTPException(status_code=404, detail="Block not found")
-    check_document_access(db, block.document_id, current_user.user_id)
+    document = check_document_access(db, block.document_id, current_user.user_id)
 
-    if not can_reorder_block(db, block_id):
-        raise HTTPException(status_code=400, detail="Block has fixed position")
+    try:
+        assert_document_editable(db, block.document_id)
+        if not can_reorder_block(db, block_id):
+            raise HTTPException(status_code=400, detail="Block has fixed position")
+        if not can_place_block_after(db, block.document_id, payload.previous_block_id):
+            raise HTTPException(status_code=400, detail="Cannot move before fixed system blocks")
 
-    moved = move_block_after(
-        db=db,
-        document_id=block.document_id,
-        block_id=block_id,
-        previous_block_id=payload.previous_block_id,
-    )
-    if not moved:
-        raise HTTPException(status_code=404, detail="Block not found")
+        moved = move_block_after(
+            db=db,
+            document_id=block.document_id,
+            block_id=block_id,
+            previous_block_id=payload.previous_block_id,
+        )
+        if not moved:
+            raise HTTPException(status_code=404, detail="Block not found")
 
-    db.commit()
+        mark_document_edited(db, document, current_user=current_user)
+        db.commit()
+    except WorkflowCommandError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     db.refresh(moved)
+    notify_after_edit()
     return BlockResponse.model_validate(enrich_block_data_for_frontend(db, moved))
 
 
@@ -138,20 +197,28 @@ def remove_block(
     ).scalars().first()
     if not block:
         raise HTTPException(status_code=404, detail="Block not found")
-    check_document_access(db, block.document_id, current_user.user_id)
+    document = check_document_access(db, block.document_id, current_user.user_id)
 
-    if not can_delete_block(db, block_id):
-        raise HTTPException(status_code=400, detail="Block is not removable")
+    try:
+        assert_document_editable(db, block.document_id)
+        if not can_delete_block(db, block_id):
+            raise HTTPException(status_code=400, detail="Block is not removable")
 
-    from app.models.document.block_types import get_block_type_handler
+        from app.models.document.block_types import get_block_type_handler
 
-    handler = get_block_type_handler(block.block_type_id)
-    if handler:
-        handler.on_delete(db, block_id, block.document_id)
+        handler = get_block_type_handler(block.block_type_id)
+        if handler:
+            handler.on_delete(db, block_id, block.document_id)
 
-    if not delete_block(db, block.document_id, block_id):
-        raise HTTPException(status_code=404, detail="Block not found")
-    db.commit()
+        if not delete_block_or_bundle(db, block.document_id, block_id):
+            raise HTTPException(status_code=404, detail="Block not found")
+        mark_document_edited(db, document, current_user=current_user)
+        db.commit()
+    except WorkflowCommandError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    notify_after_edit()
 
 
 @router.post("/documents/{document_id}/commit", response_model=CommitResponse)
@@ -161,12 +228,22 @@ def commit_changes(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    check_document_access(db, document_id, current_user.user_id)
-    success, message = commit_operations(
-        db=db,
-        document_id=document_id,
-        ops=commit_req.ops,
-    )
-    if not success:
-        raise HTTPException(status_code=400, detail=message)
+    document = check_document_access(db, document_id, current_user.user_id)
+    try:
+        assert_document_editable(db, document_id)
+        success, message = commit_operations(
+            db=db,
+            document_id=document_id,
+            ops=commit_req.ops,
+        )
+        if not success:
+            db.rollback()
+            raise HTTPException(status_code=400, detail=message)
+        mark_document_edited(db, document, current_user=current_user)
+        db.commit()
+    except WorkflowCommandError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    notify_after_edit()
     return CommitResponse(success=True, message=message)

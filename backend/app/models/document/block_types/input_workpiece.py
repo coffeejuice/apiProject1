@@ -94,6 +94,79 @@ GEOMETRY_TYPES = {
 }
 
 
+def generate_input_workpiece_title(geometry_type_id: str, attributes: Dict[str, Any]) -> str:
+    """Generate title based on the selected geometry type process template."""
+    if not geometry_type_id or geometry_type_id not in GEOMETRY_TYPES:
+        return "Input Workpiece"
+
+    geom_type = GEOMETRY_TYPES[geometry_type_id]
+    process_name = str(geom_type["process_name"])
+
+    values = []
+    for col in geom_type["db_columns"]:
+        val = attributes.get(col, "")
+        values.append(str(val) if val else "_")
+
+    try:
+        return process_name.format(*values)
+    except (IndexError, KeyError):
+        return str(geom_type["library_name"])
+
+
+def serialize_input_workpiece_props(props: Dict[str, Any]) -> Dict[str, Any]:
+    """Return input-workpiece props enriched with geometry metadata."""
+    geometry_type_id = str(props.get("geometry_type_id", "") or "")
+    attributes = props.get("attributes", {})
+    if not isinstance(attributes, dict):
+        attributes = {}
+
+    result = {
+        "geometry_type_id": geometry_type_id,
+        "weight": props.get("weight", ""),
+        "attributes": attributes,
+        "input_workpiece_title": generate_input_workpiece_title(geometry_type_id, attributes),
+        "available_geometry_types": [
+            {
+                "id": type_id,
+                "name": data["library_name"],
+                "labels": data["labels"],
+                "columns": data["db_columns"],
+            }
+            for type_id, data in sorted(GEOMETRY_TYPES.items(), key=lambda x: int(x[0]))
+        ],
+    }
+
+    if geometry_type_id and geometry_type_id in GEOMETRY_TYPES:
+        geom_type = GEOMETRY_TYPES[geometry_type_id]
+        result["selected_geometry"] = {
+            "labels": geom_type["labels"],
+            "columns": geom_type["db_columns"],
+            "library_name": geom_type["library_name"],
+        }
+
+    return result
+
+
+def validate_input_workpiece_props(props: Dict[str, Any]) -> bool:
+    """Validate input-workpiece props."""
+    if "geometry_type_id" not in props:
+        return False
+
+    geom_id = props.get("geometry_type_id")
+    if geom_id and str(geom_id) not in GEOMETRY_TYPES:
+        return False
+
+    if "weight" in props:
+        weight_val = props["weight"]
+        if weight_val is not None and weight_val != "":
+            try:
+                float(weight_val)
+            except (ValueError, TypeError):
+                return False
+
+    return True
+
+
 class InputWorkpieceHandler(BlockTypeHandler):
     """
     Handler for Input Workpiece block.
@@ -118,7 +191,7 @@ class InputWorkpieceHandler(BlockTypeHandler):
 
     @property
     def fixed_position(self) -> int:
-        return 1  # Always second block (after document_heading)
+        return 2  # After title and fixed material block
 
     @property
     def allow_multiple_instances(self) -> bool:
@@ -128,101 +201,24 @@ class InputWorkpieceHandler(BlockTypeHandler):
         """Return default values for input workpiece"""
         return {
             "geometry_type_id": "",  # ID from GEOMETRY_TYPES (e.g., "68", "69", etc.)
-            "mesh_elements": 0,  # Integer type
             "weight": 0.0,  # Real type
             "attributes": {}  # Dynamic attributes based on selected geometry type
         }
 
     def _generate_title(self, geometry_type_id: str, attributes: Dict[str, Any]) -> str:
         """Generate title based on process_name template"""
-        if not geometry_type_id or geometry_type_id not in GEOMETRY_TYPES:
-            return "Input Workpiece"
-
-        geom_type = GEOMETRY_TYPES[geometry_type_id]
-        process_name = str(geom_type["process_name"])
-
-        # Get attribute values in order
-        values = []
-        for col in geom_type["db_columns"]:
-            val = attributes.get(col, "")
-            values.append(str(val) if val else "_")
-
-        # Fill in the template
-        try:
-            title = process_name.format(*values)
-        except (IndexError, KeyError):
-            title = str(geom_type["library_name"])
-
-        return title
+        return generate_input_workpiece_title(geometry_type_id, attributes)
 
     def validate_props(self, props: Dict[str, Any]) -> bool:
         """Validate input workpiece props"""
-        # geometry_type_id is required
-        if "geometry_type_id" not in props:
-            return False
-
-        # If geometry_type_id is set, validate it's a known type
-        geom_id = props.get("geometry_type_id")
-        if geom_id and geom_id not in GEOMETRY_TYPES:
-            return False
-
-        # Validate mesh_elements is integer
-        if "mesh_elements" in props:
-            mesh_val = props["mesh_elements"]
-            if mesh_val is not None and mesh_val != "":
-                try:
-                    int(mesh_val)
-                except (ValueError, TypeError):
-                    return False
-
-        # Validate weight is numeric (Real)
-        if "weight" in props:
-            weight_val = props["weight"]
-            if weight_val is not None and weight_val != "":
-                try:
-                    float(weight_val)
-                except (ValueError, TypeError):
-                    return False
-
-        return True
+        return validate_input_workpiece_props(props)
 
     def serialize_for_frontend(self, db: Session, block_id: UUID, document_id: int, props: Dict[str, Any]) -> Dict[str, Any]:
         """
         Return props for frontend rendering with geometry type metadata.
         """
-        geometry_type_id = props.get("geometry_type_id", "")
-        attributes = props.get("attributes", {})
-
-        # Generate title
-        title = self._generate_title(geometry_type_id, attributes)
-
-        result = {
-            "geometry_type_id": geometry_type_id,
-            "mesh_elements": props.get("mesh_elements", ""),
-            "weight": props.get("weight", ""),
-            "attributes": attributes,
-            "title": title,
-            # Geometry types list for dropdown
-            "available_geometry_types": [
-                {
-                    "id": type_id,
-                    "name": data["library_name"],
-                    "labels": data["labels"],
-                    "columns": data["db_columns"]
-                }
-                for type_id, data in sorted(GEOMETRY_TYPES.items(), key=lambda x: int(x[0]))
-            ]
-        }
-
-        # If a geometry type is selected, include its metadata
-        if geometry_type_id and geometry_type_id in GEOMETRY_TYPES:
-            geom_type = GEOMETRY_TYPES[geometry_type_id]
-            result["selected_geometry"] = {
-                "labels": geom_type["labels"],
-                "columns": geom_type["db_columns"],
-                "library_name": geom_type["library_name"]
-            }
-
+        result = serialize_input_workpiece_props(props)
+        result["title"] = result.pop("input_workpiece_title")
         return result
 
     def on_update(self, db: Session, block_id: UUID, document_id: int, props: Dict[str, Any]) -> None:
@@ -230,9 +226,10 @@ class InputWorkpieceHandler(BlockTypeHandler):
         Validate and handle updates to input workpiece.
         Could be extended to trigger recalculations or validations.
         """
+        props.pop("mesh_elements", None)
         if not self.validate_props(props):
             raise ValueError("Invalid input workpiece props")
 
     def get_editable_fields(self):
         """Return list of fields that can be edited"""
-        return ["geometry_type_id", "mesh_elements", "weight", "attributes"]
+        return ["geometry_type_id", "weight", "attributes"]

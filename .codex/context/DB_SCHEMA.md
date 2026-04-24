@@ -15,9 +15,9 @@ It covers:
 
 If source code or migrations conflict with this file, source code is authoritative and this file must be updated.
 
-## DB consistency snapshot (updated 2026-04-07)
+## DB consistency snapshot (updated 2026-04-22)
 - Alembic code state:
-  - current head migration file: `d2c6e8a4b9f1_change_material_name_to_varchar.py`
+  - current head migration file: `e7c9a1d4f8b2_merge_setup_blocks_into_title_and_deformation.py`
 - Baseline remains `9ac4e7b1d2f3_squashed_current_schema_baseline.py`
 - Current schema shape of note:
   - `projects.material_id` points to `materials.material_id`
@@ -27,21 +27,48 @@ If source code or migrations conflict with this file, source code is authoritati
   - material standards/documents and material-specific designations use normalized tables: `material_standards_catalog`, `materials_designations`
   - material chemistry/publication data uses normalized tables: `publications_catalog`, `materials_designations_standard_chemistry`, `materials_test_records`, `materials_chemistry_tests_results`
   - test-record-linked property datasets use normalized tables: `materials_property_tables`, `materials_property_table_to_columns_connectivity`, `materials_property_column_values`
+  - workflow runtime now has dedicated orchestration tables:
+    - `simulation_steps`
+    - `simulation_step_status`
+    - `postprocessing_tasks`
+  - document/block library tables were renamed:
+    - `blocks` -> `document_blocks`
+    - `operations_library` -> `document_blocks_library`
+  - `document_blocks_library` is seeded from old `backend_old/forgelab/sql_setup/operations.json` and currently contains 100 old operation-type rows
+  - old separate Weight and billet-geometry operation block rows (`6`, `7`, `68`-`79`) are obsolete/hidden from insertable block catalog; billet geometry now lives inside the `document_heading` block
+  - old heating rows `10` (`Furnace class`) and `62` (`Temperature at 0 min`) were merged into active operation type `10` (`Furnace`) with fields `furnace_class_id` and `temperature`; type `62` is obsolete/hidden, and type `11` now auto-creates `23|23`
+  - old forming requirement rows now map to one merged operation type `24` (`Deformation`) with `Press`, empty `Die`, feed-direction, speed, and first/middle/last feed-length fields; operation types `26`, `8`, `15`, `13`, and `14` are obsolete/hidden
+  - fixed document setup is now one auto-created `document_heading` block; old operation type `5` (`Material`), legacy `input_workpiece`, and operation type `84` (`Mesh`) data is migrated into `document_heading`, while catalog rows `5` and `84` are obsolete/hidden
+  - `material_versions` now stores versioned snapshots for the project-level root material
+  - `documents.material_version_id` points to the selected material version for that document
+  - `document_versions` now carries preprocess runtime fields:
+    - `preprocess_status`
+    - `preprocess_worker_name`
+    - `preprocess_started_at`
+    - `preprocess_finished_at`
+    - `preprocess_error`
+  - `simulation_steps` stores immutable compiled `Pre` output for one fixed `document_version`
+  - `simulation_step_status` stores mutable solver execution state per compiled step
+  - `postprocessing_tasks` stores mutable post-stage queue state and outputs per compiled step
 - Verification status:
-  - frontend `npm run typecheck` passes after the materials update
-  - backend `python3 -m compileall backend/app backend/alembic/versions backend/db_setup/reinit_db.py` passes
+  - frontend `npm run typecheck` passes after merging setup fields into Title and Deformation
+  - backend `python3 -m compileall backend/app backend/alembic/versions` passes
+  - backend `alembic current` reports `e7c9a1d4f8b2 (head)`
+  - SQLAlchemy inspection confirms `document_blocks`, `document_blocks_library`, `material_versions`, `simulation_steps`, `simulation_step_status`, and `postprocessing_tasks` exist in `public`
+  - SQLAlchemy inspection confirms `document_blocks_library` contains 100 rows and 29 user-insertable leaf operation block types
   - backend automated tests are unavailable because `pytest` is not installed in `backend/.venv`
 
 ## Public schema table inventory
 - Tables currently present:
   - `alembic_version`
-  - `blocks`
   - `config`
   - `devices`
   - `die_assemblies`
   - `die_types`
   - `dies`
   - `document_acl`
+  - `document_blocks`
+  - `document_blocks_library`
   - `document_edit_sessions`
   - `document_versions`
   - `documents`
@@ -52,6 +79,7 @@ If source code or migrations conflict with this file, source code is authoritati
   - `material_classification_values`
   - `material_standards_catalog`
   - `materials`
+  - `material_versions`
   - `materials_chemistry_tests_results`
   - `materials_designations`
   - `materials_designations_standard_chemistry`
@@ -59,16 +87,18 @@ If source code or migrations conflict with this file, source code is authoritati
   - `materials_property_table_to_columns_connectivity`
   - `materials_property_tables`
   - `materials_test_records`
-  - `operations_library`
   - `physical_machines`
   - `press_die_map`
   - `press_modes`
   - `presses`
   - `projects`
   - `publications_catalog`
+  - `postprocessing_tasks`
   - `servers`
   - `settings`
   - `share_links`
+  - `simulation_step_status`
+  - `simulation_steps`
   - `time_between_operations`
   - `users`
 
@@ -78,22 +108,121 @@ If source code or migrations conflict with this file, source code is authoritati
 - `projects`
   - `project_id`, `user_id` (FK `users.user_id`), `material_id` (FK `materials.material_id`), `name`, `notes`, `created_at`, `updated_at`, `deleted_at`
 - `documents`
-  - `document_id`, `project_id`, `source_document_id`, `editor_user_id`, `first_block_id`, `name`, `notes`, `created_at`, `updated_at`, `deleted_at`
-- `blocks`
+  - `document_id`, `project_id`, `source_document_id`, `editor_user_id`, `first_block_id`, `material_version_id`, `name`, `notes`, `created_at`, `updated_at`, `deleted_at`
+- `document_blocks`
   - `block_id`, `document_id`, `previous_block_id`, `next_block_id`, `block_type_id`, `props` (JSONB), `created_at`, `updated_at`, `is_system`, `is_removable`, `fixed_position`
+- `document_versions`
+  - `document_version_id`, `document_id`, `parent_document_version_id`, `is_editable`
+  - workflow intent/state: `run_switch_status`, `run_switch_is_active`, `preprocess_status`, `simulation_status`
+  - preprocess runtime: `preprocess_worker_name`, `preprocess_started_at`, `preprocess_finished_at`, `preprocess_error`
+  - queue/progress summary: `simulation_priority`, `simulation_queue_number`, `simulation_queue_row_number`, `simulation_percent`, `simulation_expected_duration_days`, `simulation_server_id`
 - `settings`
   - `setting_id`, `key`, `value` (JSONB), `scope`, `user_id`
   - unique index on (`key`, `scope`, `user_id`)
+
+## Workflow runtime tables
+- `simulation_steps`
+  - immutable compiled execution steps created by `Pre` for one fixed `document_version`
+  - `simulation_step_id`, `document_version_id` (FK `document_versions.document_version_id`), `execution_order`
+  - optional trace/source linkage: `source_block_id` (FK `document_blocks.block_id`)
+  - compiled block/type snapshot:
+    - `block_type_id` (FK `document_blocks_library.type_id`)
+    - `block_name_snapshot`
+    - `library_name_snapshot`
+  - material/version linkage:
+    - `material_version_id` (nullable FK `material_versions.material_version_id`)
+  - machine/tooling refs:
+    - `press_id`, `press_mode_id`, `die_assembly_id`, `top_die_id`, `bottom_die_id`, `left_die_id`, `right_die_id`
+  - compiled JSONB payloads:
+    - `parameter_values`
+    - `control_parameters`
+    - `step_specific_parameters`
+    - `initial_geometry`
+    - `final_geometry`
+    - `metrics`
+  - compiled timeline fields:
+    - `accumulated_time_start_seconds`
+    - `duration_seconds`
+    - `accumulated_time_stop_seconds`
+  - audit fields:
+    - `created_at`
+    - `updated_at`
+  - uniqueness:
+    - unique on (`document_version_id`, `execution_order`)
+- `simulation_step_status`
+  - mutable solver execution state for one `simulation_steps` row
+  - one-to-one keyed by `simulation_step_id` (PK + FK to `simulation_steps.simulation_step_id`)
+  - core state:
+    - `status` enum values: `blocked`, `queued`, `running`, `finished`, `failed`, `cancelled`
+    - `simulation_server_id` (FK `servers.id`)
+    - `worker_name`
+  - execution control:
+    - `attempt_no`
+    - `retry_count`
+    - `cancel_requested`
+    - `simulation_percent`
+    - `simulation_expected_duration_seconds`
+  - runtime timestamps:
+    - `queued_at`
+    - `started_at`
+    - `heartbeat_at`
+    - `finished_at`
+  - runtime payloads:
+    - `runtime_artifacts` (JSONB)
+    - `last_error`
+    - `error_payload` (JSONB)
+  - audit:
+    - `updated_at`
+  - indexes:
+    - `status`
+    - `simulation_server_id`
+- `postprocessing_tasks`
+  - mutable post-stage task queue and output table
+  - `postprocessing_task_id`, `simulation_step_id` (FK `simulation_steps.simulation_step_id`)
+  - post queue state:
+    - `task_kind` (default `full`)
+    - `status` enum values: `queued`, `running`, `finished`, `failed`, `cancelled`
+    - `postprocessing_server_id` (FK `servers.id`)
+    - `worker_name`
+    - `retry_count`
+  - runtime timestamps:
+    - `queued_at`
+    - `started_at`
+    - `heartbeat_at`
+    - `finished_at`
+  - payloads and outputs:
+    - `input_payload` (JSONB)
+    - `output_payload` (JSONB)
+    - `images_dir_path`
+    - `pptx_file_name`
+    - `pdf_file_name`
+    - `last_error`
+    - `error_payload` (JSONB)
+  - audit:
+    - `updated_at`
+  - uniqueness:
+    - unique on (`simulation_step_id`, `task_kind`)
+  - indexes:
+    - `simulation_step_id`
+    - `status`
+    - `postprocessing_server_id`
 
 ## Industrial and library normalized tables
 - `die_types`
   - `id`, `name` (JSONB)
 - `materials`
   - `material_id`, `name` (VARCHAR), `deform_file_name`, `note`, `is_obsolete`, `owner_id` (FK `users.user_id`)
+- `material_versions`
+  - `material_version_id`, `material_id` (FK `materials.material_id`), `version_no`, `name_snapshot`, `deform_file_name`, `note`, `created_at`, `updated_at`
+- `document_blocks_library`
+  - renamed former `operations_library`
+  - seeded from old `operations.json`
+  - `type_id`, `parent_type_id`, `auto_create_children`, `row`, `process_fixed_row`, `allow_copies`, `text_id`, `process_name`, `library_name`, `labels`, `db_column_names`, `foreign_keys`, simulation/category flags, `deformation_type`, `speed_column_name`, `trigger`, `is_initialize`, `is_accumulate`, `is_keep`, `is_obsolete`
 - `material_standards_catalog`
   - `standard_id`, `predecessor_standard_id` (self FK), `issue_organization`, `issue_year`, `geographic_level`, `country_or_region`, `title` (JSONB), `standard_number`, `url`, `file_name`, `is_obsolete`, `created_at`, `updated_at`
 - `materials_designations`
   - `designation_id`, `designation`, `material_id` (FK `materials.material_id`), `standard_id` (nullable FK `material_standards_catalog.standard_id`), `is_main_designation`, `note`, `is_obsolete`, `created_at`, `updated_at`
+  - frontend `Materials` view derives its pseudo `Standard level` filter from non-empty `materials_designations -> material_standards_catalog.country_or_region` values; this filter is not represented in `material_classification_*`
 - `publications_catalog`
   - `publication_id`, `source_type`, `title`, `authors_text`, `publisher_or_journal`, `issue_year`, `doi`, `url`, `file_name`, `note`, `is_obsolete`, `created_at`, `updated_at`
 - `materials_designations_standard_chemistry`
@@ -120,9 +249,9 @@ If source code or migrations conflict with this file, source code is authoritati
   - composite PK (`material_id`, `value_id`)
   - `created_at`, `created_by_user_id` (FK `users.user_id`)
 - `dies`
-  - `id`, `name` (JSONB), `die_type_id` (FK `die_types.id`), `die_template_file_name`, `inventory_number`, `properties` (JSONB), `is_obsolete`, `created_at`, `obsolete_at`, `owner_user_id` (FK `users.user_id`)
+  - `id`, `name` (JSONB), `die_type_id` (FK `die_types.id`), `classification_path` (VARCHAR(255), nullable), `die_template_file_name`, `inventory_number`, `properties` (JSONB), `is_obsolete`, `created_at`, `obsolete_at`, `owner_user_id` (FK `users.user_id`)
 - `die_assemblies`
-  - `id`, `name` (JSONB), `is_obsolete`, `created_at`, `obsolete_at`, `top_die_id`, `bottom_die_id`, `left_die_id`, `right_die_id` (FKs to `dies.id`), `owner_user_id` (FK `users.user_id`)
+  - `id`, `name` (JSONB), `classification_path` (VARCHAR(255), nullable), `is_obsolete`, `created_at`, `obsolete_at`, `top_die_id`, `bottom_die_id`, `left_die_id`, `right_die_id` (FKs to `dies.id`), `owner_user_id` (FK `users.user_id`)
 - `presses`
   - `id`, `name` (JSONB), `is_obsolete`, `created_at`, `obsolete_at`, `owner_user_id` (FK `users.user_id`)
 - `press_modes`
@@ -146,10 +275,25 @@ If source code or migrations conflict with this file, source code is authoritati
   - `object_type` -> level `1`
   - `composition` (`Composition Base`) -> level `2`
   - all remaining material-classification axes -> level `3`
+- The manufacturing-route classification axis is now `manufacturing_route` (`Manufacturing route`) and its approved value set is restricted to:
+  - `cast`
+  - `wrought`
+  - `powder`
+  - `additive`
 - `backend/data/database_seeding/materials.json` now includes fully populated normalized-material examples for:
   - `Ti-6Al-4V` sourced from `backend_obsolete/TI64.md`
+  - `Ti80` sourced from `backend_obsolete/Ti80.md`
+  - `Ti-10V-2Fe-3Al` sourced from `backend_obsolete/Ti10V2Fe3Al.md`
   - `Inconel 718` sourced from `backend_obsolete/Inc718.md`
+  - `Inconel 625` sourced from `backend_obsolete/Inc625.md`
+  - `Inconel 706` sourced from `backend_obsolete/Inconel706.md`
+  - `Haynes 282` sourced from `backend_obsolete/Haynes282.md`
+  - `Alloy 263` sourced from `backend_obsolete/Alloy263.md`
   - `Waspaloy` sourced from `backend_obsolete/waspaloy.md`
+  - `Nimonic 90` sourced from `backend_obsolete/Nimonic90.md`
+  - `GH4698` sourced from `backend_obsolete/GH4698.md`
+  - `GH4720Li` sourced from web research plus primary/secondary standards and literature references
+  - `A286` sourced from `backend_obsolete/A286.md`
   Each example can populate:
   - canonical `materials[]` note / DEFORM file reference
   - `material_standards_catalog[]`
@@ -161,24 +305,34 @@ If source code or migrations conflict with this file, source code is authoritati
   - `materials_property_tables[]`
   - `materials_property_table_to_columns_connectivity[]`
   - `materials_property_column_values[]`
+- `backend_obsolete/GBT3620.1-2016_Table1.json`, `backend_obsolete/GBT3620.1-2016_Table2.json`, and `backend_obsolete/GBT3620.1-2016_Table3.json` are the primary source-of-truth inputs for GB/T 3620.1-2016 titanium designation chemistry.
+  - `materials.json` now mirrors the full extracted Table 1, Table 2, and Table 3 coverage for these GB/T designations.
+  - the `nominal_composition` column from those extracts is also seeded into `materials_designations[]` as additional GB/T designation rows on the same materials.
+  - Existing GB/T 3620.1 chemistry rows from older year-specific imports must be treated as replaced by this table-driven seed.
+- `backend_obsolete/GBT3620.1-2016_TableB1.json` is the source-of-truth cross-reference input for commercially pure GB/T titanium grades vs ASTM designation pairs.
+  - `materials.json` seeds `Grade 1..4` and `UNS R50250 / R50400 / R50550 / R50700` as additional `materials_designations` rows on the corresponding `TA1G / TA2G / TA3G / TA4G` materials.
 - `dies.properties` seed structure:
   - numeric keys observed: `total_length`, `total_width`, `height`, `straight_length`, `edge_radius`, `edge_angle`
+  - `dies.classification_path` and `die_assemblies.classification_path` are dot-separated open classification keys such as `flat.top`, `vdie.bottom`, `gfm.left`, and `gfm.assembly`; categories are not constrained by a lookup table
 - `press_modes.properties` seed structure:
   - scalar keys: `is_left_manipulator`, `is_right_manipulator`, `automatic_feed_mode_is_on_when_bites_count`, `max_force`, `back_speed`, `idle_speed`, `working_speed`, `min_dwell_speed`, `max_dwell_time`, `min_idle_stroke`, `max_idle_stroke`, `approaching_distance`, `open_height_without_dies`
   - array key: `power_limit` -> list of objects with keys `id`, `force`, `speed`
-- `blocks.props`
-  - `document_heading`: stores block fields (`heat_no`, `finished_size`, `stock_size`, `stock_weight`, `remarks`, `preview_status`), then is enriched for read responses with document metadata (`name`, `project_id`, `source_document_id`, `editor_user_id`, `created_at`, `updated_at`) and optional nested `version`
-  - `input_workpiece`: `geometry_type_id`, `mesh_elements`, `weight`, `attributes` (dynamic object), and response-enriched fields (`title`, `available_geometry_types`, optional `selected_geometry`)
-  - basic text blocks (`paragraph`, `heading1`, `heading2`, `list`, `code`, `quote`) store `text`
-  - `todo` stores `text` and `checked`
-  - `divider` typically has an empty object
+- `document_blocks.props`
+  - `document_heading`: stores title fields (`heat_no`, `finished_size`, `remarks`, `preview_status`) plus merged setup fields (`material_id`, `geometry_type_id`, `weight`, `attributes`, `mesh_elements`), then is enriched for read responses with document metadata (`name`, `project_id`, `source_document_id`, `editor_user_id`, `created_at`, `updated_at`), optional nested `version`, and billet-geometry metadata (`input_workpiece_title`, `available_geometry_types`, optional `selected_geometry`)
+  - `input_workpiece`: legacy compatibility block only; new documents no longer auto-create it
+  - operation type `84` (`Mesh`): obsolete compatibility row; `mesh_elements` now lives on `document_heading`
+  - operation type `10` (`Furnace`): stores `furnace_class_id` and initial furnace `temperature`; preprocessor carries furnace class and initial temperature into following type `23` heating steps
+  - operation type `24` (`Deformation`): stores `press_id`, `feed_direction_prolongation_id`, `speed_prolongation`, `feed_direction_upsetting_id`, `speed_upsetting`, `feed_direction_transversal_cogging_id`, `speed_transversal_cogging`, `feed_first`, `feed_middle`, and `feed_last`
+  - operation types `26`, `8`, `15`, `13`, and `14`: obsolete compatibility rows migrated into operation type `24`
+  - feed direction ids render as `<--`, `<->`, `-->` with default `<--`
+  - numeric generic operation blocks: persisted props are the operation's `document_blocks_library.db_column_names`; read responses add transient `title` and `operation_type` metadata for the generic frontend `OperationBlock`
 
 ## Database seeding layout
 - Database seeding reads two files from `backend/data/database_seeding/`
   - `library.json` for shared library sections such as `users`, `die_types`, `dies`, `die_assemblies`, `presses`, `press_modes`, and `press_die_map`
   - `materials.json` for the normalized materials domain seed sections
 - `backend/data/database_seeding/materials.json` may store top-level:
-  - current committed example coverage includes Ti-6Al-4V, Inconel 718, and Waspaloy across the standards, designation, publication, chemistry, test-record, and property-table sections
+- current committed example coverage includes Ti-6Al-4V, Ti80, Ti-10V-2Fe-3Al, Inconel 718, Inconel 600, Inconel 625, Inconel 690, Inconel 706, Haynes 188, Haynes 230, Haynes 282, Hastelloy X, Alloy 263, Waspaloy, Nimonic 90, GH4698, GH4720Li, A286, FGH96, FGH4097, Alloy 901, Incoloy 903, Incoloy 907, Incoloy 909, Incoloy 925, GH710, GH4780, K4169, K418B, K417G, K648, GH4099, and A-100 across the standards, designation, publication, chemistry, test-record, and property-table sections
   - `materials[]`
   - `material_standards_catalog[]`
   - `materials_designations[]`
@@ -193,4 +347,4 @@ If source code or migrations conflict with this file, source code is authoritati
   - `material_classification_values[]`
   - `material_classification_assignments[]`
 - These sections seed directly into the corresponding normalized tables when present.
-- Waspaloy is currently seeded without a DEFORM source file (`materials.deform_file_name = null`), so it is present in the normalized materials domain but has no DEFORM-backed visuals until such a file is added.
+- Inconel 625, Inconel 706, Haynes 282, Alloy 263, Waspaloy, Nimonic 90, GH4698, GH4720Li, and A286 are currently seeded without DEFORM source files (`materials.deform_file_name = null`), so they are present in the normalized materials domain but have no DEFORM-backed visuals until such files are added.

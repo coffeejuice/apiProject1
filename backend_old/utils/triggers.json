@@ -1,0 +1,110 @@
+{
+    "db_tables": {
+        "server_pre_main": {
+            "columns": "execution_order, operation_id, process_version_id, type_id, material_id, furnace_class_id, press_id, press_mode_id, die_assembly_id, top_die_id, bottom_die_id, feed_direction_id, control_duration, control_temperature_furnace_initial, control_temperature_furnace_final, control_speed, control_final_height, control_final_width, control_final_length, is_ready, ppt_file_name, operation_type_new, stage_name, operation_type, step_control, deformation_control, k1, deformation_type, press, feed_direction, feed_first, feed_middle, feed_last, relative_deformation, penetration, num_of_bites, angle, speed, max_temperature, time_bite_idle_down_stroke, time_bite_idle_back_stroke, time_between_bites, time_bite_working, cycle_time, time_pass_forging, time_before_pass, time_before_pass_minutes, operation_time, total_time, total_time_minutes, billet_3d_json, initial_polygon, final_polygon, initial_3d_stl, final_3d_stl, scrap_rate, initial_weight, final_weight, volume_initial, volume_final, initial_height, initial_width, initial_length, final_height, final_width, final_length, equivalent_diameter, initial_cross_section_area, final_cross_section_area, initial_surface_area, final_surface_area, initial_height_to_width_ratio, final_height_to_width_ratio, initial_horizontal_face, final_horizontal_face, initial_vertical_face, final_vertical_face, initial_length_of_contact, final_length_of_contact, initial_width_of_contact, final_width_of_contact, elongation_channel_a, elongation_channel_b, strain_height, strain_width, strain_length, strain_accumulated_channel_a, strain_accumulated_channel_b",
+            "foreign_keys": "operation_id, process_version_id, type_id, material_id"
+        },
+        "operations_library": {
+            "columns": "parent_type_id, type_id, row, allow_copies, text_id, process_fixed_row, auto_create_children, library_name, process_name, labels, labels_regex, db_column_names, foreign_keys, is_simulation, is_obsolete"
+        }
+    },
+    "db_tables_list": {
+        "press": [
+            "press_id",
+            "name",
+            "open_height_without_dies"
+        ]
+    },
+    "type_ids_categories": {
+        "billet": 2,
+        "heating": 3,
+        "forming": 4
+    },
+    "accumulate_properties_trigger": {
+        "start_accumulating_with_type_id": {
+            "billet": 2,
+            "heating": 3,
+            "forming": 4
+        },
+        "stop_accumulating_with_type_id": {
+            "billet": 7,
+            "heating": 11,
+            "forming": 25
+        }
+    },
+    "type_id_operation_type_new": {
+        "1": "root",
+        "2": "billet",
+        "3": "heating",
+        "4": "forming"
+    },
+    "type_id_press_id": 26,
+    "type_id_custom_die_assembly": 22,
+    "type_ids_3rd_level": {
+        "type_id_forming_operation": 36,
+        "type_id_custom_die_assembly": 22
+    },
+    "type_ids_2nd_level": {
+        "type_id_geometry": 7,
+        "type_id_die_assembly_type": 8,
+        "type_id_feed_type": 12,
+        "type_id_top_die": 27,
+        "type_id_bottom_die": 28,
+        "type_id_speed": 9
+    },
+    "criteria_start": {
+        "billet": [
+            "material_id",
+            "weight"
+        ],
+        "heating": [
+            "name",
+            "furnace_class_id",
+            "temperature",
+            "duration"
+        ]
+    },
+    "forming_type_ids": {
+        "upsetting": [
+            41,
+            42,
+            43,
+            44,
+            45
+        ],
+        "axial_prolongation": [
+            46,
+            47,
+            48,
+            49,
+            50,
+            51
+        ],
+        "radial_prolongation": [
+            80,
+            81
+        ],
+        "full_die": [
+            52,
+            53,
+            54,
+            55
+        ],
+        "hot_cutting": [
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63
+        ]
+    },
+    "deformation_type_vs_speed_type_id": {
+        "upsetting": 13,
+        "axial_prolongation": 15,
+        "radial_prolongation": 15,
+        "full_die": 14
+    }
+}

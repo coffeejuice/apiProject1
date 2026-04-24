@@ -14,14 +14,6 @@ if TYPE_CHECKING:
 
 
 class BlockType(enum.Enum):
-    paragraph = "paragraph"
-    heading1 = "heading1"
-    heading2 = "heading2"
-    list = "list"
-    todo = "todo"
-    code = "code"
-    quote = "quote"
-    divider = "divider"
     document_heading = "document_heading"
     input_workpiece = "input_workpiece"
 
@@ -47,17 +39,17 @@ class FeedDirection(enum.Enum):
 
 
 class Block(Base):
-    __tablename__ = "blocks"
+    __tablename__ = "document_blocks"
 
     block_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     document_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("documents.document_id", ondelete="CASCADE"), nullable=False
     )
     previous_block_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("blocks.block_id", ondelete="SET NULL"), nullable=True, default=None
+        UUID(as_uuid=True), ForeignKey("document_blocks.block_id", ondelete="SET NULL"), nullable=True, default=None
     )
     next_block_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("blocks.block_id", ondelete="SET NULL"), nullable=True, default=None
+        UUID(as_uuid=True), ForeignKey("document_blocks.block_id", ondelete="SET NULL"), nullable=True, default=None
     )
     block_type_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     props: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)

@@ -1,0 +1,14 @@
+* text=auto eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+*.key -text -eol
+*.KEY -text -eol
+*.zip binary -eol
+*.stl binary -eol
+*.STL binary -eol
+*.png binary -eol
+*.pptx binary -eol
+*.ods binary -eol

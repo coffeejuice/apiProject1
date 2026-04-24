@@ -64,6 +64,7 @@
         "ZH_HANS": "650"
       },
       "die_type_id": 1,
+      "classification_path": "flat.top",
       "die_template_file_name": "press_80_flat_650_top.zip",
       "inventory_number": "",
       "properties": {
@@ -85,6 +86,7 @@
         "ZH_HANS": "650"
       },
       "die_type_id": 1,
+      "classification_path": "flat.bottom",
       "die_template_file_name": "press_80_flat_650_bottom.zip",
       "inventory_number": "",
       "properties": {
@@ -106,6 +108,7 @@
         "ZH_HANS": "900"
       },
       "die_type_id": 1,
+      "classification_path": "flat.top",
       "die_template_file_name": "press_80_flat_900_top.zip",
       "inventory_number": "",
       "properties": {
@@ -127,6 +130,7 @@
         "ZH_HANS": "900"
       },
       "die_type_id": 1,
+      "classification_path": "flat.bottom",
       "die_template_file_name": "press_80_flat_900_bottom.zip",
       "inventory_number": "",
       "properties": {
@@ -148,6 +152,7 @@
         "ZH_HANS": "550"
       },
       "die_type_id": 1,
+      "classification_path": "flat.top",
       "die_template_file_name": "press_45_flat_550_top.zip",
       "inventory_number": "",
       "properties": {
@@ -169,6 +174,7 @@
         "ZH_HANS": "550"
       },
       "die_type_id": 1,
+      "classification_path": "flat.bottom",
       "die_template_file_name": "press_45_flat_550_bottom.zip",
       "inventory_number": "",
       "properties": {
@@ -190,6 +196,7 @@
         "ZH_HANS": "V122°◯355->◯180"
       },
       "die_type_id": 2,
+      "classification_path": "vdie.top",
       "die_template_file_name": "press_80_v_a122_d355_d180_top.zip",
       "inventory_number": "",
       "properties": {
@@ -211,6 +218,7 @@
         "ZH_HANS": "V122°◯355->◯180"
       },
       "die_type_id": 2,
+      "classification_path": "vdie.bottom",
       "die_template_file_name": "press_80_v_a122_d355_d180_bottom.zip",
       "inventory_number": "",
       "properties": {
@@ -232,6 +240,7 @@
         "ZH_HANS": "w90xl240 ∠10° L850 (Top)"
       },
       "die_type_id": 3,
+      "classification_path": "gfm.top",
       "die_template_file_name": "gfm_die_gfm20_w90_top.zip",
       "inventory_number": "",
       "properties": {
@@ -253,6 +262,7 @@
         "ZH_HANS": "w90xl240 ∠10° L850 (Bottom)"
       },
       "die_type_id": 3,
+      "classification_path": "gfm.bottom",
       "die_template_file_name": "gfm_die_gfm20_w90_bottom.zip",
       "inventory_number": "",
       "properties": {
@@ -274,6 +284,7 @@
         "ZH_HANS": "w90xl240 ∠10° L850 (+Y)"
       },
       "die_type_id": 3,
+      "classification_path": "gfm.left",
       "die_template_file_name": "gfm_die_gfm20_w90_plus_y.zip",
       "inventory_number": "",
       "properties": {
@@ -295,6 +306,7 @@
         "ZH_HANS": "w90xl240 ∠10° L850 (-Y)"
       },
       "die_type_id": 3,
+      "classification_path": "gfm.right",
       "die_template_file_name": "gfm_die_gfm20_w90_minus_y.zip",
       "inventory_number": "",
       "properties": {
@@ -321,6 +333,7 @@
       "bottom_die_id": 2,
       "left_die_id": null,
       "right_die_id": null,
+      "classification_path": "flat.assembly",
       "owner_user_id": 1,
       "is_obsolete": false
     },
@@ -335,6 +348,7 @@
       "bottom_die_id": 4,
       "left_die_id": null,
       "right_die_id": null,
+      "classification_path": "flat.assembly",
       "owner_user_id": 1,
       "is_obsolete": false
     },
@@ -349,6 +363,7 @@
       "bottom_die_id": 6,
       "left_die_id": null,
       "right_die_id": null,
+      "classification_path": "flat.assembly",
       "owner_user_id": 1,
       "is_obsolete": false
     },
@@ -363,6 +378,7 @@
       "bottom_die_id": 8,
       "left_die_id": null,
       "right_die_id": null,
+      "classification_path": "vdie.assembly",
       "owner_user_id": 1,
       "is_obsolete": false
     },
@@ -377,6 +393,7 @@
       "bottom_die_id": 10,
       "left_die_id": 11,
       "right_die_id": 12,
+      "classification_path": "gfm.assembly",
       "owner_user_id": 1,
       "is_obsolete": false
     }

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 
 import type { BlockEditorMeta } from './BlockEditor'
+import Tooltip from './ui/Tooltip'
 
 interface MenuBarProps {
   meta: BlockEditorMeta
@@ -115,9 +116,11 @@ export default function MenuBar({
           {meta.saveStatus === 'saving' && <span className="text-blue-600">Saving...</span>}
           {meta.saveStatus === 'saved' && <span className="text-green-600">Saved</span>}
           {meta.saveStatus === 'error' && (
-            <span className="text-red-600" title={meta.saveError || 'Error'}>
-              Error
-            </span>
+            <Tooltip content={meta.saveError || 'Error'}>
+              <span className="text-red-600" aria-label={meta.saveError || 'Error'}>
+                Error
+              </span>
+            </Tooltip>
           )}
           {meta.saveStatus === 'idle' && (
             <span className={meta.hasUnsavedChanges ? 'text-amber-600' : 'text-gray-500'}>

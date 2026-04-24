@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from uuid import UUID
 from .base import BlockTypeHandler
+from .input_workpiece import serialize_input_workpiece_props, validate_input_workpiece_props
 
 
 class DocumentHeadingHandler(BlockTypeHandler):
@@ -18,8 +19,6 @@ class DocumentHeadingHandler(BlockTypeHandler):
         "name": 1024,
         "heat_no": 511,
         "finished_size": 511,
-        "stock_size": 511,
-        "stock_weight": 511,
         "remarks": 4095,
     }
 
@@ -48,10 +47,13 @@ class DocumentHeadingHandler(BlockTypeHandler):
         return {
             "heat_no": "",
             "finished_size": "",
-            "stock_size": "",
-            "stock_weight": "",
             "remarks": "",
             "preview_status": "empty",
+            "material_id": "",
+            "geometry_type_id": "",
+            "weight": 0.0,
+            "attributes": {},
+            "mesh_elements": 10,
         }
 
     def validate_props(self, props: Dict[str, Any]) -> bool:
@@ -73,14 +75,30 @@ class DocumentHeadingHandler(BlockTypeHandler):
         if not document:
             return props
 
-        # Start with props data
-        data = dict(props)
+        # Start with props data, excluding title fields removed from the active schema.
+        data = {
+            key: value
+            for key, value in dict(props).items()
+            if key not in {
+                "stock_size",
+                "stock_weight",
+                "available_geometry_types",
+                "selected_geometry",
+                "input_workpiece_title",
+                "title",
+                "operation_type",
+                "editable_fields",
+                "field_limits",
+            }
+        }
+        data.update(serialize_input_workpiece_props(data))
 
         # Add document metadata
         data["name"] = document.name
         data["project_id"] = document.project_id
         data["source_document_id"] = document.source_document_id
         data["editor_user_id"] = document.editor_user_id
+        data["material_version_id"] = document.material_version_id
         data["created_at"] = document.created_at.isoformat() if document.created_at else None
         data["updated_at"] = document.updated_at.isoformat() if document.updated_at else None
 
@@ -112,6 +130,19 @@ class DocumentHeadingHandler(BlockTypeHandler):
         """
         from app.models.document.document import Document, DocumentVersion
 
+        props.pop("stock_size", None)
+        props.pop("stock_weight", None)
+        for transient_key in (
+            "available_geometry_types",
+            "selected_geometry",
+            "input_workpiece_title",
+            "title",
+            "operation_type",
+            "editable_fields",
+            "field_limits",
+        ):
+            props.pop(transient_key, None)
+
         validation_errors = []
         for field, max_len in self.FIELD_LIMITS.items():
             if field in props and props[field] is not None:
@@ -120,6 +151,15 @@ class DocumentHeadingHandler(BlockTypeHandler):
                     validation_errors.append(
                         f"Field '{field}' is too long: {len(value)} characters (max {max_len})"
                     )
+        if not validate_input_workpiece_props(props):
+            validation_errors.append("Input workpiece props are invalid")
+        mesh_elements = props.get("mesh_elements")
+        if mesh_elements not in (None, ""):
+            try:
+                if int(mesh_elements) <= 0:
+                    validation_errors.append("mesh_elements must be positive")
+            except (TypeError, ValueError):
+                validation_errors.append("mesh_elements must be an integer")
 
         if validation_errors:
             raise ValueError("Validation failed:\n" + "\n".join(validation_errors))
@@ -156,9 +196,13 @@ class DocumentHeadingHandler(BlockTypeHandler):
         """Return list of fields that can be edited"""
         return [
             "name", "heat_no", "finished_size",
-            "stock_size", "stock_weight",
             "remarks",
-            "preview_status"
+            "preview_status",
+            "material_id",
+            "geometry_type_id",
+            "weight",
+            "attributes",
+            "mesh_elements",
         ]
 
     def get_field_limits(self) -> Dict[str, int]:

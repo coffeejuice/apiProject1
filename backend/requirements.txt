@@ -23,6 +23,8 @@ markdown
 uuid7
 python-dotenv
 requests
+smbprotocol
+shapely
 types-requests
 mypy
 types-PyYAML

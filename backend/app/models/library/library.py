@@ -12,10 +12,10 @@ if TYPE_CHECKING:
 
 
 class OperationsLibrary(Base):
-    __tablename__ = "operations_library"
+    __tablename__ = "document_blocks_library"
 
     type_id: Mapped[int] = mapped_column(SmallInteger, primary_key=True)
-    parent_type_id: Mapped[Optional[int]] = mapped_column(SmallInteger, ForeignKey("operations_library.type_id", ondelete="RESTRICT"), nullable=True)
+    parent_type_id: Mapped[Optional[int]] = mapped_column(SmallInteger, ForeignKey("document_blocks_library.type_id", ondelete="RESTRICT"), nullable=True)
     auto_create_children: Mapped[Optional[str]] = mapped_column(String(63), default=None, nullable=True)
     row: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     process_fixed_row: Mapped[Optional[int]] = mapped_column(SmallInteger, default=None, nullable=True)
@@ -56,8 +56,8 @@ class OperationsLibrary(Base):
 class TimeBetweenOperations(Base):
     __tablename__ = "time_between_operations"
 
-    first_operation_type_id: Mapped[int] = mapped_column(SmallInteger, ForeignKey("operations_library.type_id", ondelete="CASCADE"), primary_key=True)
-    second_operation_type_id: Mapped[int] = mapped_column(SmallInteger, ForeignKey("operations_library.type_id", ondelete="CASCADE"), primary_key=True)
+    first_operation_type_id: Mapped[int] = mapped_column(SmallInteger, ForeignKey("document_blocks_library.type_id", ondelete="CASCADE"), primary_key=True)
+    second_operation_type_id: Mapped[int] = mapped_column(SmallInteger, ForeignKey("document_blocks_library.type_id", ondelete="CASCADE"), primary_key=True)
     press_id: Mapped[int] = mapped_column(SmallInteger, ForeignKey("press_modes.id", ondelete="CASCADE"), primary_key=True)
 
     time_mean: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
