@@ -452,41 +452,26 @@ class LibraryDbUserResponse(BaseModel):
         from_attributes = True
 
 
-class LibraryDbDocumentBlockTypeResponse(BaseModel):
-    type_id: int
-    parent_type_id: Optional[int]
-    row: int
-    process_fixed_row: Optional[int] = None
-    allow_copies: bool
-    text_id: str
-    library_name: str
-    process_name: str
-    labels: List[str] = Field(default_factory=list)
-    db_column_names: List[str] = Field(default_factory=list)
-    foreign_keys: List[str] = Field(default_factory=list)
-    is_simulation: bool
-    is_geometry: bool
-    is_die_assembly: bool
-    is_custom_die_assembly: bool
-    is_press: bool
-    is_feed: bool
-    is_top_die: bool
-    is_bottom_die: bool
-    is_speed: bool
-    is_billet_category: bool
-    is_heating_category: bool
-    is_forming_category: bool
-    is_forming_operation: bool
-    is_surface_treatment_operation: bool
-    deformation_type: Optional[str] = None
-    speed_column_name: Optional[str] = None
-    trigger: Optional[str] = None
-    is_initialize: bool
-    is_accumulate: bool
-    is_keep: bool
-    is_obsolete: bool
-    has_children: bool
-    insertable: bool
+class OperationTemplateFieldResponse(BaseModel):
+    path: str
+    type: str = "string"
+    label: str
+    unit: Optional[str] = None
+    default: Any = None
+    options: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class OperationTemplateResponse(BaseModel):
+    id: str
+    version: int
+    label: str
+    display_name: str
+    category: str
+    operation_kind: str
+    compiler_handler: str
+    insertable: bool = True
+    materialize: bool = True
+    target_schema: List[OperationTemplateFieldResponse] = Field(default_factory=list)
 
 
 class LibraryDbDieTypeResponse(BaseModel):

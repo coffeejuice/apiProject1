@@ -10,6 +10,7 @@ from app.models.document.document import (
     Status,
 )
 from app.models.document.block import Block, BlockType, IngotSide, FeedDirection, DeformationType
+from app.models.document.document_operation import DocumentOperation
 
 __all__ = [
     "Document",
@@ -22,6 +23,7 @@ __all__ = [
     "ShareLink",
     "Role",
     "Block",
+    "DocumentOperation",
     "BlockType",
     "IngotSide",
     "FeedDirection",

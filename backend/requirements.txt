@@ -25,6 +25,7 @@ python-dotenv
 requests
 smbprotocol
 shapely
+PyYAML
 types-requests
 mypy
 types-PyYAML

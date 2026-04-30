@@ -230,7 +230,7 @@ class GeometryBuilder:
         return tuple(sorted(GEOMETRY_TYPES))
 
     def get_labels(self, type_id: int) -> tuple[str, ...]:
-        """Return the legacy label order for one billet geometry type."""
+        """Return the parameter label order for one billet geometry type."""
 
         definition = GEOMETRY_TYPES.get(type_id)
         if definition is None:

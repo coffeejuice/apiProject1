@@ -11,6 +11,15 @@ from .geometry import (
     outline_perimeter_mm,
     scale_generated_geometry,
 )
+from .operation_keys import (
+    UPSETTING_LENGTH_TARGET_TEMPLATE_IDS,
+    UPSETTING_ROTATION_HEIGHT,
+    UPSETTING_SINGLE_STROKE,
+    UPSETTING_TAIL_CHAMFERING,
+    UPSETTING_TAIL_FLATTENING,
+    UPSETTING_TEMPLATE_IDS,
+    UPSETTING_THREE_STROKES,
+)
 
 
 class UpsettingMathError(ValueError):
@@ -87,14 +96,13 @@ class UpsettingComputationResult:
 
 def calculate_upsetting(
     *,
-    type_id: int,
+    template_id: str,
     initial_geometry: GeneratedGeometry,
     press_mode: PressModeParameters,
     top_die: DieDimensions,
     bottom_die: DieDimensions,
     speed_mm_per_s: float,
     previous_total_time_seconds: float,
-    previous_type_id: int | None,
     time_between_operation_seconds: float | None,
     angle_deg: float = 0.0,
     final_length_input_mm: float | None = None,
@@ -106,8 +114,8 @@ def calculate_upsetting(
 ) -> UpsettingComputationResult:
     """Compute upsetting deformation, geometry, and timing outputs."""
 
-    if type_id not in {91, 92, 93, 94, 100}:
-        raise UpsettingMathError(f"Unsupported upsetting type_id={type_id}")
+    if template_id not in UPSETTING_TEMPLATE_IDS:
+        raise UpsettingMathError(f"Unsupported upsetting template_id={template_id}")
     if speed_mm_per_s <= 0.0:
         raise UpsettingMathError(f"Working speed must be positive, got {speed_mm_per_s}")
 
@@ -117,14 +125,14 @@ def calculate_upsetting(
     initial_width = initial_geometry.width_mm
     initial_height = initial_geometry.height_mm
 
-    if type_id in {91, 93, 94}:
+    if template_id in UPSETTING_LENGTH_TARGET_TEMPLATE_IDS:
         if final_length_input_mm is None:
-            raise UpsettingMathError("Upsetting types 91/93/94 require final_length_input_mm")
+            raise UpsettingMathError("Length-target upsetting requires final_length_input_mm")
         final_length = min(initial_length, float(final_length_input_mm))
         penetration = max(0.0, initial_length - final_length)
-    elif type_id == 92:
+    elif template_id == UPSETTING_TAIL_FLATTENING:
         if stroke_mm is None:
-            raise UpsettingMathError("Tail flattening type 92 requires stroke_mm")
+            raise UpsettingMathError("Tail flattening requires stroke_mm")
         penetration = max(0.0, float(stroke_mm))
         final_length = max(0.0, initial_length - penetration)
     else:
@@ -150,13 +158,13 @@ def calculate_upsetting(
     )
 
     feed_first_mm, feed_middle_mm, feed_last_mm = _upsetting_feeds(
-        type_id=type_id,
+        template_id=template_id,
         billet_width_mm=initial_height,
         top_die=top_die,
         bottom_die=bottom_die,
     )
     num_of_bites = _num_of_bites(
-        type_id=type_id,
+        template_id=template_id,
         billet_width_mm=initial_height,
         feed_first_mm=feed_first_mm,
         feed_middle_mm=feed_middle_mm,
@@ -164,7 +172,7 @@ def calculate_upsetting(
 
     initial_width_of_contact_mm = initial_width
     initial_length_of_contact_mm = _initial_length_of_contact(
-        type_id=type_id,
+        template_id=template_id,
         billet_width_mm=initial_height,
         penetration_mm=penetration,
         feed_first_mm=feed_first_mm,
@@ -190,7 +198,7 @@ def calculate_upsetting(
     )
 
     final_length_of_contact_mm = _final_length_of_contact(
-        type_id=type_id,
+        template_id=template_id,
         billet_width_mm=initial_height,
         penetration_mm=penetration,
         initial_length_of_contact_mm=initial_length_of_contact_mm,
@@ -202,17 +210,17 @@ def calculate_upsetting(
     actual_speed_mm_per_s = min(speed_mm_per_s, press_mode.working_speed_mm_per_s)
 
     open_die_height_max_before_working_stroke_mm = _open_die_height_max_before_working_stroke(
-        type_id=type_id,
+        template_id=template_id,
         initial_length_mm=initial_length,
         projections=operation_specific_parameters.get("projections"),
     )
     open_die_height_min_after_working_stroke_mm = _open_die_height_min_after_working_stroke(
-        type_id=type_id,
+        template_id=template_id,
         final_length_mm=final_length,
         projections=operation_specific_parameters.get("projections"),
     )
     working_stroke_mm = _working_stroke(
-        type_id=type_id,
+        template_id=template_id,
         penetration_mm=penetration,
         projections=operation_specific_parameters.get("projections"),
     )
@@ -361,7 +369,7 @@ def _actual_working_length_of_dies(
 
 def _upsetting_feeds(
     *,
-    type_id: int,
+    template_id: str,
     billet_width_mm: float,
     top_die: DieDimensions,
     bottom_die: DieDimensions,
@@ -370,72 +378,72 @@ def _upsetting_feeds(
     half_die_length = 0.5 * min_die_working_length
     first_feed_till_billet_center = 0.5 * billet_width_mm + 0.5 * min_die_working_length
 
-    if type_id == 93:
+    if template_id == UPSETTING_SINGLE_STROKE:
         return (first_feed_till_billet_center, 0.0, 0.0)
-    if type_id == 91:
+    if template_id == UPSETTING_ROTATION_HEIGHT:
         if billet_width_mm >= min_die_working_length:
             return (first_feed_till_billet_center, half_die_length, min_die_working_length)
         return (first_feed_till_billet_center, 0.0, 0.0)
-    if type_id == 94:
+    if template_id == UPSETTING_THREE_STROKES:
         return (first_feed_till_billet_center, half_die_length, min_die_working_length)
-    if type_id == 92:
+    if template_id == UPSETTING_TAIL_FLATTENING:
         average_feed = 200.0
         average_num_of_bites = billet_width_mm / average_feed
         num_of_bites = max(2, round(average_num_of_bites))
         feed = billet_width_mm / num_of_bites
         return (feed, 0.0, 0.0)
-    if type_id == 100:
+    if template_id == UPSETTING_TAIL_CHAMFERING:
         if billet_width_mm >= min_die_working_length:
             return (first_feed_till_billet_center, half_die_length, min_die_working_length)
         return (first_feed_till_billet_center, 0.0, 0.0)
-    raise UpsettingMathError(f"Unsupported upsetting type_id={type_id}")
+    raise UpsettingMathError(f"Unsupported upsetting template_id={template_id}")
 
 
 def _num_of_bites(
     *,
-    type_id: int,
+    template_id: str,
     billet_width_mm: float,
     feed_first_mm: float,
     feed_middle_mm: float,
 ) -> int:
-    if type_id == 93:
+    if template_id == UPSETTING_SINGLE_STROKE:
         return 1
-    if type_id == 91:
+    if template_id == UPSETTING_ROTATION_HEIGHT:
         return 3 if feed_middle_mm > 0.0 else 1
-    if type_id == 94:
+    if template_id == UPSETTING_THREE_STROKES:
         return 3
-    if type_id == 92:
+    if template_id == UPSETTING_TAIL_FLATTENING:
         return max(1, round(billet_width_mm / feed_first_mm))
-    if type_id == 100:
+    if template_id == UPSETTING_TAIL_CHAMFERING:
         return 8 if feed_middle_mm > 0.0 else 4
-    raise UpsettingMathError(f"Unsupported upsetting type_id={type_id}")
+    raise UpsettingMathError(f"Unsupported upsetting template_id={template_id}")
 
 
 def _initial_length_of_contact(
     *,
-    type_id: int,
+    template_id: str,
     billet_width_mm: float,
     penetration_mm: float,
     feed_first_mm: float,
     top_die: DieDimensions,
     bottom_die: DieDimensions,
 ) -> float:
-    if type_id in {91, 93, 94}:
+    if template_id in UPSETTING_LENGTH_TARGET_TEMPLATE_IDS:
         return min(_die_straight_length(top_die, bottom_die), billet_width_mm)
-    if type_id == 92:
+    if template_id == UPSETTING_TAIL_FLATTENING:
         radius, _ = _edge_radius_of_shortest_die(top_die, bottom_die)
         half_penetration = penetration_mm / 2.0
         radius_y = half_penetration / 2.0
         radius_x = radius if radius_y >= radius else math.sqrt(radius_y * (2.0 * radius - radius_y))
         return feed_first_mm - radius_x
-    if type_id == 100:
+    if template_id == UPSETTING_TAIL_CHAMFERING:
         return 1.0
-    raise UpsettingMathError(f"Unsupported upsetting type_id={type_id}")
+    raise UpsettingMathError(f"Unsupported upsetting template_id={template_id}")
 
 
 def _final_length_of_contact(
     *,
-    type_id: int,
+    template_id: str,
     billet_width_mm: float,
     penetration_mm: float,
     initial_length_of_contact_mm: float,
@@ -443,9 +451,9 @@ def _final_length_of_contact(
     bottom_die: DieDimensions,
 ) -> float:
     one_side_penetration = penetration_mm / 2.0
-    if type_id in {91, 93, 94}:
+    if template_id in UPSETTING_LENGTH_TARGET_TEMPLATE_IDS:
         return min(_actual_working_length_of_dies(one_side_penetration, top_die, bottom_die), billet_width_mm)
-    if type_id == 92:
+    if template_id == UPSETTING_TAIL_FLATTENING:
         radius, _ = _edge_radius_of_shortest_die(top_die, bottom_die)
         radius_impression_length = (
             radius
@@ -453,9 +461,9 @@ def _final_length_of_contact(
             else math.sqrt(one_side_penetration * (2.0 * radius - one_side_penetration))
         )
         return initial_length_of_contact_mm + radius_impression_length
-    if type_id == 100:
+    if template_id == UPSETTING_TAIL_CHAMFERING:
         return 1.0
-    raise UpsettingMathError(f"Unsupported upsetting type_id={type_id}")
+    raise UpsettingMathError(f"Unsupported upsetting template_id={template_id}")
 
 
 def _strain_length_based_on_contact_shape(
@@ -532,11 +540,11 @@ def _tail_chamfering_projections(
 
 def _open_die_height_max_before_working_stroke(
     *,
-    type_id: int,
+    template_id: str,
     initial_length_mm: float,
     projections: dict[str, dict[str, float]] | None,
 ) -> float:
-    if type_id == 100 and projections is not None:
+    if template_id == UPSETTING_TAIL_CHAMFERING and projections is not None:
         return max(
             projections["height_to_length_projection"]["initial_billet_vertical_projection"],
             projections["width_to_length_projection"]["initial_billet_vertical_projection"],
@@ -546,11 +554,11 @@ def _open_die_height_max_before_working_stroke(
 
 def _open_die_height_min_after_working_stroke(
     *,
-    type_id: int,
+    template_id: str,
     final_length_mm: float,
     projections: dict[str, dict[str, float]] | None,
 ) -> float:
-    if type_id == 100 and projections is not None:
+    if template_id == UPSETTING_TAIL_CHAMFERING and projections is not None:
         return min(
             projections["height_to_length_projection"]["final_billet_vertical_projection"],
             projections["width_to_length_projection"]["final_billet_vertical_projection"],
@@ -560,11 +568,11 @@ def _open_die_height_min_after_working_stroke(
 
 def _working_stroke(
     *,
-    type_id: int,
+    template_id: str,
     penetration_mm: float,
     projections: dict[str, dict[str, float]] | None,
 ) -> float:
-    if type_id == 100 and projections is not None:
+    if template_id == UPSETTING_TAIL_CHAMFERING and projections is not None:
         penetration_1 = 2.0 * projections["height_to_length_projection"]["chamfer_vertical_projection"]
         penetration_2 = 2.0 * projections["width_to_length_projection"]["chamfer_vertical_projection"]
         return (penetration_1 + penetration_2) / 2.0

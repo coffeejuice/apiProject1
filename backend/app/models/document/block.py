@@ -14,8 +14,11 @@ if TYPE_CHECKING:
 
 
 class BlockType(enum.Enum):
-    document_heading = "document_heading"
-    input_workpiece = "input_workpiece"
+    document = "document"
+    heating = "heating"
+    deformation = "deformation"
+    furnace = "furnace"
+    operation = "operation"
 
 
 class DeformationType(enum.Enum):

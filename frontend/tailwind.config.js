@@ -31,6 +31,37 @@ const flatterShadows = {
   none: 'none',
 }
 
+const multilingualSans = [
+  'Noto Sans',
+  'Noto Sans CJK SC',
+  'Noto Sans SC',
+  'Noto Sans CJK TC',
+  'Noto Sans TC',
+  'Noto Sans CJK JP',
+  'Noto Sans JP',
+  'Noto Sans CJK KR',
+  'Noto Sans KR',
+  'Noto Sans Arabic',
+  'Noto Naskh Arabic',
+  'Noto Sans Hebrew',
+  'Noto Sans Devanagari',
+  'Noto Sans Thai',
+  'Noto Sans Armenian',
+  'Noto Sans Georgian',
+  'Noto Color Emoji',
+  'Segoe UI',
+  'Microsoft YaHei',
+  'PingFang SC',
+  'Hiragino Sans',
+  'Meiryo',
+  'Yu Gothic',
+  'Malgun Gothic',
+  'Apple SD Gothic Neo',
+  'Arial Unicode MS',
+  'Arial',
+  'sans-serif',
+]
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -40,7 +71,7 @@ export default {
   theme: {
     fontFamily: {
       ...defaultTheme.fontFamily,
-      sans: ['Open Sans', 'Segoe UI', 'Tahoma', 'sans-serif'],
+      sans: multilingualSans,
     },
     fontSize: compactFontScale,
     fontWeight: {

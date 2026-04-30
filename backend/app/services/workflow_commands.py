@@ -10,12 +10,13 @@ from typing import Iterable
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models.document.block import Block
+from app.models.document.document_operation import DocumentOperation
 from app.models.document.document import Document, DocumentVersion, PreprocessStatus, SimulationStatus
 from app.models.user import User, UserPriority
 from app.orchestration.channels import PRE_JOBS_CHANNEL, WORKFLOW_EVENTS_CHANNEL
 from app.orchestration.pg_notify import broadcast_notify
 from app.services.block_service import create_block, get_ordered_blocks
+from app.services.document_operations import regenerate_document_operations
 from app.services.files.paths import generate_project_dir_name
 
 
@@ -70,16 +71,13 @@ def get_document_version_or_none(db: Session, document_version_id: int) -> Docum
 
 
 def count_document_operations(db: Session, document_id: int) -> int:
-    """Count user-editable operation blocks for workflow summaries."""
+    """Count materialized technological operations for workflow summaries."""
 
     return int(
         db.execute(
             select(func.count())
-            .select_from(Block)
-            .filter(
-                Block.document_id == document_id,
-                Block.is_system.is_(False),
-            )
+            .select_from(DocumentOperation)
+            .filter(DocumentOperation.document_id == document_id)
         ).scalar()
         or 0
     )
@@ -405,6 +403,7 @@ def fork_fixed_document(
         )
         previous_new_id = created.block_id
 
+    regenerate_document_operations(db, forked.document_id)
     create_initial_working_version(
         db,
         forked,

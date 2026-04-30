@@ -8,12 +8,14 @@ interface ClipboardPaneProps {
 }
 
 function getOperationLibraryName(block: BlockData): string | null {
-  const operationType = block.props?.operation_type
-  if (!operationType || typeof operationType !== 'object') {
-    return null
+  const template = block.props?.operation_template || block.props?.template_snapshot
+  if (template && typeof template === 'object') {
+    const label = (template as { label?: unknown }).label
+    if (typeof label === 'string' && label.trim()) {
+      return label
+    }
   }
-  const libraryName = (operationType as { library_name?: unknown }).library_name
-  return typeof libraryName === 'string' && libraryName.trim() ? libraryName : null
+  return null
 }
 
 function getClipboardBlockName(block: BlockData): string {
@@ -97,7 +99,7 @@ export default function ClipboardPane({ onPasteClip }: ClipboardPaneProps) {
 
       {!hasClips ? (
         <div className="ui-card ui-card-body text-sm text-gray-500">
-          Copy or cut blocks from VisualEditor to create clipboard entries.
+          Copy or cut selected document blocks to create clipboard entries.
         </div>
       ) : (
         <div className="space-y-2">

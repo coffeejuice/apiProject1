@@ -1,19 +1,23 @@
-import { DragEvent, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useDocumentsStore } from '../stores/useDocumentsStore'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useBlockClipboardStore } from '../stores/useBlockClipboardStore'
-import { apiClient } from '../lib/apiClient'
 import Tooltip from './ui/Tooltip'
 import ClipboardPane from './clipboard/ClipboardPane'
 import type { ToolView } from './ToolsSwitcher'
 import type { LibraryEditorView } from './editorPaneTypes'
-import type { OperationBlockTypeRecord } from '../types/api'
+import type { BlockEditorMeta } from './BlockEditor'
 
 interface ToolsPaneProps {
   activeView: ToolView | null
   libraryView: LibraryEditorView
   onLibraryViewChange: (view: LibraryEditorView) => void
-  onInsertBlockType: (blockTypeId: string) => void
+  editorMeta: BlockEditorMeta
+  onCopySelectedBlockToClipboard: () => void
+  onCutSelectedBlockToClipboard: () => void
+  onRemoveSelectedBlock: () => void
+  onPasteAfterSelectedBlock: () => void
+  onClearSelectedBlocks: () => void
   onPasteClipboardClip: (clipId?: string) => void
 }
 
@@ -72,6 +76,138 @@ function LibraryMaterialsIcon({ className }: { className?: string }) {
   )
 }
 
+function CopyIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <rect x="7" y="6" width="8" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M5 13.5H4.5A1.5 1.5 0 0 1 3 12V4.5A1.5 1.5 0 0 1 4.5 3H11a1.5 1.5 0 0 1 1.5 1.5V5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+function NewDocumentIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M5 3.5h6.25L15 7.25V16a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 5 16V3.5Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path d="M11 3.75V7.5h3.75M7.75 12h4.5M10 9.75v4.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function CutIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path d="M4 4l12 12M16 4L4 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="5" cy="15" r="2" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="15" cy="15" r="2" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  )
+}
+
+function RemoveIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path d="M4 6h12M8 6V4h4v2M6.5 6.5l.75 9h5.5l.75-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function PasteAfterIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path d="M7 4h6l1.5 2v9.5A1.5 1.5 0 0 1 13 17H7a1.5 1.5 0 0 1-1.5-1.5v-10A1.5 1.5 0 0 1 7 4Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M8 10h4M10 8v4M14.5 6H12V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function ClearSelectionIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <rect x="4" y="4" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 2" />
+      <path d="M7 7l6 6M13 7l-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function DocumentActionIconButton({
+  label,
+  onClick,
+  disabled,
+  variant = 'default',
+  Icon,
+}: {
+  label: string
+  onClick: () => void
+  disabled: boolean
+  variant?: 'default' | 'primary' | 'danger'
+  Icon: ({ className }: { className?: string }) => React.ReactNode
+}) {
+  const className = variant === 'primary'
+    ? 'ui-btn-primary h-9 w-9 shrink-0 p-0'
+    : variant === 'danger'
+      ? 'ui-btn-danger h-9 w-9 shrink-0 p-0'
+      : 'ui-btn h-9 w-9 shrink-0 p-0'
+
+  return (
+    <Tooltip content={label}>
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        className={className}
+        aria-label={label}
+      >
+        <Icon className="h-6 w-6" />
+      </button>
+    </Tooltip>
+  )
+}
+
+function ActionIconButton({
+  label,
+  onClick,
+  disabled,
+  variant = 'default',
+  Icon,
+}: {
+  label: string
+  onClick: () => void
+  disabled: boolean
+  variant?: 'default' | 'primary' | 'danger'
+  Icon: ({ className }: { className?: string }) => React.ReactNode
+}) {
+  const className = variant === 'primary'
+    ? 'ui-btn-primary h-7 w-7 p-0'
+    : variant === 'danger'
+      ? 'ui-btn-danger h-7 w-7 p-0'
+      : 'ui-btn h-7 w-7 p-0'
+
+  return (
+    <Tooltip content={label}>
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        className={className}
+        aria-label={label}
+      >
+        <Icon className="h-4 w-4" />
+      </button>
+    </Tooltip>
+  )
+}
+
 const LIBRARY_VIEW_ITEMS: Array<{
   id: LibraryEditorView
   label: string
@@ -87,7 +223,12 @@ export default function ToolsPane({
   activeView,
   libraryView,
   onLibraryViewChange,
-  onInsertBlockType,
+  editorMeta,
+  onCopySelectedBlockToClipboard,
+  onCutSelectedBlockToClipboard,
+  onRemoveSelectedBlock,
+  onPasteAfterSelectedBlock,
+  onClearSelectedBlocks,
   onPasteClipboardClip,
 }: ToolsPaneProps) {
   const [projectsFilter, setProjectsFilter] = useState('')
@@ -99,19 +240,18 @@ export default function ToolsPane({
   const [newDocName, setNewDocName] = useState('')
   const [copySourceDocId, setCopySourceDocId] = useState('')
   const [copyName, setCopyName] = useState('')
-  const [blocksFilter, setBlocksFilter] = useState('')
-  const [operationTypes, setOperationTypes] = useState<OperationBlockTypeRecord[]>([])
-  const [operationTypesLoading, setOperationTypesLoading] = useState(false)
-  const [operationTypesError, setOperationTypesError] = useState<string | null>(null)
   const [isCreatingProject, setIsCreatingProject] = useState(false)
   const [isCreatingDocument, setIsCreatingDocument] = useState(false)
   const [isCopyingDocument, setIsCopyingDocument] = useState(false)
+  const [isDeletingProject, setIsDeletingProject] = useState(false)
+  const [isDeletingDocuments, setIsDeletingDocuments] = useState(false)
 
   const {
     projects,
     currentProjectId,
     setCurrentProject,
     createProject,
+    deleteProject,
     documents,
     currentDocId,
     setCurrentDoc,
@@ -120,6 +260,7 @@ export default function ToolsPane({
     toggleDocSelection,
     createDocument,
     copyDocument,
+    deleteMultipleDocuments,
     isLoading,
   } = useDocumentsStore()
 
@@ -127,6 +268,9 @@ export default function ToolsPane({
   const activeBlocksPaneTab = useBlockClipboardStore((state) => state.activePaneTab)
   const setActiveBlocksPaneTab = useBlockClipboardStore((state) => state.setActivePaneTab)
   const clipboardClipsCount = useBlockClipboardStore((state) => state.clips.length)
+  const activeClipboardClip = useBlockClipboardStore((state) =>
+    state.clips.find((clip) => clip.id === state.activeClipId) ?? null
+  )
 
   const filteredProjects = useMemo(() => {
     const needle = projectsFilter.trim().toLowerCase()
@@ -145,61 +289,6 @@ export default function ToolsPane({
   }, [documents, documentsFilter])
 
   const selectedDocumentIds = useMemo(() => Array.from(selectedDocIds), [selectedDocIds])
-
-  const filteredOperationTypes = useMemo(() => {
-    const needle = blocksFilter.trim().toLowerCase()
-    if (!needle) {
-      return operationTypes
-    }
-    return operationTypes.filter((entry) => {
-      const haystack = [
-        String(entry.type_id),
-        entry.library_name,
-        entry.process_name,
-        entry.text_id,
-        ...entry.db_column_names,
-      ].join(' ').toLowerCase()
-      return haystack.includes(needle)
-    })
-  }, [blocksFilter, operationTypes])
-
-  useEffect(() => {
-    if (activeView !== 'blocks') {
-      return
-    }
-
-    let isActive = true
-    setOperationTypesLoading(true)
-    setOperationTypesError(null)
-
-    const loadOperationTypes = async () => {
-      const response = await apiClient.get<OperationBlockTypeRecord[]>(
-        '/library/db/document-block-types',
-        {
-          params: {
-            insertable_only: true,
-          },
-        }
-      )
-
-      if (!isActive) {
-        return
-      }
-
-      if (response.ok && response.data) {
-        setOperationTypes(response.data)
-      } else {
-        setOperationTypesError(response.errorMessage || 'Failed to load operation block types')
-      }
-      setOperationTypesLoading(false)
-    }
-
-    void loadOperationTypes()
-
-    return () => {
-      isActive = false
-    }
-  }, [activeView])
 
   useEffect(() => {
     if (activeView === 'documents') {
@@ -248,6 +337,24 @@ export default function ToolsPane({
     }
   }
 
+  const deleteCurrentProject = async () => {
+    if (!currentProjectId) {
+      return
+    }
+    const project = projects.find((entry) => entry.id === currentProjectId)
+    const projectName = project?.name ? ` "${project.name}"` : ''
+    if (!window.confirm(`Remove selected project${projectName}?`)) {
+      return
+    }
+
+    setIsDeletingProject(true)
+    try {
+      await deleteProject(currentProjectId)
+    } finally {
+      setIsDeletingProject(false)
+    }
+  }
+
   const copyDocumentFromModal = async (event: React.FormEvent) => {
     event.preventDefault()
     if (!copySourceDocId) {
@@ -264,10 +371,23 @@ export default function ToolsPane({
     }
   }
 
-  const handleBlockDragStart = (event: DragEvent<HTMLElement>, blockTypeId: string) => {
-    event.dataTransfer.setData('application/x-forgelab-block-type', blockTypeId)
-    event.dataTransfer.setData('text/plain', blockTypeId)
-    event.dataTransfer.effectAllowed = 'copy'
+  const deleteSelectedDocuments = async () => {
+    if (selectedDocumentIds.length === 0) {
+      return
+    }
+    const message = selectedDocumentIds.length === 1
+      ? 'Remove selected document?'
+      : `Remove ${selectedDocumentIds.length} selected documents?`
+    if (!window.confirm(message)) {
+      return
+    }
+
+    setIsDeletingDocuments(true)
+    try {
+      await deleteMultipleDocuments(selectedDocumentIds)
+    } finally {
+      setIsDeletingDocuments(false)
+    }
   }
 
   if (!activeView) {
@@ -279,6 +399,14 @@ export default function ToolsPane({
   }
 
   const paneWidthClass = activeView === 'library' ? 'w-16 shrink-0' : 'w-80 shrink-0'
+  const selectedBlockCount = editorMeta.selectedDocumentBlockIds.length
+  const hasSingleSelectedBlock = selectedBlockCount === 1
+  const hasActiveFallbackBlock = selectedBlockCount === 0 && Boolean(editorMeta.activeDocumentBlockId)
+  const canUseActiveSingleBlock = hasSingleSelectedBlock || hasActiveFallbackBlock
+  const selectedBlockLabel =
+    editorMeta.selectedDocumentBlockLabel || editorMeta.activeDocumentBlockLabel || 'Selected block'
+  const selectionActionDisabled = editorMeta.structureEditDisabled || !hasSingleSelectedBlock
+  const singleBlockActionDisabled = editorMeta.structureEditDisabled || !canUseActiveSingleBlock
 
   return (
     <aside className={`ui-pane ${paneWidthClass}`}>
@@ -295,7 +423,7 @@ export default function ToolsPane({
 
       {activeView === 'projects' && (
         <div className="ui-pane-body">
-          <div className="flex gap-2">
+          <div className="flex items-center gap-1.5">
             <input
               type="text"
               value={projectsFilter}
@@ -303,13 +431,20 @@ export default function ToolsPane({
               placeholder="Filter projects..."
               className="ui-input flex-1"
             />
-            <button
-              type="button"
+            <DocumentActionIconButton
+              label="New project"
               onClick={() => setShowProjectModal(true)}
-              className="ui-btn"
-            >
-              Create new
-            </button>
+              disabled={false}
+              variant="primary"
+              Icon={NewDocumentIcon}
+            />
+            <DocumentActionIconButton
+              label="Remove selected project"
+              onClick={() => void deleteCurrentProject()}
+              disabled={!currentProjectId || isDeletingProject}
+              variant="danger"
+              Icon={RemoveIcon}
+            />
           </div>
 
           <div className="space-y-2">
@@ -342,7 +477,7 @@ export default function ToolsPane({
             <span className="font-medium text-gray-700">{currentProjectId || 'None selected'}</span>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex items-center gap-1.5">
             <input
               type="text"
               value={documentsFilter}
@@ -351,25 +486,26 @@ export default function ToolsPane({
               className="ui-input flex-1"
               disabled={!currentProjectId}
             />
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              type="button"
+            <DocumentActionIconButton
+              label="New document"
               onClick={() => setShowNewDocModal(true)}
               disabled={!currentProjectId}
-              className="ui-btn-primary flex-1"
-            >
-              New
-            </button>
-            <button
-              type="button"
+              variant="primary"
+              Icon={NewDocumentIcon}
+            />
+            <DocumentActionIconButton
+              label="Copy selected document"
               onClick={openCopyModal}
               disabled={!currentProjectId || selectedDocIds.size !== 1}
-              className="ui-btn-secondary flex-1"
-            >
-              Copy
-            </button>
+              Icon={CopyIcon}
+            />
+            <DocumentActionIconButton
+              label={selectedDocIds.size <= 1 ? 'Remove selected document' : 'Remove selected documents'}
+              onClick={() => void deleteSelectedDocuments()}
+              disabled={!currentProjectId || selectedDocIds.size === 0 || isDeletingDocuments}
+              variant="danger"
+              Icon={RemoveIcon}
+            />
           </div>
 
           <div className="text-xs text-gray-500">
@@ -410,13 +546,13 @@ export default function ToolsPane({
 
       {activeView === 'blocks' && (
         <div className="ui-pane-body">
-          <div className="grid grid-cols-2 gap-1 rounded border border-gray-200 bg-gray-50 p-1">
+          <div className="grid grid-cols-2 gap-1 rounded border border-[rgba(55,53,47,0.09)] bg-[rgba(242,241,238,0.55)] p-1">
             <button
               type="button"
-              onClick={() => setActiveBlocksPaneTab('catalog')}
-              className={activeBlocksPaneTab === 'catalog' ? 'ui-btn-primary' : 'ui-btn'}
+              onClick={() => setActiveBlocksPaneTab('actions')}
+              className={activeBlocksPaneTab === 'actions' ? 'ui-btn-primary' : 'ui-btn'}
             >
-              Catalog
+              Actions
             </button>
             <button
               type="button"
@@ -427,72 +563,54 @@ export default function ToolsPane({
             </button>
           </div>
 
-          {activeBlocksPaneTab === 'catalog' ? (
-            <>
-              <div className="text-xs text-gray-500">
-                Drag an operation card into BlockEditor, or double-click it to insert.
+          {activeBlocksPaneTab === 'actions' ? (
+            <div className="ui-card ui-card-body space-y-1.5 p-2">
+              <div className="flex min-w-0 items-center gap-1">
+                <span className="ui-badge shrink-0 px-1.5 py-0.5 text-[10px]">S:{selectedBlockCount}</span>
+                <span className="ui-badge shrink-0 px-1.5 py-0.5 text-[10px]">
+                  C:{activeClipboardClip?.blocks.length ?? 0}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-xs font-medium text-gray-800">
+                  {canUseActiveSingleBlock ? selectedBlockLabel : '-'}
+                </span>
               </div>
 
-              <input
-                type="text"
-                value={blocksFilter}
-                onChange={(event) => setBlocksFilter(event.target.value)}
-                placeholder="Filter operations..."
-                className="ui-input"
-              />
-
-              {operationTypesError && (
-                <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-2 py-1">
-                  {operationTypesError}
-                </div>
-              )}
-
-              {operationTypesLoading && operationTypes.length === 0 ? (
-                <div className="text-sm text-gray-500">Loading operation types...</div>
-              ) : null}
-
-              {!operationTypesLoading && filteredOperationTypes.length === 0 ? (
-                <div className="text-sm text-gray-500">No operation types found.</div>
-              ) : null}
-
-              <div className="space-y-2">
-                {filteredOperationTypes.map((entry) => {
-                  const blockTypeId = String(entry.type_id)
-                  const columnSummary = entry.db_column_names.length > 0
-                    ? entry.db_column_names.join(', ')
-                    : 'no fields'
-
-                  return (
-                    <Tooltip key={entry.type_id} content={`Drag or double-click ${entry.library_name}`}>
-                      <div
-                        draggable
-                        role="button"
-                        tabIndex={0}
-                        onDragStart={(event) => handleBlockDragStart(event, blockTypeId)}
-                        onDoubleClick={() => onInsertBlockType(blockTypeId)}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter') {
-                            onInsertBlockType(blockTypeId)
-                          }
-                        }}
-                        className="ui-card ui-card-body flex cursor-grab items-center gap-2 active:cursor-grabbing hover:border-blue-300 hover:bg-blue-50/30"
-                        aria-label={`Drag or double-click ${entry.library_name}`}
-                      >
-                        <div className="ui-btn pointer-events-none w-10 h-10 p-0 font-semibold">
-                          OP
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium truncate">{entry.library_name}</div>
-                          <div className="text-xs text-gray-500 truncate">
-                            #{entry.type_id} | {columnSummary}
-                          </div>
-                        </div>
-                      </div>
-                    </Tooltip>
-                  )
-                })}
+              <div className="flex items-center gap-1">
+                <ActionIconButton
+                  label="Copy selected block"
+                  onClick={onCopySelectedBlockToClipboard}
+                  disabled={selectionActionDisabled}
+                  Icon={CopyIcon}
+                />
+                <ActionIconButton
+                  label="Cut selected block"
+                  onClick={onCutSelectedBlockToClipboard}
+                  disabled={singleBlockActionDisabled}
+                  variant="danger"
+                  Icon={CutIcon}
+                />
+                <ActionIconButton
+                  label="Remove selected block"
+                  onClick={onRemoveSelectedBlock}
+                  disabled={singleBlockActionDisabled}
+                  variant="danger"
+                  Icon={RemoveIcon}
+                />
+                <ActionIconButton
+                  label="Paste after selected block"
+                  onClick={onPasteAfterSelectedBlock}
+                  disabled={selectionActionDisabled || !activeClipboardClip}
+                  variant="primary"
+                  Icon={PasteAfterIcon}
+                />
+                <ActionIconButton
+                  label="Clear selection"
+                  onClick={onClearSelectedBlocks}
+                  disabled={selectedBlockCount === 0}
+                  Icon={ClearSelectionIcon}
+                />
               </div>
-            </>
+            </div>
           ) : (
             <ClipboardPane onPasteClip={onPasteClipboardClip} />
           )}

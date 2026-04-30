@@ -14,6 +14,33 @@ Configuration/setup details (including `.env` editing during install) are tracke
 - Documents are project-scoped (`documents.project_id` is required).
 - Block ordering is linked-list based (no `order_key`, no block tree).
 
+## Current semantic block model (updated 2026-04-29)
+- Active block types are:
+  - `document`: fixed root/canvas block, first in the linked list, non-removable.
+  - `heating`: removable second-level section/container for furnace operations.
+  - `deformation`: removable second-level section; a document must keep at least one.
+  - `furnace`: property-only child block under a `heating`; multiple furnaces are allowed in one heating section.
+  - `operation`: property-only child block under a `deformation`; each deformation must keep at least one operation.
+- New documents auto-create `document`, then `deformation`, then the first `operation`.
+- Creating a `heating` section auto-creates one initial `furnace` child.
+- `document_heading`, `input_workpiece`, and numeric editor block IDs are obsolete in active code. Historical sections below that mention them are superseded by this section.
+- There is no active runtime block-library table for the editor. Operation templates and text parsing rules are defined in `backend/app/domain/operation_block_design_and_parsing_rules.yaml`, and templates are exposed by `GET /operation-templates`.
+- `operation_block_design_and_parsing_rules.yaml` also defines the single-level operation type selector and the common parameters-calculation-mode selector at `target.parameters_calculation_mode`.
+- Placeholder dynamic block schema files live in `backend/app/domain/block_schemas/` for the future YAML-driven definitions of `document`, `heating`, `deformation`, `furnace`, and `operation`; these are not active loaders yet.
+- Creating an operation block uses `block_type_id = "operation"` and passes `props.operation_template_id`; backend expands defaults from YAML.
+- Dynamic operation variables use nested JSON under `document_blocks.props.operation_properties.target`, for example `target.rotation` is stored as `{ "operation_properties": { "target": { "rotation": "..." } } }`.
+- `deformation_properties.deformation_variables` stores inherited parser variables used by child Operation blocks: `tail_chamfering_stroke`, `tail_flattening_stroke`, and `radial_feed`.
+- `operation_properties.operation_text` is an optional multiline operation source for non-rounding Operation types. Line breaks, tabs, and repeated spaces are visual only; the parser normalizes them to spaces and splits operations only by right-arrow separators, autoformatted to `→` in the frontend. Parser-backed selector entries include `operation.upsetting`, `operation.tail_flattening`, `operation.tail_chamfering`, `operation.cogging`, `operation.radial`, `operation.transversal`, and `operation.cut`; cutting currently emits parse errors until concrete formats are defined.
+- `operation.rounding` uses `operation_properties.rounding_table` instead of text. The table columns are `Pass`, `Size`, `Feed`, `Angle`, `Rotations per Feed`, and `Speed`; one non-empty row materializes one `document_operations` row.
+- Template fields retained on operation props:
+  - `operation_template_id`
+  - `operation_template_version`
+  - `operation_kind`
+  - `template_snapshot`
+- The preprocessor bridge reads `document_operations`, flattens effective target values using the template schema, and stores compiled runtime output in `simulation_steps` using semantic source fields.
+- Pre operation definitions are YAML/built-in metadata, not `document_blocks_library` rows. Compiler dispatch and timing lookup use semantic operation template IDs.
+- `document_operations` is regenerated from `document_blocks` after structural and prop edits. Block-to-block inheritance is evaluated only during this regeneration; `document_blocks.props` remains explicit-only source data.
+
 ## Cross-domain note
 - `projects.material_id` now references `materials.material_id` (dedicated `materials` table).
 - This does not change document/block storage, linked-list ordering, commit operations, or block handler behavior.
@@ -68,46 +95,19 @@ Configuration/setup details (including `.env` editing during install) are tracke
 
 ## `document_blocks.props` JSONB contract
 - `props` is schema-flexible JSONB, but active handlers/components impose de facto structures.
+- Current active structures:
+  - `document`: title/setup fields (`name`, `heat_no`, `finished_size`, `remarks`, `preview_status`, `material_id`, `geometry_type_id`, `weight`, `attributes`, `mesh_elements`, `section_numbering_start`) plus frontend enrichment for document metadata and billet geometry.
+  - `heating`: `heating_properties.furnace_class_id`, `heating_properties.temperature`.
+  - `deformation`: `deformation_properties.deformation_variables.tail_chamfering_stroke`, `deformation_properties.deformation_variables.tail_flattening_stroke`, and `deformation_properties.deformation_variables.radial_feed`.
+  - `furnace`: `furnace_properties.furnace_class_id`, `furnace_properties.temperature`.
+  - `operation`: YAML-backed template metadata, optional `operation_text`, optional `rounding_table`, and nested `operation_properties.target` variables.
 - Handler-backed structures:
-  - `document_heading`:
-    - persisted/editable title fields: `name`, `heat_no`, `finished_size`, `remarks`, `preview_status`
-    - persisted/editable setup fields merged from old setup blocks: `material_id`, `geometry_type_id`, `weight`, `attributes`, `mesh_elements`
-    - response enrichment for billet geometry: `input_workpiece_title`, `available_geometry_types`, optional `selected_geometry`
-    - response enrichment fields: `project_id`, `source_document_id`, `editor_user_id`, `material_version_id`, `created_at`, `updated_at`
-    - optional nested object: `version` with `document_version_id`, `name`, `is_editable`, `execution_order`, `operations_count`, `created_at`, `last_modified`
-  - `input_workpiece`:
-    - legacy compatibility block only; new documents no longer auto-create it
-    - persisted/editable fields: `geometry_type_id`, `weight`, `attributes`
-    - response enrichment fields: `title`, `available_geometry_types`, optional `selected_geometry`
-    - `available_geometry_types[]` item shape: `id`, `name`, `labels[]`, `columns[]`
-  - operation type `84` (`Mesh`):
-    - obsolete compatibility row; `mesh_elements` now lives on `document_heading`
-  - operation type `10` (`Furnace`):
-    - persisted/editable fields: `furnace_class_id`, `temperature`
-    - replaces the old split operation rows `10` (`Furnace class`) plus `62` (`Temperature at 0 min`)
-    - compiler carries furnace class and initial furnace temperature forward into following type `23` heating steps
-  - operation type `24` (`Deformation`):
-    - persisted/editable fields: `press_id`, `feed_direction_prolongation_id`, `speed_prolongation`, `feed_direction_upsetting_id`, `speed_upsetting`, `feed_direction_transversal_cogging_id`, `speed_transversal_cogging`, `feed_first`, `feed_middle`, `feed_last`
-    - frontend renders those fields as merged `Press`, empty `Die`, grouped feed-direction/speed rows, and a visually separated first/middle/last feed-length row
-  - operation type `26` (`Press`):
-    - obsolete compatibility row; `press_id` now lives on operation type `24`
-  - operation type `8` (`Die`):
-    - obsolete compatibility row; the empty Die section is rendered inside operation type `24`
-  - operation type `15` (`Prolongation feed and speed`):
-    - obsolete compatibility row; fields now live on operation type `24`
-  - operation type `13` (`Upsetting feed and speed`):
-    - obsolete compatibility row; fields now live on operation type `24`
-  - operation type `14` (`Transversal cogging feed and speed`):
-    - obsolete compatibility row; fields now live on operation type `24`
-  - feed direction fields:
-    - use old feed-direction ids rendered as arrow buttons: `3` = `<--`, `4` = `<->`, `2` = `-->`; default is `3`
-  - Deformation insert behavior:
-    - direct insertion of `26`, `8`, `15`, `13`, or `14` is blocked because those rows are obsolete; only `24` is user-insertable
-- Generic operation blocks:
-  - `block_type_id` is a numeric string matching `document_blocks_library.type_id`
-  - persisted/editable fields are exactly the operation's `db_column_names`
-  - response enrichment fields are transient: `title` and `operation_type`
-  - `operation_type` includes cleaned old-catalog metadata such as `library_name`, `process_name`, `labels[]`, `db_column_names[]`, category flags, `deformation_type`, `trigger`, and optional `field_options`
+  - `document`: persisted/editable title/setup fields are `name`, `heat_no`, `finished_size`, `remarks`, `preview_status`, `material_id`, `geometry_type_id`, `weight`, `attributes`, `mesh_elements`, and `section_numbering_start`; read responses are enriched with document metadata, optional latest `version`, and billet geometry metadata
+- Semantic non-handler structures:
+  - `heating`: persisted/editable fields live under `heating_properties`
+  - `deformation`: section/container block with inherited parser variables under `deformation_properties.deformation_variables`
+  - `furnace`: persisted/editable fields live under `furnace_properties`
+  - `operation`: persisted/editable fields live under `operation_properties`; backend expands YAML defaults and enriches responses with template metadata plus transient selector definitions for the generic frontend `OperationBlock`
 
 ## Linked-list ordering behavior (`backend/app/services/block_service.py`)
 - Document order root is `documents.first_block_id`.
@@ -123,30 +123,29 @@ Configuration/setup details (including `.env` editing during install) are tracke
 Defined in `backend/app/models/document/block.py`.
 
 - Enum values:
-  - `document_heading`
-  - `input_workpiece`
-  - numeric operation ids are not enum values; they are validated against `document_blocks_library`
+  - `document`
+  - `heating`
+  - `deformation`
+  - `furnace`
+  - `operation`
 - Active handler-backed types:
-  - `document_heading`
-  - `input_workpiece` for legacy compatibility only
+  - `document`
 - Frontend-registered block components:
-  - `document_heading` -> `DocumentHeadingBlock`
-  - `input_workpiece` -> `InputWorkpieceBlock`
-  - numeric operation ids -> generic `OperationBlock`
+  - `document` -> `DocumentBlock`
+  - `heating`, `deformation`, `furnace`, and `operation` -> generic `OperationBlock`
 
 ## Block handler architecture
 - Base contract: `BlockTypeHandler` (`backend/app/models/document/block_types/base.py`)
 - Registry: `backend/app/models/document/block_types/__init__.py`
 - Active handlers:
-  - `DocumentHeadingHandler`
-  - `InputWorkpieceHandler`
+  - `DocumentHandler`
 - Integration service: `backend/app/services/block_type_service.py`
   - system block initialization
   - single-instance constraints
-  - numeric operation-block validation against `document_blocks_library`
+  - semantic block validation and placement rules
   - delete/reorder restrictions
   - frontend enrichment via handler serialization
-  - frontend enrichment for generic operation blocks via `backend/app/services/operation_blocks.py`
+  - frontend enrichment for YAML-backed operation blocks via `backend/app/services/operation_blocks.py`
 
 ### Frontend payload metadata for handler-backed blocks
 `enrich_block_data_for_frontend` returns:
@@ -156,12 +155,12 @@ Defined in `backend/app/models/document/block.py`.
 `field_limits` is consumed by frontend to enforce DB-aligned limits during input and draft updates.
 
 ## Document editing model (frontend, current)
-Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockEditor.tsx`, `frontend/src/components/MenuBar.tsx`, `frontend/src/components/ToolsPane.tsx`, and `frontend/src/components/VisualEditor.tsx`.
+Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockEditor.tsx`, `frontend/src/components/MenuBar.tsx`, `frontend/src/components/ToolsPane.tsx`, and `frontend/src/components/clipboard/ClipboardPane.tsx`.
 
 - Main screen uses split-pane layout:
   - `MenuBar` (top, full width, always visible)
-  - below: `ToolsSwitcher` (left, always visible), `ToolsPane` (middle, collapsible), right editor stack
-  - right editor stack: `TopEditorPane` (conditional) + `MainEditorPane` (conditional)
+  - below: `ToolsSwitcher` (left, always visible), `ToolsPane` (middle, collapsible), right editor area
+  - right editor area: optional inline library action strip + `MainEditorPane`
 - `ToolsSwitcher` toggles current `ToolsPane` view.
   - if no view is active, `ToolsPane` is hidden
   - clicking the currently active tool hides `ToolsPane` only and does not change the current `MainEditorPane` view
@@ -172,8 +171,8 @@ Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockE
     - the first document is selected on first opening the Documents view if no user selection exists yet
     - selected document ids live in `useDocumentsStore.selectedDocIds`, so selection survives switching tools
     - `currentDoc/currentDocId` are populated only when exactly one document is selected; zero or multiple selections intentionally hide document-specific content in other views
-  - `Blocks` (shared `Catalog` / `Clipboard` tab pane)
-    - `Catalog` is selected by default and provides the operation catalog loaded from `GET /library/db/document-block-types?insertable_only=true`; each whole catalog card is draggable, and double-click inserts the operation after the active document block
+  - `Blocks` (shared `Actions` / `Clipboard` tab pane)
+    - `Actions` is selected by default and acts as a selected-block context menu; it enables copy, cut, remove, paste-after-selected, and clear-selection only when appropriate
     - `Clipboard` is frontend-only session memory for structural block cut/copy/paste; clipboard state is not persisted in backend tables
   - `Library` (selector for `Dies`, `Die Assemblies`, `Presses`, `Materials`)
   - `Simulation` (no middle pane content; selecting it opens the Simulation dashboard in the main pane)
@@ -185,19 +184,51 @@ Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockE
   - `Simulation` dashboard when current tool is `Simulation`
 - `BlockEditor` visual document format:
   - source data remains the flat `document_blocks` linked list; no `parent_block_id` is stored
-  - the first `document_heading` block is rendered as the document canvas/title area
-  - operation type `10` (`Furnace`) and operation type `24` (`Deformation`) are rendered as second-level sections inside that canvas
-  - operation blocks after a Deformation section are rendered as children of that Deformation until the next Furnace/Deformation section appears
-  - operation blocks outside any Deformation section render in an `Unsectioned Operations` visual group
-  - dropping a catalog block onto a visual section inserts it after the section's last visual child, preserving the flat linked-list model
-  - one non-title block can be active at a time; `document_heading` / title canvas cannot become active
+  - document rendering intentionally uses borderless `doc-*` classes from `frontend/src/index.css` to keep the canvas close to a Microsoft Word / Notion page: blocks are identified by title text, hierarchy is shown by indentation, and regular form controls look like document text until hover/focus
+  - the first `document` block is rendered as the document canvas/title area
+  - `Heating` and `Deformation` semantic block types are rendered as second-level sections inside that canvas
+  - `Furnace` blocks after a Heating section are rendered as children of that Heating until the next Heating/Deformation section appears
+  - `Operation` blocks after a Deformation section are rendered as children of that Deformation until the next Heating/Deformation section appears
+  - child blocks outside their valid section render in an `Unsectioned Operations` visual group until fixed by structural edits
+  - one non-title block can be active at a time; `document` / title canvas cannot become active
   - active block state is independent from selected block state and is shown with a strong outline
+  - clicking the document canvas outside activatable Heating/Deformation/Furnace/Operation block areas clears the active block
   - direct block click, input focus/click/change inside a block, successful drag/drop, insert, and paste make a block active
   - selection checkbox clicks and drag-handle clicks without a completed drop do not change active block state
-  - selected blocks are used for batch copy, cut, remove, and drag-group preparation
+  - exactly one selected block drives the `Blocks > Actions` context menu; multiple selected blocks remain useful for drag-group preparation
+  - Heating and Deformation section titles are auto-numbered from `document_properties.section_numbering_start`
+  - section numbering rule: a Heating immediately followed by a Deformation shares one base number as `N.1 Heating` and `N.2 Deformation`; every other Heating or Deformation gets simple `N.` numbering
+  - Operation block titles are auto-numbered within their containing Deformation section using simple `1.`, `2.`, `3.` numbering; numbering restarts at `1.` for each Deformation
   - drag/drop uses dense zero-height insertion markers: while dragging, a thin blue `Insert here` line previews the exact insertion target without adding permanent spacing to the document layout
+  - `Alt+Shift+ArrowUp` / `Alt+Shift+ArrowDown` are keyboard alternatives to drag/drop:
+    - selected blocks take precedence over the active block
+    - with no selected blocks, the active block shifts one movement position
+    - selected operation blocks shift in the flat operation lane, so they can cross Heating/Deformation boundaries and change visual parent
+    - selected furnace blocks shift in the flat furnace lane, so they can cross Heating sections and change visual parent
+    - selected top-level Heating/Deformation sections shift in the document section lane; moving a section includes its current child blocks
+    - sparse selected groups consolidate first: `Alt+Shift+ArrowUp` keeps the first selected unit anchored, `Alt+Shift+ArrowDown` keeps the last selected unit anchored
+    - the shortcut is ignored from text inputs, textareas, selects, buttons, contenteditable regions, and ARIA combobox/listbox/menu/textbox controls so native form navigation/dropdown shortcuts keep working
+  - `Shift+Enter` inserts a new same-type block below the active block; `Alt+Shift+Enter` inserts it above:
+    - these insert shortcuts are ignored from the same interactive controls as movement shortcuts, preserving multiline and native form editing behavior
+    - selected blocks disable insert-by-shortcut; insertion uses the active block only
+    - active operation insertion creates a fresh initialized operation with no selected operation type; it does not copy `operation_template_id` or edited target values from the active operation
+    - active Heating/Deformation insertion below targets the end of that visual section, after its current child blocks
+  - hovered block toolbar is Notion-like and floats at the upper-left of the block; it contains selection, `+` insert-same-type-below, and drag controls
+    - inline `+` insertion uses the hovered block, not necessarily the active block, and is disabled while any block selection exists
+    - normal click on `+` inserts below; Shift-click on `+` inserts above
+  - all block types render their editable layout all the time
+  - operation blocks always show a title; empty operations use `Empty operation`, and selected operation types use the YAML template `display_name`
+  - operation type selector visibility is stateful:
+    - empty operations show the selector until a type is selected and saved
+    - saved operations hide the selector by default
+    - double-clicking the title activates the block and reopens the selector
+    - saving hides the selector after the selected type is persisted
+    - deactivating the block hides the selector and reverts unsaved operation-type changes to the last saved type
+  - operation blocks continue to show the compact horizontal parameters-calculation-mode selector, then either a multiline operation-text editor for non-rounding types or a dense rounding table for `operation.rounding`, plus selected template target fields
+  - active block state controls the strong outline, insertion/action anchor behavior, and the temporary operation-type selector edit session; it does not switch the block into a separate alternate renderer
   - move operations are optimistic in the frontend: `draftBlocks` reorder locally first, block wrappers animate position with lightweight `framer-motion`, and backend move requests then persist the same order; failed moves revert and refresh
-  - catalog insert, structural copy, and clipboard paste keep a short-lived `Inserted here` confirmation line at the final anchor and briefly highlight the inserted block group after refresh so users can see which lower blocks moved down
+  - structural copy and clipboard paste keep a short-lived `Inserted here` confirmation line at the final anchor and briefly highlight the inserted block group after refresh so users can see which lower blocks moved down
+  - frontend-local resume state uses `localStorage` key `forgelab-document-resume`; app startup switches to `Blocks`, restores the last document/project, and `BlockEditor` restores the saved scroll offset plus selected block ids if they still exist
 - `Simulation` dashboard behavior:
   - owner scope filter defaults to current user and can switch to all users or one selected user via icon controls and a dropdown
   - `Documents` table shows latest version workflow state and per-row run/stop plus pause/continue controls
@@ -254,7 +285,7 @@ Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockE
   - when a concrete `Standard level` value is active, material cards in the left rail and the dashboard summary line show a compound label made from the matching designation rows instead of the canonical material name
   - materials without `deform_file_name` still appear in the browser/editor/copy workflows, but are skipped by DEFORM chart loading and comparison plotting
   - each dashboard chart supports `Auto / Manual / Reset` scaling; when manual mode is active, the first and last tick labels on each axis can be clicked and edited inline
-  - `TopEditorPane` does not render the shared library action strip for this view
+  - the inline library action strip is not rendered for this view
   - editor mode currently saves:
     - `materials`
     - `material_classification_assignments`
@@ -266,15 +297,10 @@ Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockE
     - classification assignments
     - designation rows plus linked standard chemistry rows
     - test-record subtrees including chemistry results and property tables
-- `TopEditorPane` routes top content:
-  - `VisualEditor` when `BlockEditor` is active
-  - library action menu when a library view is active
-- `VisualEditor` view in `TopEditorPane` renders a horizontal block icon strip in the same order as `BlockEditor` and supports:
-  - full hide/show behavior: when collapsed it is not rendered at all
-  - visibility toggle is provided by `MenuBar` in block-editor mode
-  - click-to-scroll navigation to block anchors inside `BlockEditor`
-  - viewer mode type visibility toggles (hide/show per block type)
-  - editor mode with multi-selection, drag-drop reordering, Ctrl/Cmd-drop copy, operation insert, delete, and frontend clipboard copy/cut/paste
+- Inline library action strip:
+  - rendered above `MainEditorPane` for `Dies`, `Die Assemblies`, and `Presses`
+  - hidden for `BlockEditor`, `Materials`, and `Simulation`
+  - `Materials` keeps its actions in the material rail because that view uses a dedicated workspace layout
 - Active document block behavior:
   - paste and default insert use the active document block as the insertion anchor
   - paste is disabled/error-blocked when there is no active document block
@@ -290,10 +316,12 @@ Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockE
   - clipboard memory defaults to 10 containers and is user-adjustable in the pane; trimming keeps the newest entries
   - paste never consumes/removes a clipboard container, so the same copied/cut block set can be inserted multiple times
   - pasted block props are sanitized so transient frontend metadata such as `title` and `operation_type` is not written back to `document_blocks.props`
-- Structural edits from `VisualEditor` and `Blocks` are blocked while unsaved draft prop edits exist (user must save/cancel first).
-- Frontend visual styling for document editing UI is standardized on a compact VisualEditor-derived system:
+- Structural edits from `BlockEditor`, `Blocks` Actions, and `Clipboard` are blocked while unsaved draft prop edits exist (user must save/cancel first).
+- Frontend visual styling for document editing UI is standardized on a compact Notion-like system:
   - shared style primitives are defined in `frontend/src/index.css` (`ui-*` classes)
-  - active editor-related components (`MenuBar`, `ToolsPane`, `ToolsSwitcher`, `VisualEditor`, `BlockEditor`, and block components) should consume `ui-*` classes instead of ad-hoc utility combinations for common controls/surfaces
+  - document-specific page styling is defined by `doc-*` classes; hovered/active/selected block backgrounds may darken, but editable fields/selects/textareas inside them must stay on a light surface so editable controls remain visible immediately
+  - active editor-related components (`MenuBar`, `ToolsPane`, `ToolsSwitcher`, `BlockEditor`, clipboard, and block components) should consume `ui-*` classes instead of ad-hoc utility combinations for common controls/surfaces
+  - document/editor typography must preserve the Noto-first multilingual sans stack from `frontend/src/index.css` / `frontend/tailwind.config.js`, covering Cyrillic, CJK Chinese/Japanese/Korean, Arabic, Hebrew, Indic, Thai, and emoji fallback
   - typography scale is constrained by `frontend/tailwind.config.js` to `text-xs`, `text-sm`, `text-base`, `text-lg`
 
 - All rendered block types are always in editable mode.
@@ -328,7 +356,7 @@ Common characteristics:
 
 ## Existing handler-backed block types as deltas from `draft_synced_props_block`
 
-### `document_heading` delta
+### `document` delta
 - System-only placement constraints:
   - `is_system = true`
   - `is_removable = false`
@@ -342,30 +370,11 @@ Common characteristics:
 - Adds block-specific string limits through `get_field_limits()`:
   - `name`, `heat_no`, `finished_size`, `remarks`
 
-### `input_workpiece` delta
-- System-only placement constraints:
-  - `is_system = true`
-  - `is_removable = false`
-  - `fixed_position = 2`
-  - `allow_multiple_instances = false`
-- Domain-specific geometry model:
-  - geometry selector keyed by `geometry_type_id`
-  - dynamic `attributes` schema derived from geometry definition
-  - generated display `title` from geometry and attributes
-  - serialized geometry metadata (`available_geometry_types`, optional `selected_geometry`)
-- Numeric/domain validation in handler:
-  - `geometry_type_id` must exist and be known when non-empty
-  - `weight` must be numeric-compatible
-- No explicit block-specific `field_limits` currently returned by handler.
-
-### Generic operation block delta
+### Semantic operation block delta
 - Text/editor block types have been removed from the active UI and backend type enum.
-- Numeric operation block types are validated against active leaf rows in `document_blocks_library`; unknown, obsolete, and parent/category rows are rejected on create.
-- Fixed setup operation types `5` (`Material`) and `84` (`Mesh`) are obsolete; their data now lives on `document_heading`.
-- Operation type `10` (`Furnace`) merges the old furnace-class and initial-temperature cards; operation type `62` is obsolete/hidden.
-- Operation type `24` (`Deformation`) is the user-insertable merged Deformation block for Press, empty Die, Prolongation feed/speed, Upsetting feed/speed, Transversal cogging feed/speed, and first/middle/last feed length; old operation types `26`, `8`, `15`, `13`, `14`, old combined `Feed` (`12`), old combined `Speed` (`9`), and old feed leaf operation types `16`-`18` are obsolete/hidden.
-- Generic operation fields with backend-provided `operation_type.field_options[column]` render as one-click mutually exclusive option-button rows in the frontend.
-- Frontend component registration uses one fallback `OperationBlock` for all numeric operation ids.
+- Operation templates are defined in YAML, not in a runtime block-library table.
+- `operation` block creation validates the requested `operation_template_id`, expands YAML defaults into nested `target` props, and stores template metadata for the preprocessor bridge.
+- Frontend component registration uses one generic `OperationBlock` for `heating`, `deformation`, `furnace`, and `operation`.
 - Operation props are sanitized on create/update/copy so transient render metadata is not persisted.
 
 ## System block lifecycle
@@ -373,13 +382,14 @@ Common characteristics:
   - `POST /documents` calls `initialize_system_blocks(...)`.
 - System blocks are created by explicit fixed prefix order in `backend/app/services/block_type_service.py`.
 - Current default system order:
-  1. `document_heading` (`fixed_position = 0`)
-- The fixed setup fields that used to be separate Material/Input Workpiece/Mesh blocks are now properties of `document_heading`.
-- The fixed title block is non-removable; Material and Mesh cannot be manually inserted as duplicates because their catalog rows are obsolete.
+  1. `document` (`fixed_position = 0`)
+- After the fixed prefix, non-copy document creation creates a `deformation` bundle containing the first `operation`.
+- The fixed setup fields that used to be separate Material/Input Workpiece/Mesh blocks are now properties of `document`.
+- The fixed title block is non-removable.
 
 ## Fixed leading block rules
 - The first block of any new non-copy document is:
-  1. `document_heading`
+  1. `document`
 - This block is treated as fixed with:
   - `is_removable = false`
   - `is_fixed = true` (documentation alias; implemented via non-null `fixed_position`)
@@ -425,7 +435,7 @@ Common characteristics:
 ## Revisions and versioning status
 - `backend/app/models/document/revision.py` is not present in current code.
 - Block commit persistence is handled directly by `commit_service`.
-- `document_versions` still exists and is used by `document_heading` enrichment/update logic.
+- `document_versions` still exists and is used by `document` enrichment/update logic.
 
 ## Notes for future updates
 - For every new handler-backed block type:

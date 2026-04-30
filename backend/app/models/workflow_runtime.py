@@ -26,8 +26,8 @@ from app.database import Base
 if TYPE_CHECKING:
     from app.models.document.block import Block
     from app.models.document.document import DocumentVersion
+    from app.models.document.document_operation import DocumentOperation
     from app.models.library.die import Die, DieAssembly
-    from app.models.library.library import OperationsLibrary
     from app.models.library.material import MaterialVersion
     from app.models.library.press import Press, PressMode
     from app.models.server import Server
@@ -67,13 +67,17 @@ class SimulationStep(Base):
         nullable=True,
         default=None,
     )
-    block_type_id: Mapped[int] = mapped_column(
-        SmallInteger,
-        ForeignKey("document_blocks_library.type_id", ondelete="RESTRICT"),
-        nullable=False,
+    document_operation_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger,
+        ForeignKey("document_operations.document_operation_id", ondelete="SET NULL"),
+        nullable=True,
+        default=None,
         index=True,
     )
 
+    operation_template_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default=None, index=True)
+    operation_kind: Mapped[str] = mapped_column(String(63), nullable=False, default="generic", server_default="generic")
+    operation_label_snapshot: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default=None)
     block_name_snapshot: Mapped[str] = mapped_column(String(255), nullable=False)
     library_name_snapshot: Mapped[str] = mapped_column(String(255), nullable=False)
 
@@ -82,6 +86,7 @@ class SimulationStep(Base):
         ForeignKey("material_versions.material_version_id", ondelete="SET NULL"),
         nullable=True,
         default=None,
+        index=True,
     )
 
     press_id: Mapped[Optional[int]] = mapped_column(
@@ -174,7 +179,10 @@ class SimulationStep(Base):
 
     document_version: Mapped["DocumentVersion"] = relationship("DocumentVersion")
     source_block: Mapped[Optional["Block"]] = relationship("Block", foreign_keys=[source_block_id])
-    block_type: Mapped["OperationsLibrary"] = relationship("OperationsLibrary", foreign_keys=[block_type_id])
+    document_operation: Mapped[Optional["DocumentOperation"]] = relationship(
+        "DocumentOperation",
+        foreign_keys=[document_operation_id],
+    )
     material_version: Mapped[Optional["MaterialVersion"]] = relationship(
         "MaterialVersion",
         back_populates="simulation_steps",

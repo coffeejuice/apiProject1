@@ -48,7 +48,7 @@ def search_blocks(
         if first_block:
             block_id, block_type_id = first_block
         else:
-            block_id, block_type_id = uuid4(), "document_heading"
+            block_id, block_type_id = uuid4(), "document"
 
         snippet = document.name
         if document.notes:

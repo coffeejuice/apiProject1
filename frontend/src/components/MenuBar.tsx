@@ -6,9 +6,6 @@ import Tooltip from './ui/Tooltip'
 interface MenuBarProps {
   meta: BlockEditorMeta
   hasDocument: boolean
-  isTopEditorVisible: boolean
-  showTopEditorToggle: boolean
-  onToggleTopEditor: () => void
   onSave: () => void
   onCancel: () => void
   onUndo: () => void
@@ -20,9 +17,6 @@ interface MenuBarProps {
 export default function MenuBar({
   meta,
   hasDocument,
-  isTopEditorVisible,
-  showTopEditorToggle,
-  onToggleTopEditor,
   onSave,
   onCancel,
   onUndo,
@@ -47,16 +41,6 @@ export default function MenuBar({
         <Link to="/setup" className="ui-btn">
           Setup
         </Link>
-
-        {showTopEditorToggle && (
-          <button
-            type="button"
-            onClick={onToggleTopEditor}
-            className="ui-btn"
-          >
-            {isTopEditorVisible ? 'Hide TopEditorPane' : 'Show TopEditorPane'}
-          </button>
-        )}
 
         <button
           type="button"

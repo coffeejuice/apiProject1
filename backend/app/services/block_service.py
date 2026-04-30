@@ -6,11 +6,46 @@ from sqlalchemy.orm import Session
 
 from app.models.document.block import Block
 from app.models.document.document import Document
+from app.services.block_props import (
+    FURNACE_PROPERTIES,
+    HEATING_PROPERTIES,
+    normalize_deformation_block_props,
+    normalize_furnace_block_props,
+    normalize_heating_block_props,
+)
 from app.services.operation_blocks import build_default_operation_props
 
 
-DEFORMATION_BUNDLE_TYPE_ORDER = ("24",)
-DEFORMATION_BUNDLE_TYPE_SET = set(DEFORMATION_BUNDLE_TYPE_ORDER)
+DOCUMENT_BLOCK_TYPE_ID = "document"
+HEATING_BLOCK_TYPE_ID = "heating"
+DEFORMATION_BLOCK_TYPE_ID = "deformation"
+FURNACE_BLOCK_TYPE_ID = "furnace"
+OPERATION_BLOCK_TYPE_ID = "operation"
+SECTION_BLOCK_TYPE_IDS = {DOCUMENT_BLOCK_TYPE_ID, HEATING_BLOCK_TYPE_ID, DEFORMATION_BLOCK_TYPE_ID}
+
+
+def _default_props_for_block_type(db: Session, block_type_id: str, props: dict | None) -> dict:
+    if block_type_id == OPERATION_BLOCK_TYPE_ID:
+        return build_default_operation_props(db, block_type_id, props)
+    if block_type_id == HEATING_BLOCK_TYPE_ID:
+        defaults = {HEATING_PROPERTIES: {"furnace_class_id": "", "temperature": ""}}
+        normalized = normalize_heating_block_props(props)
+        normalized[HEATING_PROPERTIES] = {
+            **defaults[HEATING_PROPERTIES],
+            **normalized.get(HEATING_PROPERTIES, {}),
+        }
+        return normalized
+    if block_type_id == FURNACE_BLOCK_TYPE_ID:
+        defaults = {FURNACE_PROPERTIES: {"furnace_class_id": "", "temperature": ""}}
+        normalized = normalize_furnace_block_props(props)
+        normalized[FURNACE_PROPERTIES] = {
+            **defaults[FURNACE_PROPERTIES],
+            **normalized.get(FURNACE_PROPERTIES, {}),
+        }
+        return normalized
+    if block_type_id == DEFORMATION_BLOCK_TYPE_ID:
+        return normalize_deformation_block_props(props)
+    return dict(props or {})
 
 
 def _get_document_or_none(db: Session, document_id: int) -> Optional[Document]:
@@ -137,35 +172,50 @@ def create_block_or_bundle(
     previous_block_id: Optional[UUID] = None,
     block_id: Optional[UUID] = None,
 ) -> Block:
-    if str(block_type_id) != DEFORMATION_BUNDLE_TYPE_ORDER[0]:
+    block_type_id = str(block_type_id)
+    if block_type_id not in {HEATING_BLOCK_TYPE_ID, DEFORMATION_BLOCK_TYPE_ID}:
         return create_block(
             db=db,
             document_id=document_id,
             block_type_id=block_type_id,
-            props=props,
+            props=_default_props_for_block_type(db, block_type_id, props),
             previous_block_id=previous_block_id,
             block_id=block_id,
         )
 
+    if block_type_id == HEATING_BLOCK_TYPE_ID:
+        leader = create_block(
+            db=db,
+            document_id=document_id,
+            block_type_id=HEATING_BLOCK_TYPE_ID,
+            props=_default_props_for_block_type(db, HEATING_BLOCK_TYPE_ID, props),
+            previous_block_id=previous_block_id,
+            block_id=block_id,
+        )
+        create_block(
+            db=db,
+            document_id=document_id,
+            block_type_id=FURNACE_BLOCK_TYPE_ID,
+            props=_default_props_for_block_type(db, FURNACE_BLOCK_TYPE_ID, None),
+            previous_block_id=leader.block_id,
+        )
+        return leader
+
     leader = create_block(
         db=db,
         document_id=document_id,
-        block_type_id=DEFORMATION_BUNDLE_TYPE_ORDER[0],
-        props=build_default_operation_props(db, DEFORMATION_BUNDLE_TYPE_ORDER[0], props),
+        block_type_id=DEFORMATION_BLOCK_TYPE_ID,
+        props=_default_props_for_block_type(db, DEFORMATION_BLOCK_TYPE_ID, props),
         previous_block_id=previous_block_id,
         block_id=block_id,
     )
-    previous_id = leader.block_id
-    for member_type_id in DEFORMATION_BUNDLE_TYPE_ORDER[1:]:
-        member_props = build_default_operation_props(db, member_type_id, props)
-        member = create_block(
-            db=db,
-            document_id=document_id,
-            block_type_id=member_type_id,
-            props=member_props,
-            previous_block_id=previous_id,
-        )
-        previous_id = member.block_id
+    create_block(
+        db=db,
+        document_id=document_id,
+        block_type_id=OPERATION_BLOCK_TYPE_ID,
+        props=build_default_operation_props(db, OPERATION_BLOCK_TYPE_ID),
+        previous_block_id=leader.block_id,
+    )
 
     return leader
 
@@ -344,35 +394,41 @@ def _next_block(db: Session, document_id: int, block: Block | None) -> Block | N
     return _get_block_by_id(db, document_id, block.next_block_id if block else None)
 
 
-def get_deformation_bundle_blocks(db: Session, document_id: int, block_id: UUID) -> list[Block]:
+def get_section_blocks(db: Session, document_id: int, block_id: UUID) -> list[Block]:
     block = _get_block_by_id(db, document_id, block_id)
-    if block is None or block.block_type_id not in DEFORMATION_BUNDLE_TYPE_SET:
+    if block is None:
         return []
 
-    leader = block
-    while leader.block_type_id != DEFORMATION_BUNDLE_TYPE_ORDER[0]:
-        previous = _previous_block(db, document_id, leader)
-        if previous is None or previous.block_type_id not in DEFORMATION_BUNDLE_TYPE_SET:
+    section = block
+    while section.block_type_id not in {HEATING_BLOCK_TYPE_ID, DEFORMATION_BLOCK_TYPE_ID}:
+        previous = _previous_block(db, document_id, section)
+        if previous is None or previous.block_type_id in SECTION_BLOCK_TYPE_IDS:
             return [block]
-        leader = previous
+        section = previous
 
-    bundle = [leader]
-    current = leader
-    for expected_type_id in DEFORMATION_BUNDLE_TYPE_ORDER[1:]:
+    section_blocks = [section]
+    current = section
+    while True:
         current = _next_block(db, document_id, current)
-        if current is None or current.block_type_id != expected_type_id:
-            return [block]
-        bundle.append(current)
+        if current is None or current.block_type_id in SECTION_BLOCK_TYPE_IDS:
+            break
+        section_blocks.append(current)
+    return section_blocks
 
-    return bundle
+
+def get_deformation_section_blocks(db: Session, document_id: int, block_id: UUID) -> list[Block]:
+    return get_section_blocks(db, document_id, block_id)
 
 
 def delete_block_or_bundle(db: Session, document_id: int, block_id: UUID) -> bool:
-    bundle = get_deformation_bundle_blocks(db, document_id, block_id)
-    if not bundle:
+    block = _get_block_by_id(db, document_id, block_id)
+    if block is None:
+        return False
+
+    if block.block_type_id not in {HEATING_BLOCK_TYPE_ID, DEFORMATION_BLOCK_TYPE_ID}:
         return delete_block(db, document_id, block_id)
 
     deleted_any = False
-    for block in bundle:
-        deleted_any = delete_block(db, document_id, block.block_id) or deleted_any
+    for section_block in list(reversed(get_section_blocks(db, document_id, block_id))):
+        deleted_any = delete_block(db, document_id, section_block.block_id) or deleted_any
     return deleted_any

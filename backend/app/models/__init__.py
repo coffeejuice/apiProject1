@@ -2,12 +2,11 @@ from app.models.user import User, Device, UserPriority
 from app.models.project import Project
 from app.models.document import (
     Document, DocumentACL, ShareLink, Role, DocumentVersion, DocumentEditSession, SimulationStatus, PreprocessStatus, Status,
-    Block, BlockType, IngotSide, FeedDirection, DeformationType
+    Block, BlockType, DocumentOperation, IngotSide, FeedDirection, DeformationType
 )
 from app.models.library import (
     Library,
     LibraryType,
-    OperationsLibrary,
     TimeBetweenOperations,
     Die,
     DieAssembly,
@@ -42,6 +41,7 @@ from app.models.workflow_runtime import (
 from app.models.config import Config
 from app.models.log import Log, LogLevel
 from app.models.settings import Setting, SettingScope
+from app.models.seed_run import SeedRun
 
 __all__ = [
     "User",
@@ -59,13 +59,13 @@ __all__ = [
     "ShareLink",
     "Role",
     "Block",
+    "DocumentOperation",
     "BlockType",
     "IngotSide",
     "FeedDirection",
     "DeformationType",
     "Library",
     "LibraryType",
-    "OperationsLibrary",
     "TimeBetweenOperations",
     "Config",
     "Log",
@@ -100,4 +100,5 @@ __all__ = [
     "PostprocessingTaskStatusEnum",
     "Setting",
     "SettingScope",
+    "SeedRun",
 ]

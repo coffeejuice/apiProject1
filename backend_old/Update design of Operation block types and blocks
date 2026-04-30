@@ -1,0 +1,223 @@
+Update design of Operation block types and blocks to operations parser correspondingly.
+
+Input method per blocks types:
+1. for 'Rounding', input method is table with columns: Pass, Size, Feed, Angle, Rotations per Feed, Speed.
+2. for other operation types input method is unformatted multi-line editable text field.
+
+Design requirements:
+
+1. Text inpu field must have dynamic height. Default height is 1 text line. Height increases automatically based on number of text lines. User can freely input text with line breaks.
+
+Parsing rules for text input fields:
+1. Line breaks, tabs and muliple spaces are allowed. They are NOT semantic separators. They serve as old style visual formating tools used by a user. Save text with them as is.
+2. The text represents zero, one or multiple operations in specific format separated by one of separators.
+3. The only separator is Right arrow. But specific representation of right arrow may differ. It may be '->', '-->' and one of special right arrow symbols predefined in font collections supplied by popular text and tables editors, for example Microsoft Word and Excell. So the user may just copy-paste the text from such an Editor. Brainstorm which Right arrow symbols may be potentially used and register them all as allowed separators.
+4. Block's text input fields do auto format of Right arrows in same moment a user input it. Substitute any allowed Right arrow separator into a standard Right arrow symbol. Brainstorm which Right arrow symbol has the best compatibility in case a user copy-paste text form a Block into other editor.
+5. For parsing copy full text input as a single string, remove line breaks and tabs, substitute multiple spaces by one space. Split into 'sentences' using arrow separators. For every 'sentence' remove leading and trailing spaces.
+6. Each parsed 'sentence' must be classified as one of:"initial_state", "operation" or "unknown".
+7. Initial state 'sentence' may be in 1st position only. Initial state format is a real or integer number in round brackets like '(500)'. It represents initial size (height specifically). Must not be treated as an operation.
+8. Operation 'sentence' is any 'sentence' that is not initial state with one of predefined format. It must be interpreted as an operation. Examples: '450', '(90) 450', '(90)450', '1', '0', '0(3)', '(45) 450 (3)', '(45)450 (3)', '(45)450(3)'. Below are all inclusive formats, variables and corresponding operation types.
+9. Parent block - 'Deforamtion' should have new parameters, edited by user: deformation_variables.tail_chamfering_stroke (decimal); deformation_variables.tail_flattening_stroke (decimal). These variables are inherited by child 'Operation' blocks and may used it to calculate operation's parameters.
+10. 'Upsetting' formats for operation 'sentences':
+  10.1 {
+    examples: 500 | 500.0; 
+    parsing_to_variables: height; 
+    variable_types: height = positive decimal; 
+    conditions: height > 1;
+    operation_id: upsetting.single_stroke;
+    output_variables: rotation=0, height
+    };
+  10.2 {
+    examples: 500(3) | 500.0(3) | 500.0 (3); 
+    parsing_to_variables: height(num_of_bites); 
+    variable_types: height = positive decimal, number_of_types = positive integer; 
+    conditions: height > 1, num_of_bites = 3; 
+    operation_id: upsetting.three_strokes; 
+    output_variables: rotation=0, height
+    };
+  10.3 {
+    examples: (90)500 | (45)500.0 | (0)300 | (-45)300 | (0) 300 | (-45)  300; 
+    parsing_to_variables: (rotation)height; 
+    variable_types: rotation = decimal, height = positive decimal; 
+    conditions: height > 1; 
+    operation_id: upsetting.rotation_height; 
+    output_variables: rotation, height
+    };
+  10.4 {
+    examples: 0 ; 
+    parsing_to_variables: legend; 
+    variable_types: legend = integer; 
+    conditions: legend = 0; 
+    operation_id: upsetting.tail_flattening; 
+    output_variables: rotation=0, stroke=deformation_variables.tail_flattening_stroke
+    };
+  10.5 {
+    examples: 1 ; 
+    parsing_to_variables: legend; 
+    variable_types: legend = integer; 
+    conditions: legend = 1; 
+    operation_id: upsetting.tail_chamfering; 
+    output_variables: rotation=0, stroke=deformation_variables.tail_chamfering_stroke
+    };
+11. 'Cogging' formats for operation 'sentences':
+  11.1 {
+    examples: 500 | 500.0; 
+    parsing_to_variables: height; 
+    variable_types: height = positive decimal; 
+    conditions: height > 1;
+    operation_id: prolongation.rotation_height;
+    output_variables: rotation=0, height
+    };
+  11.2 {
+    examples: (90)500 | (45)500.0 | (0)300 | (-45)300 | (0) 300 | (-45)  300; 
+    parsing_to_variables: (rotation)height; 
+    variable_types: rotation = decimal, height = positive decimal; 
+    conditions: height > 1; 
+    operation_id: prolongation.rotation_height; 
+    output_variables: rotation, height
+    };
+  11.3 {
+    examples: (90)500(2) | (45)500.0(2) | (0)300(3) | (-45)300(1) | (0) 300 (1) | (-45)  300(1); 
+    parsing_to_variables: (rotation)height(num_of_bites); 
+    variable_types: rotation = decimal, height = positive decimal, num_of_bites = positive integer; 
+    conditions: height > 1, num_of_bites > 0; 
+    operation_id: prolongation.height_bites; 
+    output_variables: rotation, height, num_of_bites, 
+    };
+  11.4 {
+    examples: 500(2) | 500.0(2) | 500 (2) | 500  (1); 
+    parsing_to_variables: height(num_of_bites); 
+    variable_types: height = positive decimal, num_of_bites = positive integer; 
+    conditions: height > 1, num_of_bites > 0; 
+    operation_id: prolongation.height_bites; 
+    output_variables: rotation=0, height, num_of_bites, 
+    };
+  11.5 {
+    examples: (90)500(6)(1) | (90)500(6)(1,3) | (90)500(6)(2,3) | (90)500(6)(2,3,5) | (90)500.0(6)(2,3,5) | (0)300(3)(3) | (-45)300(2)(1) | (0) 300 (3) (2) | (-45)  300(2)  (1); 
+    parsing_to_variables: (rotation)height(num_of_bites)(skip_bites); 
+    variable_types: rotation = decimal, height = positive decimal, num_of_bites = positive integer, skip_bites = list of integers; 
+    conditions: height > 1, num_of_bites > 1, lenght(skip_bites)>0, length(skip_bites) < num_of_bites, min(skip_bites)>0, max(skip_bites) <= num_of_bites; 
+    operation_id: prolongation.skip_bites; 
+    output_variables: rotation, height, num_of_bites, skip_bites
+    };
+  11.6 {
+    examples: 500(6)(1) | 500(6)(1,3) | 500(6)(2,3) | 500(6)(2,3,5) | 500.0(6)(2,3,5) | 300(3)(3) | 300(2)(1) | 300 (3) (2) |  300(2)  (1); 
+    parsing_to_variables: height(num_of_bites)(skip_bites); 
+    variable_types: height = positive decimal, num_of_bites = positive integer, skip_bites = list of integers; 
+    conditions: height > 1, num_of_bites > 1, lenght(skip_bites)>0, length(skip_bites) < num_of_bites, min(skip_bites)>0, max(skip_bites) <= num_of_bites; 
+    operation_id: prolongation.skip_bites; 
+    output_variables: rotation=0, height, num_of_bites, skip_bites
+    };
+12. 'Transverse cogging' formats for operation 'sentences':
+  12.1 {
+    examples: 500 | 500.0; 
+    parsing_to_variables: height; 
+    variable_types: rotation = decimal, height = positive decimal, num_of_bites = positive integer, skip_bites = list of integers; 
+    conditions: height > 1;
+    operation_id: transverse.all_in_one;
+    output_variables: rotation=0, height, num_of_bites = 0, skip_bites = []
+    };
+  12.2 {
+    examples: (90)500 | (45)500.0 | (0)300 | (-45)300 | (0) 300 | (-45)  300; 
+    parsing_to_variables: (rotation)height; 
+    variable_types: rotation = decimal, height = positive decimal, num_of_bites = positive integer, skip_bites = list of integers; 
+    conditions: height > 1; 
+    operation_id: transverse.all_in_one; 
+    output_variables: rotation, height, num_of_bites = 0, skip_bites = []
+    };
+  12.3 {
+    examples: (90)500(2) | (45)500.0(2) | (0)300(3) | (-45)300(1) | (0) 300 (1) | (-45)  300(1); 
+    parsing_to_variables: (rotation)height(num_of_bites); 
+    variable_types: rotation = decimal, height = positive decimal, num_of_bites = positive integer, skip_bites = list of integers; 
+    conditions: height > 1, num_of_bites > 0; 
+    operation_id: transverse.all_in_one; 
+    output_variables: rotation, height, num_of_bites, skip_bites = [] 
+    };
+  12.4 {
+    examples: 500(2) | 500.0(2) | 500 (2) | 500  (1); 
+    parsing_to_variables: height(num_of_bites); 
+    variable_types: rotation = decimal, height = positive decimal, num_of_bites = positive integer, skip_bites = list of integers; 
+    conditions: height > 1, num_of_bites > 0; 
+    operation_id: transverse.all_in_one; 
+    output_variables: rotation=0, height, num_of_bites, skip_bites = []
+    };
+  12.5 {
+    examples: (90)500(6)(1) | (90)500(6)(1,3) | (90)500(6)(2,3) | (90)500(6)(2,3,5) | (90)500.0(6)(2,3,5) | (0)300(3)(3) | (-45)300(2)(1) | (0) 300 (3) (2) | (-45)  300(2)  (1); 
+    parsing_to_variables: (rotation)height(num_of_bites)(skip_bites); 
+    variable_types: rotation = decimal, height = positive decimal, num_of_bites = positive integer, skip_bites = list of integers; 
+    conditions: height > 1, num_of_bites > 1, lenght(skip_bites)>0, length(skip_bites) < num_of_bites, min(skip_bites)>0, max(skip_bites) <= num_of_bites; 
+    operation_id: transverse.all_in_one; 
+    output_variables: rotation, height, num_of_bites, skip_bites
+    };
+  12.6 {
+    examples: 500(6)(1) | 500(6)(1,3) | 500(6)(2,3) | 500(6)(2,3,5) | 500.0(6)(2,3,5) | 300(3)(3) | 300(2)(1) | 300 (3) (2) |  300(2)  (1); 
+    parsing_to_variables: height(num_of_bites)(skip_bites); 
+    variable_types: rotation = decimal, height = positive decimal, num_of_bites = positive integer, skip_bites = list of integers; 
+    conditions: height > 1, num_of_bites > 1, lenght(skip_bites)>0, length(skip_bites) < num_of_bites, min(skip_bites)>0, max(skip_bites) <= num_of_bites; 
+    operation_id: transverse.all_in_one; 
+    output_variables: rotation=0, height, num_of_bites, skip_bites
+    };
+13. 'Radial cogging' formats for operation 'sentences':
+  13.1 {
+    examples: XYXY(90,90,90,90) | xyxy(90,90,90,90) | XYXY ( 90 , 90   ,  90 , 90 )  | XYXY(90.5,90.1,90.9,90.0)  | XYXY(0,-90,0,-45); 
+    parsing_to_variables: XYXY(rotation_1_x,rotation_2_y,rotation_3_x,rotation_4_y); 
+    variable_types: rotation_1_x = decimal, rotation_2_y = decimal, rotation_3_x = decimal, rotation_4_y = decimal; 
+    conditions: ; 
+    operation_id: radial.initial_rotations; 
+    output_variables: otation_1_x , rotation_2_y , rotation_3_x , rotation_4_y 
+    };
+  13.2 {
+    examples: 500 | 500.0; 
+    parsing_to_variables: height; 
+    variable_types: rotation_manipulator = decimal, height = positive decimal; 
+    conditions: height > 1;
+    operation_id: radial.rotation_height_feed;
+    output_variables: rotation_manipulator=0, height, radial_feed=
+    };
+  13.3 {
+    examples: (90)500 | (45)500.0 | (0)300 | (-45)300 | (0) 300 | (-45)  300; 
+    parsing_to_variables: (rotation_manipulatorrotation_manipulator)height; 
+    variable_types: rotation_manipulator = decimal, height = positive decimal; 
+    conditions: height > 1; 
+    operation_id: radial.rotation_height_feed; 
+    output_variables: rotation_manipulator, height, radial_feed=
+    };
+  13.4 {
+    examples: (90)500(2) | (45)500.0(2) | (0)300(3) | (-45)300(1) | (0) 300 (1) | (-45)  300(1); 
+    parsing_to_variables: (rotation)height(num_of_bites); 
+    variable_types: rotation = decimal, height = positive decimal, num_of_bites = positive integer; 
+    conditions: height > 1, num_of_bites > 0; 
+    operation_id: radial.all_in_one; 
+    output_variables: rotation, height, num_of_bites 
+    };
+  13.5 {
+    examples: 500(2) | 500.0(2) | 500 (2) | 500  (1); 
+    parsing_to_variables: height(num_of_bites); 
+    variable_types: rotation = decimal, height = positive decimal, num_of_bites = positive integer; 
+    conditions: height > 1, num_of_bites > 0; 
+    operation_id: radial.all_in_one; 
+    output_variables: rotation=0, height, num_of_bites
+    };
+
+
+Unknown 'sentence' is any 'sentence' which cannot be parsed. Generate parse error.
+
+After parsing, values must be stored in the operation block.
+
+
+Parsing rules for table input:
+1. Table must initially contain one row.
+2. User can: insert rows below, insert above, remove rows.
+3. Parsing rule: one row = one operation.
+4. Each cell contains raw textual values that will be parsed to integers, real numbers or strings.
+5. Allowed type per column:
+- Pass is read only auto numbering column starting with 1.
+- Size is positive real number (may be entered as integer, but coverted to real), meaning 'final_diameter' of the billet, measured in 'mm', default is none (empty cell).
+- Feed is positive real number (same format as Size), meaining 'feed' value of the dies per bite, measured in 'mm', default is none.
+- Angle is positive or negtive real number (same format as Size), meaning 'angle' of rotation per bite, measred in degrees, default is none.
+- Rotations per feed is positive integer bigger than 0, meaning that specific number of rotations should be done without of feed, for example '1 rotation - 1 feed' means every rotation should followed by a feed, and '3 rotations - 1 feed' means that first rotation is followed by a feed but next 2 rotations have no feed.
+- Speed is positive real number (same format as Size), meaning 'speed' of working stroke, measured in 'mm/s', default is none.
+6. Table is only used by Rounding 'Operation' block type. A table row is parsed into one of following operation types: 
+- if 'Rotations per feed' is equal to 1, then operation type is rounding.spiral_one_rotation;
+- in case of 'Rotation per feed' bigger that 1, then operation type is rounding.spiral_three_rotations.
+

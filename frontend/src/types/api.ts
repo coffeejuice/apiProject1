@@ -329,6 +329,28 @@ export interface OperationBlockTypeRecord {
   insertable: boolean
 }
 
+export interface OperationTemplateFieldRecord {
+  path: string
+  type: string
+  label: string
+  unit?: string | null
+  default?: unknown
+  options?: Array<Record<string, unknown>>
+}
+
+export interface OperationTemplateRecord {
+  id: string
+  version: number
+  label: string
+  display_name: string
+  category: string
+  operation_kind: string
+  compiler_handler: string
+  insertable: boolean
+  materialize: boolean
+  target_schema: OperationTemplateFieldRecord[]
+}
+
 export interface LibraryDbUserRecord {
   user_id: number
   login: string

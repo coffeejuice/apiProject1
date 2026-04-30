@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import logging
 import math
 from typing import Any, Mapping, Sequence
@@ -20,8 +20,10 @@ from app.services.preprocessor.control_program_builder import (
 )
 from app.services.preprocessor.geometry import GeneratedGeometry, GeometryBuilder
 from app.services.preprocessor.prolongation import (
-    PROLONGATION_TYPE_IDS,
+    AXIAL_PROLONGATION_TEMPLATE_IDS,
     ProlongationMathError,
+    RADIAL_PROLONGATION_TEMPLATE_IDS,
+    PROLONGATION_TEMPLATE_IDS,
     calculate_prolongation,
 )
 from app.services.preprocessor.upsetting import (
@@ -30,13 +32,18 @@ from app.services.preprocessor.upsetting import (
     UpsettingMathError,
     calculate_upsetting,
 )
+from app.services.preprocessor.operation_keys import (
+    FURNACE_TEMPLATE_ID,
+    HEATING_TEMPERATURE_DURATION_TEMPLATE_ID,
+    UPSETTING_LENGTH_TARGET_TEMPLATE_IDS,
+    UPSETTING_PRESSURE_CONTROL_TEMPLATE_IDS,
+    UPSETTING_TAIL_FLATTENING,
+    UPSETTING_TEMPLATE_IDS,
+)
 
 
 LOGGER = logging.getLogger(__name__)
 
-HEAT_OPERATION_TYPE_ID = 23
-FURNACE_OPERATION_TYPE_ID = 10
-UPSETTING_OPERATION_TYPE_IDS = frozenset({91, 92, 93, 94, 100})
 FEED_DIRECTION_DEFAULT_ID = 3
 FEED_DIRECTION_LEGACY_FIELD = "feed_direction_id"
 FEED_DIRECTION_UPSETTING_FIELD = "feed_direction_upsetting_id"
@@ -58,8 +65,12 @@ class ProcessCard:
     """User-facing process card normalized for the first compiler slice."""
 
     operation_id: int
-    type_id: int
+    type_id: int | None = None
     parameters: Mapping[str, object] = field(default_factory=dict)
+    document_operation_id: int | None = None
+    operation_template_id: str | None = None
+    operation_kind: str | None = None
+    operation_label: str | None = None
     source_block_id: object | None = None
     press_id: int | None = None
     press_mode_id: int | None = None
@@ -80,8 +91,8 @@ class CompiledControlProgramRow:
     simulation_index: int | None
     operation_id: int
     source_block_id: object | None
-    type_id: int
-    parent_type_id: int | None
+    type_id: int | None
+    parent_type_id: str | None
     process_name: str
     library_name: str
     operation_type: str
@@ -109,6 +120,10 @@ class CompiledControlProgramRow:
     final_surface_area_mm2: float | None
     metrics: dict[str, object] = field(default_factory=dict)
     compiler_notes: tuple[str, ...] = ()
+    document_operation_id: int | None = None
+    operation_template_id: str | None = None
+    operation_kind: str | None = None
+    operation_label: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -116,8 +131,8 @@ class CompiledControlProgram:
     """Compiled preprocessing output for one immutable document snapshot."""
 
     rows: tuple[CompiledControlProgramRow, ...]
-    type_tree: dict[int, dict[int, Any]]
-    flattened_type_ids: tuple[int, ...]
+    type_tree: dict[str, dict[str, Any]]
+    flattened_type_ids: tuple[str, ...]
 
 
 class PreprocessorCompiler:
@@ -139,7 +154,10 @@ class PreprocessorCompiler:
         accumulated_parameters: dict[str, object] = {}
 
         for sequence_index, card in enumerate(cards):
-            operation = library_snapshot.get_operation(card.type_id)
+            operation = library_snapshot.get_operation(
+                card.operation_template_id,
+                type_id=card.type_id,
+            )
             effective_card = (
                 self._with_accumulated_parameters(card, accumulated_parameters)
                 if operation.is_simulation
@@ -160,6 +178,7 @@ class PreprocessorCompiler:
                 library_snapshot=library_snapshot,
                 default_press_id=default_press_id,
             )
+            row = self._attach_card_metadata(row, effective_card)
             compiled_rows.append(row)
 
             if operation.is_simulation:
@@ -171,7 +190,7 @@ class PreprocessorCompiler:
         return CompiledControlProgram(
             rows=tuple(compiled_rows),
             type_tree=library_snapshot.type_tree,
-            flattened_type_ids=tuple(row.type_id for row in compiled_rows),
+            flattened_type_ids=tuple(row.operation_template_id or "" for row in compiled_rows),
         )
 
     def compile_from_database(
@@ -208,7 +227,10 @@ class PreprocessorCompiler:
 
         enriched_cards: list[ProcessCard] = []
         for card in cards:
-            operation = library_snapshot.operations_by_type.get(card.type_id)
+            operation = library_snapshot.get_operation(
+                card.operation_template_id,
+                type_id=card.type_id,
+            )
             parameters = dict(card.parameters)
 
             die_assembly_id = self._first_optional_int(
@@ -265,6 +287,10 @@ class PreprocessorCompiler:
                     operation_id=card.operation_id,
                     type_id=card.type_id,
                     parameters=parameters,
+                    document_operation_id=card.document_operation_id,
+                    operation_template_id=card.operation_template_id,
+                    operation_kind=card.operation_kind,
+                    operation_label=card.operation_label,
                     source_block_id=card.source_block_id,
                     press_id=press_id,
                     press_mode_id=press_mode_id,
@@ -279,6 +305,19 @@ class PreprocessorCompiler:
             )
 
         return tuple(enriched_cards)
+
+    def _attach_card_metadata(
+        self,
+        row: CompiledControlProgramRow,
+        card: ProcessCard,
+    ) -> CompiledControlProgramRow:
+        return replace(
+            row,
+            document_operation_id=card.document_operation_id,
+            operation_template_id=card.operation_template_id,
+            operation_kind=card.operation_kind,
+            operation_label=card.operation_label,
+        )
 
     def _get_die(self, session: Session, cache: dict[int, Die | None], die_id: int) -> Die | None:
         if die_id not in cache:
@@ -357,7 +396,7 @@ class PreprocessorCompiler:
                 parameter_values=parameter_values,
                 control_parameters=control_parameters,
             )
-        if card.type_id == FURNACE_OPERATION_TYPE_ID:
+        if operation.operation_template_id == FURNACE_TEMPLATE_ID:
             return self._compile_furnace_row(
                 card=card,
                 operation=operation,
@@ -367,7 +406,7 @@ class PreprocessorCompiler:
                 control_parameters=control_parameters,
                 previous_row=previous_row,
             )
-        if card.type_id == HEAT_OPERATION_TYPE_ID:
+        if operation.operation_template_id == HEATING_TEMPERATURE_DURATION_TEMPLATE_ID:
             return self._compile_heat_row(
                 card=card,
                 operation=operation,
@@ -377,7 +416,7 @@ class PreprocessorCompiler:
                 control_parameters=control_parameters,
                 previous_row=previous_row,
             )
-        if card.type_id in UPSETTING_OPERATION_TYPE_IDS:
+        if operation.operation_template_id in UPSETTING_TEMPLATE_IDS:
             return self._compile_upsetting_row(
                 card=card,
                 operation=operation,
@@ -389,7 +428,7 @@ class PreprocessorCompiler:
                 library_snapshot=library_snapshot,
                 default_press_id=default_press_id,
             )
-        if card.type_id in PROLONGATION_TYPE_IDS:
+        if operation.operation_template_id in PROLONGATION_TEMPLATE_IDS:
             return self._compile_prolongation_row(
                 card=card,
                 operation=operation,
@@ -455,6 +494,10 @@ class PreprocessorCompiler:
             operation_id=card.operation_id,
             type_id=card.type_id,
             parameters=parameters,
+            document_operation_id=card.document_operation_id,
+            operation_template_id=card.operation_template_id,
+            operation_kind=card.operation_kind,
+            operation_label=card.operation_label,
             source_block_id=card.source_block_id,
             press_id=self._first_optional_int(parameters.get("press_id"), card.press_id),
             press_mode_id=self._first_optional_int(parameters.get("press_mode_id"), card.press_mode_id),
@@ -491,6 +534,10 @@ class PreprocessorCompiler:
     ) -> GeneratedGeometry | None:
         if not operation.is_geometry:
             return None
+        if card.type_id is None:
+            raise PreprocessorCompileError(
+                f"Geometry card operation_id={card.operation_id} requires geometry type_id"
+            )
         if card.volume_mm3 is None:
             raise PreprocessorCompileError(
                 f"Geometry card operation_id={card.operation_id} requires volume_mm3"
@@ -731,29 +778,29 @@ class PreprocessorCompiler:
         angle_deg = self._first_float_parameter(card, "angle", default=0.0)
         current_feed_direction_id = self._resolve_feed_direction_id(card=card, operation=operation)
         previous_feed_direction_id = self._resolve_previous_feed_direction_id(previous, operation)
+        operation_template_id = operation.operation_template_id
 
         final_length_input_mm: float | None = None
         stroke_mm: float | None = None
-        if card.type_id in {91, 93, 94}:
+        if operation_template_id in UPSETTING_LENGTH_TARGET_TEMPLATE_IDS:
             final_length_input_mm = self._first_float_parameter(
                 card,
                 "height",
                 "final_length",
                 "length",
             )
-        elif card.type_id == 92:
+        elif operation_template_id == UPSETTING_TAIL_FLATTENING:
             stroke_mm = self._first_float_parameter(card, "stroke", "penetration")
 
         try:
             upsetting_result = calculate_upsetting(
-                type_id=card.type_id,
+                template_id=operation_template_id,
                 initial_geometry=initial_geometry,
                 press_mode=press_mode,
                 top_die=top_die,
                 bottom_die=bottom_die,
                 speed_mm_per_s=target_speed,
                 previous_total_time_seconds=previous.total_time_seconds,
-                previous_type_id=previous.type_id,
                 time_between_operation_seconds=time_before,
                 angle_deg=angle_deg,
                 final_length_input_mm=final_length_input_mm,
@@ -768,7 +815,7 @@ class PreprocessorCompiler:
                 f"Upsetting card operation_id={card.operation_id} cannot be compiled: {exc}"
             ) from exc
 
-        deformation_control = "P" if card.type_id in {92, 100} else "H"
+        deformation_control = "P" if operation_template_id in UPSETTING_PRESSURE_CONTROL_TEMPLATE_IDS else "H"
         operation_specific_parameters = {
             **control_parameters,
             **upsetting_result.operation_specific_parameters,
@@ -879,7 +926,7 @@ class PreprocessorCompiler:
 
         try:
             result = calculate_prolongation(
-                type_id=card.type_id,
+                template_id=operation.operation_template_id,
                 initial_geometry=initial_geometry,
                 press_mode=press_mode,
                 top_die=top_die,
@@ -1077,17 +1124,19 @@ class PreprocessorCompiler:
     ) -> float | None:
         if previous_row is None or press_mode_id is None or not operation.is_simulation:
             return None
+        if not operation.operation_template_id or not previous_row.operation_template_id:
+            return None
         try:
             return library_snapshot.get_time_between_operations(
-                first_operation_type_id=card.type_id,
-                second_operation_type_id=previous_row.type_id,
+                first_operation_template_id=operation.operation_template_id,
+                second_operation_template_id=previous_row.operation_template_id,
                 press_id=press_mode_id,
             )
         except Exception as exc:
             LOGGER.debug(
-                "No time_between_operations record for type_id=%s previous_type_id=%s press_mode_id=%s: %s",
-                card.type_id,
-                previous_row.type_id,
+                "No time_between_operations record for operation_template_id=%s previous_operation_template_id=%s press_mode_id=%s: %s",
+                operation.operation_template_id,
+                previous_row.operation_template_id,
                 press_mode_id,
                 exc,
             )
@@ -1311,12 +1360,11 @@ class PreprocessorCompiler:
         return None
 
     def _resolve_prolongation_angle(self, card: ProcessCard) -> float:
-        if card.type_id in {46, 83, 90}:
+        template_id = card.operation_template_id or ""
+        if template_id in AXIAL_PROLONGATION_TEMPLATE_IDS:
             return self._first_optional_float(card, "rotation", "angle") or 0.0
-        if card.type_id in {95, 96}:
+        if template_id in RADIAL_PROLONGATION_TEMPLATE_IDS:
             return self._first_optional_float(card, "rotation_manipulator", "angle") or 0.0
-        if card.type_id in {80, 82}:
-            return self._first_optional_float(card, "x_rotation", "rotation_manipulator", "angle") or 0.0
         return 0.0
 
     def _parse_skip_bites(self, value: object) -> tuple[int, ...]:

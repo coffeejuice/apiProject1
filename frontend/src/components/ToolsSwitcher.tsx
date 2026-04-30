@@ -112,13 +112,13 @@ export default function ToolsSwitcher({ activeView, onToggleView }: ToolsSwitche
               type="button"
               onClick={() => onToggleView(item.id)}
               aria-label={item.label}
-              className={`ui-btn w-10 h-10 p-0 font-semibold ${
+              className={`ui-btn h-9 w-9 p-0 font-semibold ${
                 isActive
-                  ? 'border-blue-600 bg-blue-50 text-blue-700'
-                  : 'text-gray-700'
+                  ? 'bg-[rgba(55,53,47,0.09)] text-[rgba(55,53,47,0.92)]'
+                  : 'text-[rgba(55,53,47,0.58)]'
               }`}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-[18px] w-[18px]" />
             </button>
           </Tooltip>
         )

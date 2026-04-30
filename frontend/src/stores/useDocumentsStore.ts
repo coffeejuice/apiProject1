@@ -25,9 +25,11 @@ interface DocumentsState {
 
   fetchProjects: () => Promise<void>
   createProject: (name: string, notes?: string) => Promise<Project | null>
+  deleteProject: (id: string) => Promise<boolean>
   setCurrentProject: (id: string | null) => void
 
   fetchDocuments: (projectId?: string | null) => Promise<void>
+  restoreDocumentContext: (projectId: string | null, documentId: string) => Promise<boolean>
   createDocument: (name: string, notes?: string, sourceDocumentId?: string) => Promise<Document | null>
   copyDocument: (id: string, name?: string) => Promise<Document | null>
   fetchDocument: (id: string) => Promise<Document | null>
@@ -35,7 +37,7 @@ interface DocumentsState {
   updateLocalDoc: (id: string, updates: Partial<Document>) => void
   updateDocument: (id: string, updates: Partial<Document>) => Promise<boolean>
   deleteDocument: (id: string) => Promise<boolean>
-  deleteMultipleDocuments: (ids: string[]) => Promise<void>
+  deleteMultipleDocuments: (ids: string[]) => Promise<boolean>
   getDiff: (leftId: string, rightId: string) => Promise<DocumentDiffResponse | null>
 
   setShowDeleted: (show: boolean) => void
@@ -177,6 +179,32 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
     return project
   },
 
+  deleteProject: async (id: string) => {
+    const response = await apiClient.delete(`/projects/${id}`)
+    if (!response.ok) {
+      set({ error: response.errorMessage || 'Failed to delete project' })
+      return false
+    }
+
+    const remainingProjects = get().projects.filter((project) => project.id !== id)
+    const nextProjectId = remainingProjects[0]?.id || null
+    set({
+      projects: remainingProjects,
+      currentProjectId: nextProjectId,
+      documents: [],
+      currentDocId: null,
+      currentDoc: null,
+      selectedDocIds: new Set<string>(),
+      documentSelectionInitialized: false,
+      error: null,
+    })
+
+    if (nextProjectId) {
+      await get().fetchDocuments(nextProjectId)
+    }
+    return true
+  },
+
   setCurrentProject: (id: string | null) => {
     set({
       currentProjectId: id,
@@ -239,6 +267,42 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
       isLoading: false,
       error: null,
     })
+  },
+
+  restoreDocumentContext: async (projectId: string | null, documentId: string) => {
+    const normalizedDocumentId = String(documentId)
+    const normalizedProjectId = projectId ? String(projectId) : null
+
+    if (normalizedProjectId) {
+      set({
+        currentProjectId: normalizedProjectId,
+        currentDocId: normalizedDocumentId,
+        currentDoc: null,
+        selectedDocIds: new Set<string>([normalizedDocumentId]),
+        documentSelectionInitialized: true,
+      })
+
+      await get().fetchDocuments(normalizedProjectId)
+
+      const state = get()
+      if (state.currentDocId === normalizedDocumentId && state.currentDoc) {
+        return true
+      }
+    }
+
+    const fetched = await get().fetchDocument(normalizedDocumentId)
+    if (!fetched) {
+      return false
+    }
+
+    set({
+      currentProjectId: String(fetched.project_id),
+      currentDoc: fetched,
+      currentDocId: fetched.id,
+      selectedDocIds: new Set<string>([fetched.id]),
+      documentSelectionInitialized: true,
+    })
+    return true
   },
 
   createDocument: async (name: string, notes?: string, sourceDocumentId?: string) => {
@@ -390,14 +454,23 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
 
   deleteMultipleDocuments: async (ids: string[]) => {
     const requests = ids.map((id) => apiClient.delete(`/documents/${id}`))
-    await Promise.all(requests)
+    const responses = await Promise.all(requests)
+    const failed = responses.filter((response) => !response.ok)
+    if (failed.length > 0) {
+      set({
+        error: failed[0].errorMessage || `Failed to delete ${failed.length} document${failed.length === 1 ? '' : 's'}`,
+      })
+      return false
+    }
     set({
       selectedDocIds: new Set<string>(),
       currentDocId: null,
       currentDoc: null,
       documentSelectionInitialized: true,
+      error: null,
     })
     await get().fetchDocuments()
+    return true
   },
 
   getDiff: async (leftId: string, rightId: string) => {

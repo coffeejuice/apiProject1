@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { BlockData } from '../types/api'
 
 export type ClipboardClipMode = 'copy' | 'cut'
-export type BlocksPaneTab = 'catalog' | 'clipboard'
+export type BlocksPaneTab = 'actions' | 'clipboard'
 
 export interface ClipboardClip {
   id: string
@@ -70,7 +70,7 @@ export const useBlockClipboardStore = create<BlockClipboardState>((set) => ({
   activeClipId: null,
   selectedClipIds: new Set<string>(),
   maxClips: DEFAULT_MAX_CLIPS,
-  activePaneTab: 'catalog',
+  activePaneTab: 'actions',
 
   addClip: (mode, blocks, sourceDocumentId = null) => {
     if (blocks.length === 0) {
@@ -130,7 +130,7 @@ export const useBlockClipboardStore = create<BlockClipboardState>((set) => ({
         clips,
         selectedClipIds,
         activeClipId: normalizeActiveClipId(clips, state.activeClipId === clipId ? null : state.activeClipId),
-        activePaneTab: clips.length === 0 ? 'catalog' : state.activePaneTab,
+        activePaneTab: clips.length === 0 ? 'actions' : state.activePaneTab,
       }
     })
   },
@@ -145,7 +145,7 @@ export const useBlockClipboardStore = create<BlockClipboardState>((set) => ({
         clips,
         selectedClipIds: new Set<string>(),
         activeClipId: normalizeActiveClipId(clips, state.activeClipId),
-        activePaneTab: clips.length === 0 ? 'catalog' : state.activePaneTab,
+        activePaneTab: clips.length === 0 ? 'actions' : state.activePaneTab,
       }
     })
   },
@@ -155,7 +155,7 @@ export const useBlockClipboardStore = create<BlockClipboardState>((set) => ({
       clips: [],
       activeClipId: null,
       selectedClipIds: new Set<string>(),
-      activePaneTab: 'catalog',
+      activePaneTab: 'actions',
     })
   },
 

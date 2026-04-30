@@ -6,17 +6,35 @@ export interface BlockTypeMeta {
 }
 
 const BLOCK_TYPE_META: Record<string, BlockTypeMeta> = {
-  document_heading: {
-    id: 'document_heading',
-    label: 'Document Heading',
-    icon: 'DH',
+  document: {
+    id: 'document',
+    label: 'Document',
+    icon: 'DOC',
     insertable: false,
   },
-  input_workpiece: {
-    id: 'input_workpiece',
-    label: 'Input Workpiece',
-    icon: 'IW',
-    insertable: false,
+  heating: {
+    id: 'heating',
+    label: 'Heating',
+    icon: 'HEAT',
+    insertable: true,
+  },
+  deformation: {
+    id: 'deformation',
+    label: 'Deformation',
+    icon: 'DEF',
+    insertable: true,
+  },
+  operation: {
+    id: 'operation',
+    label: 'Operation',
+    icon: 'OP',
+    insertable: true,
+  },
+  furnace: {
+    id: 'furnace',
+    label: 'Furnace',
+    icon: 'FUR',
+    insertable: true,
   },
 }
 
@@ -30,14 +48,6 @@ const FALLBACK_META: BlockTypeMeta = {
 export function getBlockTypeMeta(blockTypeId: string): BlockTypeMeta {
   if (BLOCK_TYPE_META[blockTypeId]) {
     return BLOCK_TYPE_META[blockTypeId]
-  }
-  if (/^\d+$/.test(blockTypeId)) {
-    return {
-      id: blockTypeId,
-      label: `Operation ${blockTypeId}`,
-      icon: 'OP',
-      insertable: true,
-    }
   }
   return { ...FALLBACK_META, id: blockTypeId, label: blockTypeId }
 }

@@ -29,6 +29,7 @@ from app.schemas import (
 )
 from app.services.block_service import create_block, get_ordered_blocks
 from app.services.block_type_service import initialize_system_blocks
+from app.services.document_operations import regenerate_document_operations
 from app.services.workflow_commands import (
     WorkflowCommandError,
     assert_document_editable,
@@ -139,12 +140,13 @@ def create_document(
         # Keep system blocks initialized for non-copy documents.
         initialize_system_blocks(db, document.document_id)
 
+    operations_count = regenerate_document_operations(db, document.document_id)
     create_initial_working_version(
         db,
         document,
         current_user=current_user,
         parent_version=get_latest_document_version(db, source.document_id) if source is not None else None,
-        preprocess_requested=source is not None and len([block for block in source_blocks if not block.is_system]) > 0,
+        preprocess_requested=source is not None and operations_count > 0,
     )
 
     db.commit()
@@ -288,12 +290,13 @@ def copy_document(
         )
         previous_new_id = created.block_id
 
+    operations_count = regenerate_document_operations(db, copied.document_id)
     create_initial_working_version(
         db,
         copied,
         current_user=current_user,
         parent_version=parent_version,
-        preprocess_requested=len([block for block in ordered_blocks if not block.is_system]) > 0,
+        preprocess_requested=operations_count > 0,
     )
 
     db.commit()

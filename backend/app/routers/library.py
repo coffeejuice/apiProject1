@@ -29,11 +29,9 @@ from app.models.library.material_properties import (
 )
 from app.models.library.material_standards import MaterialDesignation, MaterialStandardCatalog
 from app.models.library.library_item import Library, LibraryType
-from app.models.library.library import OperationsLibrary
 from app.models.library.press import Press, PressMode
 from app.models.user import User as UserModel
 from app.schemas import (
-    LibraryDbDocumentBlockTypeResponse,
     LibraryDbDieAssemblyResponse,
     LibraryDbDieResponse,
     LibraryDbDieTypeResponse,
@@ -64,7 +62,6 @@ from app.services.materials.errors import (
 )
 from app.services.materials.models import MaterialDiagram, MaterialVisualPayload
 from app.services.materials.service import MATERIALS_FILES_DIR, get_material_visual_payload
-from app.services.operation_blocks import operation_type_to_payload
 
 router = APIRouter(prefix="/library", tags=["library"])
 
@@ -869,23 +866,6 @@ def get_time_between_operation(
     return _get_by_type_or_404(db, item_id, LibraryType.time_between_operations)
 
 
-@router.get("/operation-types", response_model=List[LibraryListItemResponse])
-def list_operation_types(
-    _: UserModel = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return _list_by_type(db, LibraryType.operation_type)
-
-
-@router.get("/operation-types/{item_id}", response_model=LibraryResponse)
-def get_operation_type(
-    item_id: int,
-    _: UserModel = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return _get_by_type_or_404(db, item_id, LibraryType.operation_type)
-
-
 @router.get("/db/users", response_model=List[LibraryDbUserResponse])
 def list_db_users(
     _: UserModel = Depends(get_current_user),
@@ -894,33 +874,6 @@ def list_db_users(
     return db.execute(
         select(UserModel).order_by(UserModel.user_id.asc())
     ).scalars().all()
-
-
-@router.get("/db/document-block-types", response_model=List[LibraryDbDocumentBlockTypeResponse])
-def list_db_document_block_types(
-    insertable_only: bool = False,
-    _: UserModel = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    operations = db.execute(
-        select(OperationsLibrary).order_by(
-            OperationsLibrary.parent_type_id.asc().nulls_first(),
-            OperationsLibrary.row.asc(),
-            OperationsLibrary.type_id.asc(),
-        )
-    ).scalars().all()
-    parent_ids = {
-        operation.parent_type_id
-        for operation in operations
-        if operation.parent_type_id is not None
-    }
-    payloads = [
-        operation_type_to_payload(operation, has_children=operation.type_id in parent_ids)
-        for operation in operations
-    ]
-    if insertable_only:
-        payloads = [payload for payload in payloads if payload["insertable"]]
-    return [LibraryDbDocumentBlockTypeResponse.model_validate(payload) for payload in payloads]
 
 
 @router.get("/db/die-types", response_model=List[LibraryDbDieTypeResponse])

@@ -19,12 +19,17 @@ from .prolongation_geometry import (
     build_spiral_round_geometry,
 )
 from .upsetting import DieDimensions, PressModeParameters
-
-
-AXIAL_PROLONGATION_TYPE_IDS = frozenset({46, 83, 90})
-SPIRAL_PROLONGATION_TYPE_IDS = frozenset({50, 51})
-RADIAL_PROLONGATION_TYPE_IDS = frozenset({80, 82, 95, 96})
-PROLONGATION_TYPE_IDS = AXIAL_PROLONGATION_TYPE_IDS | SPIRAL_PROLONGATION_TYPE_IDS | RADIAL_PROLONGATION_TYPE_IDS
+from .operation_keys import (
+    AXIAL_PROLONGATION_TEMPLATE_IDS,
+    PROLONGATION_HEIGHT_BITES,
+    PROLONGATION_SKIP_BITES,
+    PROLONGATION_TEMPLATE_IDS,
+    RADIAL_HEIGHT_BITES,
+    RADIAL_PROLONGATION_TEMPLATE_IDS,
+    RADIAL_ROTATION_HEIGHT_FEED,
+    ROUNDING_SPIRAL_ONE_ROTATION,
+    SPIRAL_PROLONGATION_TEMPLATE_IDS,
+)
 
 
 class ProlongationMathError(ValueError):
@@ -46,7 +51,7 @@ class ProlongationComputationResult:
 
 def calculate_prolongation(
     *,
-    type_id: int,
+    template_id: str,
     initial_geometry: GeneratedGeometry,
     press_mode: PressModeParameters,
     top_die: DieDimensions,
@@ -73,8 +78,8 @@ def calculate_prolongation(
 ) -> ProlongationComputationResult:
     """Compute axial, spiral, and radial prolongation deformation and timing outputs."""
 
-    if type_id not in PROLONGATION_TYPE_IDS:
-        raise ProlongationMathError(f"Unsupported prolongation type_id={type_id}")
+    if template_id not in PROLONGATION_TEMPLATE_IDS:
+        raise ProlongationMathError(f"Unsupported prolongation template_id={template_id}")
     if speed_mm_per_s <= 0.0:
         raise ProlongationMathError(f"Working speed must be positive, got {speed_mm_per_s}")
 
@@ -90,7 +95,7 @@ def calculate_prolongation(
     notes: list[str] = []
     operation_specific_parameters: dict[str, Any] = {}
 
-    if type_id in SPIRAL_PROLONGATION_TYPE_IDS:
+    if template_id in SPIRAL_PROLONGATION_TEMPLATE_IDS:
         try:
             spiral_geometry = build_spiral_round_geometry(
                 initial_geometry=initial_geometry,
@@ -109,7 +114,7 @@ def calculate_prolongation(
         base_feed_first = min(initial_height, 0.8 * die_straight_length)
         base_feed_middle = _require_positive(feed_mm, "feed")
         base_feed_last = 0.0
-        rotations_count_per_feed_list = (5, 0, 5) if type_id == 50 else (5, 2, 5)
+        rotations_count_per_feed_list = (5, 0, 5) if template_id == ROUNDING_SPIRAL_ONE_ROTATION else (5, 2, 5)
         operation_specific_parameters["diameter"] = final_geometry.height_mm
         operation_specific_parameters["rotation_per_bite"] = rotation_per_bite_deg
         operation_specific_parameters["rotations_count_per_feed_list"] = rotations_count_per_feed_list
@@ -142,8 +147,8 @@ def calculate_prolongation(
                 parameters_update={"height": target_height},
             )
 
-        if type_id in RADIAL_PROLONGATION_TYPE_IDS:
-            if type_id in {80, 95}:
+        if template_id in RADIAL_PROLONGATION_TEMPLATE_IDS:
+            if template_id == RADIAL_ROTATION_HEIGHT_FEED:
                 base_feed_first = _require_positive(radial_feed_mm, "radial_feed")
                 num_of_bites_input = None
             else:
@@ -152,7 +157,7 @@ def calculate_prolongation(
             base_feed_middle = 0.0
             base_feed_last = 0.0
         else:
-            if type_id in {83, 90}:
+            if template_id in {PROLONGATION_HEIGHT_BITES, PROLONGATION_SKIP_BITES}:
                 num_of_bites_input = _require_positive_int(num_of_bites_input, "num_of_bites")
                 base_feed_first = initial_length / num_of_bites_input
                 base_feed_middle = 0.0
@@ -218,7 +223,7 @@ def calculate_prolongation(
         feed_last=base_feed_last,
         num_of_bites_input=num_of_bites_input,
         skip_bites=skip_bites,
-        rotation_per_bite_deg=rotation_per_bite_deg if type_id in SPIRAL_PROLONGATION_TYPE_IDS else 0.0,
+        rotation_per_bite_deg=rotation_per_bite_deg if template_id in SPIRAL_PROLONGATION_TEMPLATE_IDS else 0.0,
         rotations_count_per_feed_list=operation_specific_parameters["rotations_count_per_feed_list"],
     )
     num_of_bites = len(bites_table)
@@ -235,17 +240,17 @@ def calculate_prolongation(
             "extra_rotations": extra_rotations or {},
         }
     )
-    if type_id in RADIAL_PROLONGATION_TYPE_IDS:
+    if template_id in RADIAL_PROLONGATION_TEMPLATE_IDS:
         operation_specific_parameters.update(
             {
-                "radial_initial_rotations": _radial_initial_rotations(type_id),
+                "radial_initial_rotations": _radial_initial_rotations(template_id),
                 "radial_accumulated_billet_rotation": angle_deg,
-                "radial_rotations": _radial_rotations(type_id, angle_deg, extra_rotations or {}),
+                "radial_rotations": _radial_rotations(template_id, angle_deg, extra_rotations or {}),
             }
         )
 
     strain_height = 0.0 if penetration <= 0.0 else math.log(final_geometry.height_mm / initial_height)
-    if type_id in SPIRAL_PROLONGATION_TYPE_IDS:
+    if template_id in SPIRAL_PROLONGATION_TEMPLATE_IDS:
         strain_length = math.log(initial_area / final_geometry.cross_section_area_mm2)
         strain_width = -0.5 * strain_length
         strain_height = strain_width
@@ -563,18 +568,18 @@ def _billet_rotation_time(angle_deg: float) -> float:
     return angle_deg / 360.0 * 1.5 + 1.0
 
 
-def _radial_initial_rotations(type_id: int) -> list[tuple[str, float]]:
-    if type_id in {95, 96}:
+def _radial_initial_rotations(template_id: str) -> list[tuple[str, float]]:
+    if template_id in {RADIAL_ROTATION_HEIGHT_FEED, RADIAL_HEIGHT_BITES}:
         return [("y", 90.0)]
     return []
 
 
 def _radial_rotations(
-    type_id: int,
+    template_id: str,
     angle_deg: float,
     extra_rotations: dict[str, float],
 ) -> list[tuple[str, float]]:
-    if type_id in {95, 96}:
+    if template_id in {RADIAL_ROTATION_HEIGHT_FEED, RADIAL_HEIGHT_BITES}:
         return [("y", 90.0), ("x", angle_deg)]
     return [
         ("x", angle_deg),

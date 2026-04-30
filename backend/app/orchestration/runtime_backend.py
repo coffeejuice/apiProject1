@@ -20,6 +20,7 @@ from app.models.document.document import (
     PreprocessStatus,
     SimulationStatus,
 )
+from app.models.document.document_operation import DocumentOperation
 from app.models.library.material import MaterialVersion
 from app.models.project import Project
 from app.models.server import Server, ServerType
@@ -40,7 +41,15 @@ from app.orchestration.claims import ClaimedStageJob, StageJobClaimer, StageJobE
 from app.orchestration.leases import LeaseHeartbeat, LeaseManager, LeasePolicy
 from app.orchestration.pg_notify import broadcast_notify
 from app.orchestration.state_machine import WorkflowStage
+from app.services.block_props import (
+    DOCUMENT_PROPERTIES,
+    OPERATION_PROPERTIES,
+    extract_namespace,
+    normalize_document_block_props,
+)
 from app.services.block_service import get_ordered_blocks
+from app.services.document_operations import regenerate_document_operations
+from app.services.operation_blocks import OPERATION_BLOCK_TYPE_ID, operation_target_to_parameters
 from app.services.preprocessor.compiler import (
     CompiledControlProgram,
     CompiledControlProgramRow,
@@ -54,7 +63,6 @@ from app.services.preprocessor.geometry import GeneratedGeometry
 LOGGER = logging.getLogger(__name__)
 
 DEFAULT_MATERIAL_DENSITY_KG_PER_MM3 = 7.85e-6
-IGNORED_EDITOR_BLOCK_TYPES = {"document_heading"}
 
 
 def now_utc() -> datetime:
@@ -140,7 +148,10 @@ def _compiled_row_to_step_payload(
         }
     )
     return {
-        "block_type_id": row.type_id,
+        "document_operation_id": row.document_operation_id,
+        "operation_template_id": row.operation_template_id,
+        "operation_kind": row.operation_kind or row.operation_type or "generic",
+        "operation_label_snapshot": row.operation_label or row.process_name,
         "source_block_id": row.source_block_id,
         "block_name_snapshot": row.process_name,
         "library_name_snapshot": row.library_name,
@@ -183,7 +194,7 @@ def _coerce_float(value: object) -> float | None:
 
 
 def _infer_volume_mm3_from_input_block(block: Block) -> float | None:
-    props = dict(block.props or {})
+    props = extract_namespace(normalize_document_block_props(block.props), DOCUMENT_PROPERTIES)
     explicit_volume = _coerce_float(props.get("volume_mm3"))
     if explicit_volume is not None and explicit_volume > 0.0:
         return explicit_volume
@@ -224,8 +235,8 @@ def build_process_cards_for_document_version(session: Session, document_version:
     operation_id = 1
 
     for block in get_ordered_blocks(session, document.document_id):
-        if block.block_type_id == "document_heading":
-            props = dict(block.props or {})
+        if block.block_type_id == "document":
+            props = extract_namespace(normalize_document_block_props(block.props), DOCUMENT_PROPERTIES)
             block_material_id = _coerce_int(props.get("material_id"))
             if block_material_id is not None:
                 current_material_id = block_material_id
@@ -243,6 +254,9 @@ def build_process_cards_for_document_version(session: Session, document_version:
                         operation_id=operation_id,
                         type_id=geometry_type_id,
                         parameters=attributes,
+                        operation_template_id=f"document.geometry.{geometry_type_id}",
+                        operation_kind="geometry",
+                        operation_label="Billet geometry",
                         source_block_id=block.block_id,
                         material_id=current_material_id,
                         weight_kg=weight_kg,
@@ -252,63 +266,58 @@ def build_process_cards_for_document_version(session: Session, document_version:
                 operation_id += 1
             continue
 
-        if block.block_type_id == "input_workpiece":
-            props = dict(block.props or {})
-            geometry_type_id = _coerce_int(props.get("geometry_type_id"))
-            if geometry_type_id is None:
+    operation_rows = session.scalars(
+        select(DocumentOperation)
+        .where(DocumentOperation.document_id == document.document_id)
+        .order_by(DocumentOperation.operation_order.asc())
+    ).all()
+    if not operation_rows:
+        regenerate_document_operations(session, document.document_id)
+        operation_rows = session.scalars(
+            select(DocumentOperation)
+            .where(DocumentOperation.document_id == document.document_id)
+            .order_by(DocumentOperation.operation_order.asc())
+        ).all()
+
+    if operation_rows:
+        for row in operation_rows:
+            operation_template_id = row.operation_template_id
+            if not operation_template_id or row.parse_status != "valid":
                 continue
-            attributes = dict(props.get("attributes") or {})
-            volume_mm3 = _infer_volume_mm3_from_input_block(block)
-            weight_kg = _coerce_float(props.get("weight"))
+            parameters = dict(row.effective_properties or {})
+            if row.source_block_type_id == OPERATION_BLOCK_TYPE_ID:
+                operation_parameters = extract_namespace(
+                    {OPERATION_PROPERTIES: row.operation_properties},
+                    OPERATION_PROPERTIES,
+                )
+                parameters = {
+                    **parameters,
+                    **operation_target_to_parameters(operation_parameters),
+                }
+            block_material_id = _coerce_int(parameters.get("material_id"))
+            if block_material_id is not None:
+                current_material_id = block_material_id
             cards.append(
                 ProcessCard(
                     operation_id=operation_id,
-                    type_id=geometry_type_id,
-                    parameters=attributes,
-                    source_block_id=block.block_id,
+                    parameters=parameters,
+                    document_operation_id=row.document_operation_id,
+                    operation_template_id=operation_template_id,
+                    operation_kind=row.operation_kind,
+                    operation_label=row.label_snapshot,
+                    source_block_id=row.source_block_id,
+                    press_id=_coerce_int(parameters.get("press_id")),
+                    press_mode_id=_coerce_int(parameters.get("press_mode_id")),
+                    die_assembly_id=_coerce_int(parameters.get("die_assembly_id")),
+                    top_die_id=_coerce_int(parameters.get("top_die_id")),
+                    bottom_die_id=_coerce_int(parameters.get("bottom_die_id")),
                     material_id=current_material_id,
-                    weight_kg=weight_kg,
-                    volume_mm3=volume_mm3,
+                    weight_kg=_coerce_float(parameters.get("weight")),
+                    volume_mm3=_coerce_float(parameters.get("volume_mm3")),
                 )
             )
             operation_id += 1
-            continue
-
-        if block.block_type_id in IGNORED_EDITOR_BLOCK_TYPES:
-            continue
-
-        type_id = _coerce_int(block.block_type_id)
-        if type_id is None:
-            LOGGER.debug(
-                "Skipping non-process block block_id=%s block_type_id=%s during preprocessing",
-                block.block_id,
-                block.block_type_id,
-            )
-            continue
-
-        props = dict(block.props or {})
-        if type_id == 5:
-            block_material_id = _coerce_int(props.get("material_id"))
-            if block_material_id is not None:
-                current_material_id = block_material_id
-
-        cards.append(
-            ProcessCard(
-                operation_id=operation_id,
-                type_id=type_id,
-                parameters=props,
-                source_block_id=block.block_id,
-                press_id=_coerce_int(props.get("press_id")),
-                press_mode_id=_coerce_int(props.get("press_mode_id")),
-                die_assembly_id=_coerce_int(props.get("die_assembly_id")),
-                top_die_id=_coerce_int(props.get("top_die_id")),
-                bottom_die_id=_coerce_int(props.get("bottom_die_id")),
-                material_id=current_material_id,
-                weight_kg=_coerce_float(props.get("weight")),
-                volume_mm3=_coerce_float(props.get("volume_mm3")),
-            )
-        )
-        operation_id += 1
+        return tuple(cards)
 
     return tuple(cards)
 
@@ -337,7 +346,10 @@ def _rebuild_simulation_steps(
             document_version_id=document_version.document_version_id,
             execution_order=execution_order,
             source_block_id=payload["source_block_id"],
-            block_type_id=int(payload["block_type_id"]),
+            document_operation_id=payload["document_operation_id"],
+            operation_template_id=payload["operation_template_id"],
+            operation_kind=str(payload["operation_kind"]),
+            operation_label_snapshot=payload["operation_label_snapshot"],
             block_name_snapshot=str(payload["block_name_snapshot"]),
             library_name_snapshot=str(payload["library_name_snapshot"]),
             material_version_id=payload["material_version_id"],

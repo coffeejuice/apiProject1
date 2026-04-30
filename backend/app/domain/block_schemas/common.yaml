@@ -1,0 +1,6 @@
+version: 1
+description: Shared schema fragments for dynamic document block definitions.
+
+control_presets: {}
+option_sets: {}
+validation_presets: {}

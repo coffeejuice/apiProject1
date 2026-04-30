@@ -10,15 +10,12 @@ from app.schemas import OperationPayload
 from app.services.block_service import create_block_or_bundle, delete_block_or_bundle, move_block_after, update_block_props
 from app.services.block_type_service import (
     can_delete_block,
-    can_place_block_after,
+    can_insert_block_after,
     can_reorder_block,
     validate_block_constraints,
 )
-from app.services.operation_blocks import (
-    build_default_operation_props,
-    is_operation_block_type,
-    sanitize_operation_props,
-)
+from app.services.document_operations import normalize_props_for_block_type, regenerate_document_operations
+from app.services.operation_blocks import is_operation_block_type, sanitize_operation_props
 
 
 def apply_operations(
@@ -37,7 +34,7 @@ def apply_operations(
 
             previous_block_id = data.get("previous_block_id")
             parsed_prev = UUID(previous_block_id) if previous_block_id else None
-            if not can_place_block_after(db, document_id, parsed_prev):
+            if not can_insert_block_after(db, document_id, block_type_id, parsed_prev):
                 raise ValueError("Cannot insert before fixed system blocks")
             block_id = UUID(data["block_id"]) if data.get("block_id") else None
 
@@ -45,11 +42,7 @@ def apply_operations(
                 db=db,
                 document_id=document_id,
                 block_type_id=block_type_id,
-                props=(
-                    build_default_operation_props(db, block_type_id, data.get("props", {}))
-                    if is_operation_block_type(db, block_type_id)
-                    else data.get("props", {})
-                ),
+                props=normalize_props_for_block_type(block_type_id, data.get("props", {})),
                 previous_block_id=parsed_prev,
                 block_id=block_id,
             )
@@ -67,7 +60,10 @@ def apply_operations(
                 raise ValueError(f"Cannot reorder block {block_id}: block has fixed position")
             previous_block_id = data.get("previous_block_id")
             parsed_prev = UUID(str(previous_block_id)) if previous_block_id else None
-            if not can_place_block_after(db, document_id, parsed_prev):
+            existing_block = db.execute(select(Block).filter(Block.block_id == block_id)).scalars().first()
+            if not existing_block:
+                raise ValueError(f"Block {block_id} not found")
+            if not can_insert_block_after(db, document_id, existing_block.block_type_id, parsed_prev):
                 raise ValueError("Cannot move before fixed system blocks")
             moved = move_block_after(db, document_id, block_id, parsed_prev)
             if not moved:
@@ -81,7 +77,7 @@ def apply_operations(
             props = (
                 sanitize_operation_props(db, existing_block.block_type_id, data.get("props", {}))
                 if is_operation_block_type(db, existing_block.block_type_id)
-                else data.get("props", {})
+                else normalize_props_for_block_type(existing_block.block_type_id, data.get("props", {}))
             )
             block = update_block_props(db, block_id, props)
             if not block:
@@ -102,6 +98,7 @@ def commit_operations(
 ) -> Tuple[bool, str]:
     try:
         apply_operations(db, document_id, ops)
+        regenerate_document_operations(db, document_id)
         return True, "Operations applied"
     except Exception as exc:
         return False, str(exc)

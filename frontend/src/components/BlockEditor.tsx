@@ -2,6 +2,7 @@ import {
   useCallback,
   DragEvent,
   forwardRef,
+  MouseEvent,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -13,6 +14,7 @@ import { useDocumentsStore } from '../stores/useDocumentsStore'
 import { useBlockClipboardStore } from '../stores/useBlockClipboardStore'
 import { apiClient } from '../lib/apiClient'
 import { applyFieldLengthLimits } from '../lib/blockFieldLimits'
+import { loadDocumentResumeState, saveDocumentResumeState } from '../lib/documentResumeState'
 import { getBlockComponent, BlockData } from './blocks'
 import type {
   DocumentLineageResponse,
@@ -32,6 +34,10 @@ export interface BlockEditorMeta {
   draftDocumentName: string
   sourceDocumentId: number | null
   activeDocumentBlockId: string | null
+  activeDocumentBlockLabel: string | null
+  selectedDocumentBlockIds: string[]
+  selectedDocumentBlockLabel: string | null
+  structureEditDisabled: boolean
   saveStatus: EditorSaveStatus
   saveError: string | null
   hasUnsavedChanges: boolean
@@ -68,6 +74,7 @@ export interface BlockEditorHandle {
   cutBlocksToClipboard: (blockIds: string[]) => Promise<boolean>
   pasteClipboardClip: (clipId?: string, previousBlockId?: string | null) => Promise<boolean>
   makeBlockActive: (blockId: string | null) => void
+  clearSelectedBlocks: () => void
   getActiveBlockId: () => string | null
   getBlocks: () => BlockData[]
   hasUnsavedChanges: () => boolean
@@ -76,20 +83,70 @@ export interface BlockEditorHandle {
 interface BlockEditorProps {
   className?: string
   onMetaChange?: (meta: BlockEditorMeta) => void
-  onBlocksChange?: (blocks: BlockData[]) => void
 }
 
-const DEFORMATION_BUNDLE_ORDER = ['24']
-const DEFORMATION_BUNDLE_TYPES = new Set(DEFORMATION_BUNDLE_ORDER)
-const DOCUMENT_HEADING_TYPE_ID = 'document_heading'
-const FURNACE_SECTION_TYPE_ID = '10'
-const DEFORMATION_SECTION_TYPE_ID = '24'
-const CATALOG_BLOCK_DRAG_MIME = 'application/x-forgelab-block-type'
+const DOCUMENT_BLOCK_TYPE_ID = 'document'
+const HEATING_SECTION_TYPE_ID = 'heating'
+const DEFORMATION_SECTION_TYPE_ID = 'deformation'
+const FURNACE_BLOCK_TYPE_ID = 'furnace'
+const OPERATION_BLOCK_TYPE_ID = 'operation'
+const OPERATION_PROPERTIES = 'operation_properties'
 const EDITOR_BLOCK_DRAG_MIME = 'application/x-forgelab-editor-block-ids'
 const INSERT_CONFIRMATION_DURATION_MS = 1100
 const BLOCK_LAYOUT_TRANSITION = {
   duration: 0.38,
   ease: 'easeInOut' as const,
+}
+const OPERATION_TYPE_PROP_KEYS = [
+  'operation_template_id',
+  'operation_template_version',
+  'operation_kind',
+  'target',
+  'template_snapshot',
+  'operation_template',
+  'title',
+] as const
+const OPERATION_TYPE_NAMESPACE_KEYS = [
+  'operation_template_id',
+  'operation_template_version',
+  'operation_kind',
+  'target',
+  'template_snapshot',
+] as const
+
+type ShortcutShiftDirection = 'up' | 'down'
+type ShortcutInsertPosition = 'above' | 'below'
+
+interface ShortcutMoveUnit {
+  ids: string[]
+  startIndex: number
+  endIndex: number
+}
+
+interface ShortcutMovePlan {
+  blockIds: string[]
+  previousBlockId: string | null
+}
+
+interface ShortcutMovePlanResult {
+  plan: ShortcutMovePlan | null
+  error?: string
+}
+
+interface ShortcutInsertPlan {
+  blockTypeId: string
+  previousBlockId: string | null
+  props: Record<string, unknown>
+}
+
+interface ShortcutInsertPlanResult {
+  plan: ShortcutInsertPlan | null
+  error?: string
+}
+
+interface SectionInsertMenuState {
+  blockId: string
+  position: ShortcutInsertPosition
 }
 
 type DocumentVisualSection =
@@ -109,20 +166,37 @@ interface DocumentVisualLayout {
   sections: DocumentVisualSection[]
 }
 
+function coercePositiveInteger(value: unknown, fallback: number): number {
+  const parsed = Number.parseInt(String(value ?? ''), 10)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
+
 function isTopLevelDocumentSection(block: BlockData): boolean {
-  return block.block_type_id === FURNACE_SECTION_TYPE_ID || block.block_type_id === DEFORMATION_SECTION_TYPE_ID
+  return block.block_type_id === HEATING_SECTION_TYPE_ID || block.block_type_id === DEFORMATION_SECTION_TYPE_ID
 }
 
 function isDeformationSection(block: BlockData): boolean {
   return block.block_type_id === DEFORMATION_SECTION_TYPE_ID
 }
 
+function isHeatingSection(block: BlockData): boolean {
+  return block.block_type_id === HEATING_SECTION_TYPE_ID
+}
+
+function isOperationBlock(block: BlockData): boolean {
+  return block.block_type_id === OPERATION_BLOCK_TYPE_ID
+}
+
+function isFurnaceBlock(block: BlockData): boolean {
+  return block.block_type_id === FURNACE_BLOCK_TYPE_ID
+}
+
 function canActivateBlock(block: BlockData): boolean {
-  return block.block_type_id !== DOCUMENT_HEADING_TYPE_ID
+  return block.block_type_id !== DOCUMENT_BLOCK_TYPE_ID
 }
 
 function canSelectBlock(block: BlockData): boolean {
-  return block.block_type_id !== DOCUMENT_HEADING_TYPE_ID && !block.is_system
+  return block.block_type_id !== DOCUMENT_BLOCK_TYPE_ID && !block.is_system
 }
 
 function getEditorBlockDragPayload(event: DragEvent<HTMLElement>): string[] {
@@ -188,20 +262,185 @@ function reorderBlocksForMove(blocks: BlockData[], movingBlockIds: string[], pre
   return relinkOrderedBlocks(reordered)
 }
 
-function getOperationLibraryName(block: BlockData): string | null {
-  const operationType = block.props?.operation_type
-  if (!operationType || typeof operationType !== 'object') {
+function buildOperationMoveUnits(blocks: BlockData[]): ShortcutMoveUnit[] {
+  return blocks.reduce<ShortcutMoveUnit[]>((units, block, index) => {
+    if (isOperationBlock(block)) {
+      units.push({
+        ids: [block.block_id],
+        startIndex: index,
+        endIndex: index,
+      })
+    }
+    return units
+  }, [])
+}
+
+function buildFurnaceMoveUnits(blocks: BlockData[]): ShortcutMoveUnit[] {
+  return blocks.reduce<ShortcutMoveUnit[]>((units, block, index) => {
+    if (isFurnaceBlock(block)) {
+      units.push({
+        ids: [block.block_id],
+        startIndex: index,
+        endIndex: index,
+      })
+    }
+    return units
+  }, [])
+}
+
+function buildSectionMoveUnits(blocks: BlockData[]): ShortcutMoveUnit[] {
+  const units: ShortcutMoveUnit[] = []
+  let index = 0
+
+  while (index < blocks.length) {
+    const block = blocks[index]
+
+    if (!isTopLevelDocumentSection(block)) {
+      index += 1
+      continue
+    }
+
+    const ids = [block.block_id]
+    let endIndex = index
+
+    if (isDeformationSection(block) || isHeatingSection(block)) {
+      let childIndex = index + 1
+      while (
+        childIndex < blocks.length &&
+        blocks[childIndex].block_type_id !== DOCUMENT_BLOCK_TYPE_ID &&
+        !isTopLevelDocumentSection(blocks[childIndex])
+      ) {
+        ids.push(blocks[childIndex].block_id)
+        endIndex = childIndex
+        childIndex += 1
+      }
+    }
+
+    units.push({
+      ids,
+      startIndex: index,
+      endIndex,
+    })
+    index = endIndex + 1
+  }
+
+  return units
+}
+
+function getAnchorBeforeBlockAfterRemoving(
+  blocks: BlockData[],
+  movingIds: Set<string>,
+  nextBlockId: string | null
+): string | null {
+  const remainingBlocks = blocks.filter((block) => !movingIds.has(block.block_id))
+  if (nextBlockId === null) {
+    return remainingBlocks[remainingBlocks.length - 1]?.block_id ?? null
+  }
+
+  const nextIndex = remainingBlocks.findIndex((block) => block.block_id === nextBlockId)
+  if (nextIndex < 0) {
+    return remainingBlocks[remainingBlocks.length - 1]?.block_id ?? null
+  }
+  return nextIndex > 0 ? remainingBlocks[nextIndex - 1].block_id : null
+}
+
+function areIndexesContiguous(indexes: number[]): boolean {
+  return indexes.every((index, arrayIndex) => arrayIndex === 0 || index === indexes[arrayIndex - 1] + 1)
+}
+
+function buildShortcutMovePlanFromUnits(
+  blocks: BlockData[],
+  units: ShortcutMoveUnit[],
+  targetUnitIndexes: number[],
+  direction: ShortcutShiftDirection
+): ShortcutMovePlan | null {
+  const sortedUnitIndexes = Array.from(new Set(targetUnitIndexes)).sort((left, right) => left - right)
+  if (sortedUnitIndexes.length === 0) {
     return null
   }
-  const libraryName = (operationType as { library_name?: unknown }).library_name
-  return typeof libraryName === 'string' && libraryName.trim() ? libraryName : null
+
+  const movingIds = new Set(
+    sortedUnitIndexes.flatMap((unitIndex) => units[unitIndex]?.ids ?? [])
+  )
+  if (movingIds.size === 0) {
+    return null
+  }
+
+  const blockIds = blocks
+    .filter((block) => movingIds.has(block.block_id))
+    .map((block) => block.block_id)
+  const firstUnitIndex = sortedUnitIndexes[0]
+  const lastUnitIndex = sortedUnitIndexes[sortedUnitIndexes.length - 1]
+  const firstUnit = units[firstUnitIndex]
+  const lastUnit = units[lastUnitIndex]
+
+  if (!firstUnit || !lastUnit) {
+    return null
+  }
+
+  if (!areIndexesContiguous(sortedUnitIndexes)) {
+    if (direction === 'up') {
+      return {
+        blockIds,
+        previousBlockId: blocks[firstUnit.startIndex].previous_block_id,
+      }
+    }
+
+    return {
+      blockIds,
+      previousBlockId: getAnchorBeforeBlockAfterRemoving(
+        blocks,
+        movingIds,
+        blocks[lastUnit.endIndex].next_block_id
+      ),
+    }
+  }
+
+  if (direction === 'up') {
+    if (firstUnitIndex === 0) {
+      return null
+    }
+    const previousUnit = units[firstUnitIndex - 1]
+    return {
+      blockIds,
+      previousBlockId: blocks[previousUnit.startIndex].previous_block_id,
+    }
+  }
+
+  if (lastUnitIndex >= units.length - 1) {
+    return null
+  }
+  const nextUnit = units[lastUnitIndex + 1]
+  return {
+    blockIds,
+    previousBlockId: blocks[nextUnit.endIndex].block_id,
+  }
+}
+
+function getOperationLibraryName(block: BlockData): string | null {
+  const title = block.props?.title
+  if (typeof title === 'string' && title.trim()) {
+    return title
+  }
+  const template = block.props?.operation_template || block.props?.template_snapshot
+  if (template && typeof template === 'object') {
+    const label = (template as { display_name?: unknown; label?: unknown }).display_name ||
+      (template as { label?: unknown }).label
+    if (typeof label === 'string' && label.trim()) {
+      return label
+    }
+  }
+  return null
 }
 
 function getBlockDisplayName(block: BlockData): string {
-  if (block.block_type_id === DOCUMENT_HEADING_TYPE_ID) {
+  if (block.block_type_id === DOCUMENT_BLOCK_TYPE_ID) {
     return 'Document'
   }
-  if (block.block_type_id === FURNACE_SECTION_TYPE_ID) {
+  if (block.block_type_id === HEATING_SECTION_TYPE_ID) {
+    return 'Heating'
+  }
+  if (block.block_type_id === FURNACE_BLOCK_TYPE_ID) {
     return 'Furnace'
   }
   if (block.block_type_id === DEFORMATION_SECTION_TYPE_ID) {
@@ -218,9 +457,9 @@ function getSectionDropTarget(section: DocumentVisualSection): string | null {
 }
 
 function buildDocumentVisualLayout(blocks: BlockData[]): DocumentVisualLayout {
-  const heading = blocks.find((block) => block.block_type_id === DOCUMENT_HEADING_TYPE_ID) || null
+  const heading = blocks.find((block) => block.block_type_id === DOCUMENT_BLOCK_TYPE_ID) || null
   const sections: DocumentVisualSection[] = []
-  let activeDeformation: Extract<DocumentVisualSection, { kind: 'section' }> | null = null
+  let activeSection: Extract<DocumentVisualSection, { kind: 'section' }> | null = null
   let looseSectionIndex = 0
 
   const appendLooseBlock = (block: BlockData) => {
@@ -249,18 +488,58 @@ function buildDocumentVisualLayout(blocks: BlockData[]): DocumentVisualLayout {
         children: [],
       }
       sections.push(section)
-      activeDeformation = isDeformationSection(block) ? section : null
+      activeSection = section
       continue
     }
 
-    if (activeDeformation) {
-      activeDeformation.children.push(block)
+    if (
+      activeSection &&
+      ((isDeformationSection(activeSection.block) && isOperationBlock(block)) ||
+        (isHeatingSection(activeSection.block) && isFurnaceBlock(block)))
+    ) {
+      activeSection.children.push(block)
     } else {
       appendLooseBlock(block)
     }
   }
 
   return { heading, sections }
+}
+
+function buildSectionNumbers(
+  sections: DocumentVisualSection[],
+  startNumber: number
+): Map<string, string> {
+  const numbersByBlockId = new Map<string, string>()
+  let sectionIndex = 0
+  let currentNumber = startNumber
+
+  while (sectionIndex < sections.length) {
+    const section = sections[sectionIndex]
+    if (section.kind !== 'section') {
+      sectionIndex += 1
+      continue
+    }
+
+    const nextSection = sections[sectionIndex + 1]
+    if (
+      isHeatingSection(section.block) &&
+      nextSection?.kind === 'section' &&
+      isDeformationSection(nextSection.block)
+    ) {
+      numbersByBlockId.set(section.block.block_id, `${currentNumber}.1`)
+      numbersByBlockId.set(nextSection.block.block_id, `${currentNumber}.2`)
+      currentNumber += 1
+      sectionIndex += 2
+      continue
+    }
+
+    numbersByBlockId.set(section.block.block_id, `${currentNumber}.`)
+    currentNumber += 1
+    sectionIndex += 1
+  }
+
+  return numbersByBlockId
 }
 
 function cloneProps(props: Record<string, unknown>): Record<string, unknown> {
@@ -337,14 +616,97 @@ function withFallbackErrorMessage(message: string | undefined, fallback: string)
 function preparePropsForStructureInsert(props: Record<string, unknown>): Record<string, unknown> {
   const clonedProps = cloneProps(props)
   delete clonedProps.title
+  delete clonedProps.operation_template
   delete clonedProps.operation_type
+  delete clonedProps.operation_templates
+  delete clonedProps.operation_type_selector
+  delete clonedProps.operation_block_parsing_rules
+  delete clonedProps.parameters_calculation_mode_selector
   delete clonedProps.editable_fields
   delete clonedProps.field_limits
   return clonedProps
 }
 
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {}
+}
+
+function getOperationTemplateIdFromProps(props: Record<string, unknown> | undefined): string {
+  const rawProps = props || {}
+  const operationProperties = asRecord(rawProps[OPERATION_PROPERTIES])
+  const value = rawProps.operation_template_id ?? operationProperties.operation_template_id
+  return value === null || value === undefined ? '' : String(value)
+}
+
+function hasUnsavedOperationTypeChange(
+  draftProps: Record<string, unknown>,
+  baselineProps: Record<string, unknown>
+): boolean {
+  return getOperationTemplateIdFromProps(draftProps) !== getOperationTemplateIdFromProps(baselineProps)
+}
+
+function restoreOperationTypeProps(
+  draftProps: Record<string, unknown>,
+  baselineProps: Record<string, unknown>
+): Record<string, unknown> {
+  const nextProps = cloneProps(draftProps)
+
+  OPERATION_TYPE_PROP_KEYS.forEach((key) => {
+    if (Object.prototype.hasOwnProperty.call(baselineProps, key)) {
+      nextProps[key] = cloneProps({ value: baselineProps[key] }).value
+    } else {
+      delete nextProps[key]
+    }
+  })
+
+  const draftOperationProperties = asRecord(draftProps[OPERATION_PROPERTIES])
+  const baselineOperationProperties = asRecord(baselineProps[OPERATION_PROPERTIES])
+  if (
+    Object.keys(draftOperationProperties).length > 0 ||
+    Object.keys(baselineOperationProperties).length > 0
+  ) {
+    const nextOperationProperties = cloneProps(draftOperationProperties)
+    OPERATION_TYPE_NAMESPACE_KEYS.forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(baselineOperationProperties, key)) {
+        nextOperationProperties[key] = cloneProps({ value: baselineOperationProperties[key] }).value
+      } else {
+        delete nextOperationProperties[key]
+      }
+    })
+    nextProps[OPERATION_PROPERTIES] = nextOperationProperties
+  }
+
+  return nextProps
+}
+
+function isInteractiveShortcutTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false
+  }
+  if (target.isContentEditable) {
+    return true
+  }
+
+  return Boolean(
+    target.closest(
+      [
+        'input',
+        'textarea',
+        'select',
+        'button',
+        '[role="combobox"]',
+        '[role="listbox"]',
+        '[role="menu"]',
+        '[role="textbox"]',
+      ].join(',')
+    )
+  )
+}
+
 const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function BlockEditor(
-  { className, onMetaChange, onBlocksChange },
+  { className, onMetaChange },
   ref
 ) {
   const [savedBlocks, setSavedBlocks] = useState<BlockData[]>([])
@@ -365,15 +727,17 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
   const [dropPreviewPreviousBlockId, setDropPreviewPreviousBlockId] = useState<string | null | undefined>(undefined)
   const [confirmedInsertPreviousBlockId, setConfirmedInsertPreviousBlockId] = useState<string | null | undefined>(undefined)
   const [recentlyInsertedBlockIds, setRecentlyInsertedBlockIds] = useState<Set<string>>(new Set())
+  const [sectionInsertMenu, setSectionInsertMenu] = useState<SectionInsertMenuState | null>(null)
   const activeSessionIdRef = useRef<string | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
   const insertConfirmationTimeoutRef = useRef<number | null>(null)
+  const previousActiveDocumentBlockIdRef = useRef<string | null>(null)
+  const restoredDocumentIdRef = useRef<string | null>(null)
+  const scrollPersistFrameRef = useRef<number | null>(null)
+  const latestScrollTopRef = useRef(0)
 
   const { currentDoc, fetchDocument } = useDocumentsStore()
   const addClipboardClip = useBlockClipboardStore((state) => state.addClip)
-  const activeClipboardClip = useBlockClipboardStore((state) =>
-    state.clips.find((clip) => clip.id === state.activeClipId) ?? null
-  )
 
   const cloneSnapshot = (): EditorSnapshot => ({
     blocks: cloneBlocks(draftBlocks),
@@ -397,7 +761,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
   const hasUnsavedChanges = changedBlocks.length > 0
 
   const draftDocumentName = useMemo(() => {
-    const headingBlock = draftBlocks.find((block) => block.block_type_id === 'document_heading')
+    const headingBlock = draftBlocks.find((block) => block.block_type_id === DOCUMENT_BLOCK_TYPE_ID)
     const headingName = headingBlock?.props?.name
     if (typeof headingName === 'string' && headingName.trim().length > 0) {
       return headingName
@@ -410,6 +774,14 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     [draftBlocks]
   )
 
+  const sectionNumbersByBlockId = useMemo(() => {
+    const sectionNumberingStart = coercePositiveInteger(
+      documentVisualLayout.heading?.props?.section_numbering_start,
+      2
+    )
+    return buildSectionNumbers(documentVisualLayout.sections, sectionNumberingStart)
+  }, [documentVisualLayout.heading?.props?.section_numbering_start, documentVisualLayout.sections])
+
   const activeDocumentBlock = useMemo(
     () => draftBlocks.find((block) => block.block_id === activeDocumentBlockId) || null,
     [activeDocumentBlockId, draftBlocks]
@@ -419,7 +791,44 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     return draftBlocks.filter((block) => selectedDocumentBlockIds.has(block.block_id))
   }, [draftBlocks, selectedDocumentBlockIds])
 
+  const activeDocumentBlockLabel = activeDocumentBlock ? getBlockDisplayName(activeDocumentBlock) : null
+  const selectedDocumentBlockLabel = selectedDocumentBlocksInOrder.length === 1
+    ? getBlockDisplayName(selectedDocumentBlocksInOrder[0])
+    : null
+
   const structureEditDisabled = hasUnsavedChanges
+
+  const persistResumeForCurrentDocument = useCallback(
+    (patch: Partial<{ scrollTop: number; selectedBlockIds: string[] }> = {}) => {
+      if (!currentDoc?.id) {
+        return
+      }
+
+      saveDocumentResumeState({
+        projectId: String(currentDoc.project_id),
+        documentId: currentDoc.id,
+        ...patch,
+      })
+    },
+    [currentDoc?.id, currentDoc?.project_id]
+  )
+
+  const persistSelectedBlockIds = useCallback(
+    (blockIds: Iterable<string>) => {
+      persistResumeForCurrentDocument({ selectedBlockIds: Array.from(blockIds) })
+    },
+    [persistResumeForCurrentDocument]
+  )
+
+  const restoreScrollTop = useCallback((scrollTop: number) => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = scrollTop
+        }
+      })
+    })
+  }, [])
 
   const loadEditorState = useCallback(
     async (
@@ -430,6 +839,9 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
       const showLoading = options?.showLoading ?? true
       const preserveScroll = options?.preserveScroll ?? false
       const scrollTopBefore = preserveScroll ? scrollContainerRef.current?.scrollTop ?? null : null
+      const resumeState = loadDocumentResumeState()
+      const shouldRestoreResume =
+        resumeState?.documentId === docId && restoredDocumentIdRef.current !== docId
 
       if (showLoading) {
         setIsLoading(true)
@@ -447,12 +859,17 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
         setUndoStack([])
         setRedoStack([])
 
-        if (scrollTopBefore !== null) {
-          requestAnimationFrame(() => {
-            if (scrollContainerRef.current) {
-              scrollContainerRef.current.scrollTop = scrollTopBefore
-            }
+        if (shouldRestoreResume && resumeState) {
+          const blocksById = new Map(loadedBlocks.map((block) => [block.block_id, block]))
+          const selectedBlockIds = resumeState.selectedBlockIds.filter((blockId) => {
+            const block = blocksById.get(blockId)
+            return Boolean(block && canSelectBlock(block))
           })
+          setSelectedDocumentBlockIds(new Set(selectedBlockIds))
+          restoredDocumentIdRef.current = docId
+          restoreScrollTop(resumeState.scrollTop)
+        } else if (scrollTopBefore !== null) {
+          restoreScrollTop(scrollTopBefore)
         }
       } finally {
         if (showLoading) {
@@ -460,7 +877,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
         }
       }
     },
-    [fetchDocument]
+    [fetchDocument, restoreScrollTop]
   )
 
   const currentDocId = currentDoc?.id
@@ -502,6 +919,9 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
       if (insertConfirmationTimeoutRef.current !== null) {
         window.clearTimeout(insertConfirmationTimeoutRef.current)
       }
+      if (scrollPersistFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollPersistFrameRef.current)
+      }
     }
   }, [])
 
@@ -521,6 +941,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
       setActiveDocumentBlockId(null)
       setSelectedDocumentBlockIds(new Set())
       setDropPreviewPreviousBlockId(undefined)
+      setSectionInsertMenu(null)
       clearInsertConfirmation()
       setIsLoading(false)
       return
@@ -529,6 +950,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     setActiveDocumentBlockId(null)
     setSelectedDocumentBlockIds(new Set())
     setDropPreviewPreviousBlockId(undefined)
+    restoredDocumentIdRef.current = null
     clearInsertConfirmation()
     void loadEditorState(String(currentDoc.id), false)
   }, [clearInsertConfirmation, currentDoc?.id, loadEditorState])
@@ -565,13 +987,6 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
   }, [currentDocId])
 
   useEffect(() => {
-    if (!onBlocksChange) {
-      return
-    }
-    onBlocksChange(cloneBlocks(draftBlocks))
-  }, [draftBlocks, onBlocksChange])
-
-  useEffect(() => {
     const blocksById = new Map(draftBlocks.map((block) => [block.block_id, block]))
     const activeBlock = activeDocumentBlockId ? blocksById.get(activeDocumentBlockId) : null
     if (activeDocumentBlockId && (!activeBlock || !canActivateBlock(activeBlock))) {
@@ -591,6 +1006,42 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
   }, [activeDocumentBlockId, draftBlocks])
 
   useEffect(() => {
+    const previousActiveBlockId = previousActiveDocumentBlockIdRef.current
+    if (previousActiveBlockId && previousActiveBlockId !== activeDocumentBlockId) {
+      const baselineBlock = savedBlocksById.get(previousActiveBlockId)
+      if (baselineBlock?.block_type_id === OPERATION_BLOCK_TYPE_ID) {
+        setDraftBlocks((previousBlocks) => {
+          let changed = false
+          const nextBlocks = previousBlocks.map((block) => {
+            if (block.block_id !== previousActiveBlockId || block.block_type_id !== OPERATION_BLOCK_TYPE_ID) {
+              return block
+            }
+
+            if (!hasUnsavedOperationTypeChange(
+              block.props as Record<string, unknown>,
+              baselineBlock.props as Record<string, unknown>
+            )) {
+              return block
+            }
+
+            changed = true
+            return {
+              ...block,
+              props: restoreOperationTypeProps(
+                block.props as Record<string, unknown>,
+                baselineBlock.props as Record<string, unknown>
+              ),
+            }
+          })
+          return changed ? nextBlocks : previousBlocks
+        })
+      }
+    }
+
+    previousActiveDocumentBlockIdRef.current = activeDocumentBlockId
+  }, [activeDocumentBlockId, savedBlocksById])
+
+  useEffect(() => {
     if (!onMetaChange) {
       return
     }
@@ -600,6 +1051,10 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
       draftDocumentName,
       sourceDocumentId: currentDoc?.source_document_id ?? null,
       activeDocumentBlockId,
+      activeDocumentBlockLabel,
+      selectedDocumentBlockIds: selectedDocumentBlocksInOrder.map((block) => block.block_id),
+      selectedDocumentBlockLabel,
+      structureEditDisabled,
       saveStatus,
       saveError,
       hasUnsavedChanges,
@@ -613,6 +1068,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     changedBlocks.length,
     currentDoc?.source_document_id,
     activeDocumentBlockId,
+    activeDocumentBlockLabel,
     draftDocumentName,
     hasUnsavedChanges,
     isLineageLoading,
@@ -622,6 +1078,9 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     redoStack.length,
     saveError,
     saveStatus,
+    selectedDocumentBlockLabel,
+    selectedDocumentBlocksInOrder,
+    structureEditDisabled,
     undoStack.length,
   ])
 
@@ -780,7 +1239,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     element.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
 
-  const ensureStructureEditAllowed = (): boolean => {
+  const ensureStructureEditAllowed = async (): Promise<boolean> => {
     if (!currentDoc) {
       setSaveStatus('error')
       setSaveError('Select a document first')
@@ -788,9 +1247,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     }
 
     if (hasUnsavedChanges) {
-      setSaveStatus('error')
-      setSaveError('Save or cancel unsaved changes before modifying block structure')
-      return false
+      return handleSaveChanges()
     }
 
     return true
@@ -825,12 +1282,30 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
       } else {
         next.add(block.block_id)
       }
+      persistSelectedBlockIds(next)
       return next
     })
   }
 
   const clearSelectedDocumentBlocks = () => {
     setSelectedDocumentBlockIds(new Set())
+    persistSelectedBlockIds([])
+  }
+
+  const handleEditorScroll = () => {
+    if (!currentDoc?.id || !scrollContainerRef.current) {
+      return
+    }
+
+    latestScrollTopRef.current = scrollContainerRef.current.scrollTop
+    if (scrollPersistFrameRef.current !== null) {
+      return
+    }
+
+    scrollPersistFrameRef.current = window.requestAnimationFrame(() => {
+      scrollPersistFrameRef.current = null
+      persistResumeForCurrentDocument({ scrollTop: latestScrollTopRef.current })
+    })
   }
 
   const getDefaultInsertAnchor = (): string | null => {
@@ -840,39 +1315,15 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     return draftBlocks.length > 0 ? draftBlocks[draftBlocks.length - 1].block_id : null
   }
 
-  const findDeformationBundleLeaderId = (block: BlockData): string | null => {
-    if (!DEFORMATION_BUNDLE_TYPES.has(block.block_type_id)) {
-      return null
-    }
-
-    const blockIndex = draftBlocks.findIndex((entry) => entry.block_id === block.block_id)
-    const typeIndex = DEFORMATION_BUNDLE_ORDER.indexOf(block.block_type_id)
-    if (blockIndex < 0 || typeIndex < 0) {
-      return null
-    }
-
-    const leaderIndex = blockIndex - typeIndex
-    const maybeBundle = draftBlocks.slice(leaderIndex, leaderIndex + DEFORMATION_BUNDLE_ORDER.length)
-    const isBundle = DEFORMATION_BUNDLE_ORDER.every(
-      (typeId, index) => maybeBundle[index]?.block_type_id === typeId,
-    )
-    return isBundle ? maybeBundle[0].block_id : null
-  }
-
   const normalizeDeleteTargets = (blocks: BlockData[]): BlockData[] => {
     const seenIds = new Set<string>()
     const normalizedTargets: BlockData[] = []
     for (const block of blocks) {
-      const targetId = findDeformationBundleLeaderId(block) || block.block_id
-      if (seenIds.has(targetId)) {
+      if (seenIds.has(block.block_id)) {
         continue
       }
-      const target = draftBlocks.find((entry) => entry.block_id === targetId)
-      if (!target) {
-        continue
-      }
-      seenIds.add(targetId)
-      normalizedTargets.push(target)
+      seenIds.add(block.block_id)
+      normalizedTargets.push(block)
     }
     return normalizedTargets
   }
@@ -882,7 +1333,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     previousBlockId?: string | null,
     props: Record<string, unknown> = {}
   ): Promise<boolean> => {
-    if (!ensureStructureEditAllowed() || !currentDoc) {
+    if (!(await ensureStructureEditAllowed()) || !currentDoc) {
       return false
     }
 
@@ -919,7 +1370,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
   }
 
   const handleDeleteBlocks = async (blockIds: string[]): Promise<boolean> => {
-    if (!ensureStructureEditAllowed()) {
+    if (!(await ensureStructureEditAllowed())) {
       return false
     }
 
@@ -949,6 +1400,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     setSelectedDocumentBlockIds((previous) => {
       const next = new Set(previous)
       deletedIds.forEach((blockId) => next.delete(blockId))
+      persistSelectedBlockIds(next)
       return next
     })
     if (activeDocumentBlockId && deletedIds.has(activeDocumentBlockId)) {
@@ -963,7 +1415,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     blockIds: string[],
     previousBlockId: string | null
   ): Promise<boolean> => {
-    if (!ensureStructureEditAllowed()) {
+    if (!(await ensureStructureEditAllowed())) {
       return false
     }
 
@@ -1023,7 +1475,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     blockIds: string[],
     previousBlockId: string | null
   ): Promise<boolean> => {
-    if (!ensureStructureEditAllowed() || !currentDoc) {
+    if (!(await ensureStructureEditAllowed()) || !currentDoc) {
       return false
     }
 
@@ -1075,7 +1527,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
   }
 
   const handleCopyBlocksToClipboard = async (blockIds: string[]): Promise<boolean> => {
-    if (!ensureStructureEditAllowed() || !currentDoc) {
+    if (!(await ensureStructureEditAllowed()) || !currentDoc) {
       return false
     }
 
@@ -1096,7 +1548,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
   }
 
   const handleCutBlocksToClipboard = async (blockIds: string[]): Promise<boolean> => {
-    if (!ensureStructureEditAllowed() || !currentDoc) {
+    if (!(await ensureStructureEditAllowed()) || !currentDoc) {
       return false
     }
 
@@ -1118,7 +1570,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     }
 
     addClipboardClip('cut', clipboardBlocks, String(currentDoc.id))
-    setSelectedDocumentBlockIds(new Set())
+    clearSelectedDocumentBlocks()
     return true
   }
 
@@ -1126,7 +1578,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     clipId?: string,
     previousBlockId?: string | null
   ): Promise<boolean> => {
-    if (!ensureStructureEditAllowed() || !currentDoc) {
+    if (!(await ensureStructureEditAllowed()) || !currentDoc) {
       return false
     }
 
@@ -1191,6 +1643,234 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     return true
   }
 
+  const buildShortcutMovePlan = useCallback(
+    (direction: ShortcutShiftDirection): ShortcutMovePlanResult => {
+      const selectedBlocks = selectedDocumentBlocksInOrder.filter(
+        (block) => block.fixed_position === null
+      )
+
+      if (selectedDocumentBlocksInOrder.length > 0) {
+        if (selectedBlocks.length === 0) {
+          return { plan: null, error: 'No movable selected blocks' }
+        }
+
+        const allOperations = selectedBlocks.every(isOperationBlock)
+        const allFurnaces = selectedBlocks.every(isFurnaceBlock)
+        const allSections = selectedBlocks.every(isTopLevelDocumentSection)
+
+        if (allOperations) {
+          const units = buildOperationMoveUnits(draftBlocks)
+          const unitIndexes = selectedBlocks
+            .map((block) => units.findIndex((unit) => unit.ids.includes(block.block_id)))
+            .filter((index) => index >= 0)
+          return {
+            plan: buildShortcutMovePlanFromUnits(draftBlocks, units, unitIndexes, direction),
+          }
+        }
+
+        if (allFurnaces) {
+          const units = buildFurnaceMoveUnits(draftBlocks)
+          const unitIndexes = selectedBlocks
+            .map((block) => units.findIndex((unit) => unit.ids.includes(block.block_id)))
+            .filter((index) => index >= 0)
+          return {
+            plan: buildShortcutMovePlanFromUnits(draftBlocks, units, unitIndexes, direction),
+          }
+        }
+
+        if (allSections) {
+          const units = buildSectionMoveUnits(draftBlocks)
+          const unitIndexes = selectedBlocks
+            .map((block) => units.findIndex((unit) => unit.ids[0] === block.block_id))
+            .filter((index) => index >= 0)
+          return {
+            plan: buildShortcutMovePlanFromUnits(draftBlocks, units, unitIndexes, direction),
+          }
+        }
+
+        return {
+          plan: null,
+          error: 'Select operation blocks, furnace blocks, or top-level sections before shifting',
+        }
+      }
+
+      if (!activeDocumentBlock || activeDocumentBlock.fixed_position !== null) {
+        return { plan: null }
+      }
+
+      if (isOperationBlock(activeDocumentBlock)) {
+        const units = buildOperationMoveUnits(draftBlocks)
+        const unitIndex = units.findIndex((unit) => unit.ids.includes(activeDocumentBlock.block_id))
+        return {
+          plan: buildShortcutMovePlanFromUnits(draftBlocks, units, [unitIndex], direction),
+        }
+      }
+
+      if (isFurnaceBlock(activeDocumentBlock)) {
+        const units = buildFurnaceMoveUnits(draftBlocks)
+        const unitIndex = units.findIndex((unit) => unit.ids.includes(activeDocumentBlock.block_id))
+        return {
+          plan: buildShortcutMovePlanFromUnits(draftBlocks, units, [unitIndex], direction),
+        }
+      }
+
+      if (isTopLevelDocumentSection(activeDocumentBlock)) {
+        const units = buildSectionMoveUnits(draftBlocks)
+        const unitIndex = units.findIndex((unit) => unit.ids[0] === activeDocumentBlock.block_id)
+        return {
+          plan: buildShortcutMovePlanFromUnits(draftBlocks, units, [unitIndex], direction),
+        }
+      }
+
+      return { plan: null, error: 'This block type cannot be shifted with the keyboard shortcut' }
+    },
+    [activeDocumentBlock, draftBlocks, selectedDocumentBlocksInOrder]
+  )
+
+  const handleShortcutShift = useCallback(
+    async (direction: ShortcutShiftDirection): Promise<void> => {
+      const { plan, error } = buildShortcutMovePlan(direction)
+      if (error) {
+        setSaveStatus('error')
+        setSaveError(error)
+        return
+      }
+      if (!plan) {
+        return
+      }
+
+      await handleMoveBlocks(plan.blockIds, plan.previousBlockId)
+    },
+    [buildShortcutMovePlan, handleMoveBlocks]
+  )
+
+  const buildShortcutInsertPlan = useCallback(
+    (
+      position: ShortcutInsertPosition,
+      targetBlock = activeDocumentBlock,
+      options: { ignoreSelection?: boolean } = {}
+    ): ShortcutInsertPlanResult => {
+      if (!options.ignoreSelection && selectedDocumentBlocksInOrder.length > 0) {
+        return { plan: null, error: 'Clear block selection before inserting by shortcut' }
+      }
+      if (!targetBlock || targetBlock.block_type_id === DOCUMENT_BLOCK_TYPE_ID) {
+        return { plan: null }
+      }
+
+      const blockTypeId = targetBlock.block_type_id
+      let previousBlockId = position === 'above'
+        ? targetBlock.previous_block_id
+        : targetBlock.block_id
+
+      if (position === 'below' && isTopLevelDocumentSection(targetBlock)) {
+        const sectionUnit = buildSectionMoveUnits(draftBlocks).find(
+          (unit) => unit.ids[0] === targetBlock.block_id
+        )
+        previousBlockId = sectionUnit
+          ? draftBlocks[sectionUnit.endIndex].block_id
+          : targetBlock.block_id
+      }
+
+      return {
+        plan: {
+          blockTypeId,
+          previousBlockId,
+          props: {},
+        },
+      }
+    },
+    [activeDocumentBlock, draftBlocks, selectedDocumentBlocksInOrder.length]
+  )
+
+  const handleShortcutInsert = useCallback(
+    async (position: ShortcutInsertPosition): Promise<void> => {
+      const { plan, error } = buildShortcutInsertPlan(position)
+      if (error) {
+        setSaveStatus('error')
+        setSaveError(error)
+        return
+      }
+      if (!plan) {
+        return
+      }
+
+      await handleInsertBlock(plan.blockTypeId, plan.previousBlockId, plan.props)
+    },
+    [buildShortcutInsertPlan, handleInsertBlock]
+  )
+
+  const handleInlineInsert = async (
+    block: BlockData,
+    position: ShortcutInsertPosition
+  ): Promise<void> => {
+    const { plan, error } = buildShortcutInsertPlan(position, block, { ignoreSelection: true })
+    if (error) {
+      setSaveStatus('error')
+      setSaveError(error)
+      return
+    }
+    if (!plan) {
+      return
+    }
+
+    await handleInsertBlock(plan.blockTypeId, plan.previousBlockId, plan.props)
+  }
+
+  const getTopLevelSectionInsertAnchor = (
+    block: BlockData,
+    position: ShortcutInsertPosition
+  ): string | null => {
+    if (position === 'above') {
+      return block.previous_block_id
+    }
+    const sectionUnit = buildSectionMoveUnits(draftBlocks).find(
+      (unit) => unit.ids[0] === block.block_id
+    )
+    return sectionUnit ? draftBlocks[sectionUnit.endIndex].block_id : block.block_id
+  }
+
+  const handleInlineTopLevelSectionInsert = async (
+    anchorBlock: BlockData,
+    blockTypeId: typeof HEATING_SECTION_TYPE_ID | typeof DEFORMATION_SECTION_TYPE_ID,
+    position: ShortcutInsertPosition
+  ): Promise<void> => {
+    setSectionInsertMenu(null)
+    await handleInsertBlock(blockTypeId, getTopLevelSectionInsertAnchor(anchorBlock, position), {})
+  }
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.isComposing ||
+        !event.shiftKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        isInteractiveShortcutTarget(event.target)
+      ) {
+        return
+      }
+
+      if (event.key === 'Enter') {
+        event.preventDefault()
+        void handleShortcutInsert(event.altKey ? 'above' : 'below')
+        return
+      }
+
+      if (!event.altKey) {
+        return
+      }
+      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') {
+        return
+      }
+
+      event.preventDefault()
+      void handleShortcutShift(event.key === 'ArrowUp' ? 'up' : 'down')
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleShortcutInsert, handleShortcutShift])
+
   useImperativeHandle(ref, () => ({
     saveChanges: handleSaveChanges,
     cancelChanges: handleCancelChanges,
@@ -1208,48 +1888,17 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     cutBlocksToClipboard: handleCutBlocksToClipboard,
     pasteClipboardClip: handlePasteClipboardClip,
     makeBlockActive,
+    clearSelectedBlocks: clearSelectedDocumentBlocks,
     getActiveBlockId: () => activeDocumentBlockId,
     getBlocks: () => cloneBlocks(draftBlocks),
     hasUnsavedChanges: () => hasUnsavedChanges,
   }))
 
-  const handleCopySelectedBlocksToClipboard = async () => {
-    if (selectedDocumentBlocksInOrder.length === 0) {
-      return
-    }
-    await handleCopyBlocksToClipboard(selectedDocumentBlocksInOrder.map((block) => block.block_id))
-  }
-
-  const handleCutSelectedBlocksToClipboard = async () => {
-    if (selectedDocumentBlocksInOrder.length === 0) {
-      return
-    }
-    await handleCutBlocksToClipboard(selectedDocumentBlocksInOrder.map((block) => block.block_id))
-  }
-
-  const handleRemoveSelectedBlocks = async () => {
-    if (selectedDocumentBlocksInOrder.length === 0) {
-      return
-    }
-    const removed = await handleDeleteBlocks(selectedDocumentBlocksInOrder.map((block) => block.block_id))
-    if (removed) {
-      setSelectedDocumentBlockIds(new Set())
-    }
-  }
-
-  const handleRemoveSingleBlock = async (block: BlockData) => {
-    await handleDeleteBlocks([block.block_id])
-  }
-
-  const handlePasteActiveClipboard = async () => {
-    await handlePasteClipboardClip()
-  }
-
   const handleDocumentBlockDragStart = (
     event: DragEvent<HTMLButtonElement>,
     block: BlockData
   ) => {
-    if (structureEditDisabled || block.fixed_position !== null) {
+    if (block.fixed_position !== null) {
       event.preventDefault()
       return
     }
@@ -1275,25 +1924,15 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     event: DragEvent<HTMLElement>,
     previousBlockId: string | null
   ) => {
-    const blockType = event.dataTransfer.getData(CATALOG_BLOCK_DRAG_MIME)
     const editorBlockIds = getEditorBlockDragPayload(event)
 
-    if (!blockType && editorBlockIds.length === 0) {
+    if (editorBlockIds.length === 0) {
       return
     }
 
     event.preventDefault()
     event.stopPropagation()
     setDropPreviewPreviousBlockId(undefined)
-
-    if (blockType) {
-      await handleInsertBlock(blockType, previousBlockId)
-      return
-    }
-
-    if (structureEditDisabled) {
-      return
-    }
 
     const isCopy = event.ctrlKey || event.metaKey || event.dataTransfer.dropEffect === 'copy'
     if (isCopy) {
@@ -1330,19 +1969,17 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
   }
 
   const handleCanvasDragOver = (event: DragEvent<HTMLElement>) => {
-    const hasCatalogBlock = hasDragMime(event, CATALOG_BLOCK_DRAG_MIME)
     const hasEditorBlocks = hasDragMime(event, EDITOR_BLOCK_DRAG_MIME)
-    if (!hasCatalogBlock && !hasEditorBlocks) {
+    if (!hasEditorBlocks) {
       return
     }
     event.preventDefault()
-    event.dataTransfer.dropEffect = hasCatalogBlock || event.ctrlKey || event.metaKey ? 'copy' : 'move'
+    event.dataTransfer.dropEffect = event.ctrlKey || event.metaKey ? 'copy' : 'move'
   }
 
   const handleCanvasDrop = async (event: DragEvent<HTMLDivElement>) => {
-    const blockType = event.dataTransfer.getData(CATALOG_BLOCK_DRAG_MIME)
     const editorBlockIds = getEditorBlockDragPayload(event)
-    if (!blockType && editorBlockIds.length === 0) {
+    if (editorBlockIds.length === 0) {
       return
     }
 
@@ -1370,9 +2007,9 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
       confirmedInsertPreviousBlockId !== undefined &&
       confirmedInsertPreviousBlockId === previousBlockId
     const lineTone = isPreviewActive
-      ? 'h-0.5 bg-blue-600 shadow-[0_0_0_2px_rgba(37,99,235,0.16)]'
+      ? 'h-0.5 bg-[rgba(47,111,159,0.8)] shadow-[0_0_0_2px_rgba(47,111,159,0.12)]'
       : isConfirmed
-        ? 'h-0.5 bg-sky-500 shadow-[0_0_0_2px_rgba(14,165,233,0.14)]'
+        ? 'h-0.5 bg-[rgba(47,111,159,0.56)] shadow-[0_0_0_2px_rgba(47,111,159,0.1)]'
         : 'h-px bg-transparent'
 
     return (
@@ -1389,11 +2026,11 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
             className={`pointer-events-none absolute left-0 right-0 top-1/2 -translate-y-1/2 rounded-full transition-all ${lineTone}`}
           />
           {isPreviewActive ? (
-            <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-blue-300 bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 shadow-sm">
+            <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 rounded border border-[rgba(47,111,159,0.2)] bg-white px-2 py-0.5 text-[11px] font-medium text-[rgba(47,111,159,0.95)] shadow-sm">
               Insert here
             </div>
           ) : isConfirmed ? (
-            <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-sky-300 bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-700 shadow-sm">
+            <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 rounded border border-[rgba(47,111,159,0.16)] bg-white px-2 py-0.5 text-[11px] font-medium text-[rgba(47,111,159,0.78)] shadow-sm">
               Inserted here
             </div>
           ) : null}
@@ -1402,7 +2039,18 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     )
   }
 
-  const renderBlockCard = (block: BlockData, className = '') => {
+  const handleDocumentCanvasClick = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) {
+      return
+    }
+    if (target.closest('[data-document-activatable-block="true"]')) {
+      return
+    }
+    setSectionInsertMenu(null)
+    setActiveDocumentBlockId(null)
+  }
+
+  const renderBlockCard = (block: BlockData, className = '', sectionNumber: string | null = null) => {
     const BlockComponent = getBlockComponent(block.block_type_id)
     const baselineProps = savedBlocksById.get(block.block_id)?.props || {}
     const isActivatable = canActivateBlock(block)
@@ -1410,14 +2058,12 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     const isActive = activeDocumentBlockId === block.block_id
     const isSelected = selectedDocumentBlockIds.has(block.block_id)
     const isRecentlyInserted = recentlyInsertedBlockIds.has(block.block_id)
+    const activeSectionInsertMenu = sectionInsertMenu?.blockId === block.block_id ? sectionInsertMenu : null
     const blockName = getBlockDisplayName(block)
     const wrapperTone = [
-      isActive
-        ? 'ring-2 ring-blue-600 ring-offset-2 border-blue-500 bg-blue-50/40'
-        : isSelected
-          ? 'border-blue-300 bg-blue-50/25'
-          : 'border-transparent',
-      isRecentlyInserted ? 'border-sky-300 bg-sky-50/60 shadow-[0_0_0_4px_rgba(14,165,233,0.08)]' : '',
+      isSelected ? 'doc-block-selected' : '',
+      isActive ? 'doc-block-active' : '',
+      isRecentlyInserted ? 'doc-block-recent' : '',
     ]
       .filter(Boolean)
       .join(' ')
@@ -1429,18 +2075,31 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
       if (target instanceof HTMLElement && target.closest('[data-block-action-silent="true"]')) {
         return
       }
+      setSectionInsertMenu(null)
       setActiveDocumentBlockId(block.block_id)
+    }
+
+    const handleInlineInsertButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation()
+      const position = event.shiftKey ? 'above' : 'below'
+      if (isTopLevelDocumentSection(block)) {
+        setSectionInsertMenu({ blockId: block.block_id, position })
+        return
+      }
+      void handleInlineInsert(block, position)
     }
 
     const blockContent = BlockComponent ? (
       <BlockComponent
         block={block}
         baselineProps={baselineProps}
+        isActive={isActive}
+        saveStatus={saveStatus}
+        sectionNumber={sectionNumber}
         onUpdate={handleBlockUpdate}
-        isReadOnly={false}
       />
     ) : (
-      <div className="ui-card ui-card-body">
+      <div className="doc-content">
         <div className="text-red-600">Unknown block type: {block.block_type_id}</div>
         <pre className="text-xs text-gray-600 mt-2">
           {JSON.stringify(block, null, 2)}
@@ -1454,7 +2113,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
           key={block.block_id}
           id={`block-${block.block_id}`}
           data-block-id={block.block_id}
-          className={`scroll-mt-28 ${className}`}
+          className={`doc-block-wrapper scroll-mt-28 ${className}`}
         >
           {blockContent}
         </div>
@@ -1468,7 +2127,8 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
         key={block.block_id}
         id={`block-${block.block_id}`}
         data-block-id={block.block_id}
-        className={`group scroll-mt-28 rounded-2xl border p-1 transition-[box-shadow,border-color,background-color] ${wrapperTone} ${className}`}
+        data-document-activatable-block="true"
+        className={`doc-block-wrapper group scroll-mt-28 ${wrapperTone} ${className}`}
         onClickCapture={(event) => maybeActivateFromInteraction(event.target)}
         onFocusCapture={(event) => maybeActivateFromInteraction(event.target)}
         onDragOver={(event) => {
@@ -1481,7 +2141,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
           void handleDropAtBlock(event, block.block_id)
         }}
       >
-        <div className="mb-1 flex items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white/85 px-2 py-1 shadow-sm">
+        <div className="doc-block-toolbar">
           <div className="flex min-w-0 items-center gap-2">
             {isSelectable ? (
               <input
@@ -1489,52 +2149,76 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
                 checked={isSelected}
                 onChange={() => toggleSelectedDocumentBlock(block)}
                 data-block-action-silent="true"
-                className="h-3.5 w-3.5"
+                className="h-3.5 w-3.5 accent-stone-700"
                 aria-label={`Select ${blockName}`}
               />
             ) : null}
 
             <button
               type="button"
-              draggable={!structureEditDisabled && block.fixed_position === null}
-              onDragStart={(event) => handleDocumentBlockDragStart(event, block)}
-              onDragEnd={() => setDropPreviewPreviousBlockId(undefined)}
+              onClick={handleInlineInsertButtonClick}
               data-block-action-silent="true"
-              disabled={structureEditDisabled || block.fixed_position !== null}
-              className="ui-btn h-7 w-7 p-0 opacity-60 group-hover:opacity-100"
-              aria-label={`Drag ${blockName}`}
+              disabled={false}
+              className="doc-block-control disabled:cursor-not-allowed"
+              aria-label={
+                isTopLevelDocumentSection(block)
+                  ? `Choose section type to insert near ${blockName}. Shift-click inserts above.`
+                  : `Insert ${blockName} below. Shift-click to insert above.`
+              }
+              title={
+                isTopLevelDocumentSection(block)
+                  ? `Choose section type to insert below. Shift-click chooses above.`
+                  : `Insert ${blockName} below. Shift-click inserts above.`
+              }
             >
-              ::
+              ＋
             </button>
+
+            {activeSectionInsertMenu ? (
+              <div
+                className="doc-inline-insert-menu"
+                data-block-action-silent="true"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleInlineTopLevelSectionInsert(
+                      block,
+                      HEATING_SECTION_TYPE_ID,
+                      activeSectionInsertMenu.position
+                    )
+                  }}
+                >
+                  Heating
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleInlineTopLevelSectionInsert(
+                      block,
+                      DEFORMATION_SECTION_TYPE_ID,
+                      activeSectionInsertMenu.position
+                    )
+                  }}
+                >
+                  Deformation
+                </button>
+              </div>
+            ) : null}
 
             <button
               type="button"
-              onClick={() => setActiveDocumentBlockId(block.block_id)}
-              className="min-w-0 truncate text-left text-xs font-semibold text-slate-800"
+              draggable={block.fixed_position === null}
+              onDragStart={(event) => handleDocumentBlockDragStart(event, block)}
+              onDragEnd={() => setDropPreviewPreviousBlockId(undefined)}
+              data-block-action-silent="true"
+              disabled={block.fixed_position !== null}
+              className="doc-block-control cursor-grab disabled:cursor-not-allowed"
+              aria-label={`Drag ${blockName}`}
             >
-              {blockName}
+              ⋮⋮
             </button>
-
-            {isActive ? (
-              <span className="ui-badge border-blue-300 bg-blue-50 text-blue-700">Active</span>
-            ) : null}
-          </div>
-
-          <div className="flex shrink-0 items-center gap-1">
-            {block.is_removable ? (
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  void handleRemoveSingleBlock(block)
-                }}
-                data-block-action-silent="true"
-                disabled={structureEditDisabled}
-                className="ui-btn-danger"
-              >
-                Remove
-              </button>
-            ) : null}
           </div>
         </div>
 
@@ -1550,22 +2234,14 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
       return (
         <section
           key={section.key}
-          className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-3 shadow-sm"
+          className="doc-loose-section"
           onDragOver={(event) => handleDropLineDragOver(event, dropTarget)}
           onDrop={(event) => {
             void handleDropAtBlock(event, dropTarget)
           }}
         >
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-sm font-bold text-slate-800">Unsectioned Operations</h2>
-              <p className="text-xs text-slate-500">
-                These blocks are outside Furnace and Deformation sections.
-              </p>
-            </div>
-            <div className="ui-badge">{section.children.length} blocks</div>
-          </div>
-          <div className="space-y-3">
+          <h2 className="doc-subtitle">Unsectioned Operations</h2>
+          <div className="doc-page-body">
             {section.children.map((child, index) => {
               const previousBlockId = index === 0 ? child.previous_block_id : section.children[index - 1].block_id
               return (
@@ -1580,49 +2256,28 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
       )
     }
 
-    const isDeformation = isDeformationSection(section.block)
-    const sectionName = getBlockDisplayName(section.block)
-    const sectionTone = isDeformation
-      ? 'border-amber-300 bg-amber-50/70'
-      : 'border-sky-300 bg-sky-50/70'
-    const childRailTone = isDeformation ? 'border-amber-300' : 'border-sky-300'
-
     return (
       <section
         key={section.block.block_id}
-        className={`rounded-2xl border p-3 shadow-sm ${sectionTone}`}
+        className="doc-section"
         onDragOver={(event) => handleDropLineDragOver(event, dropTarget)}
         onDrop={(event) => {
           void handleDropAtBlock(event, dropTarget)
         }}
       >
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-sm font-bold text-slate-900">{sectionName} Section</h2>
-            <p className="text-xs text-slate-600">
-              {isDeformation
-                ? 'Operations below are visually grouped under this Deformation block.'
-                : 'Furnace is a top-level section without child operation blocks.'}
-            </p>
-          </div>
-          <div className="ui-badge">
-            {isDeformation ? `${section.children.length} child blocks` : 'top level'}
-          </div>
-        </div>
+        {renderBlockCard(section.block, '', sectionNumbersByBlockId.get(section.block.block_id) || null)}
 
-        {renderBlockCard(section.block)}
-
-        {isDeformation && section.children.length > 0 ? (
-          <div className={`mt-4 ml-8 space-y-3 border-l-4 pl-8 ${childRailTone}`}>
-            <div className="text-xs font-bold uppercase tracking-wide text-slate-500">
-              Deformation Operation Children
-            </div>
+        {section.children.length > 0 ? (
+          <div className="doc-children">
             {section.children.map((child, index) => {
               const previousBlockId = index === 0 ? section.block.block_id : section.children[index - 1].block_id
+              const childNumber = isDeformationSection(section.block) && isOperationBlock(child)
+                ? `${index + 1}.`
+                : null
               return (
                 <div key={child.block_id}>
                   {renderDropLine(previousBlockId, `${section.block.block_id}-before-${child.block_id}`)}
-                  {renderBlockCard(child)}
+                  {renderBlockCard(child, '', childNumber)}
                 </div>
               )
             })}
@@ -1656,100 +2311,26 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
         </div>
       )}
 
-      <div className="border-b border-gray-200 bg-white px-4 py-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="ui-badge">
-            Active:{' '}
-            <span className="font-semibold">
-              {activeDocumentBlock ? getBlockDisplayName(activeDocumentBlock) : 'none'}
-            </span>
-          </div>
-          <div className="ui-badge">Selected: {selectedDocumentBlocksInOrder.length}</div>
-          <button
-            type="button"
-            onClick={() => {
-              void handleCopySelectedBlocksToClipboard()
-            }}
-            disabled={structureEditDisabled || selectedDocumentBlocksInOrder.length === 0}
-            className="ui-btn"
-          >
-            Copy selected
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              void handleCutSelectedBlocksToClipboard()
-            }}
-            disabled={structureEditDisabled || selectedDocumentBlocksInOrder.length === 0}
-            className="ui-btn-danger"
-          >
-            Cut selected
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              void handleRemoveSelectedBlocks()
-            }}
-            disabled={structureEditDisabled || selectedDocumentBlocksInOrder.length === 0}
-            className="ui-btn-danger"
-          >
-            Remove selected
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              void handlePasteActiveClipboard()
-            }}
-            disabled={structureEditDisabled || !activeClipboardClip || !activeDocumentBlockId}
-            className="ui-btn-primary"
-          >
-            Paste after active
-          </button>
-          <button
-            type="button"
-            onClick={clearSelectedDocumentBlocks}
-            disabled={selectedDocumentBlocksInOrder.length === 0}
-            className="ui-btn"
-          >
-            Clear selection
-          </button>
-          {activeClipboardClip ? (
-            <div className="min-w-0 max-w-[260px] truncate text-xs text-gray-500">
-              Clipboard: {activeClipboardClip.blocks.length} block
-              {activeClipboardClip.blocks.length === 1 ? '' : 's'}
-            </div>
-          ) : null}
-        </div>
-      </div>
-
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto bg-gray-100"
+        className="doc-editor-shell flex-1 overflow-y-auto"
+        onScroll={handleEditorScroll}
         onDragOver={handleCanvasDragOver}
         onDragLeave={handleEditorDragLeave}
         onDrop={(event) => {
           void handleCanvasDrop(event)
         }}
       >
-        <div className="max-w-6xl mx-auto py-5 px-4">
+        <div className="mx-auto px-4 pt-8 pb-[75vh]">
           {draftBlocks.length === 0 ? (
             <div className="text-center text-gray-500 py-8 text-sm">No blocks found in this document.</div>
           ) : (
-            <div className="rounded-[28px] border border-slate-300 bg-gradient-to-br from-slate-50 via-white to-stone-100 p-3 shadow-sm sm:p-5">
-              <div className="mb-4 flex items-center justify-between gap-3 px-1">
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-                    Document Canvas
-                  </div>
-                  <div className="text-sm text-slate-600">
-                    Title contains Material, Input Workpiece, and Mesh setup. Sections below stay flat in DB.
-                  </div>
-                </div>
-                <div className="ui-badge">{draftBlocks.length} flat blocks</div>
-              </div>
-
+            <div
+              className="doc-page"
+              onClick={(event) => handleDocumentCanvasClick(event.target)}
+            >
               <div
-                className="space-y-4"
+                className="doc-page-body"
                 onDragOver={handleCanvasDragOver}
                 onDrop={(event) => {
                   void handleCanvasDrop(event)
@@ -1764,12 +2345,12 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
                     )}
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-red-300 bg-red-50 p-4 text-sm text-red-700">
+                  <div className="doc-readonly text-red-700">
                     Document title block is missing.
                   </div>
                 )}
 
-                <div className="space-y-4">
+                <div className="doc-page-body">
                   {documentVisualLayout.sections.length > 0 ? (
                     documentVisualLayout.sections.map((section) => {
                       const sectionKey = section.kind === 'section' ? section.block.block_id : section.key
@@ -1781,8 +2362,8 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
                       )
                     })
                   ) : (
-                    <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-center text-sm text-slate-500">
-                      Add Furnace or Deformation blocks to build the technological process.
+                    <div className="doc-readonly py-6 text-center">
+                      Add Heating or Deformation blocks to build the technological process.
                     </div>
                   )}
                 </div>

@@ -1,0 +1,8 @@
+block_type_id: furnace
+label: Furnace
+version: 1
+description: Placeholder for the furnace leaf block schema.
+
+props_schema: []
+target_schema: []
+layout: []

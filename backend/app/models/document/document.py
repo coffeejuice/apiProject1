@@ -78,6 +78,7 @@ class Document(Base):
         ForeignKey("material_versions.material_version_id", ondelete="SET NULL"),
         nullable=True,
         default=None,
+        index=True,
     )
 
     name: Mapped[str] = mapped_column(String(1024), nullable=False)
@@ -179,6 +180,7 @@ class DocumentVersion(Base):
         SQLEnum(PreprocessStatus, name="preprocess_status_enum"),
         nullable=False,
         default=PreprocessStatus.ready,
+        index=True,
     )
     preprocess_worker_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default=None)
     preprocess_started_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, default=None)

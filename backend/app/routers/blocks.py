@@ -21,18 +21,15 @@ from app.schemas import (
 )
 from app.services.block_service import create_block_or_bundle, delete_block_or_bundle, get_root_blocks, move_block_after, update_block_props
 from app.services.block_type_service import (
-    can_place_block_after,
+    can_insert_block_after,
     can_delete_block,
     can_reorder_block,
     enrich_block_data_for_frontend,
     validate_block_constraints,
 )
 from app.services.commit_service import commit_operations
-from app.services.operation_blocks import (
-    build_default_operation_props,
-    is_operation_block_type,
-    sanitize_operation_props,
-)
+from app.services.document_operations import normalize_props_for_block_type, regenerate_document_operations
+from app.services.operation_blocks import is_operation_block_type, sanitize_operation_props
 from app.services.workflow_commands import (
     WorkflowCommandError,
     assert_document_editable,
@@ -74,23 +71,18 @@ def insert_block(
         assert_document_editable(db, document_id)
         if not validate_block_constraints(db, document_id, payload.block_type_id):
             raise HTTPException(status_code=400, detail="Block constraints violated")
-        if not can_place_block_after(db, document_id, payload.previous_block_id):
+        if not can_insert_block_after(db, document_id, payload.block_type_id, payload.previous_block_id):
             raise HTTPException(status_code=400, detail="Cannot insert before fixed system blocks")
-
-        props = (
-            build_default_operation_props(db, payload.block_type_id, payload.props)
-            if is_operation_block_type(db, payload.block_type_id)
-            else payload.props
-        )
 
         block = create_block_or_bundle(
             db=db,
             document_id=document_id,
             block_type_id=payload.block_type_id,
-            props=props,
+            props=normalize_props_for_block_type(payload.block_type_id, payload.props),
             previous_block_id=payload.previous_block_id,
         )
         mark_document_edited(db, document, current_user=current_user)
+        regenerate_document_operations(db, document_id)
         db.commit()
     except WorkflowCommandError as exc:
         db.rollback()
@@ -121,7 +113,7 @@ def update_block(
         props = (
             sanitize_operation_props(db, block.block_type_id, payload.props)
             if is_operation_block_type(db, block.block_type_id)
-            else payload.props
+            else normalize_props_for_block_type(block.block_type_id, payload.props)
         )
         updated = update_block_props(db, block_id, props)
         if not updated:
@@ -135,6 +127,7 @@ def update_block(
             handler.on_update(db, updated.block_id, updated.document_id, updated.props)
 
         mark_document_edited(db, document, current_user=current_user)
+        regenerate_document_operations(db, block.document_id)
         db.commit()
     except WorkflowCommandError as exc:
         db.rollback()
@@ -163,7 +156,7 @@ def move_block(
         assert_document_editable(db, block.document_id)
         if not can_reorder_block(db, block_id):
             raise HTTPException(status_code=400, detail="Block has fixed position")
-        if not can_place_block_after(db, block.document_id, payload.previous_block_id):
+        if not can_insert_block_after(db, block.document_id, block.block_type_id, payload.previous_block_id):
             raise HTTPException(status_code=400, detail="Cannot move before fixed system blocks")
 
         moved = move_block_after(
@@ -176,6 +169,7 @@ def move_block(
             raise HTTPException(status_code=404, detail="Block not found")
 
         mark_document_edited(db, document, current_user=current_user)
+        regenerate_document_operations(db, block.document_id)
         db.commit()
     except WorkflowCommandError as exc:
         db.rollback()
@@ -213,6 +207,7 @@ def remove_block(
         if not delete_block_or_bundle(db, block.document_id, block_id):
             raise HTTPException(status_code=404, detail="Block not found")
         mark_document_edited(db, document, current_user=current_user)
+        regenerate_document_operations(db, block.document_id)
         db.commit()
     except WorkflowCommandError as exc:
         db.rollback()

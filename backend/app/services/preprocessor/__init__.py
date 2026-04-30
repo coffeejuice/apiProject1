@@ -16,7 +16,6 @@ from .control_program_builder import (
     build_ordered_children_by_parent,
     flatten_operations_tree,
     load_operation_library_snapshot,
-    split_legacy_pipe_string,
 )
 from .geometry import (
     GEOMETRY_TYPES,
@@ -26,13 +25,16 @@ from .geometry import (
     GeometryTypeDefinition,
 )
 from .prolongation import (
-    AXIAL_PROLONGATION_TYPE_IDS,
-    PROLONGATION_TYPE_IDS,
-    RADIAL_PROLONGATION_TYPE_IDS,
-    SPIRAL_PROLONGATION_TYPE_IDS,
     ProlongationComputationResult,
     ProlongationMathError,
     calculate_prolongation,
+)
+from .operation_keys import (
+    AXIAL_PROLONGATION_TEMPLATE_IDS,
+    PROLONGATION_TEMPLATE_IDS,
+    RADIAL_PROLONGATION_TEMPLATE_IDS,
+    SPIRAL_PROLONGATION_TEMPLATE_IDS,
+    UPSETTING_TEMPLATE_IDS,
 )
 from .upsetting import (
     DieDimensions,
@@ -46,7 +48,7 @@ __all__ = [
     "CompiledControlProgram",
     "CompiledControlProgramRow",
     "ControlProgramError",
-    "AXIAL_PROLONGATION_TYPE_IDS",
+    "AXIAL_PROLONGATION_TEMPLATE_IDS",
     "GEOMETRY_TYPES",
     "GeneratedGeometry",
     "GeometryBuilder",
@@ -59,11 +61,11 @@ __all__ = [
     "PreprocessorCompiler",
     "PreprocessorCompileError",
     "ProcessCard",
-    "PROLONGATION_TYPE_IDS",
+    "PROLONGATION_TEMPLATE_IDS",
     "ProlongationComputationResult",
     "ProlongationMathError",
-    "RADIAL_PROLONGATION_TYPE_IDS",
-    "SPIRAL_PROLONGATION_TYPE_IDS",
+    "RADIAL_PROLONGATION_TEMPLATE_IDS",
+    "SPIRAL_PROLONGATION_TEMPLATE_IDS",
     "TimeBetweenOperationDefinition",
     "UpsettingComputationResult",
     "UpsettingMathError",
@@ -73,5 +75,5 @@ __all__ = [
     "calculate_upsetting",
     "flatten_operations_tree",
     "load_operation_library_snapshot",
-    "split_legacy_pipe_string",
+    "UPSETTING_TEMPLATE_IDS",
 ]

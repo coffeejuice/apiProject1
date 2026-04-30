@@ -17,7 +17,6 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 ## Monorepo structure (current)
 - `backend/`: FastAPI API, SQLAlchemy models, Alembic, services, scripts
 - `frontend/`: React 19 + TypeScript SPA (Vite), Zustand state, block UI
-- `frontend_obsolete/`: archived clients, no changes unless explicitly requested
 - `.aiassistant/rules/`: JetBrains context
 - `.codex/context/`: Codex context
 
@@ -25,6 +24,27 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 - Backend server: `http://127.0.0.1:8001` (`backend/run.py`)
 - Frontend dev server: `http://127.0.0.1:5173` (`frontend/vite.config.ts`)
 - Frontend default API base URL: `http://127.0.0.1:8001` (`frontend/src/lib/apiClient.ts`)
+
+## Current document/block model override (updated 2026-04-29)
+- Active document editor block types are semantic strings only:
+  - `document`
+  - `heating`
+  - `deformation`
+  - `furnace`
+  - `operation`
+- New documents auto-create one fixed, non-removable `document` root block plus one removable `deformation` section with one initial `operation` child.
+- `heating` is a removable second-level section/container. Creating a `heating` section auto-creates one child `furnace` block. Multiple `furnace` children are allowed inside one heating section.
+- `document_heading`, `input_workpiece`, and numeric editor block IDs are obsolete for active editor flow. Older notes in this file mentioning them are historical and must not be used for new work.
+- Operation block templates are loaded from `backend/app/domain/operation_block_design_and_parsing_rules.yaml` through `GET /operation-templates`; the same YAML also defines the operation-type selector, common `target.parameters_calculation_mode` selector, and text parsing rules for materializing `document_operations`; the `Blocks` pane no longer exposes a block catalog.
+- `document_blocks.props` stores explicit user-authored properties only, grouped by namespace: `document_properties`, `heating_properties`, `deformation_properties`, `furnace_properties`, and `operation_properties`.
+- `document_properties.section_numbering_start` controls visual numbering of second-level Heating/Deformation sections and defaults to `2`.
+- `deformation` props now include inherited parser variables under `deformation_properties.deformation_variables`: `tail_chamfering_stroke`, `tail_flattening_stroke`, and `radial_feed`.
+- `operation` props store dynamic target values under nested JSON at `operation_properties.target`, with template metadata in `operation_template_id`, `operation_template_version`, `operation_kind`, and `template_snapshot`. Most operation types use `operation_properties.operation_text`, a multiline source parsed as right-arrow-separated sentences; `operation.rounding` uses `operation_properties.rounding_table` where one non-empty table row materializes one `document_operations` row.
+- `document_operations` is the materialized technological-operation layer between editable `document_blocks` and compiled `simulation_steps`. Backend regeneration evaluates block-to-block inheritance there only; inherited values are not written back into `document_blocks`.
+- `simulation_steps` now links back to `document_operations` through nullable `document_operation_id` and stores semantic `operation_template_id`, `operation_kind`, and `operation_label_snapshot`. It no longer stores or FK-links old operation-library `block_type_id`.
+- `document_blocks_library` / `OperationsLibrary` was dropped. `time_between_operations` is keyed by semantic `operation_template_id` pairs plus `press_id`.
+- Pre operation definitions are built from `backend/app/domain/operation_block_design_and_parsing_rules.yaml`, semantic built-ins for document geometry/heating, and current geometry metadata. Migrated deformation math dispatch is semantic-template based; old numeric operation IDs are not part of active runtime dispatch.
+- Alembic history was compacted while the project is still pre-production. The active migration chain is one current-schema baseline: `0001_current_schema_baseline.py`.
 
 ## Backend configuration (`.env`) for setup/install
 - Backend settings are loaded by `backend/app/config.py` (`pydantic-settings`) from `backend/.env`.
@@ -60,6 +80,7 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - `search` and `document_search_router`
   - `settings`
   - `library`
+  - `operation_templates`
   - `workflow`
 - Not mounted in current `main.py`:
   - legacy `revisions`, `sharing`, `import_export`, `migration` routers
@@ -72,10 +93,13 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 - Token and base URL persistence keys:
   - `forgelab-token`
   - `forgelab-base-url`
+- Document resume persistence key:
+  - `forgelab-document-resume`
+  - stores last opened document/project, forces restore into `Blocks` view, restores document scroll offset, and restores selected block ids when the blocks still exist
 - Main app screen (`frontend/src/pages/AppPage.tsx`) uses a split-pane layout:
   - `MenuBar` at top (full width, always visible)
-  - below it: `ToolsSwitcher` (left, always visible), `ToolsPane` (middle, collapsible), right editor stack
-  - right editor stack: `TopEditorPane` (conditional) + `MainEditorPane` (conditional)
+  - below it: `ToolsSwitcher` (left, always visible), `ToolsPane` (middle, collapsible), right editor area
+  - right editor area: optional inline library action strip + `MainEditorPane`
 - `ToolsSwitcher` controls `ToolsPane` view visibility.
   - if no tool is active, `ToolsPane` is hidden
   - clicking the currently active tool button hides `ToolsPane` only and preserves the current `MainEditorPane` view
@@ -86,8 +110,9 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
     - first opening the Documents tool selects the first document in the current list if no explicit selection exists
     - only exactly one selected document populates `currentDoc` and enables document-related views; zero or multiple selections make document-related views behave as if no document is selected
     - document selection is stored in `useDocumentsStore` and survives switching tool views
-  - `Blocks`: shared pane with `Catalog` and `Clipboard` tabs
-    - `Catalog` is the default tab and lists database-backed operation types from `document_blocks_library`; the whole catalog card is draggable, and double-click inserts the operation after the active document block
+  - `Blocks`: shared pane with `Actions` and `Clipboard` tabs
+    - `Actions` is the default tab and acts as a selected-block context menu; actions are available only when exactly one non-root block is selected
+    - `Actions` provides copy, cut, remove, paste-after-selected, and clear-selection controls previously shown above the main document canvas
     - `Clipboard` is frontend-session-only memory for block cut/copy/paste; new cut/copy sessions open this tab automatically
   - `Library`: narrow icon-only selector for `Dies`, `Die Assemblies`, `Presses`, and `Materials` main editor views; this pane omits a title/header and uses shared tooltips for labels
   - `Simulation`: no middle pane; selecting the tool switches the main editor area to a simulation dashboard
@@ -97,16 +122,23 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - library main views: `Dies`, `Die Assemblies`, `Presses`, `Materials` (for `Library`)
   - simulation main view: `Simulation` dashboard (for `Simulation`)
 - `BlockEditor` renders a visual document hierarchy over the flat `document_blocks` linked list:
-  - `document_heading` is shown as the document canvas/title area and contains Material, Input Workpiece, and Mesh setup properties
-  - operation types `10` (`Furnace`) and `24` (`Deformation`) are shown as second-level sections inside the document canvas
-  - non-top-level operation blocks following a `Deformation` block are visually nested under that Deformation until the next Furnace/Deformation section
+  - the `document` block is shown as the document canvas/title area and contains Material, Input Workpiece, and Mesh setup properties
+  - `Heating` and `Deformation` semantic block types are shown as second-level sections inside the document canvas
+  - `Furnace` blocks following a `Heating` block are visually nested under that Heating until the next Heating/Deformation section
+  - `Operation` blocks following a `Deformation` block are visually nested under that Deformation until the next Heating/Deformation section
   - this hierarchy is visual only; DB storage remains a flat linked list with no `parent_block_id`
   - one non-title block can be the active block; it is shown with a strong outline and acts as the default insertion/paste anchor
   - direct block click, input focus/click/change inside a block, successful drag/drop, insert, and paste make a block active; selection checkbox clicks and drag-handle clicks alone do not
-  - document block selection is separate from active state and is used for batch copy, cut, remove, and drag-group preparation
+  - document block selection is separate from active state; exactly one selected block drives the `Blocks > Actions` context menu, while multi-selection remains useful for drag-group preparation
+  - Heating and Deformation section titles are auto-numbered from `document_properties.section_numbering_start`; a Heating immediately followed by a Deformation is shown as `N.1 Heating` and `N.2 Deformation`, otherwise each Heating/Deformation uses simple `N.` numbering
+  - Operation block titles are auto-numbered inside each Deformation section with simple `1.`, `2.`, `3.` numbering that restarts for every Deformation
+  - operation blocks always show a title; empty operations are titled `Empty operation`, and after selecting/saving a type the title uses the YAML template `display_name`
+  - operation type selector visibility is stateful: empty operations show it until a type is selected and saved; saved operations hide it by default; double-clicking the title reopens it; deactivating the block hides it and discards unsaved type changes
   - during drag, dense zero-height insertion markers show a thin blue `Insert here` line at the current drop target; hovering a block previews insertion after that block without adding permanent document spacing
   - document block move uses optimistic local reorder plus lightweight `framer-motion` position animation on block wrappers, so lower blocks slide smoothly to new positions instead of waiting for a backend refresh jump
-  - catalog insert, document copy, and clipboard paste keep a short-lived `Inserted here` confirmation line at the final anchor and briefly highlight the inserted block group so the actual new position stays visible after backend refresh
+  - structural copy and clipboard paste keep a short-lived `Inserted here` confirmation line at the final anchor and briefly highlight the inserted block group so the actual new position stays visible after backend refresh
+  - all block types render their editable layout all the time; active state only controls the strong outline plus insertion/action anchor behavior
+  - editor resume state is frontend-local: the app reopens the last document in `Blocks` view and `BlockEditor` restores scroll position plus selected blocks from `forgelab-document-resume`
 - `Simulation` main view characteristics:
   - owner filter uses icon-only controls for `Current user`, `All users`, or `Selected user`, with a dropdown shown only for the selected-user mode
   - renders three main tables: `Documents`, `Simulations`, and `Solver PCs`
@@ -156,7 +188,7 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - dashboard lazily loads visuals for the visible filtered material set through repeated `GET /library/db/materials/{material_id}/visuals` calls
   - chart rendering is frontend-inline SVG and reuses the same backend diagram payload shape for all visible materials
   - each dashboard chart has `Auto / Manual / Reset` scale controls; in manual mode the first and last tick values on each axis become inline-editable
-  - the shared library action strip in `TopEditorPane` is hidden for `Materials`; its placeholder buttons are rendered inside the material rail instead
+  - the inline library action strip is hidden for `Materials`; material-specific actions are rendered inside the material rail instead
   - editor mode currently saves the normalized material root, classification assignments, and designation rows in one workspace payload
   - in editor mode, `DEFORM file` is no longer a free-text input; it is shown as a read-only stored file name plus a staged local-file upload flow
   - the staged upload flow accepts one `.key` / `.KEY` file from the user’s local machine, requires explicit `Upload` / `Cancel`, and stores the uploaded file under `backend/data/materials/`; the returned stored file name is then written into `materials.deform_file_name` on save
@@ -165,20 +197,16 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
     - classification assignments
     - designation rows plus linked standard chemistry rows
     - test-record subtrees including chemistry results and property tables
-- `TopEditorPane` routes top content:
-  - `VisualEditor` view when `BlockEditor` is active in `MainEditorPane`
-  - library action menu when a library main view is active
-- `VisualEditor` view in `TopEditorPane` provides horizontal block-order visualization with:
-  - when hidden/collapsed, it is fully removed from layout (no header/placeholder)
-  - visibility is controlled from `MenuBar` (`Show TopEditorPane` / `Hide TopEditorPane`) for block-editor mode
-  - click-to-scroll navigation into `BlockEditor`
-  - viewer/editor modes
-  - multi-select, move/copy (Ctrl/Cmd-drop), insert, delete, and frontend clipboard copy/cut/paste for block structure edits
-  - clipboard paste uses one active clipboard container as source and the active document block as insertion anchor; clipboard selection is separate and is used only for removing containers
+- Inline library action strip:
+  - rendered above `MainEditorPane` for `Dies`, `Die Assemblies`, and `Presses`
+  - hidden for `BlockEditor`, `Materials`, and `Simulation`
+  - `Materials` keeps its actions in the material rail because that view uses a dedicated workspace layout
 
-## Frontend visual standard (VisualEditor-based)
-- The frontend uses a compact, VisualEditor-derived standard style across panes, controls, cards, lists, and modals.
+## Frontend visual standard
+- The frontend uses a compact Notion-like standard style across panes, controls, cards, lists, and modals.
 - Source of truth for reusable visual primitives is `frontend/src/index.css` under `@layer components`.
+- Global typography uses a Noto-first multilingual sans stack (`--ui-font-sans` in `frontend/src/index.css` and `fontFamily.sans` in `frontend/tailwind.config.js`) with fallbacks for Cyrillic, CJK Chinese/Japanese/Korean, Arabic, Hebrew, Indic, Thai, and emoji; do not replace it with Latin-only font stacks.
+- Document editing uses a separate Word/Notion-like `doc-*` style family in `frontend/src/index.css`: clean page surface, borderless inputs, title-only block labels, indentation-based hierarchy, subtle hover tools, darker selected block background, and strong active block outline.
 - Required shared classes:
   - layout/panes: `ui-shell`, `ui-pane`, `ui-pane-header`, `ui-pane-body`
   - toolbar: `ui-toolbar`, `ui-toolbar-title`, `ui-toolbar-meta`
@@ -210,7 +238,7 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - version-specific material state is now stored in `material_versions`; documents carry `material_version_id`
 - Library API model (currently mounted):
   - table `library`: `id`, `parent_id`, `type`, `name`, `props` (JSONB), timestamps, `is_obsolete`
-  - enum values in code: `die`, `die_assembly`, `press`, `press_mode`, `time_between_operations`, `material`, `operation_type`
+  - enum values in code: `die`, `die_assembly`, `press`, `press_mode`, `time_between_operations`, `material`
 - Industrial normalized tables also exist in DB/models:
   - `die_types`, `materials`, `dies`, `die_assemblies`, `presses`, `press_modes`, `press_die_map`
   - mounted `/library/db/*` routes read from these normalized tables, while the older `/library/*` list/detail routes still serve from the unified `library` table
@@ -226,14 +254,14 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - supports inheritance/lineage through `source_document_id`
 - Block model:
   - linked-list ordering with `previous_block_id` and `next_block_id`
-  - block type is stored as `block_type_id`; current user-insertable operation blocks use numeric old operation `type_id` values from `document_blocks_library`
-  - new documents auto-create one fixed non-removable block: `document_heading`
-  - `document_heading` now owns the former setup fields from `Material`, `input_workpiece`, and `Mesh`: `material_id`, `geometry_type_id`, `weight`, `attributes`, and `mesh_elements`
-  - operation type `10` is the active `Furnace` block and stores both `furnace_class_id` and initial furnace `temperature`; old operation type `62` is obsolete/hidden
-  - operation type `24` is the active user-insertable `Deformation` block; it now owns the former `Press`, `Die`, `Prolongation feed and speed`, `Upsetting feed and speed`, and `Transversal cogging feed and speed` fields
-  - old operation types `5`, `84`, `26`, `8`, `15`, `13`, and `14` are obsolete/hidden; existing stored chains are migrated into `document_heading` or `24`
-  - `Deformation` stores `press_id`, the three feed-direction fields, the three speed fields, and first/middle/last feed lengths
-  - feed directions render as `<--`, `<->`, and `-->` arrow buttons with default `<--`
+  - active block types are semantic strings: `document`, `heating`, `deformation`, `furnace`, and `operation`
+  - new documents auto-create one fixed non-removable `document` block, then one `deformation` bundle containing its first `operation`
+  - `document` owns title/setup fields: `name`, `heat_no`, `finished_size`, `remarks`, `preview_status`, `material_id`, `geometry_type_id`, `weight`, `attributes`, `mesh_elements`, and `section_numbering_start`
+  - `heating` is a second-level container with inherited heating parameters
+  - `furnace` is a child of `heating` and stores furnace-specific parameters
+  - `deformation` is a section/container block; inherited parser variables live under `deformation_properties.deformation_variables`, and user-visible operation details live in child `operation` blocks
+  - `operation` stores YAML-backed template metadata, optional multiline operation text, optional rounding table rows, and nested dynamic `target` variables
+  - operation templates and parsing rules are defined in `backend/app/domain/operation_block_design_and_parsing_rules.yaml` and templates are exposed through `GET /operation-templates`
   - metadata flags: `is_system`, `is_removable`, `fixed_position`
 - Legacy ACL/share/version/server/log tables remain in models and DB for compatibility and existing flows.
 - Full database schema, table inventory, key columns, JSONB payload notes, and seeding-layout details are tracked in `.codex/context/DB_SCHEMA.md`.
@@ -299,8 +327,6 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - `GET /library/press-modes/{item_id}`
   - `GET /library/time-between-operations`
   - `GET /library/time-between-operations/{item_id}`
-  - `GET /library/operation-types`
-  - `GET /library/operation-types/{item_id}`
   - `GET /library/db/users`
 - `GET /library/db/die-types`
 - `GET /library/db/materials`
@@ -342,7 +368,7 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 - New documents must remain project-scoped (`project_id` required).
 - Respect soft delete on both projects and documents (`deleted_at`) unless endpoint explicitly includes deleted data.
 - Keep schemas in `backend/app/schemas.py` aligned with model/router changes.
-- Preserve `frontend_obsolete/` untouched unless user asks.
+- `frontend_obsolete/` was removed after active React/Vite frontend became the only supported client.
 - Prefer non-destructive changes and keep backend/frontend contract synchronized.
 
 ## Current testing reality
@@ -351,29 +377,9 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 - Validate critical backend changes via focused manual checks and targeted tests when feasible.
 
 ## Migration policy
-- Active migration chain in `backend/alembic/versions/` is:
-  - `9ac4e7b1d2f3_squashed_current_schema_baseline.py`
-  - `3a4d8f2c1b90_reshape_materials_table.py`
-  - `7f7f9945c6f1_add_material_classification_tables.py`
-  - `c1f4e28b9a7d_add_material_standards_tables.py`
-  - `e5d9c3a1b4f7_add_material_chemistry_tables.py`
-  - `f7a2d4c8e1b3_add_material_property_tables.py`
-  - `a3d7f1c2e9b4_slim_materials_root_table.py`
-  - `b8c2e4f6a1d0_add_material_classification_hierarchy.py`
-  - `d2c6e8a4b9f1_change_material_name_to_varchar.py`
-  - `4f91c2a6b8d3_add_simulation_runtime_tables.py`
-  - `6c2b8f1e4a9d_rename_block_tables_add_material_versions.py`
-  - `8d4a1f6c2b7e_add_preprocess_runtime_state_to_document_versions.py`
-  - `b7e2c9a4d6f1_seed_document_blocks_library_from_old_operations.py`
-  - `c4a9d2e7b8f3_prune_billet_catalog_blocks.py`
-  - `d8f1b6c3a9e2_merge_furnace_catalog_blocks.py`
-  - `e2f4a6b8c9d1_merge_deformation_catalog_blocks.py`
-  - `f9a7c3d2e1b4_rename_full_die_speed_to_transversal_cogging.py`
-  - `a6e4c8f2b9d5_split_deformation_feed_directions.py`
-  - `b2d6f8a1c4e9_add_die_classification_paths.py`
-  - `c9e2a7d4f6b1_split_deformation_bundle_blocks.py`
-  - `d4f8b2c7e9a1_reorganize_deformation_feed_speed_blocks.py`
-  - `e7c9a1d4f8b2_merge_setup_blocks_into_title_and_deformation.py`
-- Historical migrations are archived in `backend/alembic/versions_backup/`.
-- Current head migration is `e7c9a1d4f8b2`.
-- The baseline migration uses `Base.metadata.create_all(checkfirst=True)` / `drop_all(checkfirst=True)` against registered SQLAlchemy models; follow-up migrations must remain idempotent enough to coexist with the squashed baseline on fresh installs.
+- Active migration chain in `backend/alembic/versions/` is intentionally compacted to one baseline:
+  - `0001_current_schema_baseline.py`
+- `backend/alembic/versions_backup/` was removed; active Alembic history is under `backend/alembic/versions/`.
+- Current head migration is `0001_current_schema`.
+- Existing pre-compaction development databases should be stamped with `alembic stamp --purge head` after confirming their schema matches current models.
+- The baseline migration uses `Base.metadata.create_all(checkfirst=True)` / `drop_all(checkfirst=True)` against registered SQLAlchemy models; follow-up migrations should be normal incremental migrations from `0001_current_schema`.

@@ -16,7 +16,6 @@ class LibraryType(enum.Enum):
     press_mode = "press_mode"
     time_between_operations = "time_between_operations"
     material = "material"
-    operation_type = "operation_type"
 
 
 class Library(Base):
