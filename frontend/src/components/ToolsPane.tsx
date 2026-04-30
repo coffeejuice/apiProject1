@@ -394,7 +394,7 @@ export default function ToolsPane({
     return null
   }
 
-  if (activeView === 'simulation') {
+  if (activeView === 'simulation' || activeView === 'operations') {
     return null
   }
 

@@ -152,6 +152,27 @@ class DocumentDiffResponse(BaseModel):
     changes: List[BlockDiffEntry]
 
 
+class DocumentOperationResponse(BaseModel):
+    document_operation_id: int
+    document_id: int
+    source_block_id: UUID
+    source_block_type_id: str
+    operation_order: int
+    operation_order_in_block: int
+    operation_template_id: Optional[str] = None
+    operation_kind: str
+    label_snapshot: Optional[str] = None
+    target: Dict[str, Any] = Field(default_factory=dict)
+    parse_status: str
+    parse_errors: List[Dict[str, Any]] = Field(default_factory=list)
+    parse_warnings: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class DocumentOperationListResponse(BaseModel):
+    document_id: int
+    operations: List[DocumentOperationResponse]
+
+
 class DocumentWorkflowResponse(BaseModel):
     document_id: int
     document_version_id: Optional[int] = None

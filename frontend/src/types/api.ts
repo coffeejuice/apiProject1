@@ -291,6 +291,27 @@ export interface CommitResponse {
   message?: string
 }
 
+export interface DocumentOperationRecord {
+  document_operation_id: number
+  document_id: number
+  source_block_id: string
+  source_block_type_id: string
+  operation_order: number
+  operation_order_in_block: number
+  operation_template_id?: string | null
+  operation_kind: string
+  label_snapshot?: string | null
+  target: Record<string, any>
+  parse_status: string
+  parse_errors: Array<Record<string, any>>
+  parse_warnings: Array<Record<string, any>>
+}
+
+export interface DocumentOperationListResponse {
+  document_id: number
+  operations: DocumentOperationRecord[]
+}
+
 // Library DB tables
 export interface OperationBlockTypeRecord {
   type_id: number

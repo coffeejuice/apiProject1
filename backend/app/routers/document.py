@@ -10,6 +10,7 @@ from app.auth import get_current_user
 from app.database import get_db
 from app.models.document.block import Block
 from app.models.document.document import Document, DocumentEditSession
+from app.models.document.document_operation import DocumentOperation
 from app.models.library.material import MaterialVersion
 from app.models.project import Project
 from app.models.user import User
@@ -18,6 +19,8 @@ from app.schemas import (
     DocumentCopyRequest,
     DocumentCreate,
     DocumentDiffResponse,
+    DocumentOperationListResponse,
+    DocumentOperationResponse,
     DocumentLineageNode,
     DocumentLineageResponse,
     DocumentListResponse,
@@ -196,6 +199,47 @@ def get_document(
     db: Session = Depends(get_db),
 ):
     return check_document_access(db, document_id, current_user.user_id)
+
+
+@router.get("/{document_id}/operations", response_model=DocumentOperationListResponse)
+def list_document_operations(
+    document_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    document = check_document_access(db, document_id, current_user.user_id)
+    rows = db.execute(
+        select(DocumentOperation)
+        .filter(DocumentOperation.document_id == document.document_id)
+        .order_by(DocumentOperation.operation_order.asc())
+    ).scalars().all()
+
+    return DocumentOperationListResponse(
+        document_id=document.document_id,
+        operations=[
+            DocumentOperationResponse(
+                document_operation_id=row.document_operation_id,
+                document_id=row.document_id,
+                source_block_id=row.source_block_id,
+                source_block_type_id=row.source_block_type_id,
+                operation_order=row.operation_order,
+                operation_order_in_block=row.operation_order_in_block,
+                operation_template_id=row.operation_template_id,
+                operation_kind=row.operation_kind,
+                label_snapshot=row.label_snapshot,
+                target=(
+                    row.operation_properties.get("target", {})
+                    if isinstance(row.operation_properties, dict)
+                    and isinstance(row.operation_properties.get("target"), dict)
+                    else {}
+                ),
+                parse_status=row.parse_status,
+                parse_errors=row.parse_errors or [],
+                parse_warnings=row.parse_warnings or [],
+            )
+            for row in rows
+        ],
+    )
 
 
 @router.patch("/{document_id}", response_model=DocumentResponse)

@@ -12,6 +12,7 @@ import {
   LibraryDiesView,
   LibraryPressesView,
 } from '../components/library/LibraryViews'
+import DocumentOperationsView from '../components/operations/DocumentOperationsView'
 import SimulationView from '../components/simulation/SimulationView'
 import { loadDocumentResumeState, saveDocumentResumeState } from '../lib/documentResumeState'
 import { useDocumentsStore } from '../stores/useDocumentsStore'
@@ -23,6 +24,8 @@ const EMPTY_EDITOR_META: BlockEditorMeta = {
   draftDocumentName: '',
   sourceDocumentId: null,
   activeDocumentBlockId: null,
+  hoveredDocumentBlockId: null,
+  documentBlocks: [],
   activeDocumentBlockLabel: null,
   selectedDocumentBlockIds: [],
   selectedDocumentBlockLabel: null,
@@ -91,6 +94,9 @@ function resolveMainEditorView(toolView: ToolView, libraryView: LibraryEditorVie
   }
   if (toolView === 'simulation') {
     return 'simulation'
+  }
+  if (toolView === 'operations') {
+    return 'operations'
   }
   return 'blockEditor'
 }
@@ -252,7 +258,7 @@ export default function AppPage() {
     callEditor((editor) => editor.clearSelectedBlocks())
   }
 
-  const hasDocument = mainEditorView === 'blockEditor' && Boolean(currentDoc?.id)
+  const hasDocument = (mainEditorView === 'blockEditor' || mainEditorView === 'operations') && Boolean(currentDoc?.id)
 
   const libraryActions = useMemo(() => {
     return getLibraryActions(mainEditorView, {
@@ -294,7 +300,7 @@ export default function AppPage() {
           />
 
           <div className="flex-1 min-w-0 flex flex-col">
-            {mainEditorView !== 'blockEditor' && mainEditorView !== 'materials' && mainEditorView !== 'simulation' ? (
+            {mainEditorView !== 'blockEditor' && mainEditorView !== 'operations' && mainEditorView !== 'materials' && mainEditorView !== 'simulation' ? (
               <section className="border-b border-[rgba(55,53,47,0.09)] bg-[#fbfbfa] flex-shrink-0">
                 <div className="ui-pane-header flex items-center justify-between gap-3">
                   <div className="ui-pane-title">Library actions</div>
@@ -388,6 +394,24 @@ export default function AppPage() {
                   users={users}
                   currentUserId={user?.user_id ?? null}
                 />
+              )}
+              operationsView={(
+                <div className="operations-workspace">
+                  <div className="operations-document-pane">
+                    <BlockEditor
+                      ref={editorRef}
+                      onMetaChange={setEditorMeta}
+                    />
+                  </div>
+                  <DocumentOperationsView
+                    documentId={currentDoc?.id ?? null}
+                    blocks={editorMeta.documentBlocks}
+                    activeBlockId={editorMeta.activeDocumentBlockId}
+                    hoveredBlockId={editorMeta.hoveredDocumentBlockId}
+                    hasUnsavedChanges={editorMeta.hasUnsavedChanges}
+                    saveStatus={editorMeta.saveStatus}
+                  />
+                </div>
               )}
             />
           </div>

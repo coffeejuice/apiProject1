@@ -2,7 +2,7 @@ import Tooltip from './ui/Tooltip'
 
 import type { ReactElement } from 'react'
 
-export type ToolView = 'projects' | 'documents' | 'blocks' | 'library' | 'simulation' | 'users'
+export type ToolView = 'projects' | 'documents' | 'blocks' | 'operations' | 'library' | 'simulation' | 'users'
 
 interface ToolsSwitcherProps {
   activeView: ToolView | null
@@ -46,6 +46,26 @@ function BlocksIcon({ className }: { className?: string }) {
       <rect x="11.5" y="3.5" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
       <rect x="3.5" y="11.5" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
       <rect x="11.5" y="11.5" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  )
+}
+
+function OperationsIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M4 4.75h12M4 9.75h12M4 14.75h12"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M6.5 3.5v13M12 3.5v13"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        opacity="0.72"
+      />
     </svg>
   )
 }
@@ -94,6 +114,7 @@ const TOOL_ITEMS: Array<{ id: ToolView; label: string; icon: ({ className }: { c
   { id: 'projects', label: 'Projects', icon: ProjectsIcon },
   { id: 'documents', label: 'Documents', icon: DocumentsIcon },
   { id: 'blocks', label: 'Blocks', icon: BlocksIcon },
+  { id: 'operations', label: 'Operations', icon: OperationsIcon },
   { id: 'library', label: 'Library', icon: LibraryIcon },
   { id: 'simulation', label: 'Simulation', icon: SimulationIcon },
   { id: 'users', label: 'Users', icon: UsersIcon },

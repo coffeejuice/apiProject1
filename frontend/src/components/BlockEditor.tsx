@@ -34,6 +34,8 @@ export interface BlockEditorMeta {
   draftDocumentName: string
   sourceDocumentId: number | null
   activeDocumentBlockId: string | null
+  hoveredDocumentBlockId: string | null
+  documentBlocks: BlockData[]
   activeDocumentBlockLabel: string | null
   selectedDocumentBlockIds: string[]
   selectedDocumentBlockLabel: string | null
@@ -723,6 +725,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
   const [undoStack, setUndoStack] = useState<EditorSnapshot[]>([])
   const [redoStack, setRedoStack] = useState<EditorSnapshot[]>([])
   const [activeDocumentBlockId, setActiveDocumentBlockId] = useState<string | null>(null)
+  const [hoveredDocumentBlockId, setHoveredDocumentBlockId] = useState<string | null>(null)
   const [selectedDocumentBlockIds, setSelectedDocumentBlockIds] = useState<Set<string>>(new Set())
   const [dropPreviewPreviousBlockId, setDropPreviewPreviousBlockId] = useState<string | null | undefined>(undefined)
   const [confirmedInsertPreviousBlockId, setConfirmedInsertPreviousBlockId] = useState<string | null | undefined>(undefined)
@@ -858,6 +861,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
         setDraftBlocks(cloneBlocks(loadedBlocks))
         setUndoStack([])
         setRedoStack([])
+        setHoveredDocumentBlockId(null)
 
         if (shouldRestoreResume && resumeState) {
           const blocksById = new Map(loadedBlocks.map((block) => [block.block_id, block]))
@@ -1051,6 +1055,8 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
       draftDocumentName,
       sourceDocumentId: currentDoc?.source_document_id ?? null,
       activeDocumentBlockId,
+      hoveredDocumentBlockId,
+      documentBlocks: cloneBlocks(draftBlocks),
       activeDocumentBlockLabel,
       selectedDocumentBlockIds: selectedDocumentBlocksInOrder.map((block) => block.block_id),
       selectedDocumentBlockLabel,
@@ -1068,7 +1074,9 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     changedBlocks.length,
     currentDoc?.source_document_id,
     activeDocumentBlockId,
+    hoveredDocumentBlockId,
     activeDocumentBlockLabel,
+    draftBlocks,
     draftDocumentName,
     hasUnsavedChanges,
     isLineageLoading,
@@ -2129,6 +2137,10 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
         data-block-id={block.block_id}
         data-document-activatable-block="true"
         className={`doc-block-wrapper group scroll-mt-28 ${wrapperTone} ${className}`}
+        onMouseEnter={() => setHoveredDocumentBlockId(block.block_id)}
+        onMouseLeave={() => {
+          setHoveredDocumentBlockId((current) => current === block.block_id ? null : current)
+        }}
         onClickCapture={(event) => maybeActivateFromInteraction(event.target)}
         onFocusCapture={(event) => maybeActivateFromInteraction(event.target)}
         onDragOver={(event) => {
