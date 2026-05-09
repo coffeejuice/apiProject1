@@ -10,6 +10,7 @@ from types import FrameType
 from typing import Protocol
 
 from app.config import settings
+from app.logging_config import configure_logging
 from app.orchestration.channels import WORKFLOW_EVENTS_CHANNEL
 from app.orchestration.leases import LeaseManager
 from app.orchestration.pg_notify import PgNotifyListener
@@ -123,6 +124,7 @@ def main() -> None:
     """Start the workflow coordinator process."""
 
     instance_name = os.getenv("FORGELAB_WORKER_NAME", "coordinator-1")
+    configure_logging(service="coordinator", worker_name=instance_name)
     coordinator = WorkflowCoordinator(
         WorkerConfig(role=WorkerRole.COORDINATOR, instance_name=instance_name),
     )

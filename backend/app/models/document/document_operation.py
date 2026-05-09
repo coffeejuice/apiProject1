@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class DocumentOperation(Base):
-    """Parsed/effective technological operation generated from document blocks."""
+    """Materialized technological operation generated from document blocks."""
 
     __tablename__ = "document_operations"
 
@@ -42,12 +42,12 @@ class DocumentOperation(Base):
     operation_kind: Mapped[str] = mapped_column(String(63), nullable=False, default="generic", server_default="generic")
     label_snapshot: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default=None)
 
-    document_properties: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict, server_default="{}")
-    heating_properties: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict, server_default="{}")
-    deformation_properties: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict, server_default="{}")
-    furnace_properties: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict, server_default="{}")
-    operation_properties: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict, server_default="{}")
-    effective_properties: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict, server_default="{}")
+    operation_parameters: Mapped[dict[str, Any]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=dict,
+        server_default="{}",
+    )
     template_snapshot: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict, server_default="{}")
 
     source_text_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, default=None)

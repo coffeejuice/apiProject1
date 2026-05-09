@@ -1,0 +1,2127 @@
+import { useEffect, useMemo, useState } from 'react'
+
+import { apiClient } from '../../lib/apiClient'
+import type {
+  DocumentPreprocessQueueResponse,
+  DocumentSimulationStepListResponse,
+  DocumentSimulationStepRecord,
+  DocumentSimulationStepSurfaceResponse,
+  SimulationStepSurfaceMesh,
+} from '../../types/api'
+import type { BlockData } from '../blocks/BlockRegistry'
+
+interface SimulationStepsViewProps {
+  documentId: string | null
+  isStepListVisible?: boolean
+  activeBlockId?: string | null
+  hoveredBlockId?: string | null
+}
+
+const DOCUMENT_BLOCK_TYPE_ID = 'document'
+const HEATING_BLOCK_TYPE_ID = 'heating'
+const DEFORMATION_BLOCK_TYPE_ID = 'deformation'
+const FURNACE_BLOCK_TYPE_ID = 'furnace'
+const OPERATION_BLOCK_TYPE_ID = 'operation'
+
+interface StepVisualSection {
+  block: BlockData
+  children: BlockData[]
+}
+
+type StepListItem =
+  | { kind: 'section'; block: BlockData; title: string; number: string | null; relatedBlockIds: string[] }
+  | { kind: 'source'; block: BlockData; title: string; number: string | null; relatedBlockIds: string[] }
+  | { kind: 'step'; step: DocumentSimulationStepRecord }
+
+type MeshViewMode = 'overlay' | 'side_by_side'
+
+type Vector3 = [number, number, number]
+
+interface GeometryBasis {
+  origin?: Vector3
+  ox?: Vector3
+  oy?: Vector3
+  oz?: Vector3
+}
+
+interface GeometryMarker {
+  point?: Vector3
+  label?: string
+}
+
+interface GeometrySummary {
+  shape?: string
+  width?: number
+  height?: number
+  length?: number
+  diameter?: number
+  volume?: number
+  area?: number
+  outline: Array<[number, number]>
+  basis?: GeometryBasis | null
+  topMarker?: GeometryMarker | null
+}
+
+type GeometryKind = 'initial' | 'final'
+
+function RefreshIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M15.8 7.4a6.2 6.2 0 0 0-11.4-1M4.2 3.4v3.2h3.2M4.2 12.6a6.2 6.2 0 0 0 11.4 1M15.8 16.6v-3.2h-3.2"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function formatValue(value: unknown): string {
+  if (value === null || value === undefined || value === '') {
+    return '-'
+  }
+  if (typeof value === 'number') {
+    return Number.isInteger(value) ? String(value) : value.toFixed(3).replace(/\.?0+$/, '')
+  }
+  if (typeof value === 'boolean') {
+    return value ? 'yes' : 'no'
+  }
+  return String(value)
+}
+
+const GEOMETRY_VIEW_FONT_FAMILY = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
+const GEOMETRY_VIEW_TITLE_CLASS = 'font-mono text-[10px] font-semibold leading-tight text-[rgba(55,53,47,0.78)]'
+const GEOMETRY_VIEW_NOTE_CLASS = 'font-mono text-[10px] leading-tight text-[rgba(55,53,47,0.48)]'
+const METRIC_TABLE_CHAR_WIDTH_PX = 6
+const METRIC_TABLE_CELL_PADDING_X_PX = 8
+const METRIC_TABLE_MIN_COLUMN_WIDTH_PX = 30
+const METRIC_TABLE_WRAPPER_PADDING_X_PX = 10
+
+type MetricFormat = 'default' | 'length' | 'area' | 'volume' | 'log_strain' | 'percent'
+
+interface ComparisonMetric {
+  label: string
+  initial: unknown
+  final: unknown
+  format?: MetricFormat
+}
+
+function formatMetricValue(value: unknown, format: MetricFormat = 'default'): string {
+  if (value === null || value === undefined || value === '') {
+    return '-'
+  }
+  const numericValue = toNumber(value)
+  if (numericValue === undefined) {
+    return formatValue(value)
+  }
+  if (format === 'length') {
+    return numericValue.toFixed(0)
+  }
+  if (format === 'area' || format === 'volume') {
+    return numericValue.toFixed(0)
+  }
+  if (format === 'log_strain') {
+    return numericValue.toFixed(3)
+  }
+  if (format === 'percent') {
+    return numericValue.toFixed(1)
+  }
+  return formatValue(numericValue)
+}
+
+function inferMetricFormatFromPath(path: string): MetricFormat | undefined {
+  const normalized = path.toLowerCase()
+  const parts = normalized.split('.')
+  const key = parts[parts.length - 1] || normalized
+  if (
+    key.includes('area') ||
+    key.endsWith('_mm2') ||
+    normalized.includes('cross_section_area')
+  ) {
+    return 'area'
+  }
+  if (
+    key.includes('volume') ||
+    key.endsWith('_mm3')
+  ) {
+    return 'volume'
+  }
+  if (
+    key.includes('relative_deformation_percent') ||
+    key.includes('relative_deformation_pct') ||
+    key.endsWith('_percent') ||
+    key.endsWith('_pct')
+  ) {
+    return 'percent'
+  }
+  if (
+    key.includes('strain') ||
+    key.includes('logarithmic_deformation') ||
+    key.includes('true_deformation')
+  ) {
+    return 'log_strain'
+  }
+  if (
+    key.endsWith('_mm') ||
+    key.includes('length') ||
+    key.includes('height') ||
+    key.includes('width') ||
+    key.includes('diameter') ||
+    key.includes('radius') ||
+    key.includes('stroke') ||
+    key.includes('feed') ||
+    key.includes('size')
+  ) {
+    return 'length'
+  }
+  return undefined
+}
+
+function metricColumnWidthPx(metric: ComparisonMetric): number {
+  const maxLength = Math.max(
+    metric.label.length,
+    formatMetricValue(metric.initial, metric.format).length,
+    formatMetricValue(metric.final, metric.format).length,
+  )
+  return Math.max(
+    METRIC_TABLE_MIN_COLUMN_WIDTH_PX,
+    maxLength * METRIC_TABLE_CHAR_WIDTH_PX + METRIC_TABLE_CELL_PADDING_X_PX + 2,
+  )
+}
+
+function metricTableWidthPx(metrics: ComparisonMetric[]): number {
+  return Math.ceil(metrics.reduce((sum, metric) => sum + metricColumnWidthPx(metric), 1))
+}
+
+function metricTableOverlayWidthPx(metrics: ComparisonMetric[]): number {
+  return metricTableWidthPx(metrics) + METRIC_TABLE_WRAPPER_PADDING_X_PX
+}
+
+function MetricComparisonTable({ metrics }: { metrics: ComparisonMetric[] }) {
+  const columnWidths = metrics.map(metricColumnWidthPx)
+  const tableWidth = metricTableWidthPx(metrics)
+
+  return (
+    <table
+      className="table-fixed border-collapse font-mono text-[10px] leading-[12px] text-[rgba(55,53,47,0.68)]"
+      style={{ width: tableWidth }}
+    >
+      <colgroup>
+        {columnWidths.map((width, index) => (
+          <col key={`${metrics[index]?.label ?? 'metric'}-${index}`} style={{ width }} />
+        ))}
+      </colgroup>
+      <thead>
+        <tr>
+          {metrics.map((metric) => (
+            <th
+              key={metric.label}
+              className="whitespace-nowrap border border-[rgba(55,53,47,0.16)] bg-white/70 px-[4px] py-[2px] text-center font-semibold text-[rgba(55,53,47,0.78)]"
+            >
+              {metric.label}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          {metrics.map((metric) => (
+            <td
+              key={metric.label}
+              className="whitespace-nowrap border border-[rgba(55,53,47,0.14)] bg-white/45 px-[4px] py-[2px] text-right tabular-nums text-slate-700"
+            >
+              {formatMetricValue(metric.initial, metric.format)}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          {metrics.map((metric) => (
+            <td
+              key={metric.label}
+              className="whitespace-nowrap border border-[rgba(55,53,47,0.14)] bg-white/45 px-[4px] py-[2px] text-right tabular-nums text-emerald-700"
+            >
+              {formatMetricValue(metric.final, metric.format)}
+            </td>
+          ))}
+        </tr>
+      </tbody>
+    </table>
+  )
+}
+
+interface ScalarMetricRow {
+  label: string
+  value: unknown
+  format?: MetricFormat
+}
+
+function scalarMetricTableWidthPx(rows: ScalarMetricRow[]): number {
+  const labelLength = Math.max(1, ...rows.map((row) => row.label.length))
+  const valueLength = Math.max(1, ...rows.map((row) => formatMetricValue(row.value, row.format).length))
+  const labelWidth = Math.max(28, labelLength * METRIC_TABLE_CHAR_WIDTH_PX + METRIC_TABLE_CELL_PADDING_X_PX + 2)
+  const valueWidth = Math.max(42, valueLength * METRIC_TABLE_CHAR_WIDTH_PX + METRIC_TABLE_CELL_PADDING_X_PX + 2)
+  return Math.ceil(labelWidth + valueWidth + 1)
+}
+
+function scalarMetricTableOverlayWidthPx(rows: ScalarMetricRow[]): number {
+  return scalarMetricTableWidthPx(rows) + METRIC_TABLE_WRAPPER_PADDING_X_PX
+}
+
+function scalarMetricTableOverlayHeightPx(rows: ScalarMetricRow[]): number {
+  return rows.length * 17 + 10
+}
+
+function ScalarMetricTable({ rows }: { rows: ScalarMetricRow[] }) {
+  const labelLength = Math.max(1, ...rows.map((row) => row.label.length))
+  const valueLength = Math.max(1, ...rows.map((row) => formatMetricValue(row.value, row.format).length))
+  const labelWidth = Math.max(28, labelLength * METRIC_TABLE_CHAR_WIDTH_PX + METRIC_TABLE_CELL_PADDING_X_PX + 2)
+  const valueWidth = Math.max(42, valueLength * METRIC_TABLE_CHAR_WIDTH_PX + METRIC_TABLE_CELL_PADDING_X_PX + 2)
+
+  return (
+    <table
+      className="table-fixed border-collapse font-mono text-[10px] leading-[12px] text-[rgba(55,53,47,0.68)]"
+      style={{ width: labelWidth + valueWidth + 1 }}
+    >
+      <colgroup>
+        <col style={{ width: labelWidth }} />
+        <col style={{ width: valueWidth }} />
+      </colgroup>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={row.label}>
+            <th className="whitespace-nowrap border border-[rgba(55,53,47,0.16)] bg-white/70 px-[4px] py-[2px] text-center font-semibold text-[rgba(55,53,47,0.78)]">
+              {row.label}
+            </th>
+            <td className="whitespace-nowrap border border-[rgba(55,53,47,0.14)] bg-white/45 px-[4px] py-[2px] text-right tabular-nums text-[rgba(55,53,47,0.72)]">
+              {formatMetricValue(row.value, row.format)}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
+function formatDate(value: string | null | undefined): string {
+  if (!value) {
+    return '-'
+  }
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+  return date.toLocaleString()
+}
+
+function jsonCount(value: unknown): number {
+  if (!value || typeof value !== 'object') {
+    return 0
+  }
+  if (Array.isArray(value)) {
+    return value.length
+  }
+  return Object.keys(value).length
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {}
+}
+
+function blockDisplayName(block: BlockData): string {
+  if (block.block_type_id === DOCUMENT_BLOCK_TYPE_ID) {
+    return 'Document'
+  }
+  if (block.block_type_id === HEATING_BLOCK_TYPE_ID) {
+    return 'Heating'
+  }
+  if (block.block_type_id === DEFORMATION_BLOCK_TYPE_ID) {
+    return 'Deformation'
+  }
+  if (block.block_type_id === FURNACE_BLOCK_TYPE_ID) {
+    return 'Furnace'
+  }
+
+  const props = block.props || {}
+  const title = props.title
+  if (typeof title === 'string' && title.trim()) {
+    return title.trim()
+  }
+  const template = props.operation_template || props.template_snapshot
+  if (template && typeof template === 'object') {
+    const templateRecord = template as { display_name?: unknown; label?: unknown }
+    const label = templateRecord.display_name || templateRecord.label
+    if (typeof label === 'string' && label.trim()) {
+      return label.trim()
+    }
+  }
+  const operationProperties = asRecord(props.operation_properties)
+  const templateId = props.operation_template_id || operationProperties.operation_template_id
+  if (typeof templateId === 'string' && templateId.trim()) {
+    return templateId.replace(/^operation\./, '').replace(/[._-]+/g, ' ')
+  }
+  return 'Operation'
+}
+
+function sectionNumberingStart(blocks: BlockData[]): number {
+  const documentBlock = blocks.find((block) => block.block_type_id === DOCUMENT_BLOCK_TYPE_ID)
+  const props = documentBlock?.props || {}
+  const documentProperties = asRecord(props.document_properties)
+  const rawValue = props.section_numbering_start ?? documentProperties.section_numbering_start
+  const value = typeof rawValue === 'number' ? rawValue : Number(rawValue)
+  return Number.isInteger(value) && value > 0 ? value : 2
+}
+
+function isTopLevelSection(block: BlockData): boolean {
+  return block.block_type_id === HEATING_BLOCK_TYPE_ID || block.block_type_id === DEFORMATION_BLOCK_TYPE_ID
+}
+
+function isValidSectionChild(section: BlockData, child: BlockData): boolean {
+  return (
+    (section.block_type_id === HEATING_BLOCK_TYPE_ID && child.block_type_id === FURNACE_BLOCK_TYPE_ID) ||
+    (section.block_type_id === DEFORMATION_BLOCK_TYPE_ID && child.block_type_id === OPERATION_BLOCK_TYPE_ID)
+  )
+}
+
+function relatedSourceBlockIds(blocks: BlockData[], blockId: string | null | undefined): Set<string> {
+  if (!blockId) {
+    return new Set()
+  }
+
+  const blockIndex = blocks.findIndex((block) => block.block_id === blockId)
+  if (blockIndex < 0) {
+    return new Set()
+  }
+
+  const block = blocks[blockIndex]
+  if (block.block_type_id === OPERATION_BLOCK_TYPE_ID || block.block_type_id === FURNACE_BLOCK_TYPE_ID) {
+    return new Set([block.block_id])
+  }
+
+  if (!isTopLevelSection(block)) {
+    return new Set()
+  }
+
+  const childType = block.block_type_id === HEATING_BLOCK_TYPE_ID ? FURNACE_BLOCK_TYPE_ID : OPERATION_BLOCK_TYPE_ID
+  const related = new Set<string>()
+  for (let index = blockIndex + 1; index < blocks.length; index += 1) {
+    const candidate = blocks[index]
+    if (isTopLevelSection(candidate)) {
+      break
+    }
+    if (candidate.block_type_id === childType) {
+      related.add(candidate.block_id)
+    }
+  }
+  return related
+}
+
+function buildVisualSections(blocks: BlockData[]): StepVisualSection[] {
+  const sections: StepVisualSection[] = []
+  let activeSection: StepVisualSection | null = null
+
+  for (const block of blocks) {
+    if (block.block_type_id === DOCUMENT_BLOCK_TYPE_ID) {
+      continue
+    }
+
+    if (isTopLevelSection(block)) {
+      activeSection = { block, children: [] }
+      sections.push(activeSection)
+      continue
+    }
+
+    if (activeSection && isValidSectionChild(activeSection.block, block)) {
+      activeSection.children.push(block)
+    }
+  }
+
+  return sections
+}
+
+function buildSectionNumbers(sections: StepVisualSection[], startNumber: number): Map<string, string> {
+  const numbersByBlockId = new Map<string, string>()
+  let index = 0
+  let currentNumber = startNumber
+
+  while (index < sections.length) {
+    const section = sections[index]
+    const nextSection = sections[index + 1]
+    if (
+      section.block.block_type_id === HEATING_BLOCK_TYPE_ID &&
+      nextSection?.block.block_type_id === DEFORMATION_BLOCK_TYPE_ID
+    ) {
+      numbersByBlockId.set(section.block.block_id, `${currentNumber}.1`)
+      numbersByBlockId.set(nextSection.block.block_id, `${currentNumber}.2`)
+      currentNumber += 1
+      index += 2
+      continue
+    }
+
+    numbersByBlockId.set(section.block.block_id, `${currentNumber}.`)
+    currentNumber += 1
+    index += 1
+  }
+
+  return numbersByBlockId
+}
+
+function flattenUserParameters(
+  value: unknown,
+  prefix = '',
+  output: string[] = [],
+  limit = 5
+): string[] {
+  if (output.length >= limit || value === null || value === undefined || value === '') {
+    return output
+  }
+
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    output.push(`${prefix}: ${formatValue(value)}`)
+    return output
+  }
+
+  if (Array.isArray(value)) {
+    output.push(`${prefix}: ${value.length} rows`)
+    return output
+  }
+
+  if (typeof value === 'object') {
+    for (const [key, childValue] of Object.entries(value as Record<string, unknown>)) {
+      if (output.length >= limit) {
+        break
+      }
+      const nextPrefix = prefix ? `${prefix}.${key}` : key
+      flattenUserParameters(childValue, nextPrefix, output, limit)
+    }
+  }
+
+  return output
+}
+
+function userParameterChips(step: DocumentSimulationStepRecord): string[] {
+  const operationParameters = asRecord(step.operation_parameters)
+  const chips = flattenUserParameters(operationParameters, '', [], 5)
+  return chips.length > 0 ? chips : ['no user variables']
+}
+
+function statusClass(status: string | undefined): string {
+  switch ((status || '').toLowerCase()) {
+    case 'failed':
+    case 'parse error':
+      return 'border-red-200 bg-red-50 text-red-700'
+    case 'running':
+      return 'border-blue-200 bg-blue-50 text-blue-700'
+    case 'finished':
+    case 'compiled':
+    case 'success':
+      return 'border-emerald-200 bg-emerald-50 text-emerald-700'
+    case 'queued':
+    case 'pending':
+      return 'border-amber-200 bg-amber-50 text-amber-700'
+    case 'not ready':
+      return 'border-slate-200 bg-slate-50 text-slate-500'
+    default:
+      return 'border-slate-200 bg-slate-50 text-slate-600'
+  }
+}
+
+function toNumber(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : undefined
+  }
+  return undefined
+}
+
+function parseVector3(value: unknown): Vector3 | undefined {
+  if (!Array.isArray(value) || value.length < 3) {
+    return undefined
+  }
+  const x = toNumber(value[0])
+  const y = toNumber(value[1])
+  const z = toNumber(value[2])
+  return x !== undefined && y !== undefined && z !== undefined ? [x, y, z] : undefined
+}
+
+function parseGeometryBasis(value: unknown): GeometryBasis | null {
+  const record = asRecord(value)
+  const ox = parseVector3(record.ox ?? record.x ?? record.Ox)
+  const oy = parseVector3(record.oy ?? record.y ?? record.Oy)
+  const oz = parseVector3(record.oz ?? record.z ?? record.Oz)
+  const origin = parseVector3(record.origin)
+  if (!origin && !ox && !oy && !oz) {
+    return null
+  }
+  return { origin, ox, oy, oz }
+}
+
+function parseGeometryMarker(value: unknown): GeometryMarker | null {
+  const record = asRecord(value)
+  const point = parseVector3(record.point ?? record.position)
+  const label = typeof record.label === 'string' ? record.label : undefined
+  if (!point && !label) {
+    return null
+  }
+  return { point, label }
+}
+
+function parseOutline(value: unknown): Array<[number, number]> {
+  if (!Array.isArray(value)) {
+    return []
+  }
+  const points: Array<[number, number]> = []
+  for (const item of value) {
+    if (!Array.isArray(item) || item.length < 2) {
+      continue
+    }
+    const x = toNumber(item[0])
+    const y = toNumber(item[1])
+    if (x !== undefined && y !== undefined) {
+      points.push([x, y])
+    }
+  }
+  return points
+}
+
+function summarizeGeometry(raw: Record<string, unknown> | null | undefined): GeometrySummary | null {
+  if (!raw || typeof raw !== 'object') {
+    return null
+  }
+  return {
+    shape: typeof raw.shape === 'string' ? raw.shape : undefined,
+    width: toNumber(raw.width_mm),
+    height: toNumber(raw.height_mm),
+    length: toNumber(raw.length_mm),
+    diameter: toNumber(raw.equivalent_diameter_mm),
+    volume: toNumber(raw.volume_mm3),
+    area: toNumber(raw.cross_section_area_mm2),
+    outline: parseOutline(raw.cross_section_outline),
+    basis: parseGeometryBasis(raw.basis),
+    topMarker: parseGeometryMarker(raw.top_marker),
+  }
+}
+
+function ellipseOutline(width: number, height: number, segments = 72): Array<[number, number]> {
+  return Array.from({ length: segments }, (_, index) => {
+    const angle = (index / segments) * Math.PI * 2
+    return [Math.cos(angle) * width * 0.5, Math.sin(angle) * height * 0.5]
+  })
+}
+
+function rectangleOutline(width: number, height: number): Array<[number, number]> {
+  const halfWidth = width * 0.5
+  const halfHeight = height * 0.5
+  return [
+    [-halfWidth, -halfHeight],
+    [halfWidth, -halfHeight],
+    [halfWidth, halfHeight],
+    [-halfWidth, halfHeight],
+  ]
+}
+
+function crossSectionOutline(geometry: GeometrySummary | null): Array<[number, number]> {
+  if (!geometry) {
+    return []
+  }
+  if (geometry.outline.length >= 3) {
+    return geometry.outline
+  }
+  const width = geometry.width || geometry.diameter
+  const height = geometry.height || geometry.diameter
+  if (!width || !height) {
+    return []
+  }
+  const shape = (geometry.shape || '').toLowerCase()
+  const isRound =
+    shape.includes('round') ||
+    shape.includes('circle') ||
+    shape.includes('cyl') ||
+    (geometry.diameter !== undefined && geometry.width === undefined && geometry.height === undefined)
+  return isRound ? ellipseOutline(width, height) : rectangleOutline(width, height)
+}
+
+interface PlanarProjector {
+  project: (point: [number, number]) => [number, number]
+}
+
+function createPlanarProjector(
+  outlines: Array<Array<[number, number]>>,
+  width: number,
+  height: number,
+  padding = 18
+): PlanarProjector | null {
+  const points = outlines.flat()
+  if (points.length === 0) {
+    return null
+  }
+  const xs = points.map(([x]) => x)
+  const ys = points.map(([, y]) => y)
+  const minX = Math.min(...xs)
+  const maxX = Math.max(...xs)
+  const minY = Math.min(...ys)
+  const maxY = Math.max(...ys)
+  const spanX = Math.max(maxX - minX, 1)
+  const spanY = Math.max(maxY - minY, 1)
+  const availableWidth = Math.max(width - padding * 2, 1)
+  const availableHeight = Math.max(height - padding * 2, 1)
+  const scale = Math.min(availableWidth / spanX, availableHeight / spanY)
+  const drawnWidth = spanX * scale
+  const drawnHeight = spanY * scale
+  const offsetX = (width - drawnWidth) * 0.5 - minX * scale
+  const offsetY = (height - drawnHeight) * 0.5 + maxY * scale
+
+  return {
+    project: ([x, y]) => [offsetX + x * scale, offsetY - y * scale],
+  }
+}
+
+function outlinePath(points: Array<[number, number]>, projector: PlanarProjector | null): string {
+  if (points.length === 0 || !projector) {
+    return ''
+  }
+  return points
+    .map((point, index) => {
+      const [px, py] = projector.project(point)
+      return `${index === 0 ? 'M' : 'L'} ${px.toFixed(2)} ${py.toFixed(2)}`
+    })
+    .join(' ') + ' Z'
+}
+
+function geometryValue(geometry: GeometrySummary | null, key: 'width' | 'height' | 'length' | 'area'): number | undefined {
+  if (!geometry) {
+    return undefined
+  }
+  if (key === 'width') {
+    return geometry.width ?? geometry.diameter
+  }
+  if (key === 'height') {
+    return geometry.height ?? geometry.diameter
+  }
+  return geometry[key]
+}
+
+function metricValue(metrics: Record<string, unknown> | undefined, keys: string[]): number | undefined {
+  for (const key of keys) {
+    const value = toNumber(metrics?.[key])
+    if (value !== undefined) {
+      return value
+    }
+  }
+  return undefined
+}
+
+function Geometry2DPreview({
+  initial,
+  final,
+  metrics,
+}: {
+  initial: GeometrySummary | null
+  final: GeometrySummary | null
+  metrics: Record<string, unknown>
+}) {
+  const width = 440
+  const height = 280
+  const initialOutline = crossSectionOutline(initial)
+  const finalOutline = crossSectionOutline(final)
+  const projector = createPlanarProjector([initialOutline, finalOutline], width, height, 24)
+  const initialPath = outlinePath(initialOutline, projector)
+  const finalPath = outlinePath(finalOutline, projector)
+  const comparisonMetrics: ComparisonMetric[] = [
+    { label: 'H', initial: geometryValue(initial, 'height'), final: geometryValue(final, 'height'), format: 'length' },
+    { label: 'W', initial: geometryValue(initial, 'width'), final: geometryValue(final, 'width'), format: 'length' },
+    { label: 'L', initial: geometryValue(initial, 'length'), final: geometryValue(final, 'length'), format: 'length' },
+    { label: 'A', initial: geometryValue(initial, 'area'), final: geometryValue(final, 'area'), format: 'area' },
+  ]
+  const comparisonTableWidth = metricTableOverlayWidthPx(comparisonMetrics)
+  const allStrainRows: ScalarMetricRow[] = [
+    { label: 'eH', value: metricValue(metrics, ['strain_height']), format: 'log_strain' },
+    { label: 'eW', value: metricValue(metrics, ['strain_width']), format: 'log_strain' },
+    { label: 'eL', value: metricValue(metrics, ['strain_length']), format: 'log_strain' },
+    { label: 'def', value: metricValue(metrics, ['relative_deformation_percent', 'relative_deformation_pct']), format: 'percent' },
+  ]
+  const strainRows = allStrainRows.filter((row) => row.value !== undefined)
+  const hasStrainRows = strainRows.length > 0
+  const strainTableWidth = hasStrainRows ? scalarMetricTableOverlayWidthPx(strainRows) : 0
+  const strainTableHeight = hasStrainRows ? scalarMetricTableOverlayHeightPx(strainRows) : 0
+
+  return (
+    <div className="rounded-xl border border-[rgba(55,53,47,0.10)] bg-white p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <div className={GEOMETRY_VIEW_TITLE_CLASS}>2D cross-section</div>
+        <div className={`${GEOMETRY_VIEW_NOTE_CLASS} flex items-center gap-2`}>
+          <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-slate-400" /> Initial</span>
+          <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Final</span>
+        </div>
+      </div>
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-[280px] w-full rounded-lg bg-[#faf9f7]">
+        <rect x="0" y="0" width={width} height={height} fill="#faf9f7" />
+        <path d={`M 18 ${height - 18} H ${width - 18} M 18 18 V ${height - 18}`} stroke="rgba(55,53,47,0.18)" strokeWidth="1" />
+        {initialPath ? <path d={initialPath} fill="rgba(100,116,139,0.13)" stroke="rgb(100,116,139)" strokeWidth="2" /> : null}
+        {finalPath ? <path d={finalPath} fill="rgba(16,185,129,0.14)" stroke="rgb(16,185,129)" strokeWidth="2.4" /> : null}
+        {initialPath || finalPath ? (
+          <foreignObject x="14" y="14" width={comparisonTableWidth} height="62">
+            <div className="rounded-lg border border-[rgba(55,53,47,0.10)] bg-white/85 p-1 font-mono text-[10px] leading-tight text-[rgba(55,53,47,0.68)] shadow-sm backdrop-blur">
+              <MetricComparisonTable metrics={comparisonMetrics} />
+            </div>
+          </foreignObject>
+        ) : null}
+        {hasStrainRows ? (
+          <foreignObject x={width - strainTableWidth - 14} y={height - strainTableHeight - 14} width={strainTableWidth} height={strainTableHeight}>
+            <div className="rounded-lg border border-[rgba(55,53,47,0.10)] bg-white/85 p-1 font-mono text-[10px] leading-tight text-[rgba(55,53,47,0.68)] shadow-sm backdrop-blur">
+              <ScalarMetricTable rows={strainRows} />
+            </div>
+          </foreignObject>
+        ) : null}
+        {!initialPath && !finalPath ? (
+          <text x={width / 2} y={height / 2} textAnchor="middle" fill="rgba(55,53,47,0.45)" fontSize="10" fontFamily={GEOMETRY_VIEW_FONT_FAMILY}>
+            No cross-section outline
+          </text>
+        ) : null}
+      </svg>
+    </div>
+  )
+}
+
+function projectedIsoPoint(lengthAxis: number, crossX: number, crossY: number): [number, number] {
+  return [lengthAxis * 0.72 - crossX * 0.72, lengthAxis * 0.34 + crossX * 0.34 - crossY * 0.82]
+}
+
+function pointsToPath(points: Array<[number, number]>): string {
+  if (points.length === 0) {
+    return ''
+  }
+  return points.map(([x, y], index) => `${index === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`).join(' ') + ' Z'
+}
+
+function colorWithAlpha(color: string, alpha: number): string {
+  return color.replace('rgb', 'rgba').replace(')', `,${alpha})`)
+}
+
+interface ProjectedSurfaceMesh {
+  faces: Array<Array<[number, number]>>
+  edges: Array<[[number, number], [number, number]]>
+  rimEdges: Array<[[number, number], [number, number]]>
+  bounds: { minX: number; maxX: number; minY: number; maxY: number }
+}
+
+interface ProjectedIsoBounds {
+  minX: number
+  maxX: number
+  minY: number
+  maxY: number
+}
+
+function surfaceRawVertices(surface: SimulationStepSurfaceMesh): Vector3[] {
+  return surface.vertices
+    .map((vertex): Vector3 | null => {
+      if (!Array.isArray(vertex) || vertex.length < 3) {
+        return null
+      }
+      const x = toNumber(vertex[0])
+      const y = toNumber(vertex[1])
+      const z = toNumber(vertex[2])
+      return x !== undefined && y !== undefined && z !== undefined ? [x, y, z] : null
+    })
+    .filter((vertex): vertex is Vector3 => vertex !== null)
+}
+
+function projectedBoundsForSurfaces(surfaces: Array<SimulationStepSurfaceMesh | null | undefined>): ProjectedIsoBounds | null {
+  const projectedPoints = surfaces
+    .filter((surface): surface is SimulationStepSurfaceMesh => Boolean(surface))
+    .flatMap((surface) => surfaceRawVertices(surface).map(([x, y, z]) => projectedIsoPoint(x, y, z)))
+  if (projectedPoints.length === 0) {
+    return null
+  }
+  const xs = projectedPoints.map(([x]) => x)
+  const ys = projectedPoints.map(([, y]) => y)
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys),
+  }
+}
+
+function screenBounds(points: Array<[number, number]>): { minX: number; maxX: number; minY: number; maxY: number } {
+  const xs = points.map(([x]) => x)
+  const ys = points.map(([, y]) => y)
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys),
+  }
+}
+
+function surfaceEdges(
+  surface: SimulationStepSurfaceMesh,
+  rawVertices: Vector3[],
+  projected: Array<[number, number]>
+): { edges: ProjectedSurfaceMesh['edges']; rimEdges: ProjectedSurfaceMesh['rimEdges'] } {
+  const edgeByKey = new Map<string, [number, number]>()
+  surface.faces.forEach((face) => {
+    if (!Array.isArray(face) || face.length < 3) {
+      return
+    }
+    for (let index = 0; index < face.length; index += 1) {
+      const start = face[index]
+      const end = face[(index + 1) % face.length]
+      if (!Number.isInteger(start) || !Number.isInteger(end)) {
+        continue
+      }
+      const a = Math.min(start, end)
+      const b = Math.max(start, end)
+      if (!rawVertices[a] || !rawVertices[b]) {
+        continue
+      }
+      edgeByKey.set(`${a}:${b}`, [a, b])
+    }
+  })
+
+  const xValues = rawVertices.map(([x]) => x)
+  const minAxis = Math.min(...xValues)
+  const maxAxis = Math.max(...xValues)
+  const axisTolerance = Math.max((maxAxis - minAxis) * 0.025, 1e-6)
+  const edges: ProjectedSurfaceMesh['edges'] = []
+  const rimEdges: ProjectedSurfaceMesh['rimEdges'] = []
+
+  edgeByKey.forEach(([a, b]) => {
+    const projectedA = projected[a]
+    const projectedB = projected[b]
+    if (!projectedA || !projectedB) {
+      return
+    }
+    const edge: [[number, number], [number, number]] = [projectedA, projectedB]
+    edges.push(edge)
+    const aX = rawVertices[a][0]
+    const bX = rawVertices[b][0]
+    const onMinRim = Math.abs(aX - minAxis) <= axisTolerance && Math.abs(bX - minAxis) <= axisTolerance
+    const onMaxRim = Math.abs(aX - maxAxis) <= axisTolerance && Math.abs(bX - maxAxis) <= axisTolerance
+    if (onMinRim || onMaxRim) {
+      rimEdges.push(edge)
+    }
+  })
+
+  return { edges, rimEdges }
+}
+
+function buildProjectedSurfaceMesh(
+  surface: SimulationStepSurfaceMesh,
+  width: number,
+  height: number,
+  sharedBounds?: ProjectedIsoBounds | null
+): ProjectedSurfaceMesh | null {
+  const rawVertices = surfaceRawVertices(surface)
+  if (rawVertices.length === 0 || surface.faces.length === 0) {
+    return null
+  }
+
+  const rawProjected = rawVertices.map(([x, y, z]) => projectedIsoPoint(x, y, z))
+  const bounds = sharedBounds || projectedBoundsForSurfaces([surface])
+  if (!bounds) {
+    return null
+  }
+  const spanX = Math.max(bounds.maxX - bounds.minX, 1)
+  const spanY = Math.max(bounds.maxY - bounds.minY, 1)
+  const padding = 16
+  const scale = Math.min((width - padding * 2) / spanX, (height - padding * 2) / spanY)
+  const offsetX = (width - spanX * scale) * 0.5 - bounds.minX * scale
+  const offsetY = (height - spanY * scale) * 0.5 - bounds.minY * scale
+  const projected = rawProjected.map(([x, y]): [number, number] => [offsetX + x * scale, offsetY + y * scale])
+
+  const faces = surface.faces
+    .map((face) => {
+      if (!Array.isArray(face)) {
+        return null
+      }
+      const points = face
+        .map((index) => Number.isInteger(index) ? projected[index] : undefined)
+        .filter((point): point is [number, number] => Array.isArray(point))
+      if (points.length < 3) {
+        return null
+      }
+      const depth = face.reduce((total, index) => {
+        const vertex = Number.isInteger(index) ? rawVertices[index] : undefined
+        return vertex ? total + vertex[0] - vertex[1] + vertex[2] : total
+      }, 0) / Math.max(face.length, 1)
+      return { points, depth }
+    })
+    .filter((face): face is { points: Array<[number, number]>; depth: number } => face !== null)
+    .sort((a, b) => a.depth - b.depth)
+    .map((face) => face.points)
+
+  if (faces.length === 0) {
+    return null
+  }
+  const edgeData = surfaceEdges(surface, rawVertices, projected)
+  return {
+    faces,
+    edges: edgeData.edges,
+    rimEdges: edgeData.rimEdges,
+    bounds: screenBounds(projected),
+  }
+}
+
+function renderSurfaceMesh(
+  projectedSurface: ProjectedSurfaceMesh,
+  color: string,
+  options?: { strong?: boolean; fillAlpha?: number }
+) {
+  const fillAlpha = options?.fillAlpha ?? 0.075
+  const strong = Boolean(options?.strong)
+  return (
+    <>
+      {projectedSurface.faces.map((face, index) => (
+        <path
+          key={`face-${index}`}
+          d={pointsToPath(face)}
+          fill={colorWithAlpha(color, index % 2 === 0 ? fillAlpha : fillAlpha * 0.72)}
+          stroke={colorWithAlpha(color, strong ? 0.20 : 0.16)}
+          strokeWidth={strong ? '0.75' : '0.55'}
+        />
+      ))}
+      {projectedSurface.edges.map(([start, end], index) => (
+        <line
+          key={`edge-${index}`}
+          x1={start[0]}
+          y1={start[1]}
+          x2={end[0]}
+          y2={end[1]}
+          stroke={colorWithAlpha(color, strong ? 0.40 : 0.30)}
+          strokeWidth={strong ? '0.75' : '0.55'}
+        />
+      ))}
+      {projectedSurface.rimEdges.map(([start, end], index) => (
+        <line
+          key={`rim-${index}`}
+          x1={start[0]}
+          y1={start[1]}
+          x2={end[0]}
+          y2={end[1]}
+          stroke={colorWithAlpha(color, 0.72)}
+          strokeWidth={strong ? '1.8' : '1.35'}
+          strokeLinecap="round"
+        />
+      ))}
+    </>
+  )
+}
+
+function geometryStatsMetrics({
+  initialGeometry,
+  finalGeometry,
+  initialSurface,
+  finalSurface,
+}: {
+  initialGeometry: GeometrySummary | null
+  finalGeometry: GeometrySummary | null
+  initialSurface?: SimulationStepSurfaceMesh | null
+  finalSurface?: SimulationStepSurfaceMesh | null
+}): ComparisonMetric[] {
+  return [
+    { label: 'S', initial: initialSurface?.surface_area_mm2, final: finalSurface?.surface_area_mm2, format: 'area' },
+    {
+      label: 'V',
+      initial: initialSurface?.volume_mm3 ?? initialGeometry?.volume,
+      final: finalSurface?.volume_mm3 ?? finalGeometry?.volume,
+      format: 'volume',
+    },
+    { label: 'L', initial: initialGeometry?.length, final: finalGeometry?.length, format: 'length' },
+    {
+      label: 'H',
+      initial: initialGeometry?.height ?? initialGeometry?.diameter,
+      final: finalGeometry?.height ?? finalGeometry?.diameter,
+      format: 'length',
+    },
+    {
+      label: 'W',
+      initial: initialGeometry?.width ?? initialGeometry?.diameter,
+      final: finalGeometry?.width ?? finalGeometry?.diameter,
+      format: 'length',
+    },
+  ]
+}
+
+function GeometryStatsTable({ rows }: { rows: ComparisonMetric[] }) {
+  return (
+    <div className="rounded-lg border border-[rgba(55,53,47,0.10)] bg-white/85 p-1 font-mono text-[10px] leading-tight text-[rgba(55,53,47,0.68)] shadow-sm backdrop-blur">
+      <MetricComparisonTable metrics={rows} />
+    </div>
+  )
+}
+
+function BasisStatus({ initial, final }: { initial: GeometrySummary | null; final: GeometrySummary | null }) {
+  const hasInitialBasis = Boolean(initial?.basis?.ox || initial?.basis?.oy || initial?.basis?.oz)
+  const hasFinalBasis = Boolean(final?.basis?.ox || final?.basis?.oy || final?.basis?.oz)
+  const hasInitialMarker = Boolean(initial?.topMarker?.point || initial?.topMarker?.label)
+  const hasFinalMarker = Boolean(final?.topMarker?.point || final?.topMarker?.label)
+  if (hasInitialBasis || hasFinalBasis || hasInitialMarker || hasFinalMarker) {
+    return (
+      <div className="rounded-lg border border-[rgba(55,53,47,0.10)] bg-white/85 px-2 py-1.5 font-mono text-[10px] leading-tight text-[rgba(55,53,47,0.66)] shadow-sm backdrop-blur">
+        <div className="font-semibold">Basis metadata</div>
+        <div>Initial: {hasInitialBasis ? 'basis' : 'no basis'} / {hasInitialMarker ? 'top marker' : 'no marker'}</div>
+        <div>Final: {hasFinalBasis ? 'basis' : 'no basis'} / {hasFinalMarker ? 'top marker' : 'no marker'}</div>
+      </div>
+    )
+  }
+  return (
+    <div className="rounded-lg border border-amber-200 bg-amber-50/90 px-2 py-1.5 font-mono text-[10px] leading-tight text-amber-800 shadow-sm backdrop-blur">
+      Basis/top-marker metadata is not emitted by Pre yet. Rotation animation stays disabled.
+    </div>
+  )
+}
+
+function DimensionGuide({
+  projectedSurface,
+  geometry,
+  width,
+  height,
+  color,
+}: {
+  projectedSurface: ProjectedSurfaceMesh
+  geometry: GeometrySummary | null
+  width: number
+  height: number
+  color: string
+}) {
+  const y = Math.min(height - 18, projectedSurface.bounds.maxY + 18)
+  const x1 = Math.max(18, projectedSurface.bounds.minX)
+  const x2 = Math.min(width - 18, projectedSurface.bounds.maxX)
+  if (x2 - x1 < 40) {
+    return null
+  }
+  return (
+    <g>
+      <line x1={x1} y1={y} x2={x2} y2={y} stroke={colorWithAlpha(color, 0.55)} strokeWidth="1" />
+      <line x1={x1} y1={y - 4} x2={x1} y2={y + 4} stroke={colorWithAlpha(color, 0.55)} strokeWidth="1" />
+      <line x1={x2} y1={y - 4} x2={x2} y2={y + 4} stroke={colorWithAlpha(color, 0.55)} strokeWidth="1" />
+      <text
+        x={(x1 + x2) / 2}
+        y={y - 5}
+        textAnchor="middle"
+        fill={colorWithAlpha(color, 0.72)}
+        fontSize="10"
+        fontFamily={GEOMETRY_VIEW_FONT_FAMILY}
+      >
+        L {formatMetricValue(geometry?.length, 'length')}
+      </text>
+    </g>
+  )
+}
+
+function Geometry3DPreview({
+  geometry,
+  kind,
+  surface,
+  isSurfaceLoading,
+}: {
+  geometry: GeometrySummary | null
+  kind: GeometryKind
+  surface?: SimulationStepSurfaceMesh | null
+  isSurfaceLoading?: boolean
+}) {
+  const color = kind === 'initial' ? 'rgb(100,116,139)' : 'rgb(16,185,129)'
+  const width = 320
+  const height = 220
+  const projectedSurface = surface ? buildProjectedSurfaceMesh(surface, width, height, projectedBoundsForSurfaces([surface])) : null
+
+  return (
+    <div className="rounded-xl border border-[rgba(55,53,47,0.10)] bg-white p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className={GEOMETRY_VIEW_TITLE_CLASS}>
+          3D {kind} geometry
+        </div>
+        <div className={GEOMETRY_VIEW_NOTE_CLASS}>
+          {isSurfaceLoading ? 'loading legacy mesh...' : projectedSurface ? `${surface?.face_count ?? 0} faces` : 'no legacy mesh'}
+        </div>
+      </div>
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-[220px] w-full rounded-lg bg-[#faf9f7]">
+        {projectedSurface ? (
+          <>
+            {renderSurfaceMesh(projectedSurface, color, { strong: true, fillAlpha: 0.09 })}
+            <DimensionGuide
+              projectedSurface={projectedSurface}
+              geometry={geometry}
+              width={width}
+              height={height}
+              color={color}
+            />
+          </>
+        ) : (
+          <text x={width / 2} y={height / 2} textAnchor="middle" fill="rgba(55,53,47,0.45)" fontSize="10" fontFamily={GEOMETRY_VIEW_FONT_FAMILY}>
+            {isSurfaceLoading ? 'Loading legacy STL mesh...' : 'Legacy STL mesh is unavailable'}
+          </text>
+        )}
+      </svg>
+      <div className="mt-2 grid grid-cols-2 gap-1 font-mono text-[10px] leading-tight text-[rgba(55,53,47,0.58)]">
+        <div>Width: {formatMetricValue(geometry?.width || geometry?.diameter, 'length')}</div>
+        <div>Height: {formatMetricValue(geometry?.height || geometry?.diameter, 'length')}</div>
+        <div>Length: {formatMetricValue(geometry?.length, 'length')}</div>
+        <div>Volume: {formatMetricValue(surface?.volume_mm3 ?? geometry?.volume, 'volume')}</div>
+        <div>Area: {formatMetricValue(surface?.surface_area_mm2, 'area')}</div>
+        <div>Basis: {geometry?.basis ? 'yes' : 'missing'}</div>
+      </div>
+    </div>
+  )
+}
+
+function Geometry3DOverlayPreview({
+  initialGeometry,
+  finalGeometry,
+  initialSurface,
+  finalSurface,
+  isSurfaceLoading,
+}: {
+  initialGeometry: GeometrySummary | null
+  finalGeometry: GeometrySummary | null
+  initialSurface?: SimulationStepSurfaceMesh | null
+  finalSurface?: SimulationStepSurfaceMesh | null
+  isSurfaceLoading?: boolean
+}) {
+  const width = 680
+  const height = 300
+  const sharedBounds = projectedBoundsForSurfaces([initialSurface, finalSurface])
+  const initialProjected = initialSurface && sharedBounds
+    ? buildProjectedSurfaceMesh(initialSurface, width, height, sharedBounds)
+    : null
+  const finalProjected = finalSurface && sharedBounds
+    ? buildProjectedSurfaceMesh(finalSurface, width, height, sharedBounds)
+    : null
+  const statsRows = geometryStatsMetrics({
+    initialGeometry,
+    finalGeometry,
+    initialSurface,
+    finalSurface,
+  })
+  const statsTableWidth = metricTableOverlayWidthPx(statsRows)
+
+  return (
+    <div className="rounded-xl border border-[rgba(55,53,47,0.10)] bg-white p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className={GEOMETRY_VIEW_TITLE_CLASS}>3D initial/final overlay</div>
+        <div className={`${GEOMETRY_VIEW_NOTE_CLASS} flex items-center gap-2`}>
+          <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-slate-400" /> Initial</span>
+          <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Final</span>
+        </div>
+      </div>
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-[300px] w-full rounded-lg bg-[#faf9f7]">
+        <rect x="0" y="0" width={width} height={height} fill="#faf9f7" />
+        {initialProjected ? renderSurfaceMesh(initialProjected, 'rgb(100,116,139)', { fillAlpha: 0.055 }) : null}
+        {finalProjected ? renderSurfaceMesh(finalProjected, 'rgb(16,185,129)', { strong: true, fillAlpha: 0.075 }) : null}
+        {initialProjected ? (
+          <DimensionGuide
+            projectedSurface={initialProjected}
+            geometry={initialGeometry}
+            width={width}
+            height={height}
+            color="rgb(100,116,139)"
+          />
+        ) : null}
+        {!initialProjected && !finalProjected ? (
+          <text x={width / 2} y={height / 2} textAnchor="middle" fill="rgba(55,53,47,0.45)" fontSize="10" fontFamily={GEOMETRY_VIEW_FONT_FAMILY}>
+            {isSurfaceLoading ? 'Loading legacy STL meshes...' : 'Legacy STL meshes are unavailable'}
+          </text>
+        ) : null}
+        <foreignObject x="14" y="14" width={statsTableWidth} height="62">
+          <GeometryStatsTable rows={statsRows} />
+        </foreignObject>
+        <foreignObject x={width - 214} y={height - 76} width="200" height="62">
+          <BasisStatus initial={initialGeometry} final={finalGeometry} />
+        </foreignObject>
+      </svg>
+    </div>
+  )
+}
+
+function compactJson(value: unknown): string {
+  if (value === null || value === undefined || value === '') {
+    return '-'
+  }
+  if (typeof value === 'string') {
+    return value
+  }
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return String(value)
+  }
+}
+
+interface VariableEntry {
+  key: string
+  value: string
+}
+
+const HIDDEN_METRIC_KEYS = new Set([
+  'initial_surface_area_mm2',
+  'final_surface_area_mm2',
+  'strain_height',
+  'strain_width',
+  'strain_length',
+  'relative_deformation_percent',
+  'relative_deformation_pct',
+  'surface_artifacts',
+])
+
+const HIDDEN_GEOMETRY_KEYS = new Set([
+  'cross_section_outline',
+  'width_mm',
+  'height_mm',
+  'length_mm',
+  'equivalent_diameter_mm',
+  'volume_mm3',
+  'cross_section_area_mm2',
+  'parameters_json',
+  'basis',
+  'top_marker',
+])
+
+function geometryMetadata(raw: Record<string, unknown> | null | undefined): Record<string, unknown> {
+  const record = asRecord(raw)
+  return {
+    type_id: record.type_id,
+    shape: record.shape,
+    orientation_metadata_status: record.orientation_metadata_status,
+    parameters: record.parameters,
+  }
+}
+
+function shouldHideVariable(path: string, value: unknown, hiddenTopLevelKeys: Set<string>): boolean {
+  const parts = path.split('.')
+  const topLevelKey = parts[0]
+  const lastKey = parts[parts.length - 1]
+  if (hiddenTopLevelKeys.has(topLevelKey) || hiddenTopLevelKeys.has(lastKey)) {
+    return true
+  }
+
+  const normalized = path.toLowerCase()
+  if (
+    normalized.includes('cross_section_outline') ||
+    normalized.includes('vertices') ||
+    normalized.includes('faces') ||
+    normalized.includes('stl') ||
+    normalized.includes('artifact')
+  ) {
+    return true
+  }
+
+  return Array.isArray(value) && (
+    normalized.includes('outline') ||
+    normalized.includes('mesh') ||
+    normalized.includes('surface')
+  )
+}
+
+function formatVariableTableValue(value: unknown, path: string): string {
+  const metricFormat = inferMetricFormatFromPath(path)
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return '[]'
+    }
+    if (value.every((item) => item === null || ['string', 'number', 'boolean'].includes(typeof item))) {
+      return `[${value.map((item) => metricFormat ? formatMetricValue(item, metricFormat) : formatValue(item)).join(', ')}]`
+    }
+    return `${value.length} rows`
+  }
+  if (value && typeof value === 'object') {
+    return compactJson(value)
+  }
+  return metricFormat ? formatMetricValue(value, metricFormat) : formatValue(value)
+}
+
+function flattenVariableEntries(
+  value: unknown,
+  options: {
+    prefix?: string
+    hiddenTopLevelKeys?: Set<string>
+    output?: VariableEntry[]
+  } = {}
+): VariableEntry[] {
+  const prefix = options.prefix || ''
+  const hiddenTopLevelKeys = options.hiddenTopLevelKeys || new Set<string>()
+  const output = options.output || []
+  if (value === null || value === undefined || value === '') {
+    return output
+  }
+  if (shouldHideVariable(prefix, value, hiddenTopLevelKeys)) {
+    return output
+  }
+
+  if (Array.isArray(value)) {
+    output.push({ key: prefix || 'value', value: formatVariableTableValue(value, prefix || 'value') })
+    return output
+  }
+
+  if (typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>)
+    if (entries.length === 0 && prefix) {
+      output.push({ key: prefix, value: '{}' })
+      return output
+    }
+    for (const [key, childValue] of entries) {
+      const nextPrefix = prefix ? `${prefix}.${key}` : key
+      flattenVariableEntries(childValue, {
+        prefix: nextPrefix,
+        hiddenTopLevelKeys,
+        output,
+      })
+    }
+    return output
+  }
+
+  output.push({ key: prefix || 'value', value: formatVariableTableValue(value, prefix || 'value') })
+  return output
+}
+
+function VariableGroupPanel({
+  title,
+  value,
+  hiddenTopLevelKeys = new Set<string>(),
+}: {
+  title: string
+  value: unknown
+  hiddenTopLevelKeys?: Set<string>
+}) {
+  const entries = flattenVariableEntries(value, { hiddenTopLevelKeys })
+  return (
+    <section className="rounded-xl border border-[rgba(55,53,47,0.10)] bg-white">
+      <div className="border-b border-[rgba(55,53,47,0.07)] px-3 py-1.5 text-[12px] font-semibold text-[rgba(55,53,47,0.78)]">
+        {title}
+      </div>
+      {entries.length > 0 ? (
+        <div>
+          <table className="w-full border-collapse text-[11px] leading-tight">
+            <tbody>
+              {entries.map((entry) => (
+                <tr key={`${entry.key}-${entry.value}`} className="border-b border-[rgba(55,53,47,0.055)] last:border-b-0">
+                  <th className="w-[42%] px-2 py-1 text-right align-top font-medium text-[rgba(55,53,47,0.48)]">
+                    <span className="block break-words" title={entry.key}>{entry.key}</span>
+                  </th>
+                  <td className="px-2 py-1 align-top font-mono text-[rgba(55,53,47,0.72)]">
+                    <span className="block break-words" title={entry.value}>{entry.value}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="px-3 py-3 text-[11px] text-[rgba(55,53,47,0.42)]">No extra variables.</div>
+      )}
+    </section>
+  )
+}
+
+function stepStatus(step: DocumentSimulationStepRecord): string {
+  const metricStatus = typeof step.metrics?.preprocessor_status === 'string'
+    ? step.metrics.preprocessor_status
+    : undefined
+  if (step.parse_status?.toLowerCase() === 'error') {
+    return 'parse error'
+  }
+  if (step.status?.status?.toLowerCase() === 'failed') {
+    return step.status.status
+  }
+  if (step.preprocess_ready && !step.initial_geometry && !step.final_geometry) {
+    return metricStatus || step.status?.status || 'pending'
+  }
+  return metricStatus || step.status?.status || (step.preprocess_ready ? 'ready' : 'not ready')
+}
+
+function stepStateDescription(step: DocumentSimulationStepRecord): string {
+  const status = stepStatus(step).toLowerCase()
+  if (status === 'failed') {
+    return 'Pre failed on this row. The row keeps the source context needed to locate the problematic document block.'
+  }
+  if (status === 'parse error') {
+    return 'The source Operation/Furnace data could not be parsed, so Pre must not compile this row until the document block is corrected.'
+  }
+  if (!step.preprocess_ready) {
+    return 'This sibling simulation step exists, but its source document operation is not ready for Pre compilation.'
+  }
+  if (status === 'queued' || status === 'pending') {
+    return 'Pre output is queued or pending. Run or wait for the Pre worker before using this row for Solver input.'
+  }
+  if (!step.initial_geometry && !step.final_geometry) {
+    return 'Pre output is not available for this row yet. Queue Pre regeneration after saving document changes.'
+  }
+  return 'Pre output is available for this row.'
+}
+
+function sourceContextValue(step: DocumentSimulationStepRecord): string | null {
+  const parseRecords = [
+    ...(Array.isArray(step.parse_errors) ? step.parse_errors : []),
+    ...(Array.isArray(step.parse_warnings) ? step.parse_warnings : []),
+  ]
+  for (const item of parseRecords) {
+    if (item.source_sentence !== undefined) {
+      return `sentence: ${compactJson(item.source_sentence)}`
+    }
+    if (item.source_row !== undefined) {
+      return `table row: ${compactJson(item.source_row)}`
+    }
+  }
+  const parameters = asRecord(step.operation_parameters)
+  if (parameters.source_sentence !== undefined) {
+    return `sentence: ${compactJson(parameters.source_sentence)}`
+  }
+  if (parameters.source_row !== undefined) {
+    return `table row: ${compactJson(parameters.source_row)}`
+  }
+  return null
+}
+
+function stepError(step: DocumentSimulationStepRecord): string | null {
+  if (step.status?.last_error) {
+    return step.status.last_error
+  }
+  if (typeof step.metrics?.preprocessor_error === 'string') {
+    return step.metrics.preprocessor_error
+  }
+  if (step.status?.error_payload && jsonCount(step.status.error_payload) > 0) {
+    return JSON.stringify(step.status.error_payload)
+  }
+  return null
+}
+
+function stepDiagnostics(step: DocumentSimulationStepRecord): string[] {
+  const messages: string[] = []
+  const addMessage = (value: unknown) => {
+    if (value === null || value === undefined || value === '') {
+      return
+    }
+    const message = compactJson(value)
+    if (message && !messages.includes(message)) {
+      messages.push(message)
+    }
+  }
+
+  addMessage(stepError(step))
+  addMessage(step.metrics?.legacy_surface_artifact_error)
+  addMessage(step.metrics?.surface_artifact_error)
+
+  const surfaceArtifacts = asRecord(step.metrics?.surface_artifacts)
+  addMessage(surfaceArtifacts.artifact_storage_error)
+  const artifacts = asRecord(surfaceArtifacts.artifacts)
+  Object.values(artifacts).forEach((artifact) => {
+    const writeErrors = asRecord(artifact).write_errors
+    if (Array.isArray(writeErrors)) {
+      writeErrors.forEach(addMessage)
+    }
+  })
+
+  ;(Array.isArray(step.parse_errors) ? step.parse_errors : []).forEach((errorItem) => {
+    addMessage(errorItem.message || errorItem.error || errorItem)
+  })
+  ;(Array.isArray(step.parse_warnings) ? step.parse_warnings : []).forEach((warningItem) => {
+    addMessage(warningItem.message || warningItem.warning || warningItem)
+  })
+
+  return messages
+}
+
+function operationTitle(step: DocumentSimulationStepRecord): string {
+  return step.operation_label_snapshot || step.operation_template_id || step.operation_kind
+}
+
+function hasAnyRelatedBlock(blockIds: string[], highlightBlockIds: Set<string>): boolean {
+  return blockIds.some((blockId) => highlightBlockIds.has(blockId))
+}
+
+function stepSummaryTableValue(step: DocumentSimulationStepRecord): Record<string, unknown> {
+  const sourceContext = sourceContextValue(step)
+  const diagnostics = stepDiagnostics(step)
+  return {
+    title: `Step ${step.execution_order}: ${operationTitle(step)}`,
+    status: stepStatus(step),
+    state: stepStateDescription(step),
+    document_operation_id: step.document_operation_id,
+    operation_order: step.operation_order,
+    operation_order_in_block: step.operation_order_in_block,
+    operation_template_id: step.operation_template_id || '-',
+    source_block_id: step.source_block_id || '-',
+    source: sourceContext || '-',
+    parse_status: step.parse_status || '-',
+    updated_at: formatDate(step.updated_at),
+    diagnostics: diagnostics.length > 0 ? diagnostics : undefined,
+  }
+}
+
+function StepListPanel({
+  items,
+  selectedStep,
+  isLoading,
+  isQueueingPre,
+  visibleRowsCount,
+  totalRowsCount,
+  isFiltered,
+  onSelectStep,
+  onRefresh,
+  highlightedBlockIds,
+  onHoverBlockIds,
+}: {
+  items: StepListItem[]
+  selectedStep: DocumentSimulationStepRecord | null
+  isLoading: boolean
+  isQueueingPre: boolean
+  visibleRowsCount: number
+  totalRowsCount: number
+  isFiltered: boolean
+  onSelectStep: (stepId: number) => void
+  onRefresh: () => void
+  highlightedBlockIds: Set<string>
+  onHoverBlockIds: (blockIds: string[]) => void
+}) {
+  return (
+    <aside className="flex h-full min-h-0 flex-col overflow-hidden border-r border-[rgba(55,53,47,0.08)] bg-white">
+      <div className="border-b border-[rgba(55,53,47,0.08)] bg-[#f5f4f1] px-2.5 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <div className="text-[11px] font-semibold text-[rgba(55,53,47,0.72)]">Steps</div>
+            <div className="mt-0.5 truncate text-[9px] text-[rgba(55,53,47,0.44)]">
+              {visibleRowsCount}{isFiltered ? ` / ${totalRowsCount}` : ''} rows
+            </div>
+          </div>
+          <button
+            type="button"
+            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-[rgba(55,53,47,0.12)] bg-white text-[rgba(55,53,47,0.66)] shadow-sm transition hover:bg-[rgba(55,53,47,0.04)] disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={onRefresh}
+            disabled={isLoading || isQueueingPre}
+            aria-label="Queue preprocessor refresh"
+            title="Queue Pre without regenerating operations"
+          >
+            <RefreshIcon className={`h-4 w-4 ${isLoading || isQueueingPre ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-1.5 py-2">
+        <div className="space-y-1">
+          {items.map((item, index) => {
+            if (item.kind === 'section') {
+              const isRelated = hasAnyRelatedBlock(item.relatedBlockIds, highlightedBlockIds)
+              return (
+                <div
+                  key={`section-${item.block.block_id}-${index}`}
+                  onMouseEnter={() => onHoverBlockIds(item.relatedBlockIds)}
+                  onMouseLeave={() => onHoverBlockIds([])}
+                  className={`rounded-md border px-2 py-1.5 text-[10px] font-semibold transition ${
+                    isRelated
+                      ? 'border-amber-200 bg-amber-50 text-amber-800'
+                      : 'border-transparent bg-[rgba(55,53,47,0.065)] text-[rgba(55,53,47,0.78)]'
+                  }`}
+                >
+                  <span className="font-mono text-[rgba(55,53,47,0.48)]">{item.number}</span>{' '}
+                  {item.title}
+                </div>
+              )
+            }
+
+            if (item.kind === 'source') {
+              const isRelated = hasAnyRelatedBlock(item.relatedBlockIds, highlightedBlockIds)
+              return (
+                <div
+                  key={`source-${item.block.block_id}-${index}`}
+                  onMouseEnter={() => onHoverBlockIds(item.relatedBlockIds)}
+                  onMouseLeave={() => onHoverBlockIds([])}
+                  className={`ml-2 rounded-md border px-2 py-1 text-[10px] font-medium transition ${
+                    isRelated
+                      ? 'border-amber-200 bg-amber-50 text-amber-800'
+                      : 'border-transparent bg-[#faf9f7] text-[rgba(55,53,47,0.62)]'
+                  }`}
+                >
+                  <span className="font-mono text-[rgba(55,53,47,0.40)]">{item.number}</span>{' '}
+                  {item.title}
+                </div>
+              )
+            }
+
+            const { step } = item
+            const isSelected = selectedStep?.document_operation_id === step.document_operation_id
+            const isRelated = step.source_block_id ? highlightedBlockIds.has(step.source_block_id) : false
+            const status = stepStatus(step)
+            const errorMessage = stepError(step)
+            const chips = userParameterChips(step)
+
+            return (
+              <button
+                key={`step-${step.document_operation_id}`}
+                type="button"
+                onClick={() => onSelectStep(step.document_operation_id)}
+                onMouseEnter={() => onHoverBlockIds(step.source_block_id ? [step.source_block_id] : [])}
+                onMouseLeave={() => onHoverBlockIds([])}
+                className={`ml-4 block w-[calc(100%-1rem)] rounded-md border px-2 py-1.5 text-left transition hover:bg-[rgba(55,53,47,0.035)] ${
+                  isSelected
+                    ? 'border-[rgba(55,53,47,0.30)] bg-[rgba(55,53,47,0.07)]'
+                    : isRelated
+                      ? 'border-amber-200 bg-amber-50/70'
+                    : 'border-transparent bg-white'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-1">
+                  <span className="font-mono text-[10px] font-semibold text-[rgba(55,53,47,0.64)]">
+                    {step.execution_order}
+                  </span>
+                  <span className={`max-w-[78px] truncate rounded-full border px-1.5 py-0.5 text-[9px] font-semibold ${statusClass(status)}`}>
+                    {status}
+                  </span>
+                </div>
+                <div className="mt-1 truncate text-[10px] font-semibold text-[rgba(55,53,47,0.84)]">
+                  {operationTitle(step)}
+                </div>
+                <div className="mt-1 space-y-0.5">
+                  {chips.slice(0, 4).map((chip) => (
+                    <div
+                      key={chip}
+                      className="truncate rounded bg-[#f5f4f1] px-1.5 py-0.5 font-mono text-[9px] text-[rgba(55,53,47,0.54)]"
+                      title={chip}
+                    >
+                      {chip}
+                    </div>
+                  ))}
+                </div>
+                {errorMessage ? (
+                  <div className="mt-1 truncate text-[9px] text-red-600" title={errorMessage}>
+                    {errorMessage}
+                  </div>
+                ) : null}
+              </button>
+            )
+          })}
+        </div>
+        {!isLoading && items.length === 0 ? (
+          <div className="px-2 py-8 text-center text-[11px] text-[rgba(55,53,47,0.45)]">
+            No simulation steps yet.
+          </div>
+        ) : null}
+        {isLoading ? (
+          <div className="px-2 py-8 text-center text-[11px] text-[rgba(55,53,47,0.45)]">
+            Loading...
+          </div>
+        ) : null}
+      </div>
+    </aside>
+  )
+}
+
+function buildStepListItems(blocks: BlockData[], steps: DocumentSimulationStepRecord[]): StepListItem[] {
+  if (blocks.length === 0) {
+    return steps.map((step) => ({ kind: 'step', step }))
+  }
+
+  const usedStepIds = new Set<number>()
+  const stepsByBlockId = new Map<string, DocumentSimulationStepRecord[]>()
+  steps.forEach((step) => {
+    if (!step.source_block_id) {
+      return
+    }
+    const list = stepsByBlockId.get(step.source_block_id) || []
+    list.push(step)
+    stepsByBlockId.set(step.source_block_id, list)
+  })
+
+  const items: StepListItem[] = []
+  const documentBlock = blocks.find((block) => block.block_type_id === DOCUMENT_BLOCK_TYPE_ID)
+  if (documentBlock) {
+    const documentSteps = stepsByBlockId.get(documentBlock.block_id) || []
+    documentSteps.forEach((step) => {
+      items.push({ kind: 'step', step })
+      usedStepIds.add(step.document_operation_id)
+    })
+  }
+
+  const sections = buildVisualSections(blocks)
+  const sectionNumbers = buildSectionNumbers(sections, sectionNumberingStart(blocks))
+  sections.forEach((section) => {
+    const sectionRelatedBlockIds = [
+      section.block.block_id,
+      ...section.children.map((child) => child.block_id),
+    ]
+    items.push({
+      kind: 'section',
+      block: section.block,
+      title: blockDisplayName(section.block),
+      number: sectionNumbers.get(section.block.block_id) || null,
+      relatedBlockIds: sectionRelatedBlockIds,
+    })
+
+    const sectionSteps = stepsByBlockId.get(section.block.block_id) || []
+    sectionSteps.forEach((step) => {
+      items.push({ kind: 'step', step })
+      usedStepIds.add(step.document_operation_id)
+    })
+
+    section.children.forEach((child, childIndex) => {
+      const childNumber = child.block_type_id === OPERATION_BLOCK_TYPE_ID || child.block_type_id === FURNACE_BLOCK_TYPE_ID
+        ? `${childIndex + 1}.`
+        : null
+      items.push({
+        kind: 'source',
+        block: child,
+        title: blockDisplayName(child),
+        number: childNumber,
+        relatedBlockIds: [child.block_id],
+      })
+      const childSteps = stepsByBlockId.get(child.block_id) || []
+      childSteps.forEach((step) => {
+        items.push({ kind: 'step', step })
+        usedStepIds.add(step.document_operation_id)
+      })
+    })
+  })
+
+  steps.forEach((step) => {
+    if (!usedStepIds.has(step.document_operation_id)) {
+      items.push({ kind: 'step', step })
+    }
+  })
+
+  return items
+}
+
+export default function SimulationStepsView({
+  documentId,
+  isStepListVisible = true,
+  activeBlockId = null,
+  hoveredBlockId = null,
+}: SimulationStepsViewProps) {
+  const [steps, setSteps] = useState<DocumentSimulationStepRecord[]>([])
+  const [blocks, setBlocks] = useState<BlockData[]>([])
+  const [selectedStepId, setSelectedStepId] = useState<number | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isQueueingPre, setIsQueueingPre] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [surfaceMesh, setSurfaceMesh] = useState<DocumentSimulationStepSurfaceResponse | null>(null)
+  const [isSurfaceLoading, setIsSurfaceLoading] = useState(false)
+  const [surfaceError, setSurfaceError] = useState<string | null>(null)
+  const [hoveredBlockIds, setHoveredBlockIds] = useState<string[]>([])
+  const [meshViewMode, setMeshViewMode] = useState<MeshViewMode>('overlay')
+
+  const activeSourceBlockIds = useMemo(
+    () => relatedSourceBlockIds(blocks, activeBlockId),
+    [activeBlockId, blocks]
+  )
+  const hoveredSourceBlockIds = useMemo(
+    () => relatedSourceBlockIds(blocks, hoveredBlockId),
+    [blocks, hoveredBlockId]
+  )
+  const visibleSteps = useMemo(() => {
+    if (activeSourceBlockIds.size === 0) {
+      return steps
+    }
+    return steps.filter((step) => step.source_block_id && activeSourceBlockIds.has(step.source_block_id))
+  }, [activeSourceBlockIds, steps])
+
+  const selectedStep = useMemo(() => {
+    if (visibleSteps.length === 0) {
+      return null
+    }
+    return visibleSteps.find((step) => step.document_operation_id === selectedStepId) || visibleSteps[0]
+  }, [selectedStepId, visibleSteps])
+
+  const initialGeometry = summarizeGeometry(selectedStep?.initial_geometry)
+  const finalGeometry = summarizeGeometry(selectedStep?.final_geometry)
+  const selectedSurfaceMesh =
+    selectedStep && surfaceMesh?.document_operation_id === selectedStep.document_operation_id ? surfaceMesh : null
+  const stepListItems = useMemo(() => buildStepListItems(blocks, visibleSteps), [blocks, visibleSteps])
+  const highlightedBlockIds = useMemo(() => {
+    const blockIds = new Set<string>()
+    activeSourceBlockIds.forEach((blockId) => blockIds.add(blockId))
+    hoveredSourceBlockIds.forEach((blockId) => blockIds.add(blockId))
+    if (selectedStep?.source_block_id) {
+      blockIds.add(selectedStep.source_block_id)
+    }
+    hoveredBlockIds.forEach((blockId) => blockIds.add(blockId))
+    return blockIds
+  }, [activeSourceBlockIds, hoveredBlockIds, hoveredSourceBlockIds, selectedStep?.source_block_id])
+
+  const loadSteps = async () => {
+    if (!documentId) {
+      setSteps([])
+      setBlocks([])
+      setSelectedStepId(null)
+      setError(null)
+      setNotice(null)
+      return
+    }
+    setIsLoading(true)
+    setError(null)
+    const [response, blocksResponse] = await Promise.all([
+      apiClient.get<DocumentSimulationStepListResponse>(`/documents/${documentId}/simulation-steps`),
+      apiClient.get<BlockData[]>(`/documents/${documentId}/blocks/root`),
+    ])
+    setBlocks(blocksResponse.ok && blocksResponse.data ? blocksResponse.data : [])
+    if (!response.ok || !response.data) {
+      setSteps([])
+      setSelectedStepId(null)
+      setError(response.errorMessage || 'Failed to load simulation steps.')
+      setIsLoading(false)
+      return
+    }
+    const nextSteps = response.data.steps || []
+    setSteps(nextSteps)
+    setSelectedStepId((previous) => {
+      if (previous && nextSteps.some((step) => step.document_operation_id === previous)) {
+        return previous
+      }
+      return nextSteps[0]?.document_operation_id ?? null
+    })
+    setIsLoading(false)
+  }
+
+  const queuePreprocess = async () => {
+    if (!documentId || isQueueingPre) {
+      return
+    }
+
+    setIsQueueingPre(true)
+    setError(null)
+    setNotice(null)
+
+    const response = await apiClient.post<DocumentPreprocessQueueResponse>(
+      `/documents/${documentId}/simulation-steps/preprocess`
+    )
+    if (!response.ok || !response.data) {
+      setError(response.errorMessage || 'Failed to start preprocessor.')
+      setIsQueueingPre(false)
+      return
+    }
+
+    setNotice(`${response.data.message} Operations: ${response.data.operations_count}.`)
+    await loadSteps()
+    setIsQueueingPre(false)
+
+    window.setTimeout(() => {
+      void loadSteps()
+    }, 1200)
+  }
+
+  useEffect(() => {
+    void loadSteps()
+  }, [documentId])
+
+  useEffect(() => {
+    if (!documentId || !selectedStep) {
+      setSurfaceMesh(null)
+      setSurfaceError(null)
+      setIsSurfaceLoading(false)
+      return
+    }
+
+    let isCancelled = false
+    setSurfaceMesh(null)
+    setSurfaceError(null)
+    setIsSurfaceLoading(true)
+
+    apiClient
+      .get<DocumentSimulationStepSurfaceResponse>(
+        `/documents/${documentId}/simulation-steps/${selectedStep.document_operation_id}/surface`,
+        { params: { max_outline_points: 128 } }
+      )
+      .then((response) => {
+        if (isCancelled) {
+          return
+        }
+        if (!response.ok || !response.data) {
+          setSurfaceError(response.errorMessage || 'Failed to load surface mesh.')
+          return
+        }
+        setSurfaceMesh(response.data)
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsSurfaceLoading(false)
+        }
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [documentId, selectedStep?.document_operation_id])
+
+  if (!documentId) {
+    return (
+      <section className="flex h-full min-h-0 items-center justify-center bg-[#fbfbfa] text-sm text-[rgba(55,53,47,0.55)]">
+        Select one document to inspect simulation steps.
+      </section>
+    )
+  }
+
+  return (
+    <section className="flex h-full min-h-0 flex-col bg-[#fbfbfa]">
+      {error ? (
+        <div className="mx-5 mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      ) : null}
+      {notice ? (
+        <div className="mx-5 mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          {notice}
+        </div>
+      ) : null}
+
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        {isStepListVisible ? (
+          <div className="w-[230px] shrink-0 min-h-0">
+            <StepListPanel
+              items={stepListItems}
+              selectedStep={selectedStep}
+              isLoading={isLoading}
+              isQueueingPre={isQueueingPre}
+              visibleRowsCount={visibleSteps.length}
+              totalRowsCount={steps.length}
+              isFiltered={activeSourceBlockIds.size > 0}
+              onSelectStep={setSelectedStepId}
+              onRefresh={() => void queuePreprocess()}
+              highlightedBlockIds={highlightedBlockIds}
+              onHoverBlockIds={setHoveredBlockIds}
+            />
+          </div>
+        ) : null}
+
+        <div className="min-h-0 flex-1 overflow-auto p-4">
+          {selectedStep ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-[12px] font-semibold text-[rgba(55,53,47,0.68)]">Geometry inspection</div>
+                <div className="inline-flex rounded-full border border-[rgba(55,53,47,0.12)] bg-white p-0.5 text-[10px]">
+                  <button
+                    type="button"
+                    onClick={() => setMeshViewMode('overlay')}
+                    className={`rounded-full px-2.5 py-1 font-semibold ${
+                      meshViewMode === 'overlay'
+                        ? 'bg-[rgba(55,53,47,0.88)] text-white'
+                        : 'text-[rgba(55,53,47,0.58)] hover:bg-[rgba(55,53,47,0.06)]'
+                    }`}
+                  >
+                    Overlay
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMeshViewMode('side_by_side')}
+                    className={`rounded-full px-2.5 py-1 font-semibold ${
+                      meshViewMode === 'side_by_side'
+                        ? 'bg-[rgba(55,53,47,0.88)] text-white'
+                        : 'text-[rgba(55,53,47,0.58)] hover:bg-[rgba(55,53,47,0.06)]'
+                    }`}
+                  >
+                    Side by side
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Geometry2DPreview initial={initialGeometry} final={finalGeometry} metrics={selectedStep.metrics} />
+                <div className="min-w-0">
+                  {meshViewMode === 'overlay' ? (
+                    <Geometry3DOverlayPreview
+                      initialGeometry={initialGeometry}
+                      finalGeometry={finalGeometry}
+                      initialSurface={selectedSurfaceMesh?.initial}
+                      finalSurface={selectedSurfaceMesh?.final}
+                      isSurfaceLoading={isSurfaceLoading}
+                    />
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      <Geometry3DPreview
+                        geometry={initialGeometry}
+                        kind="initial"
+                        surface={selectedSurfaceMesh?.initial}
+                        isSurfaceLoading={isSurfaceLoading}
+                      />
+                      <Geometry3DPreview
+                        geometry={finalGeometry}
+                        kind="final"
+                        surface={selectedSurfaceMesh?.final}
+                        isSurfaceLoading={isSurfaceLoading}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {surfaceError ? (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-700">
+                  Legacy STL mesh preview is unavailable: {surfaceError}
+                </div>
+              ) : null}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-3">
+                  <VariableGroupPanel title="User operation parameters" value={selectedStep.operation_parameters} />
+                  <VariableGroupPanel title="Parameter values" value={selectedStep.parameter_values} />
+                  <VariableGroupPanel title="Control parameters" value={selectedStep.control_parameters} />
+                  <VariableGroupPanel title="Step-specific parameters" value={selectedStep.step_specific_parameters} />
+                </div>
+
+                <div className="space-y-3">
+                  <VariableGroupPanel title="Step summary" value={stepSummaryTableValue(selectedStep)} />
+                  <VariableGroupPanel
+                    title="Geometry metadata"
+                    value={{
+                      initial: geometryMetadata(selectedStep.initial_geometry),
+                      final: geometryMetadata(selectedStep.final_geometry),
+                    }}
+                    hiddenTopLevelKeys={HIDDEN_GEOMETRY_KEYS}
+                  />
+                  <VariableGroupPanel
+                    title="Pre metrics"
+                    value={selectedStep.metrics}
+                    hiddenTopLevelKeys={HIDDEN_METRIC_KEYS}
+                  />
+                  <VariableGroupPanel title="Status" value={selectedStep.status} />
+                  <VariableGroupPanel
+                    title="Typed columns"
+                    value={{
+                      document_operation_id: selectedStep.document_operation_id,
+                      document_id: selectedStep.document_id,
+                      document_version_id: selectedStep.document_version_id,
+                      execution_order: selectedStep.execution_order,
+                      source_block_id: selectedStep.source_block_id,
+                      source_block_type_id: selectedStep.source_block_type_id,
+                      operation_order: selectedStep.operation_order,
+                      operation_order_in_block: selectedStep.operation_order_in_block,
+                      operation_template_id: selectedStep.operation_template_id,
+                      operation_kind: selectedStep.operation_kind,
+                      operation_label_snapshot: selectedStep.operation_label_snapshot,
+                      source_text_hash: selectedStep.source_text_hash,
+                      parse_status: selectedStep.parse_status,
+                      parse_errors: selectedStep.parse_errors,
+                      parse_warnings: selectedStep.parse_warnings,
+                      block_name_snapshot: selectedStep.block_name_snapshot,
+                      library_name_snapshot: selectedStep.library_name_snapshot,
+                      material_version_id: selectedStep.material_version_id,
+                      press_id: selectedStep.press_id,
+                      press_mode_id: selectedStep.press_mode_id,
+                      die_assembly_id: selectedStep.die_assembly_id,
+                      top_die_id: selectedStep.top_die_id,
+                      bottom_die_id: selectedStep.bottom_die_id,
+                      left_die_id: selectedStep.left_die_id,
+                      right_die_id: selectedStep.right_die_id,
+                      accumulated_time_start_seconds: selectedStep.accumulated_time_start_seconds,
+                      duration_seconds: selectedStep.duration_seconds,
+                      accumulated_time_stop_seconds: selectedStep.accumulated_time_stop_seconds,
+                      created_at: selectedStep.created_at,
+                      updated_at: selectedStep.updated_at,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex h-full items-center justify-center rounded-xl border border-[rgba(55,53,47,0.10)] bg-white text-sm text-[rgba(55,53,47,0.45)]">
+              Select a simulation step row.
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}

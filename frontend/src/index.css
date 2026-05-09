@@ -441,6 +441,76 @@
     margin-bottom: 0;
   }
 
+  .doc-title-tabbed-content {
+    margin-left: 1.25rem;
+  }
+
+  .doc-title-tabbed-content > .doc-section:first-child {
+    margin-top: 0.15rem;
+  }
+
+  .doc-section-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .doc-section-title-row .doc-title {
+    min-width: 0;
+    flex: 0 1 auto;
+    margin: 0;
+  }
+
+  .doc-section-numbering-control {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    opacity: 0;
+    pointer-events: none;
+    color: rgba(55, 53, 47, 0.48);
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1;
+    transition: opacity 140ms ease, color 140ms ease;
+  }
+
+  .doc-block-wrapper:hover .doc-section-numbering-control,
+  .doc-section-title-row:focus-within .doc-section-numbering-control {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .doc-section-numbering-control:hover,
+  .doc-section-title-row:focus-within .doc-section-numbering-control {
+    color: rgba(55, 53, 47, 0.7);
+  }
+
+  .doc-section-numbering-control input.doc-section-numbering-input {
+    width: 2.8rem;
+    min-height: 1.35rem;
+    height: 1.35rem;
+    box-sizing: border-box;
+    border: 0;
+    border-radius: 0.25rem;
+    background: #fffefa;
+    color: rgba(55, 53, 47, 0.86);
+    font: inherit;
+    font-size: 0.72rem;
+    line-height: 1;
+    padding: 0.08rem 0.25rem;
+    text-align: center;
+    outline: none;
+    box-shadow: inset 0 0 0 1px rgba(55, 53, 47, 0.13);
+  }
+
+  .doc-section-numbering-control input.doc-section-numbering-input:hover,
+  .doc-section-numbering-control input.doc-section-numbering-input:focus-visible {
+    box-shadow: inset 0 0 0 1px rgba(47, 111, 159, 0.35), inset 0 -1px 0 rgba(47, 111, 159, 0.55);
+  }
+
   .doc-title-mode-label {
     display: inline-flex;
     align-items: center;
@@ -465,6 +535,8 @@
   }
 
   .doc-block-wrapper:hover .doc-title-mode-controls,
+  .doc-block-active .doc-title-mode-controls,
+  .doc-block-wrapper:focus-within .doc-title-mode-controls,
   .doc-title-row:focus-within .doc-title-mode-controls {
     opacity: 1;
     pointer-events: auto;
@@ -493,6 +565,60 @@
     line-height: 1.35;
   }
 
+  .doc-document-blocks {
+    display: grid;
+    gap: 0.28rem;
+    margin-top: 0.28rem;
+  }
+
+  .doc-document-section {
+    display: grid;
+    gap: 0.04rem;
+    margin: 0;
+  }
+
+  .doc-document-section-title {
+    margin: 0 0 0.02rem 1rem;
+    color: rgba(55, 53, 47, 0.76);
+    font-size: 0.79rem;
+    font-weight: 690;
+    letter-spacing: -0.005em;
+    line-height: 1.25;
+  }
+
+  .doc-document-section-params {
+    margin-left: 2.2rem;
+  }
+
+  .doc-document-section .doc-label {
+    padding-top: 0.03rem;
+    padding-bottom: 0.03rem;
+    line-height: 1.55rem;
+  }
+
+  .doc-document-section .doc-value {
+    padding-top: 0.03rem;
+    padding-bottom: 0.03rem;
+  }
+
+  .doc-document-section .doc-field,
+  .doc-document-section .doc-select {
+    min-height: 1.55rem;
+    padding-top: 0.08rem;
+    padding-bottom: 0.08rem;
+  }
+
+  .doc-document-section .doc-textarea {
+    min-height: 1.55rem;
+    padding-top: 0.12rem;
+    padding-bottom: 0.12rem;
+  }
+
+  .doc-document-section .doc-table-row:has(.doc-textarea) .doc-label,
+  .doc-document-section .doc-table-row:has(.doc-material-control) .doc-label {
+    padding-top: 0.12rem;
+  }
+
   .doc-muted {
     color: rgba(55, 53, 47, 0.54);
     font-size: 0.75rem;
@@ -500,6 +626,315 @@
 
   .doc-section {
     margin-top: 0.8rem;
+  }
+
+  .doc-deformation-section {
+    display: grid;
+    gap: 0.3rem;
+  }
+
+  .doc-deformation-header-block .doc-title {
+    margin-bottom: 0;
+  }
+
+  .doc-deformation-header-content {
+    min-height: 1.5rem;
+  }
+
+  .doc-deformation-parameters-footer {
+    margin-top: 0.1rem;
+    margin-left: 3rem;
+  }
+
+  .doc-deformation-dies-block {
+    margin-left: 3rem;
+    width: auto;
+  }
+
+  .doc-deformation-dies-panel {
+    display: grid;
+    width: 100%;
+    max-width: 100%;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+  }
+
+  .doc-die-title-row {
+    margin-bottom: 0.1rem;
+  }
+
+  .doc-die-mode-controls {
+    justify-content: flex-end;
+    max-width: none;
+  }
+
+  .doc-die-selector-lines {
+    display: grid;
+    gap: 0.18rem;
+  }
+
+  .doc-die-selector-line {
+    display: grid;
+    min-width: 0;
+  }
+
+  .doc-die-summary {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    gap: 0.45rem;
+    min-height: 1.55rem;
+    padding: 0.02rem 0;
+    color: rgba(55, 53, 47, 0.76);
+    font-size: 0.8125rem;
+    line-height: 1.55;
+  }
+
+  .doc-die-summary-text {
+    min-width: 0;
+    overflow: hidden;
+    color: rgba(55, 53, 47, 0.76);
+    font: inherit;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .doc-die-editor-line {
+    display: none;
+    align-items: center;
+    gap: 0.38rem;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .doc-deformation-dies-block:hover .doc-die-editor-line,
+  .doc-deformation-dies-block.doc-block-active .doc-die-editor-line,
+  .doc-deformation-dies-block:focus-within .doc-die-editor-line {
+    display: flex;
+  }
+
+  .doc-deformation-dies-block:hover .doc-die-summary,
+  .doc-deformation-dies-block.doc-block-active .doc-die-summary,
+  .doc-deformation-dies-block:focus-within .doc-die-summary {
+    display: none;
+  }
+
+  .doc-die-line-label {
+    flex: 0 0 auto;
+    color: rgba(55, 53, 47, 0.52);
+    font-size: 0.72rem;
+    font-weight: 650;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .doc-die-type-buttons {
+    display: flex;
+    flex: 0 1 auto;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.16rem;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .doc-die-type-button {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    padding: 0.28rem;
+    line-height: 1;
+  }
+
+  .doc-die-select {
+    flex: 0 1 13.5rem;
+    min-width: 8.5rem;
+    max-width: 100%;
+  }
+
+  .doc-die-icon {
+    display: block;
+    width: 2.5rem;
+    height: 2.5rem;
+    object-fit: contain;
+    opacity: 0.8;
+  }
+
+  .doc-die-type-button.doc-selector-button-selected .doc-die-icon,
+  .doc-die-type-button:hover .doc-die-icon {
+    opacity: 0.98;
+  }
+
+  .doc-deformation-parameters-title {
+    margin: 0 0 0.25rem;
+    color: rgba(55, 53, 47, 0.58);
+    font-size: 0.75rem;
+    font-weight: 650;
+    line-height: 1.35;
+  }
+
+  .doc-deformation-parameter-panels {
+    display: grid;
+    gap: 0.34rem;
+    min-width: 0;
+  }
+
+  .doc-deformation-parameter-panel {
+    display: grid;
+    gap: 0.04rem;
+    min-width: 0;
+  }
+
+  .doc-deformation-parameter-title-row {
+    margin-bottom: 0;
+  }
+
+  .doc-deformation-parameter-panel > .doc-title-tabbed-content {
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .doc-deformation-speed-table {
+    width: max-content;
+    min-width: 19rem;
+    max-width: 100%;
+    margin: 0 0 0.35rem;
+    border-collapse: collapse;
+    background: #fffefa;
+  }
+
+  .doc-deformation-speed-table th {
+    padding: 0.12rem 0.35rem;
+    border: 1px solid rgba(55, 53, 47, 0.16);
+    background: rgba(242, 241, 238, 0.62);
+    color: rgba(55, 53, 47, 0.56);
+    font-size: 0.68rem;
+    font-weight: 650;
+    line-height: 1.15;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .doc-deformation-speed-table td {
+    padding: 0.08rem 0.25rem;
+    border: 1px solid rgba(55, 53, 47, 0.13);
+    vertical-align: middle;
+  }
+
+  .doc-deformation-speed-label {
+    color: rgba(55, 53, 47, 0.66);
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .doc-deformation-speed-value {
+    width: 7.5rem;
+  }
+
+  .doc-deformation-speed-value .doc-field {
+    min-width: 0;
+    text-align: center;
+  }
+
+  .doc-deformation-feed-table {
+    width: max-content;
+    min-width: 42rem;
+    max-width: 100%;
+    margin: 0 0 0.35rem;
+    border-collapse: collapse;
+    background: #fffefa;
+  }
+
+  .doc-deformation-feed-table th {
+    padding: 0.14rem 0.42rem;
+    border: 1px solid rgba(55, 53, 47, 0.16);
+    background: rgba(242, 241, 238, 0.62);
+    color: rgba(55, 53, 47, 0.56);
+    font-size: 0.68rem;
+    font-weight: 650;
+    line-height: 1.15;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .doc-deformation-feed-table td {
+    padding: 0.12rem 0.28rem;
+    border: 1px solid rgba(55, 53, 47, 0.13);
+    vertical-align: middle;
+  }
+
+  .doc-deformation-feed-label {
+    color: rgba(55, 53, 47, 0.68);
+    font-size: 0.74rem;
+    font-weight: 620;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .doc-deformation-feed-direction {
+    width: 7rem;
+  }
+
+  .doc-deformation-feed-value {
+    width: 5.8rem;
+  }
+
+  .doc-deformation-feed-value .doc-field {
+    min-width: 0;
+    text-align: center;
+  }
+
+  .doc-feed-direction-group {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.18rem;
+    width: 100%;
+  }
+
+  .doc-feed-direction-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.08rem;
+    min-height: 1.4rem;
+    border-radius: 0.35rem;
+    padding: 0 0.2rem;
+    background: transparent;
+    color: rgba(55, 53, 47, 0.58);
+    font-family: "Noto Sans", "Noto Sans Symbols 2", "Noto Sans Symbols", sans-serif;
+    font-size: 1.08rem;
+    font-weight: 820;
+    letter-spacing: 0.015em;
+    line-height: 1;
+    transition: background-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+  }
+
+  .doc-feed-direction-button:hover {
+    background: rgba(55, 53, 47, 0.06);
+    color: rgba(55, 53, 47, 0.86);
+  }
+
+  .doc-feed-direction-button-active {
+    background: rgba(47, 111, 159, 0.1);
+    color: rgba(47, 111, 159, 0.96);
+    box-shadow: inset 0 0 0 1px rgba(47, 111, 159, 0.26);
+  }
+
+  .doc-feed-direction-button-dirty {
+    background: #fff7f5;
+    color: rgba(153, 27, 27, 0.98);
+    box-shadow: inset 0 0 0 1px rgba(185, 28, 28, 0.28), inset 0 -1px 0 rgba(185, 28, 28, 0.42);
   }
 
   .doc-loose-section {
@@ -523,14 +958,43 @@
     border: 0;
   }
 
+  .doc-meta-table {
+    width: 100%;
+    margin: -0.15rem 0 0.65rem;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .doc-meta-table th {
+    padding: 0.1rem 0.35rem 0.08rem;
+    border-bottom: 1px solid rgba(55, 53, 47, 0.1);
+    color: rgba(55, 53, 47, 0.48);
+    font-size: 0.64rem;
+    font-weight: 650;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .doc-meta-table td {
+    padding: 0.14rem 0.35rem 0.18rem;
+    color: rgba(55, 53, 47, 0.72);
+    font-size: 0.7rem;
+    font-weight: 500;
+    line-height: 1.25;
+    text-align: center;
+    white-space: nowrap;
+  }
+
   .doc-label {
-    width: 34%;
-    padding: 0.16rem 0.6rem 0.16rem 0;
+    width: 1%;
+    padding: 0.08rem 0.5rem 0.08rem 0;
     color: rgba(55, 53, 47, 0.58);
     font-size: 0.75rem;
     font-weight: 500;
-    line-height: 1.45;
-    vertical-align: top;
+    line-height: 1.75rem;
+    text-align: right;
+    vertical-align: middle;
     white-space: nowrap;
     background: transparent;
   }
@@ -540,7 +1004,7 @@
     color: rgba(55, 53, 47, 0.9);
     font-size: 0.75rem;
     line-height: 1.45;
-    vertical-align: top;
+    vertical-align: middle;
   }
 
   .doc-field,
@@ -548,6 +1012,7 @@
   .doc-textarea {
     width: 100%;
     min-height: 1.55rem;
+    box-sizing: border-box;
     border: 0;
     border-radius: 0.25rem;
     background: transparent;
@@ -560,13 +1025,27 @@
 
   .doc-field,
   .doc-select {
-    padding: 0.12rem 0.25rem;
+    min-height: 1.75rem;
+    padding: 0.16rem 0.25rem;
+    line-height: 1.35;
   }
 
   .doc-textarea {
-    min-height: 1.55rem;
+    min-height: 1.75rem;
     padding: 0.18rem 0.25rem;
     resize: vertical;
+  }
+
+  .doc-table-row:has(.doc-textarea) .doc-label,
+  .doc-table-row:has(.doc-material-control) .doc-label {
+    padding-top: 0.18rem;
+    line-height: 1.45;
+    vertical-align: top;
+  }
+
+  .doc-table-row:has(.doc-textarea) .doc-value,
+  .doc-table-row:has(.doc-material-control) .doc-value {
+    vertical-align: top;
   }
 
   .doc-operation-table-wrap {
@@ -633,6 +1112,28 @@
     box-shadow: inset 0 0 0 1px rgba(185, 28, 28, 0.24), inset 0 -1px 0 rgba(185, 28, 28, 0.38);
   }
 
+  .doc-deformation-speed-table,
+  .doc-deformation-feed-table {
+    margin: 0;
+  }
+
+  .doc-deformation-speed-table .doc-field-row,
+  .doc-deformation-feed-table .doc-field-row {
+    gap: 0.08rem;
+  }
+
+  .doc-deformation-speed-table .doc-reset,
+  .doc-deformation-feed-table .doc-reset {
+    min-height: 1.3rem;
+    width: 1.3rem;
+    font-size: 0.68rem;
+  }
+
+  .doc-deformation-speed-table .doc-field,
+  .doc-deformation-feed-table .doc-field {
+    min-width: 4.2rem;
+  }
+
   .doc-operation-pass-col {
     width: 2rem;
   }
@@ -691,6 +1192,135 @@
   .doc-table-actions button:hover {
     background: rgba(55, 53, 47, 0.07);
     color: rgba(55, 53, 47, 0.9);
+  }
+
+  .doc-furnace-program-section {
+    margin-top: 0.35rem;
+  }
+
+  .doc-furnace-switch {
+    max-width: none;
+  }
+
+  .doc-furnace-diagram-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 0.35rem;
+    background:
+      linear-gradient(180deg, rgba(255, 254, 250, 0.84), rgba(250, 249, 245, 0.72));
+    padding: 0.25rem 0.2rem;
+  }
+
+  .doc-furnace-diagram {
+    display: block;
+    min-width: 100%;
+    height: 13rem;
+  }
+
+  .doc-furnace-axis {
+    stroke: rgba(55, 53, 47, 0.32);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .doc-furnace-guide {
+    stroke: rgba(55, 53, 47, 0.16);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .doc-furnace-line {
+    fill: none;
+    stroke: rgba(47, 111, 159, 0.9);
+    stroke-linecap: round;
+    stroke-width: 2.4;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .doc-furnace-line-unload {
+    stroke: rgba(141, 96, 55, 0.9);
+  }
+
+  .doc-furnace-mark {
+    fill: #fffefa;
+    stroke: rgba(47, 111, 159, 0.92);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .doc-furnace-temp-label,
+  .doc-furnace-duration-label {
+    fill: rgba(55, 53, 47, 0.72);
+    font-size: 0.66rem;
+    font-weight: 650;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+  }
+
+  .doc-furnace-duration-label {
+    fill: rgba(55, 53, 47, 0.56);
+    font-weight: 600;
+  }
+
+  .doc-furnace-type-col {
+    width: 5.8rem;
+  }
+
+  .doc-furnace-duration-col {
+    width: 8.5rem;
+  }
+
+  .doc-furnace-temperature-col {
+    width: 7.2rem;
+  }
+
+  .doc-furnace-type-buttons {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.12rem;
+  }
+
+  .doc-furnace-type-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 1.35rem;
+    min-width: 1.55rem;
+    border-radius: 0.25rem;
+    padding: 0 0.28rem;
+    color: rgba(55, 53, 47, 0.62);
+    font-size: 0.78rem;
+    font-weight: 750;
+    line-height: 1;
+  }
+
+  .doc-furnace-type-button:hover {
+    background: rgba(55, 53, 47, 0.07);
+    color: rgba(55, 53, 47, 0.9);
+  }
+
+  .doc-furnace-type-button-active {
+    background: rgba(47, 111, 159, 0.1);
+    color: rgba(47, 111, 159, 0.96);
+    box-shadow: inset 0 0 0 1px rgba(47, 111, 159, 0.18);
+  }
+
+  .doc-furnace-type-button-dirty {
+    background: #fff7f5;
+    color: rgba(153, 27, 27, 0.98);
+    box-shadow: inset 0 0 0 1px rgba(185, 28, 28, 0.24), inset 0 -1px 0 rgba(185, 28, 28, 0.38);
+  }
+
+  .doc-furnace-readonly-cell {
+    min-height: 1.4rem;
+    padding: 0.08rem 0.25rem;
+    color: rgba(55, 53, 47, 0.52);
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
   }
 
   .doc-block-wrapper:hover .doc-field:not(:disabled):not(:read-only),
@@ -767,6 +1397,46 @@
     background: #fff1ee;
   }
 
+  .doc-segmented-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.1rem;
+    border-radius: 999px;
+    background: rgba(55, 53, 47, 0.06);
+    padding: 0.1rem;
+  }
+
+  .doc-segmented-button {
+    border-radius: 999px;
+    padding: 0.18rem 0.55rem;
+    color: rgba(55, 53, 47, 0.6);
+    font-size: 0.68rem;
+    font-weight: 650;
+    line-height: 1;
+    white-space: nowrap;
+    transition: background-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+  }
+
+  .doc-segmented-button:hover {
+    color: rgba(55, 53, 47, 0.88);
+  }
+
+  .doc-segmented-button-active {
+    background: #fffefa;
+    color: rgba(47, 111, 159, 0.96) !important;
+    box-shadow: 0 1px 2px rgba(55, 53, 47, 0.12);
+  }
+
+  .doc-segmented-button-dirty {
+    background: #fff7f5;
+    color: rgba(153, 27, 27, 0.98) !important;
+    box-shadow: inset 0 0 0 1px rgba(185, 28, 28, 0.24), inset 0 -1px 0 rgba(185, 28, 28, 0.38);
+  }
+
+  .doc-segmented-button-dirty:hover {
+    background: #fff1ee;
+  }
+
   .doc-readonly {
     display: block;
     min-height: 1.55rem;
@@ -776,8 +1446,55 @@
 
   .doc-field-row {
     display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .doc-field-row:has(.doc-textarea) {
+    align-items: flex-start;
+  }
+
+  .doc-material-control {
+    display: flex;
     align-items: flex-start;
     gap: 0.35rem;
+    width: 100%;
+  }
+
+  .doc-material-base-buttons {
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    max-width: 15rem;
+  }
+
+  .doc-material-base-button {
+    border: 1px solid rgba(55, 53, 47, 0.13);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    color: rgba(55, 53, 47, 0.68);
+    padding: 0.18rem 0.5rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+  }
+
+  .doc-material-base-button:hover {
+    border-color: rgba(55, 53, 47, 0.24);
+    color: rgba(55, 53, 47, 0.9);
+  }
+
+  .doc-material-base-button-active {
+    border-color: rgba(47, 111, 159, 0.36);
+    background: rgba(47, 111, 159, 0.1);
+    color: rgba(47, 111, 159, 0.95);
+  }
+
+  .doc-material-control .doc-select {
+    flex: 1 1 auto;
+    min-width: 12rem;
   }
 
   .doc-reset {
@@ -829,6 +1546,62 @@
     gap: 0.75rem;
     padding: 0.7rem 0.8rem 0.6rem;
     border-bottom: 1px solid var(--ui-border-soft);
+  }
+
+  .operations-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: 0 0 auto;
+  }
+
+  .operations-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.65rem;
+    height: 1.65rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ui-text-secondary);
+    cursor: pointer;
+  }
+
+  .operations-icon-button:hover,
+  .operations-icon-button:focus-visible {
+    background: rgba(55, 53, 47, 0.08);
+    color: var(--ui-text-primary);
+    outline: none;
+  }
+
+  .operations-icon-button[aria-disabled='true'] {
+    cursor: default;
+    opacity: 0.45;
+  }
+
+  .operations-icon-button[aria-disabled='true']:hover,
+  .operations-icon-button[aria-disabled='true']:focus-visible {
+    background: transparent;
+    color: var(--ui-text-secondary);
+  }
+
+  .operations-icon-button svg {
+    width: 1.08rem;
+    height: 1.08rem;
+  }
+
+  .operations-icon-spin {
+    animation: operations-spin 0.9s linear infinite;
+  }
+
+  @keyframes operations-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .operations-title {
@@ -958,6 +1731,24 @@
     font-weight: 650;
   }
 
+  .operations-parse-diagnostics {
+    display: grid;
+    gap: 0.22rem;
+    margin-top: 0.35rem;
+  }
+
+  .operations-parse-error {
+    border-left: 2px solid rgba(185, 28, 28, 0.62);
+    border-radius: 0.22rem;
+    background: rgba(185, 28, 28, 0.07);
+    color: #9f2f2f;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.35;
+    padding: 0.24rem 0.34rem;
+    overflow-wrap: anywhere;
+  }
+
   .operations-status-valid,
   .operations-status-error {
     display: inline-flex;
@@ -1019,8 +1810,16 @@
       margin-left: 1.35rem;
     }
 
+    .doc-deformation-parameters-footer {
+      margin-left: 1.35rem;
+    }
+
+    .doc-deformation-dies-block {
+      margin-left: 1.35rem;
+    }
+
     .doc-label {
-      width: 42%;
+      width: 1%;
       white-space: normal;
     }
   }

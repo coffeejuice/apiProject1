@@ -53,7 +53,11 @@ class PostprocessingTaskStatusEnum(enum.Enum):
 class SimulationStep(Base):
     __tablename__ = "simulation_steps"
 
-    simulation_step_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    document_operation_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("document_operations.document_operation_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
     document_version_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("document_versions.document_version_id", ondelete="CASCADE"),
@@ -67,17 +71,11 @@ class SimulationStep(Base):
         nullable=True,
         default=None,
     )
-    document_operation_id: Mapped[Optional[int]] = mapped_column(
-        BigInteger,
-        ForeignKey("document_operations.document_operation_id", ondelete="SET NULL"),
-        nullable=True,
-        default=None,
-        index=True,
-    )
 
     operation_template_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default=None, index=True)
     operation_kind: Mapped[str] = mapped_column(String(63), nullable=False, default="generic", server_default="generic")
     operation_label_snapshot: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default=None)
+    preprocess_ready: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     block_name_snapshot: Mapped[str] = mapped_column(String(255), nullable=False)
     library_name_snapshot: Mapped[str] = mapped_column(String(255), nullable=False)
 
@@ -179,7 +177,7 @@ class SimulationStep(Base):
 
     document_version: Mapped["DocumentVersion"] = relationship("DocumentVersion")
     source_block: Mapped[Optional["Block"]] = relationship("Block", foreign_keys=[source_block_id])
-    document_operation: Mapped[Optional["DocumentOperation"]] = relationship(
+    document_operation: Mapped["DocumentOperation"] = relationship(
         "DocumentOperation",
         foreign_keys=[document_operation_id],
     )
@@ -218,9 +216,9 @@ class SimulationStep(Base):
 class SimulationStepStatus(Base):
     __tablename__ = "simulation_step_status"
 
-    simulation_step_id: Mapped[int] = mapped_column(
+    document_operation_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("simulation_steps.simulation_step_id", ondelete="CASCADE"),
+        ForeignKey("simulation_steps.document_operation_id", ondelete="CASCADE"),
         primary_key=True,
     )
     status: Mapped[SimulationStepStatusEnum] = mapped_column(
@@ -288,9 +286,9 @@ class PostprocessingTask(Base):
     __tablename__ = "postprocessing_tasks"
 
     postprocessing_task_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    simulation_step_id: Mapped[int] = mapped_column(
+    document_operation_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("simulation_steps.simulation_step_id", ondelete="CASCADE"),
+        ForeignKey("simulation_steps.document_operation_id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -353,8 +351,8 @@ class PostprocessingTask(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "simulation_step_id",
+            "document_operation_id",
             "task_kind",
-            name="uq_postprocessing_tasks_simulation_step_task_kind",
+            name="uq_postprocessing_tasks_document_operation_task_kind",
         ),
     )

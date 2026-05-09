@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 
+from app.logging_config import configure_logging
 from app.orchestration.channels import PRE_JOBS_CHANNEL
 from app.orchestration.claims import ClaimedStageJob, StageJobClaimer, StageJobExecutor
 from app.orchestration.runtime_backend import PreJobClaimer, PreJobExecutor, SqlAlchemyLeaseManager
@@ -40,6 +41,7 @@ def main() -> None:
     """Start the pre worker process."""
 
     instance_name = os.getenv("FORGELAB_WORKER_NAME", "pre-1")
+    configure_logging(service="pre", worker_name=instance_name)
     worker = PreWorker(
         WorkerConfig(role=WorkerRole.PRE, instance_name=instance_name),
     )

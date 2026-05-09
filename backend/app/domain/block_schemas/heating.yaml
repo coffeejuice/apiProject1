@@ -1,8 +1,0 @@
-block_type_id: heating
-label: Heating
-version: 1
-description: Placeholder for the heating container block schema.
-
-props_schema: []
-target_schema: []
-layout: []

@@ -62,7 +62,7 @@ DOCUMENT_LEGACY_KEYS = frozenset(
 )
 
 HEATING_LEGACY_KEYS = frozenset({"furnace_class_id", "temperature"})
-FURNACE_LEGACY_KEYS = frozenset({"furnace_class_id", "temperature"})
+FURNACE_LEGACY_KEYS = frozenset({"furnace_class_id", "temperature", "temperature_program"})
 OPERATION_LEGACY_KEYS = frozenset(
     {
         "operation_template_id",
@@ -120,7 +120,7 @@ def normalize_heating_block_props(props: Mapping[str, Any] | None) -> dict[str, 
     raw = strip_transient_props(props)
     heating_properties = extract_namespace(raw, HEATING_PROPERTIES)
     for key in HEATING_LEGACY_KEYS:
-        if key in raw:
+        if key in raw and key not in heating_properties:
             heating_properties[key] = deepcopy(raw[key])
     return {HEATING_PROPERTIES: heating_properties}
 
@@ -130,12 +130,32 @@ def normalize_deformation_block_props(props: Mapping[str, Any] | None) -> dict[s
     return {DEFORMATION_PROPERTIES: extract_namespace(raw, DEFORMATION_PROPERTIES)}
 
 
+def _last_hold_temperature_from_program(value: Any) -> Any:
+    if not isinstance(value, list):
+        return None
+    for row in reversed(value):
+        if not isinstance(row, Mapping):
+            continue
+        if str(row.get("type") or "hold") != "hold":
+            continue
+        temperature = row.get("temperature_c")
+        if temperature not in (None, ""):
+            return temperature
+    return ""
+
+
 def normalize_furnace_block_props(props: Mapping[str, Any] | None) -> dict[str, Any]:
     raw = strip_transient_props(props)
     furnace_properties = extract_namespace(raw, FURNACE_PROPERTIES)
     for key in FURNACE_LEGACY_KEYS:
-        if key in raw:
+        if key in raw and key not in furnace_properties:
             furnace_properties[key] = deepcopy(raw[key])
+    if "temperature_program" in furnace_properties:
+        program_temperature = _last_hold_temperature_from_program(
+            furnace_properties.get("temperature_program")
+        )
+        if program_temperature is not None:
+            furnace_properties["temperature"] = program_temperature
     return {FURNACE_PROPERTIES: furnace_properties}
 
 
@@ -149,10 +169,3 @@ def normalize_operation_block_props(props: Mapping[str, Any] | None) -> dict[str
         if key in raw and not (key in {"operation_text", "rounding_table"} and key in operation_properties):
             operation_properties[key] = deepcopy(raw[key])
     return {OPERATION_PROPERTIES: operation_properties}
-
-
-def flatten_effective_properties(*namespaces: Mapping[str, Any] | None) -> dict[str, Any]:
-    flattened: dict[str, Any] = {}
-    for namespace in namespaces:
-        flattened = deep_merge(flattened, namespace)
-    return flattened

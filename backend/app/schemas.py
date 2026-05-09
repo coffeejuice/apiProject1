@@ -162,6 +162,7 @@ class DocumentOperationResponse(BaseModel):
     operation_template_id: Optional[str] = None
     operation_kind: str
     label_snapshot: Optional[str] = None
+    operation_parameters: Dict[str, Any] = Field(default_factory=dict)
     target: Dict[str, Any] = Field(default_factory=dict)
     parse_status: str
     parse_errors: List[Dict[str, Any]] = Field(default_factory=list)
@@ -171,6 +172,116 @@ class DocumentOperationResponse(BaseModel):
 class DocumentOperationListResponse(BaseModel):
     document_id: int
     operations: List[DocumentOperationResponse]
+
+
+class SimulationStepStatusResponse(BaseModel):
+    status: str
+    simulation_server_id: Optional[int] = None
+    worker_name: Optional[str] = None
+    attempt_no: int
+    retry_count: int
+    cancel_requested: bool
+    simulation_percent: int
+    simulation_expected_duration_seconds: Optional[float] = None
+    queued_at: Optional[datetime] = None
+    started_at: Optional[datetime] = None
+    heartbeat_at: Optional[datetime] = None
+    finished_at: Optional[datetime] = None
+    runtime_artifacts: Dict[str, Any] = Field(default_factory=dict)
+    last_error: Optional[str] = None
+    error_payload: Optional[Dict[str, Any]] = None
+    updated_at: Optional[datetime] = None
+
+
+class DocumentSimulationStepResponse(BaseModel):
+    document_operation_id: int
+    document_id: int
+    document_version_id: int
+    execution_order: int
+    source_block_id: Optional[UUID] = None
+    source_block_type_id: str
+    operation_order: int
+    operation_order_in_block: int
+    operation_template_id: Optional[str] = None
+    operation_kind: str
+    operation_label_snapshot: Optional[str] = None
+    operation_parameters: Dict[str, Any] = Field(default_factory=dict)
+    source_text_hash: Optional[str] = None
+    parse_status: str
+    parse_errors: List[Dict[str, Any]] = Field(default_factory=list)
+    parse_warnings: List[Dict[str, Any]] = Field(default_factory=list)
+    preprocess_ready: bool
+    block_name_snapshot: str
+    library_name_snapshot: str
+    material_version_id: Optional[int] = None
+    press_id: Optional[int] = None
+    press_mode_id: Optional[int] = None
+    die_assembly_id: Optional[int] = None
+    top_die_id: Optional[int] = None
+    bottom_die_id: Optional[int] = None
+    left_die_id: Optional[int] = None
+    right_die_id: Optional[int] = None
+    parameter_values: Dict[str, Any] = Field(default_factory=dict)
+    control_parameters: Dict[str, Any] = Field(default_factory=dict)
+    step_specific_parameters: Dict[str, Any] = Field(default_factory=dict)
+    initial_geometry: Optional[Dict[str, Any]] = None
+    final_geometry: Optional[Dict[str, Any]] = None
+    metrics: Dict[str, Any] = Field(default_factory=dict)
+    accumulated_time_start_seconds: Optional[float] = None
+    duration_seconds: Optional[float] = None
+    accumulated_time_stop_seconds: Optional[float] = None
+    created_at: datetime
+    updated_at: datetime
+    status: Optional[SimulationStepStatusResponse] = None
+
+
+class DocumentSimulationStepListResponse(BaseModel):
+    document_id: int
+    steps: List[DocumentSimulationStepResponse]
+
+
+class SimulationStepSurfaceMesh(BaseModel):
+    units: str = "mm"
+    vertices: List[List[float]] = Field(default_factory=list)
+    faces: List[List[int]] = Field(default_factory=list)
+    bounds: Dict[str, float] = Field(default_factory=dict)
+    vertex_count: int
+    face_count: int
+    cross_section_point_count: int
+    surface_area_mm2: float
+    volume_mm3: float
+
+
+class SimulationStepSurfaceArtifactFile(BaseModel):
+    relative_path: str
+    size_bytes: int
+    url: Optional[str] = None
+
+
+class SimulationStepSurfaceArtifact(BaseModel):
+    kind: str
+    geometry_hash: Optional[str] = None
+    summary: Dict[str, Any] = Field(default_factory=dict)
+    files: Dict[str, SimulationStepSurfaceArtifactFile] = Field(default_factory=dict)
+    artifact_root: Optional[str] = None
+
+
+class DocumentSimulationStepSurfaceResponse(BaseModel):
+    document_id: int
+    document_operation_id: int
+    initial: Optional[SimulationStepSurfaceMesh] = None
+    final: Optional[SimulationStepSurfaceMesh] = None
+    artifacts: Dict[str, SimulationStepSurfaceArtifact] = Field(default_factory=dict)
+    source: str = "legacy_preprocessor_trimesh"
+
+
+class DocumentPreprocessQueueResponse(BaseModel):
+    document_id: int
+    document_version_id: int
+    preprocess_status: str
+    operations_count: int
+    queued: bool
+    message: str
 
 
 class DocumentWorkflowResponse(BaseModel):

@@ -15,25 +15,37 @@ It covers:
 
 If source code or migrations conflict with this file, source code is authoritative and this file must be updated.
 
-## DB consistency snapshot (updated 2026-04-29)
+## DB consistency snapshot (updated 2026-05-07)
 - Alembic code state:
-  - current head migration file: `0001_current_schema_baseline.py`
-  - current head revision: `0001_current_schema`
+  - current head migration file: `0005_materialize_simulation_step_siblings.py`
+  - current head revision: `0005_step_siblings`
 - Previous incremental migration history was compacted into the current-schema baseline while the project is still pre-production.
 - Current schema shape of note:
   - active editor block IDs are semantic strings: `document`, `heating`, `deformation`, `furnace`, `operation`
   - fresh schemas are created directly at the semantic document/block structure; old-shape document conversion migrations were removed from the active chain
   - new documents auto-create one fixed `document` root block and one `deformation` section with one initial `operation` child
   - creating a `heating` section auto-creates one child `furnace` block
-  - active operation templates and parsing rules are YAML-backed in `backend/app/domain/operation_block_design_and_parsing_rules.yaml`; the runtime editor catalog is exposed by `GET /operation-templates`; operation-type selector and common calculation-mode selector definitions are transient YAML metadata, not database tables
-  - legacy `document_blocks_library` / `OperationsLibrary` was dropped; active Pre metadata is YAML/built-in, and `time_between_operations` is keyed by semantic operation template IDs plus `press_id`
+  - active Operation block editor metadata is endpoint/service-owned code in `backend/app/services/operation_blocks.py` and exposed by `GET /operation-templates`; operation text/table materialization rules are explicit code in `backend/app/services/document_operations.py`
+  - legacy `document_blocks_library` / `OperationsLibrary` was dropped; active Pre metadata is preprocessor-local semantic code, and `time_between_operations` is keyed by semantic operation template IDs plus `press_id`
   - `document_blocks.props` stores explicit user-authored properties only, grouped by namespace: `document_properties`, `heating_properties`, `deformation_properties`, `furnace_properties`, `operation_properties`
   - `document_properties.section_numbering_start` is an integer document-level visual numbering setting for Heating/Deformation section titles; default is `2`
+  - `deformation_properties` stores die/tooling selection using old operation variable names: `die_assembly_id`, `top_die_id`, and `bottom_die_id`; UI helper fields are `die_type_id`, `top_die_type_id`, `bottom_die_type_id`, and `die_selection_mode`
+  - `deformation_properties` stores per-operation-type old-project feed settings at `feed_settings.<operation_type>.feed_direction_id`, `feed_first`, `feed_middle`, and `feed_last`; direction default is old-project `2` (right arrow)
+  - `deformation_properties` stores explicit old-project forming speed keys `speed_upsetting` and `speed_prolongation`; `speed_full_die` is obsolete and transverse/full-die operations use `speed_prolongation`
+  - `furnace_properties.temperature_program` stores furnace-control rows in JSONB. Rows use `type` values `hold`, `heat`, or `unload`; hold rows also store `duration_min` and `temperature_c`. Old direct Furnace/Heating `furnace_class_id` and `temperature` fields are not active user-editable properties; `furnace_properties.temperature` may still be maintained internally as a compatibility mirror of the last hold temperature for current Pre compilation.
   - `operation` block dynamic variables are stored in `document_blocks.props.operation_properties.target`; template metadata is stored in `operation_template_id`, `operation_template_version`, `operation_kind`, and `template_snapshot`
   - `operation_properties.operation_text` is optional multiline source data for non-rounding Operation blocks; the parser splits only by right-arrow separators and can generate multiple `document_operations` rows from one Operation block
   - `operation_properties.rounding_table` stores Rounding input rows; one non-empty row generates one `document_operations` row
-  - `document_operations` is the materialized technological-operation table between editable `document_blocks` and compiled `simulation_steps`; it stores inherited/effective JSONB properties used by Pre
-  - `simulation_steps` links to `document_operations` with nullable `document_operation_id` and stores semantic source fields `operation_template_id`, `operation_kind`, and `operation_label_snapshot`; old `simulation_steps.block_type_id` was removed
+  - `document_operations` is the materialized technological-operation table between editable `document_blocks` and compiled `simulation_steps`; it stores final per-row JSONB in `operation_parameters`
+  - `document_operations` copies Deformation values only from the direct parent Deformation section during materialization; missing values are not inherited from previous Deformation sections
+  - the root `document` block materializes as the first `document_operations` row with `operation_template_id = document_initial_data`, `operation_kind = billet`, and target namespaces `document_info`, `process_data`, `material`, `input_stock`, and `mesh`; Pre maps it to the legacy billet/NewBillet compiler path
+  - `furnace` blocks materialize as `document_operations` rows with `operation_template_id = furnace`; `operation_parameters.temperature_program` stores Furnace table rows with `number`, `type`, `duration_min`, and `temperature_c`
+  - `simulation_steps.document_operation_id` is both the primary key and required cascade FK to `document_operations.document_operation_id`; old `simulation_steps.simulation_step_id` and `simulation_steps.block_type_id` were removed
+  - `document_operations` regeneration creates one sibling `simulation_steps` row for each materialized operation row; deleting/replacing operations removes/replaces sibling simulation rows through the cascade FK
+  - all valid materialized operations are treated as simulation/preprocessor candidates; sibling creation initially sets `simulation_steps.preprocess_ready` for valid rows, and an active Pre run temporarily resets it until each row is successfully compiled
+  - Pre compile/parse failures are stored on the affected sibling row: `simulation_steps.metrics.preprocessor_status = failed` and `simulation_step_status.status = failed` with `last_error/error_payload`
+  - old Pre `is_simulation` metadata was removed; there is no active simulated vs non-simulated operation split
+  - semantic Pre adapter coverage is complete for the current operation templates: billet/document initial data, Furnace/Heating, Upsetting, axial/spiral/radial/full-die deformation, radial initial rotations, transverse/transversal cogging, and cutting templates should not compile through generic fallback
   - `projects.material_id` points to `materials.material_id`
   - `materials` is now a thin canonical root table with plain-text `name`, `deform_file_name`, `note`, `is_obsolete`, `owner_id`
   - shared material classification uses normalized tables: `material_classification_axes`, `material_classification_values`, `material_classification_assignments`
@@ -49,10 +61,10 @@ If source code or migrations conflict with this file, source code is authoritati
   - old document/block library table history:
     - `blocks` -> `document_blocks`
     - `operations_library` -> `document_blocks_library`
-    - `document_blocks_library` was later dropped after semantic block/operation YAML became the active source
+    - `document_blocks_library` was later dropped after semantic block/operation code became the active source
   - old separate Weight and billet-geometry operation block rows (`6`, `7`, `68`-`79`) are obsolete/hidden from active editor flow; billet geometry now lives inside the semantic `document` block
-  - old heating rows `10` (`Furnace class`) and `62` (`Temperature at 0 min`) were merged into active operation type `10` (`Furnace`) with fields `furnace_class_id` and `temperature`; type `62` is obsolete/hidden, and type `11` now auto-creates `23|23`
-  - old forming requirement rows now map to one merged operation type `24` (`Deformation`) with `Press`, empty `Die`, feed-direction, speed, and first/middle/last feed-length fields; operation types `26`, `8`, `15`, `13`, and `14` are obsolete/hidden
+  - old heating rows `10` (`Furnace class`) and `62` (`Temperature at 0 min`) are obsolete/hidden in semantic Furnace/Heating flow. Active user editing is through the richer `temperature_program`; direct `furnace_class_id` and `temperature` fields are not exposed.
+  - old forming requirement rows now map to one semantic `Deformation` section with die selection, feed-direction, speed, and first/middle/last feed-length fields; operation types `26`, `8`, `15`, `13`, and `14` are obsolete/hidden
   - fixed document setup is now one auto-created semantic `document` block; old operation type `5` (`Material`), legacy `input_workpiece`, and operation type `84` (`Mesh`) data is superseded by `document` props
   - `material_versions` now stores versioned snapshots for the project-level root material
   - `documents.material_version_id` points to the selected material version for that document
@@ -62,16 +74,18 @@ If source code or migrations conflict with this file, source code is authoritati
     - `preprocess_started_at`
     - `preprocess_finished_at`
     - `preprocess_error`
-  - `simulation_steps` stores immutable compiled `Pre` output for one fixed `document_version`
+  - `simulation_steps` starts as one sibling row per `document_operations` row, then stores immutable compiled `Pre` output for the active `document_version`
+  - Pre writes `simulation_steps` incrementally. Starting a Pre run resets rows for the active document version to pending/stale-free payloads; every successfully compiled row is committed in its own short transaction before the next row starts; compile failure on a later row keeps prior rows compiled and stores failure diagnostics on the failed sibling row.
+  - Draft documents can be manually queued for a fresh Pre run through `POST /documents/{document_id}/simulation-steps/preprocess`; this keeps existing saved `document_operations`/`simulation_steps`, sets the latest editable `document_versions` row to queued Pre intent, and wakes Pre workers. It intentionally does not regenerate operations because regeneration would erase visible compiled step output before Pre produces replacement rows.
   - `simulation_step_status` stores mutable solver execution state per compiled step
   - `postprocessing_tasks` stores mutable post-stage queue state and outputs per compiled step
 - Verification status:
   - backend `python3 -m compileall backend/app` and backend `.venv` `python -m compileall app` pass
   - frontend `npm run typecheck` and `npm run build` pass
-  - backend `.venv` `alembic current` reports `0001_current_schema (head)`
-  - backend `.venv` `alembic check` reports `No new upgrade operations detected.`
+  - backend `.venv` `alembic current` should report `0005_step_siblings (head)` after migration
+  - backend `.venv` `alembic check` should report `No new upgrade operations detected.` after migration
   - expected active runtime tables include `document_blocks`, `document_operations`, `simulation_steps`, `simulation_step_status`, and `postprocessing_tasks`
-  - direct SQLAlchemy inspection confirms `document_operations.legacy_type_id` is absent, `time_between_operations` uses semantic template columns, and `simulation_steps.block_type_id` is absent
+  - direct SQLAlchemy inspection confirms `document_operations.legacy_type_id` is absent, `time_between_operations` uses semantic template columns, and `simulation_steps.simulation_step_id` / `simulation_steps.block_type_id` are absent
   - SQLAlchemy metadata table inventory matches the current database table inventory, including `seed_runs`
   - backend automated tests are unavailable because `pytest` is not installed in `backend/.venv`
 
@@ -133,8 +147,11 @@ If source code or migrations conflict with this file, source code is authoritati
   - `document_operation_id`, `document_id` (FK `documents.document_id`), `source_block_id` (FK `document_blocks.block_id`)
   - ordering/source: `operation_order`, `operation_order_in_block`, `source_block_type_id`
   - template source: `operation_template_id`, `operation_kind`, `label_snapshot`
-  - inherited/effective JSONB payloads: `document_properties`, `heating_properties`, `deformation_properties`, `furnace_properties`, `operation_properties`, `effective_properties`, `template_snapshot`
-  - parser audit for multiline Operation blocks: `source_text_hash`, `parse_status`, `parse_errors`, `parse_warnings`
+  - materialized JSONB payloads: `operation_parameters`, `template_snapshot`
+  - root Document row convention: `source_block_type_id = document`, `operation_template_id = document_initial_data`, `operation_kind = billet`, `label_snapshot = Document initial data`, and `operation_parameters` grouped under `document_info`, `process_data`, `material`, `input_stock`, and `mesh`
+  - Furnace row convention: `source_block_type_id = furnace`, `operation_template_id = furnace`, `operation_kind = furnace`, and `operation_parameters.temperature_program` is an array of table-row objects copied from `furnace_properties.temperature_program`
+  - Operation row convention: generated operation parameters plus copied Deformation die/feed/speed values are stored directly under `operation_parameters` using the final segment of source chained-dot paths
+  - parser audit for Operation blocks: `source_text_hash`, `parse_status`, `parse_errors`, `parse_warnings`; parse error payloads may include `sentence` + `source_sentence` for text input or `row` + `source_row` for table input
   - audit: `created_at`, `updated_at`
   - uniqueness: (`document_id`, `operation_order`), (`source_block_id`, `operation_order_in_block`)
 - `document_versions`
@@ -151,15 +168,34 @@ If source code or migrations conflict with this file, source code is authoritati
 
 ## Workflow runtime tables
 - `simulation_steps`
-  - immutable compiled execution steps created by `Pre` for one fixed `document_version`
-  - `simulation_step_id`, `document_version_id` (FK `document_versions.document_version_id`), `execution_order`
-  - optional trace/source linkage:
+  - sibling execution rows created together with `document_operations`; Pre updates these rows with compiled execution data for the active `document_version`
+  - read endpoint: `GET /documents/{document_id}/simulation-steps`
+    - returns all `simulation_steps` rows for the document, joined to source `document_operations` and optional `simulation_step_status`
+    - includes source `document_operations.operation_parameters` so the frontend `Steps` left list can show saved user-entered operation variables next to compiled Pre status
+    - used by the frontend `Steps` tool for compact list/detail inspection plus 2D compiled-geometry previews
+  - lazy surface endpoint: `GET /documents/{document_id}/simulation-steps/{document_operation_id}/surface`
+    - returns JSON triangular surface meshes (`vertices`, `faces`, bounds, area/volume summary)
+    - reads JSON/STL artifacts generated row-by-row by the Pre compiler through the restored legacy Trimesh/STL mesh-state path in `backend/app/services/preprocessor/legacy_surface_mesh.py`
+    - never synthesizes fallback meshes from `simulation_steps` geometry JSON; missing, unreadable, or non-legacy artifacts are reported as explicit errors
+    - keeps mesh payloads out of the default `simulation_steps` list response
+    - writes/read selected-step JSON/STL files through `backend/app/services/preprocessor/surface_artifacts.py` under `TEMP_FILES_ROOT/runs/<document_version_id>/<execution_order>/surface/document_operation_<id>/`
+    - records only compact artifact metadata under `simulation_steps.metrics.surface_artifacts`
+    - replaces the old-project DB-coupled binary-STL preview path for interactive Steps inspection; old `initial_3d_stl` / `final_3d_stl` DB columns are not restored
+  - lazy surface artifact endpoints:
+    - `GET /documents/{document_id}/simulation-steps/{document_operation_id}/surface/artifacts/{initial|final}/{json|stl}`
+    - serves cached artifact files for selected-step inspection/download
+  - Pre queue endpoint: `POST /documents/{document_id}/simulation-steps/preprocess`
+    - uses existing saved operation/step siblings for an editable draft
+    - sets `document_versions.run_switch_status = true` and `preprocess_status = queued`
+    - emits the Pre worker notification so the running Pre process can claim the document version
+  - `document_operation_id` (PK + cascade FK `document_operations.document_operation_id`), `document_version_id` (FK `document_versions.document_version_id`), `execution_order`
+  - required source linkage:
     - `source_block_id` (FK `document_blocks.block_id`)
-    - `document_operation_id` (nullable FK `document_operations.document_operation_id`)
   - compiled semantic operation snapshot:
     - `operation_template_id`
     - `operation_kind`
     - `operation_label_snapshot`
+    - `preprocess_ready`
     - `block_name_snapshot`
     - `library_name_snapshot`
   - material/version linkage:
@@ -173,6 +209,7 @@ If source code or migrations conflict with this file, source code is authoritati
     - `initial_geometry`
     - `final_geometry`
     - `metrics`
+      - Pre run diagnostics use `metrics.preprocessor_status` values such as `pending`, `compiled`, and `failed`
   - compiled timeline fields:
     - `accumulated_time_start_seconds`
     - `duration_seconds`
@@ -184,7 +221,7 @@ If source code or migrations conflict with this file, source code is authoritati
     - unique on (`document_version_id`, `execution_order`)
 - `simulation_step_status`
   - mutable solver execution state for one `simulation_steps` row
-  - one-to-one keyed by `simulation_step_id` (PK + FK to `simulation_steps.simulation_step_id`)
+  - one-to-one keyed by `document_operation_id` (PK + FK to `simulation_steps.document_operation_id`)
   - core state:
     - `status` enum values: `blocked`, `queued`, `running`, `finished`, `failed`, `cancelled`
     - `simulation_server_id` (FK `servers.id`)
@@ -211,7 +248,7 @@ If source code or migrations conflict with this file, source code is authoritati
     - `simulation_server_id`
 - `postprocessing_tasks`
   - mutable post-stage task queue and output table
-  - `postprocessing_task_id`, `simulation_step_id` (FK `simulation_steps.simulation_step_id`)
+  - `postprocessing_task_id`, `document_operation_id` (FK `simulation_steps.document_operation_id`)
   - post queue state:
     - `task_kind` (default `full`)
     - `status` enum values: `queued`, `running`, `finished`, `failed`, `cancelled`
@@ -234,9 +271,9 @@ If source code or migrations conflict with this file, source code is authoritati
   - audit:
     - `updated_at`
   - uniqueness:
-    - unique on (`simulation_step_id`, `task_kind`)
+    - unique on (`document_operation_id`, `task_kind`)
   - indexes:
-    - `simulation_step_id`
+    - `document_operation_id`
     - `status`
     - `postprocessing_server_id`
 
@@ -250,7 +287,7 @@ If source code or migrations conflict with this file, source code is authoritati
 - `time_between_operations`
   - timing table used by the preprocessor for operation-to-operation delay estimates
   - `first_operation_template_id`, `second_operation_template_id`, `press_id` (FK `press_modes.id`), `time_mean`, `time_sigma`
-  - first/second operation template IDs are semantic strings from YAML/built-in preprocessor definitions
+  - first/second operation template IDs are semantic strings from preprocessor-local definitions and semantic built-ins
 - `material_standards_catalog`
   - `standard_id`, `predecessor_standard_id` (self FK), `issue_organization`, `issue_year`, `geographic_level`, `country_or_region`, `title` (JSONB), `standard_number`, `url`, `file_name`, `is_obsolete`, `created_at`, `updated_at`
 - `materials_designations`
@@ -351,12 +388,12 @@ If source code or migrations conflict with this file, source code is authoritati
   - scalar keys: `is_left_manipulator`, `is_right_manipulator`, `automatic_feed_mode_is_on_when_bites_count`, `max_force`, `back_speed`, `idle_speed`, `working_speed`, `min_dwell_speed`, `max_dwell_time`, `min_idle_stroke`, `max_idle_stroke`, `approaching_distance`, `open_height_without_dies`
   - array key: `power_limit` -> list of objects with keys `id`, `force`, `speed`
 - `document_blocks.props`
-  - `document`: stores explicit title/setup fields under `document_properties`, including `section_numbering_start` for visual section numbering, then is enriched for read responses with document metadata, optional nested `version`, and billet-geometry metadata
-  - `heating`: stores inherited heating parameters under `heating_properties`
-  - `deformation`: stores inherited deformation parser variables under `deformation_properties.deformation_variables`: `tail_chamfering_stroke`, `tail_flattening_stroke`, and `radial_feed`
-  - `furnace`: stores furnace-specific parameters under `furnace_properties`
-  - `operation`: stores YAML-backed template metadata, optional `operation_text`, optional `rounding_table`, and nested dynamic `target` variables under `operation_properties`
-  - operation templates and parsing rules are defined in `backend/app/domain/operation_block_design_and_parsing_rules.yaml`; there is no active runtime block-library table for editor block definitions
+  - `document`: stores explicit title/setup fields under `document_properties`, including `section_numbering_start` for visual section numbering, then is enriched for read responses with document metadata, optional nested `version`, and billet-geometry metadata; these fields materialize into the `document_initial_data` document operation
+  - `heating`: no active editable parameters; stores an empty `heating_properties` object unless legacy data is present
+  - `deformation`: stores die/tooling settings under `deformation_properties.die_type_id`, `top_die_type_id`, `bottom_die_type_id`, `die_selection_mode`, `die_assembly_id`, `top_die_id`, and `bottom_die_id`; deformation parser variables under `deformation_properties.deformation_variables`: `tail_chamfering_stroke` and `tail_flattening_stroke`; per-operation-type feed settings under `deformation_properties.feed_settings.<operation_type>.feed_direction_id`, `feed_first`, `feed_middle`, and `feed_last`; and explicit forming speed keys directly under `deformation_properties`: `speed_upsetting` and `speed_prolongation`
+  - `furnace`: stores furnace-specific parameters under `furnace_properties`, including `temperature_program` row objects and an optional internal compatibility `temperature` mirror
+  - `operation`: stores endpoint-provided template metadata, optional `operation_text`, optional `rounding_table`, and nested dynamic `target` variables under `operation_properties`
+  - Operation block template metadata is owned by `backend/app/services/operation_blocks.py`; operation text/table materialization rules are owned by `backend/app/services/document_operations.py`; there is no active runtime block-library table for editor block definitions
 
 ## Database seeding layout
 - Database seeding reads two files from `backend/data/database_seeding/`

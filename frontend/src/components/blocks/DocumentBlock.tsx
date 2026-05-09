@@ -3,8 +3,12 @@
  * Displays document metadata in a table format mimicking a title page
  */
 
+import { useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import type { BlockComponentProps } from './BlockRegistry'
 import { getFieldMaxLength } from '../../lib/blockFieldLimits'
+import { useLibraryStore } from '../../stores/useLibraryStore'
+import type { MaterialRecord } from '../../types/api'
 import Tooltip from '../ui/Tooltip'
 
 interface GeometryType {
@@ -23,11 +27,65 @@ function normalizeDocumentFieldValue(props: Record<string, unknown> | undefined,
   return normalizeComparable(props?.[field] ?? (field === 'section_numbering_start' ? 2 : ''))
 }
 
+function formatMaterialBaseLabel(value: string): string {
+  const normalized = value.trim()
+  if (normalized.length <= 3) {
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase()
+  }
+  return normalized
+    .split(/[_\s.-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ')
+}
+
+function getMaterialBaseValues(material: MaterialRecord): string[] {
+  const source = material.classifications.composition || []
+  return source.map(String).filter((entry) => entry.trim().length > 0)
+}
+
+function isChineseDesignation(entry: MaterialRecord['designation_links'][number]): boolean {
+  const country = (entry.country || '').trim().toLowerCase()
+  const standard = (entry.standard || '').trim().toLowerCase()
+  return (
+    country === 'china' ||
+    country === 'chinese' ||
+    country === 'cn' ||
+    country.includes('china') ||
+    standard.startsWith('gb') ||
+    standard.startsWith('gjb') ||
+    standard.startsWith('yb')
+  )
+}
+
+function getMaterialDisplayName(material: MaterialRecord): string {
+  const seen = new Set<string>()
+  const chineseDesignations = material.designation_links
+    .filter(isChineseDesignation)
+    .map((entry) => entry.designation.trim())
+    .filter((designation) => {
+      if (!designation) {
+        return false
+      }
+      const key = designation.toLocaleLowerCase()
+      if (seen.has(key)) {
+        return false
+      }
+      seen.add(key)
+      return true
+    })
+
+  return chineseDesignations.length > 0 ? chineseDesignations.join(' / ') : material.name
+}
+
 export default function DocumentBlock({
   block,
   baselineProps,
   onUpdate,
 }: BlockComponentProps) {
+  const materials = useLibraryStore((state) => state.materials)
+  const [materialBaseFilter, setMaterialBaseFilter] = useState<string | null>(null)
+
   const handleFieldChange = (field: string, value: unknown) => {
     onUpdate(block.block_id, {
       ...(block.props || {}),
@@ -51,6 +109,29 @@ export default function DocumentBlock({
     ? availableGeometryTypes.find((geometry) => geometry.id === currentGeometryTypeId)
     : null
   const selectedGeometry = currentGeometry || block.props.selected_geometry || null
+  const materialBaseOptions = useMemo(() => {
+    const seen = new Map<string, string>()
+    materials.forEach((material) => {
+      getMaterialBaseValues(material).forEach((base) => {
+        const key = base.toLocaleLowerCase()
+        if (!seen.has(key)) {
+          seen.set(key, base)
+        }
+      })
+    })
+    return Array.from(seen.values()).sort((left, right) =>
+      formatMaterialBaseLabel(left).localeCompare(formatMaterialBaseLabel(right))
+    )
+  }, [materials])
+  const filteredMaterials = useMemo(() => {
+    if (materialBaseFilter === null) {
+      return materials
+    }
+    const selectedBaseKey = materialBaseFilter.toLocaleLowerCase()
+    return materials.filter((material) =>
+      getMaterialBaseValues(material).some((base) => base.toLocaleLowerCase() === selectedBaseKey)
+    )
+  }, [materialBaseFilter, materials])
 
   const handleGeometryTypeChange = (newTypeId: string) => {
     const selectedType = availableGeometryTypes.find((geometry) => geometry.id === newTypeId)
@@ -181,23 +262,84 @@ export default function DocumentBlock({
     )
   }
 
-  const renderIntegerField = (field: string, placeholder = '') => {
-    const currentValue = normalizeDocumentFieldValue(block.props, field)
-    const isDirty = isFieldDirty(field)
+  const renderMaterialField = () => {
+    const currentValue = normalizeDocumentFieldValue(block.props, 'material_id')
+    const selectedMaterial = materials.find((material) => String(material.material_id) === currentValue)
+    const selectedMaterialIsVisible = filteredMaterials.some((material) => String(material.material_id) === currentValue)
+    const isDirty = isFieldDirty('material_id')
 
     return (
-      <div className="doc-field-row">
-        <input
-          type="number"
-          step="1"
-          min="1"
+      <div className="doc-material-control">
+        <div className="doc-material-base-buttons" aria-label="Filter materials by composition base">
+          {materialBaseOptions.map((base) => (
+            <button
+              key={base}
+              type="button"
+              onClick={() => setMaterialBaseFilter((current) => current === base ? null : base)}
+              className={`doc-material-base-button ${materialBaseFilter === base ? 'doc-material-base-button-active' : ''}`}
+              aria-pressed={materialBaseFilter === base}
+            >
+              {formatMaterialBaseLabel(base)}
+            </button>
+          ))}
+        </div>
+        <select
           value={currentValue}
-          onChange={(event) => handleFieldChange(field, event.target.value)}
-          className={`doc-field ${isDirty ? 'doc-field-dirty' : ''}`}
-          placeholder={placeholder}
-        />
-        {renderResetButton(field)}
+          onChange={(event) => handleFieldChange('material_id', event.target.value)}
+          className={`doc-select ${isDirty ? 'doc-field-dirty' : ''}`}
+          aria-label="Select material"
+        >
+          <option value="">Select material...</option>
+          {selectedMaterial && !selectedMaterialIsVisible ? (
+            <option value={selectedMaterial.material_id}>
+              {getMaterialDisplayName(selectedMaterial)}
+            </option>
+          ) : null}
+          {!selectedMaterial && currentValue ? (
+            <option value={currentValue}>Current material #{currentValue}</option>
+          ) : null}
+          {filteredMaterials.map((material) => (
+            <option key={material.material_id} value={material.material_id}>
+              {getMaterialDisplayName(material)}
+            </option>
+          ))}
+        </select>
+        {renderResetButton('material_id')}
       </div>
+    )
+  }
+
+  const renderDocumentMetadata = () => {
+    const version = block.props.version
+    const editableLabel = typeof version?.is_editable === 'boolean'
+      ? version.is_editable ? 'Yes' : 'No'
+      : 'N/A'
+    const createdAt = block.props.created_at
+      ? new Date(block.props.created_at as string).toLocaleString()
+      : 'N/A'
+    const updatedAt = block.props.updated_at
+      ? new Date(block.props.updated_at as string).toLocaleString()
+      : 'N/A'
+
+    return (
+      <table className="doc-meta-table" aria-label="Document metadata">
+        <thead>
+          <tr>
+            <th scope="col">Editable</th>
+            <th scope="col">Operations</th>
+            <th scope="col">Created</th>
+            <th scope="col">Last Edited</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{editableLabel}</td>
+            <td>{version?.operations_count ?? 0}</td>
+            <td>{createdAt}</td>
+            <td>{updatedAt}</td>
+          </tr>
+        </tbody>
+      </table>
     )
   }
 
@@ -231,25 +373,53 @@ export default function DocumentBlock({
     )
   }
 
+  const renderDocumentSection = (title: string, children: ReactNode) => (
+    <section className="doc-document-section">
+      <h2 className="doc-document-section-title">{title}</h2>
+      <div className="doc-document-section-params">
+        {children}
+      </div>
+    </section>
+  )
+
+  const renderProcessDataBlock = () => (
+    renderDocumentSection(
+      'Process data',
+      <table className="doc-table">
+        <tbody>
+          <tr className="doc-table-row">
+            <td className="doc-label">Heat No:</td>
+            <td className="doc-value">{renderTextField('heat_no')}</td>
+          </tr>
+          <tr className="doc-table-row">
+            <td className="doc-label">Finished Size:</td>
+            <td className="doc-value">{renderTextField('finished_size')}</td>
+          </tr>
+          <tr className="doc-table-row">
+            <td className="doc-label">Remarks:</td>
+            <td className="doc-value">{renderTextareaField('remarks', 3)}</td>
+          </tr>
+        </tbody>
+      </table>
+    )
+  )
+
   const renderMergedSetupBlocks = () => (
-    <div className="mt-4 grid gap-2">
-      <section className="doc-section">
-        <h2 className="doc-subtitle">Material</h2>
+    <>
+      {renderDocumentSection(
+        'Material',
         <table className="doc-table">
           <tbody>
             <tr className="doc-table-row">
               <td className="doc-label">Material:</td>
-              <td className="doc-value">{renderTextField('material_id')}</td>
+              <td className="doc-value">{renderMaterialField()}</td>
             </tr>
           </tbody>
         </table>
-      </section>
+      )}
 
-      <section className="doc-section">
-        <h2 className="doc-subtitle">
-          {normalizeComparable(block.props.billet_geometry_title) || 'Billet'}
-        </h2>
-
+      {renderDocumentSection(
+        'Input stock size',
         <table className="doc-table">
           <tbody>
             <tr className="doc-table-row">
@@ -302,10 +472,10 @@ export default function DocumentBlock({
             </tr>
           </tbody>
         </table>
-      </section>
+      )}
 
-      <section className="doc-section">
-        <h2 className="doc-subtitle">Mesh</h2>
+      {renderDocumentSection(
+        'Mesh',
         <table className="doc-table">
           <tbody>
             <tr className="doc-table-row">
@@ -316,20 +486,8 @@ export default function DocumentBlock({
             </tr>
           </tbody>
         </table>
-      </section>
-
-      <section className="doc-section">
-        <h2 className="doc-subtitle">Numbering</h2>
-        <table className="doc-table">
-          <tbody>
-            <tr className="doc-table-row">
-              <td className="doc-label">Section numbering starts at:</td>
-              <td className="doc-value">{renderIntegerField('section_numbering_start')}</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-    </div>
+      )}
+    </>
   )
 
   return (
@@ -350,68 +508,12 @@ export default function DocumentBlock({
         </div>
       </div>
 
-      <table className="doc-table">
-        <tbody>
-          <tr className="doc-table-row">
-            <td className="doc-label">Heat No:</td>
-            <td className="doc-value">{renderTextField('heat_no')}</td>
-          </tr>
-          <tr className="doc-table-row">
-            <td className="doc-label">Finished Size:</td>
-            <td className="doc-value">{renderTextField('finished_size')}</td>
-          </tr>
-          <tr className="doc-table-row">
-            <td className="doc-label">Remarks:</td>
-            <td className="doc-value">{renderTextareaField('remarks', 3)}</td>
-          </tr>
-          <tr className="doc-table-row">
-            <td className="doc-label">Created At:</td>
-            <td className="doc-value">
-              <span className="doc-readonly">
-                {block.props.created_at
-                  ? new Date(block.props.created_at).toLocaleString()
-                  : 'N/A'}
-              </span>
-            </td>
-          </tr>
-          <tr className="doc-table-row">
-            <td className="doc-label">Last Edited:</td>
-            <td className="doc-value">
-              <span className="doc-readonly">
-                {block.props.updated_at
-                  ? new Date(block.props.updated_at as string).toLocaleString()
-                  : 'N/A'}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      {renderDocumentMetadata()}
 
-      {renderMergedSetupBlocks()}
-
-      {block.props.version && (
-        <section className="doc-section">
-          <h3 className="doc-subtitle">Version Information</h3>
-          <table className="doc-table">
-            <tbody>
-              <tr className="doc-table-row">
-                <td className="doc-label">Version Name:</td>
-                <td className="doc-value">{block.props.version.name || 'N/A'}</td>
-              </tr>
-              <tr className="doc-table-row">
-                <td className="doc-label">Editable:</td>
-                <td className="doc-value">
-                  {block.props.version.is_editable ? 'Yes' : 'No'}
-                </td>
-              </tr>
-              <tr className="doc-table-row">
-                <td className="doc-label">Operations Count:</td>
-                <td className="doc-value">{block.props.version.operations_count ?? 0}</td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
-      )}
+      <div className="doc-document-blocks">
+        {renderProcessDataBlock()}
+        {renderMergedSetupBlocks()}
+      </div>
     </div>
   )
 }

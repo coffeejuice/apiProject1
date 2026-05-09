@@ -326,24 +326,24 @@ def enrich_block_data_for_frontend(db: Session, block: Block) -> dict:
     if not handler:
         if block.block_type_id == HEATING_BLOCK_TYPE_ID:
             normalized = normalize_heating_block_props(block.props)
-            heating_properties = dict(normalized.get(HEATING_PROPERTIES) or {})
             props = {
                 "title": "Heating",
                 **normalized,
-                **heating_properties,
             }
             editable_fields = ["heating_properties"]
-            field_limits = {"furnace_class_id": 255, "temperature": 255}
+            field_limits = {}
         elif block.block_type_id == FURNACE_BLOCK_TYPE_ID:
             normalized = normalize_furnace_block_props(block.props)
             furnace_properties = dict(normalized.get(FURNACE_PROPERTIES) or {})
             props = {
                 "title": "Furnace",
                 **normalized,
-                **furnace_properties,
+                "temperature_program": furnace_properties.get("temperature_program"),
             }
             editable_fields = ["furnace_properties"]
-            field_limits = {"furnace_class_id": 255, "temperature": 255}
+            field_limits = {
+                "temperature_program": 12000,
+            }
         elif block.block_type_id == DEFORMATION_BLOCK_TYPE_ID:
             normalized = normalize_deformation_block_props(block.props)
             props = {"title": "Deformation", **normalized}

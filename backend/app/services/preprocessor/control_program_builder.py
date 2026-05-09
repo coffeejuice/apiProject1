@@ -11,15 +11,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.library.library import TimeBetweenOperations
-from app.services.operation_templates import load_operation_templates
 from app.services.preprocessor.operation_keys import (
     CUTTING_COLD_SAW_KEEP_PERCENT,
+    CUTTING_HOT_KEEP_PERCENT,
+    DOCUMENT_INITIAL_DATA_TEMPLATE_ID,
     FURNACE_TEMPLATE_ID,
     GEOMETRY_TEMPLATE_PREFIX,
     HEATING_TEMPERATURE_DURATION_TEMPLATE_ID,
-    NON_SIMULATION_OPERATION_TEMPLATE_IDS,
-    OPERATION_EMPTY_TEMPLATE_ID,
-    UPSETTING_TEMPLATE_IDS,
+    TRANSVERSE_ALL_IN_ONE,
 )
 from app.services.preprocessor.geometry import GEOMETRY_TYPES
 
@@ -44,7 +43,6 @@ class OperationTypeDefinition:
     process_name: str
     labels: tuple[str, ...]
     db_column_names: tuple[str, ...]
-    is_simulation: bool
     is_geometry: bool
     is_press: bool
     is_feed: bool
@@ -79,7 +77,7 @@ class TimeBetweenOperationDefinition:
 
 @dataclass(frozen=True, slots=True)
 class OperationLibrarySnapshot:
-    """Runtime-prepared YAML metadata needed by the preprocessor."""
+    """Runtime-prepared semantic metadata needed by the preprocessor."""
 
     operations_by_template: dict[str, OperationTypeDefinition]
     operations_by_type: dict[int, OperationTypeDefinition]
@@ -135,92 +133,211 @@ class OperationLibrarySnapshot:
         return record.time_mean_seconds
 
 
-def _target_schema_field_names(template: Mapping[str, Any]) -> tuple[str, ...]:
-    names: list[str] = []
-    for field in template.get("target_schema") or ():
-        if not isinstance(field, Mapping):
-            continue
-        path = str(field.get("path") or "")
-        if not path.startswith("target."):
-            continue
-        name = path.removeprefix("target.")
-        if name and "." not in name:
-            names.append(name)
-    return tuple(names)
+@dataclass(frozen=True, slots=True)
+class SemanticOperationDefinitionSpec:
+    """Preprocessor-local semantic operation metadata."""
+
+    operation_template_id: str
+    label: str
+    process_name: str
+    labels: tuple[str, ...]
+    db_column_names: tuple[str, ...]
+    deformation_type: str | None
+    speed_column_name: str | None
 
 
-def _target_schema_labels(template: Mapping[str, Any]) -> tuple[str, ...]:
-    labels: list[str] = []
-    for field in template.get("target_schema") or ():
-        if not isinstance(field, Mapping):
-            continue
-        label = str(field.get("label") or "").strip()
-        if label:
-            labels.append(label)
-    return tuple(labels)
+SEMANTIC_OPERATION_DEFINITION_SPECS: tuple[SemanticOperationDefinitionSpec, ...] = (
+    SemanticOperationDefinitionSpec(
+        "upsetting.rotation_height",
+        "Upsetting: rotation and height",
+        "Upsetting: rotation and height",
+        ("Rotate before upsetting", "Height of upsetting"),
+        ("rotation", "height"),
+        "upsetting",
+        "speed_upsetting",
+    ),
+    SemanticOperationDefinitionSpec(
+        "upsetting.tail_flattening",
+        "Upsetting: tail flattening",
+        "Upsetting: tail flattening",
+        ("Rotate before tail flattening", "Stroke distance of tail flattening"),
+        ("rotation", "stroke"),
+        "upsetting",
+        "speed_prolongation",
+    ),
+    SemanticOperationDefinitionSpec(
+        "upsetting.single_stroke",
+        "Upsetting: single stroke",
+        "Upsetting: single stroke",
+        ("Rotate before upsetting", "Height of upsetting"),
+        ("rotation", "height"),
+        "upsetting",
+        "speed_upsetting",
+    ),
+    SemanticOperationDefinitionSpec(
+        "upsetting.three_strokes",
+        "Upsetting: three strokes",
+        "Upsetting: three strokes",
+        ("Rotate before upsetting", "Height of upsetting"),
+        ("rotation", "height"),
+        "upsetting",
+        "speed_upsetting",
+    ),
+    SemanticOperationDefinitionSpec(
+        "upsetting.tail_chamfering",
+        "Upsetting: tail chamfering",
+        "Upsetting: tail chamfering",
+        ("Rotate before tail chamfering", "Stroke distance of tail chamfering"),
+        ("rotation", "stroke"),
+        "upsetting",
+        "speed_prolongation",
+    ),
+    SemanticOperationDefinitionSpec(
+        "prolongation.rotation_height",
+        "Prolongation: rotation and height",
+        "Prolongation: rotation and height",
+        ("Rotation before prolongation", "Height of prolongation"),
+        ("rotation", "height"),
+        "axial_prolongation",
+        "speed_prolongation",
+    ),
+    SemanticOperationDefinitionSpec(
+        "prolongation.height_bites",
+        "Prolongation: height and bites",
+        "Prolongation: height and bites",
+        ("Rotation before prolongation", "Height of prolongation", "Number of bites"),
+        ("rotation", "height", "num_of_bites"),
+        "axial_prolongation",
+        "speed_prolongation",
+    ),
+    SemanticOperationDefinitionSpec(
+        "prolongation.skip_bites",
+        "Prolongation: skip bites",
+        "Prolongation: skip bites",
+        ("Rotation before prolongation", "Height of prolongation", "Number of bites", "Skip bites"),
+        ("rotation", "height", "num_of_bites", "skip_bites"),
+        "axial_prolongation",
+        "speed_prolongation",
+    ),
+    SemanticOperationDefinitionSpec(
+        "rounding.spiral_one_rotation",
+        "Spiral rounding: one rotation per feed",
+        "Spiral rounding: one rotation per feed",
+        ("Final diameter", "Feed", "Angle", "Rotations per Feed", "Speed", "Compiler diameter", "Compiler rotation per bite"),
+        ("final_diameter", "feed", "angle", "rotations_per_feed", "speed", "diameter", "rotation_per_bite"),
+        "axial_prolongation",
+        "speed_prolongation",
+    ),
+    SemanticOperationDefinitionSpec(
+        "rounding.spiral_three_rotations",
+        "Spiral rounding: three rotations per feed",
+        "Spiral rounding: three rotations per feed",
+        ("Final diameter", "Feed", "Angle", "Rotations per Feed", "Speed", "Compiler diameter", "Compiler rotation per bite"),
+        ("final_diameter", "feed", "angle", "rotations_per_feed", "speed", "diameter", "rotation_per_bite"),
+        "axial_prolongation",
+        "speed_prolongation",
+    ),
+    SemanticOperationDefinitionSpec(
+        "radial.rotation_height_feed",
+        "Radial: rotation, height and feed",
+        "Radial: rotation, height and feed",
+        ("Rotation around manipulator axis", "Height", "Feed"),
+        ("rotation_manipulator", "height", "radial_feed"),
+        "radial_prolongation",
+        "speed_prolongation",
+    ),
+    SemanticOperationDefinitionSpec(
+        "radial.height_bites",
+        "Radial: height and number of bites",
+        "Radial: height and number of bites",
+        ("Rotation around manipulator axis", "Height", "Number of bites"),
+        ("rotation_manipulator", "height", "num_of_bites"),
+        "radial_prolongation",
+        "speed_prolongation",
+    ),
+    SemanticOperationDefinitionSpec(
+        "radial.press_axis_feed",
+        "Radial: press-axis feed",
+        "Radial: press-axis feed",
+        ("Rotate around press axis", "Height of upsetting", "Radial feed"),
+        ("rotation", "height", "radial_feed"),
+        "radial_prolongation",
+        "speed_prolongation",
+    ),
+    SemanticOperationDefinitionSpec(
+        "radial.initial_rotations",
+        "Radial: initial rotations",
+        "Radial: initial rotations",
+        ("1st X rotation", "2nd Y rotation", "3rd X rotation", "4th Y rotation"),
+        ("rotation_1_x", "rotation_2_y", "rotation_3_x", "rotation_4_y"),
+        "radial_prolongation",
+        None,
+    ),
+    SemanticOperationDefinitionSpec(
+        TRANSVERSE_ALL_IN_ONE,
+        "Transverse cogging: all in one",
+        "Transverse cogging: all in one",
+        ("Rotation before bite", "Height of bite", "Number of bites", "Skip bites"),
+        ("rotation", "height", "num_of_bites", "skip_bites"),
+        "full_die",
+        "speed_prolongation",
+    ),
+    SemanticOperationDefinitionSpec(
+        "transversal.rotation_height",
+        "Transversal cogging: rotation and height",
+        "Transversal cogging: rotation and height",
+        ("Rotation before bite", "Height of bite"),
+        ("rotation", "height"),
+        "full_die",
+        "speed_prolongation",
+    ),
+    SemanticOperationDefinitionSpec(
+        CUTTING_HOT_KEEP_PERCENT,
+        "Hot cutting: keep percent",
+        "Hot cutting: keep percent",
+        ("Pieces count", "Keep piece number", "Keep length ratio"),
+        ("pieces_count", "piece_number", "percentage_to_keep"),
+        "hot_cutting",
+        "speed_prolongation",
+    ),
+    SemanticOperationDefinitionSpec(
+        CUTTING_COLD_SAW_KEEP_PERCENT,
+        "Cold saw: keep percent",
+        "Cold saw: keep percent",
+        ("Pieces count", "Keep piece number", "Keep length ratio"),
+        ("pieces_count", "piece_number", "percentage_to_keep"),
+        "cold_sawing",
+        "speed_prolongation",
+    ),
+)
 
 
-def _template_deformation_type(template: Mapping[str, Any]) -> str | None:
-    template_id = str(template.get("id") or "")
-    category = str(template.get("category") or "")
-    operation_kind = str(template.get("operation_kind") or "")
-
-    if template_id in UPSETTING_TEMPLATE_IDS or operation_kind == "upsetting":
-        return "upsetting"
-    if category in {"prolongation", "rounding"} or operation_kind == "prolongation":
-        return "axial_prolongation"
-    if category == "radial" or operation_kind == "radial":
-        return "radial_prolongation"
-    if category == "transversal" or operation_kind == "transversal":
-        return "full_die"
-    if category == "cutting":
-        return "cold_sawing" if template_id == CUTTING_COLD_SAW_KEEP_PERCENT else "hot_cutting"
-    return None
-
-
-def _template_speed_column_name(template: Mapping[str, Any], deformation_type: str | None) -> str | None:
-    category = str(template.get("category") or "")
-    if deformation_type == "upsetting":
-        return "speed_upsetting"
-    if deformation_type == "full_die":
-        return "speed_transversal_cogging"
-    if category in {"prolongation", "rounding", "radial", "cutting"}:
-        return "speed_prolongation"
-    return None
-
-
-def _definition_from_operation_template(template: Mapping[str, Any], *, row: int) -> OperationTypeDefinition | None:
-    template_id = str(template.get("id") or "").strip()
-    if (
-        not template_id
-        or template_id == OPERATION_EMPTY_TEMPLATE_ID
-        or not bool(template.get("materialize", True))
-    ):
-        return None
-
-    deformation_type = _template_deformation_type(template)
-    is_simulation = template_id not in NON_SIMULATION_OPERATION_TEMPLATE_IDS
-    return OperationTypeDefinition(
-        operation_template_id=template_id,
-        type_id=None,
-        parent_type_id=None,
-        row=row,
-        text_id=template_id,
-        library_name=str(template.get("label") or template_id),
-        process_name=str(template.get("display_name") or template.get("label") or template_id),
-        labels=_target_schema_labels(template),
-        db_column_names=_target_schema_field_names(template),
-        is_simulation=is_simulation,
-        is_geometry=False,
-        is_press=False,
-        is_feed=False,
-        trigger="keep",
-        is_initialize=False,
-        is_accumulate=False,
-        is_keep=True,
-        deformation_type=deformation_type,
-        speed_column_name=_template_speed_column_name(template, deformation_type),
-    )
+def _semantic_operation_definitions() -> list[OperationTypeDefinition]:
+    definitions: list[OperationTypeDefinition] = []
+    for row, spec in enumerate(SEMANTIC_OPERATION_DEFINITION_SPECS, start=1):
+        definitions.append(
+            OperationTypeDefinition(
+                operation_template_id=spec.operation_template_id,
+                type_id=None,
+                parent_type_id=None,
+                row=row,
+                text_id=spec.operation_template_id,
+                library_name=spec.label,
+                process_name=spec.process_name,
+                labels=spec.labels,
+                db_column_names=spec.db_column_names,
+                is_geometry=False,
+                is_press=False,
+                is_feed=False,
+                trigger="keep",
+                is_initialize=False,
+                is_accumulate=False,
+                is_keep=True,
+                deformation_type=spec.deformation_type,
+                speed_column_name=spec.speed_column_name,
+            )
+        )
+    return definitions
 
 
 def _geometry_operation_definitions() -> list[OperationTypeDefinition]:
@@ -238,7 +355,6 @@ def _geometry_operation_definitions() -> list[OperationTypeDefinition]:
                 process_name=label,
                 labels=geometry.labels,
                 db_column_names=geometry.labels,
-                is_simulation=True,
                 is_geometry=True,
                 is_press=False,
                 is_feed=False,
@@ -256,6 +372,47 @@ def _geometry_operation_definitions() -> list[OperationTypeDefinition]:
 def _builtin_operation_definitions() -> list[OperationTypeDefinition]:
     return [
         OperationTypeDefinition(
+            operation_template_id=DOCUMENT_INITIAL_DATA_TEMPLATE_ID,
+            type_id=None,
+            parent_type_id=None,
+            row=0,
+            text_id=DOCUMENT_INITIAL_DATA_TEMPLATE_ID,
+            library_name="Billet",
+            process_name="Document initial data",
+            labels=(
+                "Document name",
+                "Heat No",
+                "Finished size",
+                "Material",
+                "Input stock geometry",
+                "Input stock weight",
+                "Mesh elements",
+            ),
+            db_column_names=(
+                "document_info.name",
+                "process_data.heat_no",
+                "process_data.finished_size",
+                "process_data.remarks",
+                "material.material_id",
+                "material.material_name",
+                "input_stock.geometry_type_id",
+                "input_stock.geometry_type_name",
+                "input_stock.weight_kg",
+                "input_stock.volume_mm3",
+                "input_stock.attributes",
+                "mesh.mesh_elements",
+            ),
+            is_geometry=True,
+            is_press=False,
+            is_feed=False,
+            trigger="accumulate",
+            is_initialize=False,
+            is_accumulate=True,
+            is_keep=False,
+            deformation_type=None,
+            speed_column_name=None,
+        ),
+        OperationTypeDefinition(
             operation_template_id=FURNACE_TEMPLATE_ID,
             type_id=None,
             parent_type_id=None,
@@ -265,7 +422,6 @@ def _builtin_operation_definitions() -> list[OperationTypeDefinition]:
             process_name="Furnace",
             labels=("Furnace class", "Temperature"),
             db_column_names=("furnace_class_id", "temperature"),
-            is_simulation=False,
             is_geometry=False,
             is_press=False,
             is_feed=False,
@@ -286,7 +442,6 @@ def _builtin_operation_definitions() -> list[OperationTypeDefinition]:
             process_name="Heating",
             labels=("Temperature", "Duration"),
             db_column_names=("temperature", "duration"),
-            is_simulation=True,
             is_geometry=False,
             is_press=False,
             is_feed=False,
@@ -300,15 +455,14 @@ def _builtin_operation_definitions() -> list[OperationTypeDefinition]:
     ]
 
 
-def build_yaml_operation_definitions() -> list[OperationTypeDefinition]:
-    """Build compiler metadata from current YAML plus semantic built-ins."""
+def build_semantic_operation_definitions() -> list[OperationTypeDefinition]:
+    """Build compiler metadata from preprocessor-local semantic definitions."""
 
-    definitions = _geometry_operation_definitions() + _builtin_operation_definitions()
-    for row, template in enumerate(load_operation_templates(), start=1):
-        definition = _definition_from_operation_template(template, row=row)
-        if definition is not None:
-            definitions.append(definition)
-    return definitions
+    return (
+        _geometry_operation_definitions()
+        + _builtin_operation_definitions()
+        + _semantic_operation_definitions()
+    )
 
 
 def build_ordered_children_by_parent(
@@ -358,11 +512,11 @@ def flatten_operations_tree(type_tree: Mapping[str, Mapping[str, Any]]) -> tuple
 
 
 def load_operation_library_snapshot(session: Session) -> OperationLibrarySnapshot:
-    """Load preprocessing metadata from YAML and timing data from the database."""
+    """Load preprocessing metadata from local semantic definitions and timing data."""
 
     time_models = list(session.scalars(select(TimeBetweenOperations)).all())
 
-    operations = build_yaml_operation_definitions()
+    operations = build_semantic_operation_definitions()
     operations_by_template = {operation.operation_template_id: operation for operation in operations}
     operations_by_type = {
         operation.type_id: operation
@@ -377,7 +531,7 @@ def load_operation_library_snapshot(session: Session) -> OperationLibrarySnapsho
     }
 
     LOGGER.info(
-        "Loaded YAML preprocessing snapshot operations=%s time_between_records=%s",
+        "Loaded semantic preprocessing snapshot operations=%s time_between_records=%s",
         len(operations_by_template),
         len(time_between_operations),
     )

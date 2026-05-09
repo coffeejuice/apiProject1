@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     LIBRARY_FILES_ROOT: str = "/var/lib/forgelab/"
     NAS_MOUNT_ROOT: str = "/mnt/forgelab"
     LOGS_FILES_ROOT: str = "/var/log/forgelab"
+    LOGGING_LEVEL: str = "INFO"
+    LOG_FILE_MAX_BYTES: int = 5_000_000
+    LOG_FILE_BACKUP_COUNT: int = 5
     TEMP_FILES_ROOT: str = "/var/cache/forgelab"
     FILE_REMOVE_ATTEMPTS: int = 5
     FILE_REMOVE_RETRY_SECONDS: float = 0.25

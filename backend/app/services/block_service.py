@@ -28,15 +28,17 @@ def _default_props_for_block_type(db: Session, block_type_id: str, props: dict |
     if block_type_id == OPERATION_BLOCK_TYPE_ID:
         return build_default_operation_props(db, block_type_id, props)
     if block_type_id == HEATING_BLOCK_TYPE_ID:
-        defaults = {HEATING_PROPERTIES: {"furnace_class_id": "", "temperature": ""}}
         normalized = normalize_heating_block_props(props)
-        normalized[HEATING_PROPERTIES] = {
-            **defaults[HEATING_PROPERTIES],
-            **normalized.get(HEATING_PROPERTIES, {}),
-        }
+        normalized.setdefault(HEATING_PROPERTIES, {})
         return normalized
     if block_type_id == FURNACE_BLOCK_TYPE_ID:
-        defaults = {FURNACE_PROPERTIES: {"furnace_class_id": "", "temperature": ""}}
+        defaults = {
+            FURNACE_PROPERTIES: {
+                "temperature_program": [
+                    {"type": "hold", "duration_min": "", "temperature_c": ""},
+                ],
+            }
+        }
         normalized = normalize_furnace_block_props(props)
         normalized[FURNACE_PROPERTIES] = {
             **defaults[FURNACE_PROPERTIES],

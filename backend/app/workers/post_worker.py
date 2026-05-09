@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 
+from app.logging_config import configure_logging
 from app.orchestration.channels import POST_JOBS_CHANNEL
 from app.orchestration.claims import ClaimedStageJob, StageJobClaimer, StageJobExecutor
 from app.orchestration.runtime_backend import PostJobClaimer, PostJobExecutor, SqlAlchemyLeaseManager
@@ -40,6 +41,7 @@ def main() -> None:
     """Start the post worker process."""
 
     instance_name = os.getenv("FORGELAB_WORKER_NAME", "post-1")
+    configure_logging(service="post", worker_name=instance_name)
     worker = PostWorker(
         WorkerConfig(role=WorkerRole.POST, instance_name=instance_name),
     )

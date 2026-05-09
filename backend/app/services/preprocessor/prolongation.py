@@ -21,14 +21,17 @@ from .prolongation_geometry import (
 from .upsetting import DieDimensions, PressModeParameters
 from .operation_keys import (
     AXIAL_PROLONGATION_TEMPLATE_IDS,
+    FULL_DIE_TEMPLATE_IDS,
     PROLONGATION_HEIGHT_BITES,
     PROLONGATION_SKIP_BITES,
     PROLONGATION_TEMPLATE_IDS,
     RADIAL_HEIGHT_BITES,
+    RADIAL_PRESS_AXIS_FEED,
     RADIAL_PROLONGATION_TEMPLATE_IDS,
     RADIAL_ROTATION_HEIGHT_FEED,
     ROUNDING_SPIRAL_ONE_ROTATION,
     SPIRAL_PROLONGATION_TEMPLATE_IDS,
+    TRANSVERSAL_ROTATION_HEIGHT,
 )
 
 
@@ -82,6 +85,11 @@ def calculate_prolongation(
         raise ProlongationMathError(f"Unsupported prolongation template_id={template_id}")
     if speed_mm_per_s <= 0.0:
         raise ProlongationMathError(f"Working speed must be positive, got {speed_mm_per_s}")
+    if speed_mm_per_s > press_mode.working_speed_mm_per_s:
+        raise ProlongationMathError(
+            f"Working speed {speed_mm_per_s} exceeds press mode maximum "
+            f"{press_mode.working_speed_mm_per_s}"
+        )
 
     initial_length = initial_geometry.length_mm
     initial_width = initial_geometry.width_mm
@@ -148,7 +156,7 @@ def calculate_prolongation(
             )
 
         if template_id in RADIAL_PROLONGATION_TEMPLATE_IDS:
-            if template_id == RADIAL_ROTATION_HEIGHT_FEED:
+            if template_id in {RADIAL_ROTATION_HEIGHT_FEED, RADIAL_PRESS_AXIS_FEED}:
                 base_feed_first = _require_positive(radial_feed_mm, "radial_feed")
                 num_of_bites_input = None
             else:
@@ -156,6 +164,25 @@ def calculate_prolongation(
                 base_feed_first = initial_length / num_of_bites_input
             base_feed_middle = 0.0
             base_feed_last = 0.0
+        elif template_id in FULL_DIE_TEMPLATE_IDS:
+            if template_id == TRANSVERSAL_ROTATION_HEIGHT:
+                num_of_bites_input = 1
+                base_feed_first = initial_length
+                base_feed_middle = 0.0
+                base_feed_last = 0.0
+            elif num_of_bites_input is not None and int(num_of_bites_input) > 0:
+                num_of_bites_input = _require_positive_int(num_of_bites_input, "num_of_bites")
+                base_feed_first = initial_length / num_of_bites_input
+                base_feed_middle = 0.0
+                base_feed_last = 0.0
+            else:
+                base_feed_first = _positive_or_default(
+                    feed_first_mm,
+                    feed_mm,
+                    min(initial_length, max(1.0, min(initial_height, 0.8 * die_straight_length))),
+                )
+                base_feed_middle = _positive_or_default(feed_middle_mm, base_feed_first)
+                base_feed_last = _positive_or_default(feed_last_mm, base_feed_middle)
         else:
             if template_id in {PROLONGATION_HEIGHT_BITES, PROLONGATION_SKIP_BITES}:
                 num_of_bites_input = _require_positive_int(num_of_bites_input, "num_of_bites")
@@ -180,14 +207,17 @@ def calculate_prolongation(
         operation_specific_parameters["rotation_per_bite"] = 0.0
         operation_specific_parameters["rotations_count_per_feed_list"] = (0, 0, 0)
         initial_length_of_contact = min(_feed_weighted_mean(initial_length, base_feed_first, base_feed_middle, base_feed_last, num_of_bites_input), initial_length)
-        final_length_of_contact = _final_length_of_contact(
-            initial_length=initial_length,
-            feed_first=base_feed_first,
-            feed_middle=base_feed_middle,
-            feed_last=base_feed_last,
-            radius_contact_length=radius_contact_length,
-            num_of_bites=_rough_bite_count(initial_length, base_feed_first, base_feed_middle, base_feed_last, num_of_bites_input),
-        )
+        if template_id in FULL_DIE_TEMPLATE_IDS and num_of_bites_input == 1:
+            final_length_of_contact = initial_length
+        else:
+            final_length_of_contact = _final_length_of_contact(
+                initial_length=initial_length,
+                feed_first=base_feed_first,
+                feed_middle=base_feed_middle,
+                feed_last=base_feed_last,
+                radius_contact_length=radius_contact_length,
+                num_of_bites=_rough_bite_count(initial_length, base_feed_first, base_feed_middle, base_feed_last, num_of_bites_input),
+            )
         final_width_of_contact = final_geometry.width_mm
         if penetration > 0.0:
             try:
@@ -248,6 +278,13 @@ def calculate_prolongation(
                 "radial_rotations": _radial_rotations(template_id, angle_deg, extra_rotations or {}),
             }
         )
+    elif template_id in FULL_DIE_TEMPLATE_IDS:
+        operation_specific_parameters.update(
+            {
+                "full_die_adapter": True,
+                "full_die_rotation": angle_deg,
+            }
+        )
 
     strain_height = 0.0 if penetration <= 0.0 else math.log(final_geometry.height_mm / initial_height)
     if template_id in SPIRAL_PROLONGATION_TEMPLATE_IDS:
@@ -258,7 +295,7 @@ def calculate_prolongation(
         strain_length = math.log(final_geometry.length_mm / initial_length)
         strain_width = -strain_height - strain_length
 
-    actual_speed_mm_per_s = min(speed_mm_per_s, press_mode.working_speed_mm_per_s)
+    actual_speed_mm_per_s = speed_mm_per_s
     working_stroke_mm = penetration
     working_approaching_stroke_mm = press_mode.approaching_distance_mm
     idle_stroke_mm = _idle_stroke(
@@ -571,6 +608,8 @@ def _billet_rotation_time(angle_deg: float) -> float:
 def _radial_initial_rotations(template_id: str) -> list[tuple[str, float]]:
     if template_id in {RADIAL_ROTATION_HEIGHT_FEED, RADIAL_HEIGHT_BITES}:
         return [("y", 90.0)]
+    if template_id == RADIAL_PRESS_AXIS_FEED:
+        return [("y", 90.0)]
     return []
 
 
@@ -581,6 +620,8 @@ def _radial_rotations(
 ) -> list[tuple[str, float]]:
     if template_id in {RADIAL_ROTATION_HEIGHT_FEED, RADIAL_HEIGHT_BITES}:
         return [("y", 90.0), ("x", angle_deg)]
+    if template_id == RADIAL_PRESS_AXIS_FEED:
+        return [("y", 90.0), ("z", angle_deg)]
     return [
         ("x", angle_deg),
         ("y", float(extra_rotations.get("y_rotation", 0.0))),

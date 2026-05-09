@@ -2,7 +2,16 @@ import Tooltip from './ui/Tooltip'
 
 import type { ReactElement } from 'react'
 
-export type ToolView = 'projects' | 'documents' | 'blocks' | 'operations' | 'library' | 'simulation' | 'users'
+export type ToolView =
+  | 'projects'
+  | 'documents'
+  | 'blocks'
+  | 'operations'
+  | 'simulationSteps'
+  | 'library'
+  | 'simulation'
+  | 'logs'
+  | 'users'
 
 interface ToolsSwitcherProps {
   activeView: ToolView | null
@@ -70,6 +79,28 @@ function OperationsIcon({ className }: { className?: string }) {
   )
 }
 
+function SimulationStepsIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M4 5.5h12M4 10h12M4 14.5h12"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M6.5 4.25v2.5M10 8.75v2.5M13.5 13.25v2.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <circle cx="6.5" cy="5.5" r="1.5" fill="currentColor" />
+      <circle cx="10" cy="10" r="1.5" fill="currentColor" />
+      <circle cx="13.5" cy="14.5" r="1.5" fill="currentColor" />
+    </svg>
+  )
+}
+
 function LibraryIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
@@ -110,13 +141,29 @@ function SimulationIcon({ className }: { className?: string }) {
   )
 }
 
+function LogsIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M5 3.5h10A1.5 1.5 0 0 1 16.5 5v10A1.5 1.5 0 0 1 15 16.5H5A1.5 1.5 0 0 1 3.5 15V5A1.5 1.5 0 0 1 5 3.5Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <path d="M6.5 7h7M6.5 10h4.5M6.5 13h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M13.25 9.75l1.25 1.25-1.25 1.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 const TOOL_ITEMS: Array<{ id: ToolView; label: string; icon: ({ className }: { className?: string }) => ReactElement }> = [
   { id: 'projects', label: 'Projects', icon: ProjectsIcon },
   { id: 'documents', label: 'Documents', icon: DocumentsIcon },
   { id: 'blocks', label: 'Blocks', icon: BlocksIcon },
   { id: 'operations', label: 'Operations', icon: OperationsIcon },
+  { id: 'simulationSteps', label: 'Steps', icon: SimulationStepsIcon },
   { id: 'library', label: 'Library', icon: LibraryIcon },
   { id: 'simulation', label: 'Simulation', icon: SimulationIcon },
+  { id: 'logs', label: 'Logs', icon: LogsIcon },
   { id: 'users', label: 'Users', icon: UsersIcon },
 ]
 

@@ -21,12 +21,22 @@ export interface BlockData {
   field_limits?: Record<string, number>
 }
 
+export interface SectionNumberingControl {
+  value: string
+  isDirty: boolean
+  onChange: (value: string) => void
+  onReset: () => void
+}
+
 export interface BlockComponentProps {
   block: BlockData
   baselineProps: Record<string, any>
   isActive: boolean
   saveStatus?: 'idle' | 'saving' | 'saved' | 'error'
   sectionNumber?: string | null
+  sectionNumberingControl?: SectionNumberingControl
+  renderVariant?: string
+  deformationFeedKeys?: string[]
   onUpdate: (blockId: string, props: Record<string, any>) => void
 }
 

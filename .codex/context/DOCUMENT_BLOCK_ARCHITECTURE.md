@@ -24,12 +24,16 @@ Configuration/setup details (including `.env` editing during install) are tracke
 - New documents auto-create `document`, then `deformation`, then the first `operation`.
 - Creating a `heating` section auto-creates one initial `furnace` child.
 - `document_heading`, `input_workpiece`, and numeric editor block IDs are obsolete in active code. Historical sections below that mention them are superseded by this section.
-- There is no active runtime block-library table for the editor. Operation templates and text parsing rules are defined in `backend/app/domain/operation_block_design_and_parsing_rules.yaml`, and templates are exposed by `GET /operation-templates`.
-- `operation_block_design_and_parsing_rules.yaml` also defines the single-level operation type selector and the common parameters-calculation-mode selector at `target.parameters_calculation_mode`.
-- Placeholder dynamic block schema files live in `backend/app/domain/block_schemas/` for the future YAML-driven definitions of `document`, `heating`, `deformation`, `furnace`, and `operation`; these are not active loaders yet.
-- Creating an operation block uses `block_type_id = "operation"` and passes `props.operation_template_id`; backend expands defaults from YAML.
+- There is no active runtime block-library table for the editor. Operation block template metadata and selector payloads are endpoint/service-owned code in `backend/app/services/operation_blocks.py` and are exposed by `GET /operation-templates`.
+- Operation text/table materialization rules are explicit code in `backend/app/services/document_operations.py`.
+- The old runtime rule files were removed; there is no active operation-template schema-file loader for editor block definitions.
+- Creating an operation block uses `block_type_id = "operation"` and passes `props.operation_template_id`; backend expands defaults from endpoint/service-owned Operation block metadata.
 - Dynamic operation variables use nested JSON under `document_blocks.props.operation_properties.target`, for example `target.rotation` is stored as `{ "operation_properties": { "target": { "rotation": "..." } } }`.
-- `deformation_properties.deformation_variables` stores inherited parser variables used by child Operation blocks: `tail_chamfering_stroke`, `tail_flattening_stroke`, and `radial_feed`.
+- `deformation_properties.deformation_variables` stores parser variables copied into generated Operation rows when needed: `tail_chamfering_stroke` and `tail_flattening_stroke`.
+- `deformation_properties` stores die/tooling selection with old operation variable names: `die_assembly_id` for paired selection, or `top_die_id` and `bottom_die_id` for separate selection. UI-only helpers are `die_type_id`, `top_die_type_id`, `bottom_die_type_id`, and `die_selection_mode`; separate mode keeps independent top/bottom die-type filters.
+- `deformation_properties.feed_settings.<operation_type>` stores old-project feed variable names per Operation type: `feed_direction_id`, `feed_first`, `feed_middle`, and `feed_last`. Feed direction values follow the old project dictionary: `2 = right`, `3 = left`, `4 = bidirectional`; the UI renders these as arrow icons and the default is `2`.
+- `deformation_properties` also stores explicit old-project forming speed keys: `speed_upsetting` and `speed_prolongation`. `speed_full_die` is obsolete; transverse/full-die operations use `speed_prolongation`.
+- `furnace_properties.temperature_program` stores the user-authored furnace-control diagram as ordered segments. Segment `type` is `hold`, `heat`, or `unload`; hold rows store `duration_min` and `temperature_c`, while heat/unload rows are visual/control transitions without direct duration or temperature fields. Old direct Furnace/Heating `furnace_class_id` and `temperature` inputs are removed from the active UI; `furnace_properties.temperature` may still be maintained internally as a single-value compatibility mirror until the preprocessor consumes the richer program directly.
 - `operation_properties.operation_text` is an optional multiline operation source for non-rounding Operation types. Line breaks, tabs, and repeated spaces are visual only; the parser normalizes them to spaces and splits operations only by right-arrow separators, autoformatted to `→` in the frontend. Parser-backed selector entries include `operation.upsetting`, `operation.tail_flattening`, `operation.tail_chamfering`, `operation.cogging`, `operation.radial`, `operation.transversal`, and `operation.cut`; cutting currently emits parse errors until concrete formats are defined.
 - `operation.rounding` uses `operation_properties.rounding_table` instead of text. The table columns are `Pass`, `Size`, `Feed`, `Angle`, `Rotations per Feed`, and `Speed`; one non-empty row materializes one `document_operations` row.
 - Template fields retained on operation props:
@@ -37,9 +41,16 @@ Configuration/setup details (including `.env` editing during install) are tracke
   - `operation_template_version`
   - `operation_kind`
   - `template_snapshot`
-- The preprocessor bridge reads `document_operations`, flattens effective target values using the template schema, and stores compiled runtime output in `simulation_steps` using semantic source fields.
-- Pre operation definitions are YAML/built-in metadata, not `document_blocks_library` rows. Compiler dispatch and timing lookup use semantic operation template IDs.
-- `document_operations` is regenerated from `document_blocks` after structural and prop edits. Block-to-block inheritance is evaluated only during this regeneration; `document_blocks.props` remains explicit-only source data.
+- The preprocessor bridge reads `document_operations.operation_parameters` directly and stores compiled runtime output in `simulation_steps` using semantic source fields. `simulation_steps.document_operation_id` is the primary key and required cascade FK to its source `document_operations` row; operation materialization creates/removes the sibling `simulation_steps` row immediately, and valid operation rows set `preprocess_ready = true` for Pre. Obsolete `simulation_step_id` is not part of the active schema.
+- The root `document` block materializes into the first `document_operations` row with `operation_template_id = document_initial_data` and `operation_kind = billet`. Its target uses nested namespaces `document_info`, `process_data`, `material`, `input_stock`, and `mesh`; the Operations view displays these as chained-dot parameters. The Pre bridge maps this row to the legacy billet/NewBillet compiler path.
+- Each `furnace` block materializes into a `document_operations` row with `operation_template_id = furnace`; its `operation_parameters.temperature_program` stores the editable Furnace table rows as `number`, `type`, `duration_min`, and `temperature_c`.
+- Pre operation definitions are preprocessor-local semantic metadata plus semantic built-ins, not `document_blocks_library` rows. Compiler dispatch and timing lookup use semantic operation template IDs.
+- Current semantic Pre compiler coverage should use real adapters for all active templates, including billet/document initial data, Furnace/Heating, Upsetting, axial/spiral/radial/full-die deformation, radial initial rotations, transverse/transversal cogging, and cutting. New semantic operation templates must update the adapter support map instead of silently falling back to generic compilation.
+- The preprocessor no longer carries an `is_simulation` split; all valid materialized operation rows follow the same simulation-step path.
+- Pre compile/parse failures include row context (`operation_id`, `document_operation_id`, `operation_template_id`, `source_block_id`) whenever available and are written to sibling `simulation_steps` diagnostics plus `simulation_step_status.failed` so failed rows can be traced back to their source block.
+- Pre worker output is persisted incrementally: before a run, current sibling `simulation_steps` rows are reset to pending output; every successfully compiled row is committed immediately; a later compile failure leaves earlier compiled rows available for troubleshooting and marks the failing row as failed.
+- `document_operations` is regenerated from `document_blocks` after structural and prop edits. It stores final per-row JSON in `operation_parameters`; direct parent Deformation values are copied there by explicit materialization rules and no inherited/effective namespace columns are stored. A Deformation section does not inherit missing copied values from previous Deformation sections.
+- The Steps tool can explicitly requeue the latest editable document version for Pre with `POST /documents/{document_id}/simulation-steps/preprocess`; this is the active troubleshooting/retry path after a failed draft Pre run. The command uses existing saved operation/step rows and must not regenerate `document_operations`, because that would erase visible compiled `simulation_steps` data before the next Pre run writes replacements.
 
 ## Cross-domain note
 - `projects.material_id` now references `materials.material_id` (dedicated `materials` table).
@@ -97,17 +108,17 @@ Configuration/setup details (including `.env` editing during install) are tracke
 - `props` is schema-flexible JSONB, but active handlers/components impose de facto structures.
 - Current active structures:
   - `document`: title/setup fields (`name`, `heat_no`, `finished_size`, `remarks`, `preview_status`, `material_id`, `geometry_type_id`, `weight`, `attributes`, `mesh_elements`, `section_numbering_start`) plus frontend enrichment for document metadata and billet geometry.
-  - `heating`: `heating_properties.furnace_class_id`, `heating_properties.temperature`.
-  - `deformation`: `deformation_properties.deformation_variables.tail_chamfering_stroke`, `deformation_properties.deformation_variables.tail_flattening_stroke`, and `deformation_properties.deformation_variables.radial_feed`.
-  - `furnace`: `furnace_properties.furnace_class_id`, `furnace_properties.temperature`.
-  - `operation`: YAML-backed template metadata, optional `operation_text`, optional `rounding_table`, and nested `operation_properties.target` variables.
+  - `heating`: no active editable properties.
+  - `deformation`: `deformation_properties.die_type_id`, `deformation_properties.top_die_type_id`, `deformation_properties.bottom_die_type_id`, `deformation_properties.die_selection_mode`, `deformation_properties.die_assembly_id`, `deformation_properties.top_die_id`, `deformation_properties.bottom_die_id`, `deformation_properties.deformation_variables.tail_chamfering_stroke`, `deformation_properties.deformation_variables.tail_flattening_stroke`, `deformation_properties.feed_settings.<operation_type>.feed_direction_id`, `deformation_properties.feed_settings.<operation_type>.feed_first`, `deformation_properties.feed_settings.<operation_type>.feed_middle`, `deformation_properties.feed_settings.<operation_type>.feed_last`, `deformation_properties.speed_upsetting`, and `deformation_properties.speed_prolongation`.
+  - `furnace`: `furnace_properties.temperature_program`; the frontend may receive an internal compatibility `temperature` mirror, but it is not user-editable.
+  - `operation`: endpoint-provided template metadata, optional `operation_text`, optional `rounding_table`, and nested `operation_properties.target` variables.
 - Handler-backed structures:
   - `document`: persisted/editable title/setup fields are `name`, `heat_no`, `finished_size`, `remarks`, `preview_status`, `material_id`, `geometry_type_id`, `weight`, `attributes`, `mesh_elements`, and `section_numbering_start`; read responses are enriched with document metadata, optional latest `version`, and billet geometry metadata
 - Semantic non-handler structures:
-  - `heating`: persisted/editable fields live under `heating_properties`
-  - `deformation`: section/container block with inherited parser variables under `deformation_properties.deformation_variables`
-  - `furnace`: persisted/editable fields live under `furnace_properties`
-  - `operation`: persisted/editable fields live under `operation_properties`; backend expands YAML defaults and enriches responses with template metadata plus transient selector definitions for the generic frontend `OperationBlock`
+  - `heating`: no active editable fields; the block acts as a visual container
+  - `deformation`: section/container block with die settings under old-project-compatible `die_assembly_id`, `top_die_id`, and `bottom_die_id`, parser variables under `deformation_properties.deformation_variables`, per-operation-type feed settings under `deformation_properties.feed_settings`, and explicit old-project speed keys directly under `deformation_properties`
+  - `furnace`: persisted/editable fields live under `furnace_properties`; the frontend provides a diagram/table editor for the `temperature_program` rows
+  - `operation`: persisted/editable fields live under `operation_properties`; backend expands Operation block defaults and enriches responses with template metadata plus transient selector definitions for the generic frontend `OperationBlock`
 
 ## Linked-list ordering behavior (`backend/app/services/block_service.py`)
 - Document order root is `documents.first_block_id`.
@@ -145,7 +156,7 @@ Defined in `backend/app/models/document/block.py`.
   - semantic block validation and placement rules
   - delete/reorder restrictions
   - frontend enrichment via handler serialization
-  - frontend enrichment for YAML-backed operation blocks via `backend/app/services/operation_blocks.py`
+  - frontend enrichment for Operation blocks via `backend/app/services/operation_blocks.py`
 
 ### Frontend payload metadata for handler-backed blocks
 `enrich_block_data_for_frontend` returns:
@@ -177,19 +188,33 @@ Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockE
   - `Operations` (no middle pane)
     - opens a split main workspace with the regular document editor on the left and a read-only `document_operations` table on the right
     - the right table shows saved materialized operation records and warns when unsaved document edits mean the table is not yet regenerated
+  - `Steps` (no middle pane)
+    - opens a `simulation_steps` inspector for the selected document
+    - when the `Steps` tool button is active, the view displays a very narrow left step list; clicking the active `Steps` button again hides only this list while keeping the Steps inspector open
+    - the left step list scrolls independently from the right selected-step details/2D/3D workspace
+    - the left step list is built from `GET /documents/{document_id}/blocks/root` plus `GET /documents/{document_id}/simulation-steps`
+    - the left step list includes visual-only title cards for numbered Heating/Deformation sections and numbered Furnace/Operation children
+    - step cards are nested under those visual title cards and show saved user-entered values from `document_operations.operation_parameters`
+    - the main detail area displays selected-step JSON diagnostics, status errors, shared-scale 2D geometry overlays, and lazy-loaded legacy-STL surface-mesh 3D previews
+    - selected-step surface artifacts are generated during Pre compilation by the restored legacy Trimesh/STL mesh-state path and stored as JSON/STL files outside the default list payload; only compact references are persisted in `simulation_steps.metrics.surface_artifacts`
+    - if a selected row has no legacy Pre artifact yet, the backend surface endpoint returns an explicit error; hidden geometry synthesis from `simulation_steps` JSON is forbidden
   - `Library` (selector for `Dies`, `Die Assemblies`, `Presses`, `Materials`)
   - `Simulation` (no middle pane content; selecting it opens the Simulation dashboard in the main pane)
+  - `Logs` (no middle pane content; selecting it opens local API/Pre/Post/Coordinator log tailing in the main pane; Solver logs are excluded)
   - `Users` (current user/session information)
 - `MenuBar` contains document-level controls (`Save`, `Cancel`, `Undo`, `Redo`, `Lineage`, `Sessions`) and save/dirty status.
 - `MainEditorPane` routes active content:
   - `BlockEditor` when current tool is `Projects`, `Documents`, `Blocks`, or `Users`
   - split `BlockEditor` + `DocumentOperationsView` when current tool is `Operations`
+  - `SimulationStepsView` when current tool is `Steps`
   - `Dies`, `Die Assemblies`, `Presses`, `Materials` when current tool is `Library`
   - `Simulation` dashboard when current tool is `Simulation`
+  - `LogsView` when current tool is `Logs`
 - `BlockEditor` visual document format:
   - source data remains the flat `document_blocks` linked list; no `parent_block_id` is stored
   - document rendering intentionally uses borderless `doc-*` classes from `frontend/src/index.css` to keep the canvas close to a Microsoft Word / Notion page: blocks are identified by title text, hierarchy is shown by indentation, and regular form controls look like document text until hover/focus
   - the first `document` block is rendered as the document canvas/title area
+  - inside the Document block, title/setup fields are grouped into compact sections: `Process data`, `Material`, `Input stock size`, and `Mesh`; section headings are indented one tab and parameter rows are indented one additional tab
   - `Heating` and `Deformation` semantic block types are rendered as second-level sections inside that canvas
   - `Furnace` blocks after a Heating section are rendered as children of that Heating until the next Heating/Deformation section appears
   - `Operation` blocks after a Deformation section are rendered as children of that Deformation until the next Heating/Deformation section appears
@@ -202,6 +227,9 @@ Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockE
   - exactly one selected block drives the `Blocks > Actions` context menu; multiple selected blocks remain useful for drag-group preparation
   - Heating and Deformation section titles are auto-numbered from `document_properties.section_numbering_start`
   - section numbering rule: a Heating immediately followed by a Deformation shares one base number as `N.1 Heating` and `N.2 Deformation`; every other Heating or Deformation gets simple `N.` numbering
+  - the document-level `section_numbering_start` value is edited from a compact hover/focus control in the first Heating/Deformation section title; later section numbers are read-only, and the Document setup fields no longer show a separate numbering section
+  - Deformation sections render with the section title/header, then a die selector parameter block, then Operation children, and finally the Deformation parameter editor as a footer below those children; this is visual-only and does not change linked-list ordering or materialization rules
+  - the Deformation footer feed table shows only feed rows for selected operation types that actually consume feed: Tail Flattening, Cogging, Radial Cogging, and Transverse Cogging; Upsetting, Tail Chamfering, Rounding, and Cutting do not show feed rows
   - Operation block titles are auto-numbered within their containing Deformation section using simple `1.`, `2.`, `3.` numbering; numbering restarts at `1.` for each Deformation
   - drag/drop uses dense zero-height insertion markers: while dragging, a thin blue `Insert here` line previews the exact insertion target without adding permanent spacing to the document layout
   - `Alt+Shift+ArrowUp` / `Alt+Shift+ArrowDown` are keyboard alternatives to drag/drop:
@@ -221,7 +249,8 @@ Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockE
     - inline `+` insertion uses the hovered block, not necessarily the active block, and is disabled while any block selection exists
     - normal click on `+` inserts below; Shift-click on `+` inserts above
   - all block types render their editable layout all the time
-  - operation blocks always show a title; empty operations use `Empty operation`, and selected operation types use the YAML template `display_name`
+  - compact mutually exclusive mode controls use a shared pill-like segmented style and are hidden unless the block is hovered, active, or focused; this applies to Deformation `Pair / Separate`, Operation `Manual / Auto / Optimization`, and Furnace `Diagram / Table`
+  - operation blocks always show a title; empty operations use `Empty operation`, and selected operation types use the endpoint-provided `display_name`
   - operation type selector visibility is stateful:
     - empty operations show the selector until a type is selected and saved
     - saved operations hide the selector by default
@@ -235,7 +264,9 @@ Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockE
   - frontend-local resume state uses `localStorage` key `forgelab-document-resume`; app startup switches to `Blocks`, restores the last document/project, and `BlockEditor` restores the saved scroll offset plus selected block ids if they still exist
 - `Operations` view behavior:
   - API source is `GET /documents/{document_id}/operations`
-  - rows show `operation_order`, operation type/label, compact `operation_properties.target` parameter chips, and parse status
+  - manual regeneration uses `POST /documents/{document_id}/operations/regenerate`
+  - rows show `operation_order`, operation type/label, compact `operation_parameters` chips, and parse status
+  - invalid rows show visible parse diagnostics with the source sentence/table row and parser message
   - block hover is bridged from `BlockEditor` metadata to the operations panel
   - hovering an Operation or Furnace highlights rows with the same `source_block_id`
   - hovering a Deformation highlights rows whose source blocks are Operation children within that visual section
@@ -384,8 +415,8 @@ Common characteristics:
 
 ### Semantic operation block delta
 - Text/editor block types have been removed from the active UI and backend type enum.
-- Operation templates are defined in YAML, not in a runtime block-library table.
-- `operation` block creation validates the requested `operation_template_id`, expands YAML defaults into nested `target` props, and stores template metadata for the preprocessor bridge.
+- Operation block template metadata is defined in endpoint/service-owned code, not in a runtime block-library table.
+- `operation` block creation validates the requested `operation_template_id`, expands defaults into nested `target` props, and stores template metadata for the preprocessor bridge.
 - Frontend component registration uses one generic `OperationBlock` for `heating`, `deformation`, `furnace`, and `operation`.
 - Operation props are sanitized on create/update/copy so transient render metadata is not persisted.
 

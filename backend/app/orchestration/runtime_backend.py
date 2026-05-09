@@ -7,13 +7,12 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import socket
-from typing import Iterable
+from typing import Iterable, Sequence
 
 from sqlalchemy import case, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
-from app.models.document.block import Block
 from app.models.document.document import (
     Document,
     DocumentVersion,
@@ -41,15 +40,8 @@ from app.orchestration.claims import ClaimedStageJob, StageJobClaimer, StageJobE
 from app.orchestration.leases import LeaseHeartbeat, LeaseManager, LeasePolicy
 from app.orchestration.pg_notify import broadcast_notify
 from app.orchestration.state_machine import WorkflowStage
-from app.services.block_props import (
-    DOCUMENT_PROPERTIES,
-    OPERATION_PROPERTIES,
-    extract_namespace,
-    normalize_document_block_props,
-)
-from app.services.block_service import get_ordered_blocks
+from app.services.block_props import as_dict
 from app.services.document_operations import regenerate_document_operations
-from app.services.operation_blocks import OPERATION_BLOCK_TYPE_ID, operation_target_to_parameters
 from app.services.preprocessor.compiler import (
     CompiledControlProgram,
     CompiledControlProgramRow,
@@ -57,13 +49,12 @@ from app.services.preprocessor.compiler import (
     PreprocessorCompileError,
     ProcessCard,
 )
+from app.services.preprocessor.surface_artifacts import write_surface_artifacts_for_compiled_meshes
 from app.services.preprocessor.geometry import GeneratedGeometry
+from app.services.preprocessor.operation_keys import DOCUMENT_INITIAL_DATA_TEMPLATE_ID, RADIAL_ROTATION_HEIGHT_FEED
 
 
 LOGGER = logging.getLogger(__name__)
-
-DEFAULT_MATERIAL_DENSITY_KG_PER_MM3 = 7.85e-6
-
 
 def now_utc() -> datetime:
     return datetime.utcnow()
@@ -110,6 +101,12 @@ def _serialize_geometry(geometry: GeneratedGeometry | None) -> dict[str, object]
         "length_mm": geometry.length_mm,
         "cross_section_outline": [[point[0], point[1]] for point in geometry.cross_section_outline],
         "parameters_json": geometry.parameters_json,
+        # Explicitly expose orientation metadata slots. The current migrated Pre
+        # math does not emit normalized basis/top-marker data yet, so callers
+        # must treat missing values as unavailable instead of guessing.
+        "basis": None,
+        "top_marker": None,
+        "orientation_metadata_status": "missing",
     }
 
 
@@ -193,29 +190,53 @@ def _coerce_float(value: object) -> float | None:
         return None
 
 
-def _infer_volume_mm3_from_input_block(block: Block) -> float | None:
-    props = extract_namespace(normalize_document_block_props(block.props), DOCUMENT_PROPERTIES)
-    explicit_volume = _coerce_float(props.get("volume_mm3"))
-    if explicit_volume is not None and explicit_volume > 0.0:
-        return explicit_volume
+def _flatten_mapping_to_dotted_parameters(
+    value: object,
+    *,
+    prefix: str = "",
+) -> dict[str, object]:
+    if not isinstance(value, dict):
+        return {}
+    flattened: dict[str, object] = {}
+    for key, item in value.items():
+        dotted_key = f"{prefix}.{key}" if prefix else str(key)
+        flattened[dotted_key] = item
+        if isinstance(item, dict):
+            flattened.update(_flatten_mapping_to_dotted_parameters(item, prefix=dotted_key))
+    return flattened
 
-    attributes = props.get("attributes")
-    if isinstance(attributes, dict):
-        explicit_volume = _coerce_float(attributes.get("volume_mm3"))
-        if explicit_volume is not None and explicit_volume > 0.0:
-            return explicit_volume
-        density = _coerce_float(attributes.get("density_kg_per_mm3"))
-    else:
-        density = None
 
-    weight_kg = _coerce_float(props.get("weight"))
-    if weight_kg is None or weight_kg <= 0.0:
-        return None
+def _document_initial_parameters_from_target(target: object) -> dict[str, object]:
+    target_mapping = as_dict(target)
+    if not target_mapping:
+        return {}
 
-    resolved_density = density or DEFAULT_MATERIAL_DENSITY_KG_PER_MM3
-    if resolved_density <= 0.0:
-        return None
-    return weight_kg / resolved_density
+    input_stock = as_dict(target_mapping.get("input_stock"))
+    material = as_dict(target_mapping.get("material"))
+    mesh = as_dict(target_mapping.get("mesh"))
+    process_data = as_dict(target_mapping.get("process_data"))
+    document_info = as_dict(target_mapping.get("document_info"))
+    attributes = as_dict(input_stock.get("attributes"))
+
+    parameters: dict[str, object] = _flatten_mapping_to_dotted_parameters(target_mapping)
+    parameters.update(attributes)
+    parameters.update(
+        {
+            "geometry_type_id": input_stock.get("geometry_type_id"),
+            "weight": input_stock.get("weight_kg"),
+            "weight_kg": input_stock.get("weight_kg"),
+            "volume_mm3": input_stock.get("volume_mm3"),
+            "mesh_elements": mesh.get("mesh_elements"),
+            "material_id": material.get("material_id"),
+            "material_name": material.get("material_name"),
+            "material_version_id": material.get("material_version_id"),
+            "heat_no": process_data.get("heat_no"),
+            "finished_size": process_data.get("finished_size"),
+            "remarks": process_data.get("remarks"),
+            "document_name": document_info.get("name"),
+        }
+    )
+    return parameters
 
 
 def build_process_cards_for_document_version(session: Session, document_version: DocumentVersion) -> tuple[ProcessCard, ...]:
@@ -234,44 +255,15 @@ def build_process_cards_for_document_version(session: Session, document_version:
     cards: list[ProcessCard] = []
     operation_id = 1
 
-    for block in get_ordered_blocks(session, document.document_id):
-        if block.block_type_id == "document":
-            props = extract_namespace(normalize_document_block_props(block.props), DOCUMENT_PROPERTIES)
-            block_material_id = _coerce_int(props.get("material_id"))
-            if block_material_id is not None:
-                current_material_id = block_material_id
-
-            geometry_type_id = _coerce_int(props.get("geometry_type_id"))
-            if geometry_type_id is not None:
-                attributes = dict(props.get("attributes") or {})
-                mesh_elements = _coerce_int(props.get("mesh_elements"))
-                if mesh_elements is not None:
-                    attributes["mesh_elements"] = mesh_elements
-                volume_mm3 = _infer_volume_mm3_from_input_block(block)
-                weight_kg = _coerce_float(props.get("weight"))
-                cards.append(
-                    ProcessCard(
-                        operation_id=operation_id,
-                        type_id=geometry_type_id,
-                        parameters=attributes,
-                        operation_template_id=f"document.geometry.{geometry_type_id}",
-                        operation_kind="geometry",
-                        operation_label="Billet geometry",
-                        source_block_id=block.block_id,
-                        material_id=current_material_id,
-                        weight_kg=weight_kg,
-                        volume_mm3=volume_mm3,
-                    )
-                )
-                operation_id += 1
-            continue
-
     operation_rows = session.scalars(
         select(DocumentOperation)
         .where(DocumentOperation.document_id == document.document_id)
         .order_by(DocumentOperation.operation_order.asc())
     ).all()
-    if not operation_rows:
+    if not operation_rows or not any(
+        row.operation_template_id == DOCUMENT_INITIAL_DATA_TEMPLATE_ID
+        for row in operation_rows
+    ):
         regenerate_document_operations(session, document.document_id)
         operation_rows = session.scalars(
             select(DocumentOperation)
@@ -282,18 +274,51 @@ def build_process_cards_for_document_version(session: Session, document_version:
     if operation_rows:
         for row in operation_rows:
             operation_template_id = row.operation_template_id
-            if not operation_template_id or row.parse_status != "valid":
-                continue
-            parameters = dict(row.effective_properties or {})
-            if row.source_block_type_id == OPERATION_BLOCK_TYPE_ID:
-                operation_parameters = extract_namespace(
-                    {OPERATION_PROPERTIES: row.operation_properties},
-                    OPERATION_PROPERTIES,
+            if row.parse_status != "valid":
+                error_summary = "; ".join(
+                    str(item.get("message") or item)
+                    for item in (row.parse_errors or [])
+                    if isinstance(item, dict)
+                ) or str(row.parse_errors or "unknown parse error")
+                raise PreprocessorCompileError(
+                    f"Document operation #{row.operation_order} from block {row.source_block_id} is invalid: "
+                    f"{error_summary}",
+                    operation_id=row.operation_order,
+                    document_operation_id=row.document_operation_id,
+                    operation_template_id=row.operation_template_id,
+                    source_block_id=row.source_block_id,
                 )
-                parameters = {
-                    **parameters,
-                    **operation_target_to_parameters(operation_parameters),
-                }
+            if not operation_template_id:
+                continue
+            parameters = dict(row.operation_parameters or {})
+            if operation_template_id == DOCUMENT_INITIAL_DATA_TEMPLATE_ID:
+                parameters = _document_initial_parameters_from_target(parameters)
+                block_material_id = _coerce_int(parameters.get("material_id"))
+                if block_material_id is not None:
+                    current_material_id = block_material_id
+                cards.append(
+                    ProcessCard(
+                        operation_id=operation_id,
+                        type_id=_coerce_int(parameters.get("geometry_type_id")),
+                        parameters=parameters,
+                        document_operation_id=row.document_operation_id,
+                        operation_template_id=operation_template_id,
+                        operation_kind=row.operation_kind,
+                        operation_label=row.label_snapshot,
+                        source_block_id=row.source_block_id,
+                        material_id=current_material_id,
+                        weight_kg=_coerce_float(parameters.get("weight_kg")),
+                        volume_mm3=_coerce_float(parameters.get("volume_mm3")),
+                    )
+                )
+                operation_id += 1
+                continue
+            if (
+                operation_template_id == RADIAL_ROTATION_HEIGHT_FEED
+                and "radial_feed" not in parameters
+                and parameters.get("feed_first") not in (None, "")
+            ):
+                parameters["radial_feed"] = parameters["feed_first"]
             block_material_id = _coerce_int(parameters.get("material_id"))
             if block_material_id is not None:
                 current_material_id = block_material_id
@@ -322,67 +347,426 @@ def build_process_cards_for_document_version(session: Session, document_version:
     return tuple(cards)
 
 
+def _valid_document_operations_for_version(
+    session: Session,
+    *,
+    document_version: DocumentVersion,
+) -> list[DocumentOperation]:
+    document_id = document_version.document_id
+    if document_id is None:
+        raise PreprocessorCompileError(
+            f"Document version {document_version.document_version_id} has no document_id."
+        )
+    return list(session.scalars(
+        select(DocumentOperation)
+        .where(
+            DocumentOperation.document_id == document_id,
+            DocumentOperation.parse_status == "valid",
+            DocumentOperation.operation_template_id.is_not(None),
+            DocumentOperation.operation_template_id != "",
+        )
+        .order_by(DocumentOperation.operation_order.asc())
+    ).all())
+
+
+def _step_snapshot_label(operation_row: DocumentOperation) -> str:
+    return (
+        operation_row.label_snapshot
+        or operation_row.operation_template_id
+        or operation_row.operation_kind
+        or operation_row.source_block_type_id
+        or "operation"
+    )
+
+
+def _prepare_simulation_steps_for_pre_run(
+    session: Session,
+    *,
+    document_version: DocumentVersion,
+    valid_document_operations: Sequence[DocumentOperation],
+) -> set[int]:
+    """Reset sibling rows before Pre starts so stale output is not mistaken for current output."""
+
+    document = document_version.document
+    valid_ids: set[int] = set()
+    for execution_order, operation_row in enumerate(valid_document_operations, start=1):
+        document_operation_id = int(operation_row.document_operation_id)
+        valid_ids.add(document_operation_id)
+        snapshot_label = _step_snapshot_label(operation_row)
+        step = session.get(SimulationStep, document_operation_id)
+        if step is None:
+            step = SimulationStep(document_operation_id=document_operation_id)
+            session.add(step)
+
+        step.document_version_id = document_version.document_version_id
+        step.execution_order = execution_order
+        step.source_block_id = operation_row.source_block_id
+        step.operation_template_id = operation_row.operation_template_id
+        step.operation_kind = operation_row.operation_kind or "generic"
+        step.operation_label_snapshot = operation_row.label_snapshot
+        step.preprocess_ready = False
+        step.block_name_snapshot = snapshot_label
+        step.library_name_snapshot = snapshot_label
+        step.material_version_id = document.material_version_id if document is not None else None
+        step.press_id = None
+        step.press_mode_id = None
+        step.die_assembly_id = None
+        step.top_die_id = None
+        step.bottom_die_id = None
+        step.left_die_id = None
+        step.right_die_id = None
+        step.parameter_values = {}
+        step.control_parameters = {}
+        step.step_specific_parameters = {}
+        step.initial_geometry = None
+        step.final_geometry = None
+        step.metrics = {
+            "preprocessor_status": "pending",
+            "document_operation_id": document_operation_id,
+            "operation_template_id": operation_row.operation_template_id,
+            "preprocessor_started_at": now_utc().isoformat(),
+        }
+        step.accumulated_time_start_seconds = None
+        step.duration_seconds = None
+        step.accumulated_time_stop_seconds = None
+
+        step_status = session.get(SimulationStepStatus, document_operation_id)
+        if step_status is None:
+            step_status = SimulationStepStatus(document_operation_id=document_operation_id)
+            session.add(step_status)
+        step_status.status = SimulationStepStatusEnum.blocked
+        step_status.cancel_requested = False
+        step_status.simulation_percent = 0
+        step_status.simulation_expected_duration_seconds = None
+        step_status.simulation_server_id = None
+        step_status.worker_name = None
+        step_status.queued_at = None
+        step_status.started_at = None
+        step_status.heartbeat_at = None
+        step_status.finished_at = None
+        step_status.runtime_artifacts = {}
+        step_status.last_error = None
+        step_status.error_payload = None
+    return valid_ids
+
+
+def _write_compiled_simulation_step(
+    session: Session,
+    *,
+    document_version: DocumentVersion,
+    row: CompiledControlProgramRow,
+    execution_order: int,
+    valid_document_operation_ids: set[int],
+    seen_document_operation_ids: set[int],
+) -> None:
+    payload = _compiled_row_to_step_payload(
+        row,
+        material_version_id=document_version.document.material_version_id if document_version.document else None,
+    )
+    document_operation_id = _coerce_int(payload["document_operation_id"])
+    if document_operation_id is None:
+        raise PreprocessorCompileError(
+            f"Compiled simulation row #{execution_order} has no source document_operation_id."
+        )
+    if document_operation_id not in valid_document_operation_ids:
+        raise PreprocessorCompileError(
+            f"Compiled simulation row #{execution_order} references document_operation_id={document_operation_id}, "
+            f"which does not belong to document_id={document_version.document_id}."
+        )
+    if document_operation_id in seen_document_operation_ids:
+        raise PreprocessorCompileError(
+            f"Compiled simulation row #{execution_order} duplicates document_operation_id={document_operation_id}."
+        )
+    seen_document_operation_ids.add(document_operation_id)
+
+    step = session.get(SimulationStep, document_operation_id)
+    if step is None:
+        step = SimulationStep(document_operation_id=document_operation_id)
+        session.add(step)
+
+    metrics = dict(payload["metrics"])
+    metrics.update(
+        {
+            "preprocessor_status": "compiled",
+            "document_operation_id": document_operation_id,
+            "preprocessor_compiled_at": now_utc().isoformat(),
+        }
+    )
+
+    step.document_version_id = document_version.document_version_id
+    step.execution_order = execution_order
+    step.source_block_id = payload["source_block_id"]
+    step.operation_template_id = payload["operation_template_id"]
+    step.operation_kind = str(payload["operation_kind"])
+    step.operation_label_snapshot = payload["operation_label_snapshot"]
+    step.preprocess_ready = True
+    step.block_name_snapshot = str(payload["block_name_snapshot"])
+    step.library_name_snapshot = str(payload["library_name_snapshot"])
+    step.material_version_id = payload["material_version_id"]
+    step.press_id = row.press_id
+    step.press_mode_id = row.press_mode_id
+    step.die_assembly_id = _coerce_int(row.control_parameters.get("die_assembly_id"))
+    step.top_die_id = _coerce_int(row.control_parameters.get("top_die_id"))
+    step.bottom_die_id = _coerce_int(row.control_parameters.get("bottom_die_id"))
+    step.left_die_id = _coerce_int(row.control_parameters.get("left_die_id"))
+    step.right_die_id = _coerce_int(row.control_parameters.get("right_die_id"))
+    step.parameter_values = payload["parameter_values"]
+    step.control_parameters = payload["control_parameters"]
+    step.step_specific_parameters = payload["step_specific_parameters"]
+    step.initial_geometry = payload["initial_geometry"]
+    step.final_geometry = payload["final_geometry"]
+    compiled_meshes = {
+        kind: mesh
+        for kind, mesh in (
+            ("initial", row.initial_surface_mesh),
+            ("final", row.final_surface_mesh),
+        )
+        if mesh is not None
+    }
+    try:
+        generated_surface_artifacts = write_surface_artifacts_for_compiled_meshes(
+            step,
+            document_id=int(document_version.document_id),
+            meshes=compiled_meshes,
+            force=True,
+        )
+        if generated_surface_artifacts is not None:
+            metrics["surface_artifacts"] = generated_surface_artifacts.summary
+    except Exception as exc:
+        LOGGER.warning(
+            "Failed to write legacy surface artifacts document_version_id=%s document_operation_id=%s: %s",
+            document_version.document_version_id,
+            document_operation_id,
+            exc,
+        )
+        metrics["legacy_surface_artifact_error"] = str(exc)
+    step.metrics = metrics
+    step.accumulated_time_start_seconds = payload["accumulated_time_start_seconds"]
+    step.duration_seconds = payload["duration_seconds"]
+    step.accumulated_time_stop_seconds = payload["accumulated_time_stop_seconds"]
+
+    step_status = session.get(SimulationStepStatus, document_operation_id)
+    if step_status is None:
+        step_status = SimulationStepStatus(
+            document_operation_id=document_operation_id,
+        )
+        session.add(step_status)
+    step_status.status = SimulationStepStatusEnum.blocked
+    step_status.cancel_requested = False
+    step_status.simulation_percent = 0
+    step_status.simulation_expected_duration_seconds = payload["simulation_expected_duration_seconds"]
+    step_status.simulation_server_id = None
+    step_status.worker_name = None
+    step_status.queued_at = None
+    step_status.started_at = None
+    step_status.heartbeat_at = None
+    step_status.finished_at = None
+    step_status.runtime_artifacts = {}
+    step_status.last_error = None
+    step_status.error_payload = None
+
+
+def _write_compiled_simulation_step_committed(
+    *,
+    document_version_id: int,
+    row: CompiledControlProgramRow,
+    execution_order: int,
+    valid_document_operation_ids: set[int],
+    seen_document_operation_ids: set[int],
+) -> None:
+    """Persist one compiled Pre row in its own transaction."""
+
+    with session_scope() as write_session:
+        document_version = write_session.get(DocumentVersion, document_version_id)
+        if document_version is None or document_version.document_id is None:
+            raise PreprocessorCompileError(
+                f"Document version {document_version_id} disappeared while writing Pre row #{execution_order}."
+            )
+        _write_compiled_simulation_step(
+            write_session,
+            document_version=document_version,
+            row=row,
+            execution_order=execution_order,
+            valid_document_operation_ids=valid_document_operation_ids,
+            seen_document_operation_ids=seen_document_operation_ids,
+        )
+
+
+def _assert_all_rows_compiled(
+    *,
+    valid_document_operation_ids: set[int],
+    seen_document_operation_ids: set[int],
+) -> None:
+    missing_compiled_ids = valid_document_operation_ids - seen_document_operation_ids
+    if missing_compiled_ids:
+        raise PreprocessorCompileError(
+            f"Missing compiled simulation rows for document_operation_id values: {sorted(missing_compiled_ids)}"
+        )
+
+
 def _rebuild_simulation_steps(
     session: Session,
     *,
     document_version: DocumentVersion,
     compiled_program: CompiledControlProgram,
 ) -> int:
-    existing_steps = session.scalars(
-        select(SimulationStep).where(SimulationStep.document_version_id == document_version.document_version_id)
-    ).all()
-    for step in existing_steps:
-        session.delete(step)
-    session.flush()
+    document_id = document_version.document_id
+    valid_document_operations = _valid_document_operations_for_version(
+        session,
+        document_version=document_version,
+    )
+    valid_document_operation_ids = {
+        int(row.document_operation_id)
+        for row in valid_document_operations
+    }
 
-    simulation_rows = [row for row in compiled_program.rows if row.is_simulation]
-    created_count = 0
-    for execution_order, row in enumerate(simulation_rows, start=1):
-        payload = _compiled_row_to_step_payload(
-            row,
-            material_version_id=document_version.document.material_version_id if document_version.document else None,
+    compiled_rows = tuple(compiled_program.rows)
+    if len(compiled_rows) != len(valid_document_operations):
+        raise PreprocessorCompileError(
+            f"Compiled row count {len(compiled_rows)} does not match valid document operation count "
+            f"{len(valid_document_operations)} for document_id={document_id}."
         )
-        step = SimulationStep(
-            document_version_id=document_version.document_version_id,
+
+    valid_document_operation_ids = _prepare_simulation_steps_for_pre_run(
+        session,
+        document_version=document_version,
+        valid_document_operations=valid_document_operations,
+    )
+    seen_document_operation_ids: set[int] = set()
+    updated_count = 0
+    for execution_order, row in enumerate(compiled_rows, start=1):
+        _write_compiled_simulation_step(
+            session,
+            document_version=document_version,
+            row=row,
             execution_order=execution_order,
-            source_block_id=payload["source_block_id"],
-            document_operation_id=payload["document_operation_id"],
-            operation_template_id=payload["operation_template_id"],
-            operation_kind=str(payload["operation_kind"]),
-            operation_label_snapshot=payload["operation_label_snapshot"],
-            block_name_snapshot=str(payload["block_name_snapshot"]),
-            library_name_snapshot=str(payload["library_name_snapshot"]),
-            material_version_id=payload["material_version_id"],
-            press_id=row.press_id,
-            press_mode_id=row.press_mode_id,
-            die_assembly_id=_coerce_int(row.control_parameters.get("die_assembly_id")),
-            top_die_id=_coerce_int(row.control_parameters.get("top_die_id")),
-            bottom_die_id=_coerce_int(row.control_parameters.get("bottom_die_id")),
-            left_die_id=_coerce_int(row.control_parameters.get("left_die_id")),
-            right_die_id=_coerce_int(row.control_parameters.get("right_die_id")),
-            parameter_values=payload["parameter_values"],
-            control_parameters=payload["control_parameters"],
-            step_specific_parameters=payload["step_specific_parameters"],
-            initial_geometry=payload["initial_geometry"],
-            final_geometry=payload["final_geometry"],
-            metrics=payload["metrics"],
-            accumulated_time_start_seconds=payload["accumulated_time_start_seconds"],
-            duration_seconds=payload["duration_seconds"],
-            accumulated_time_stop_seconds=payload["accumulated_time_stop_seconds"],
+            valid_document_operation_ids=valid_document_operation_ids,
+            seen_document_operation_ids=seen_document_operation_ids,
         )
-        session.add(step)
-        session.flush()
+        updated_count += 1
 
-        session.add(
-            SimulationStepStatus(
-                simulation_step_id=step.simulation_step_id,
-                status=SimulationStepStatusEnum.blocked,
-                simulation_expected_duration_seconds=payload["simulation_expected_duration_seconds"],
-            )
+    _assert_all_rows_compiled(
+        valid_document_operation_ids=valid_document_operation_ids,
+        seen_document_operation_ids=seen_document_operation_ids,
+    )
+
+    return updated_count
+
+
+def _compile_and_write_simulation_steps_incrementally(
+    session: Session,
+    *,
+    document_version: DocumentVersion,
+    cards: Sequence[ProcessCard],
+    compiler: PreprocessorCompiler,
+) -> int:
+    """Compile and persist Pre output row-by-row.
+
+    Each successful row is committed in its own short transaction before the
+    next row starts compiling. If a later row fails, already compiled rows stay
+    visible in the Steps view and the failed row receives diagnostics from the
+    outer error handler.
+    """
+
+    valid_document_operations = _valid_document_operations_for_version(
+        session,
+        document_version=document_version,
+    )
+    if len(cards) != len(valid_document_operations):
+        raise PreprocessorCompileError(
+            f"Process card count {len(cards)} does not match valid document operation count "
+            f"{len(valid_document_operations)} for document_id={document_version.document_id}."
         )
-        created_count += 1
+    valid_document_operation_ids = _prepare_simulation_steps_for_pre_run(
+        session,
+        document_version=document_version,
+        valid_document_operations=valid_document_operations,
+    )
+    session.commit()
+    broadcast_notify((WORKFLOW_EVENTS_CHANNEL,), "pre_started")
 
-    return created_count
+    document_version_id = int(document_version.document_version_id)
+    seen_document_operation_ids: set[int] = set()
+    updated_count = 0
+    for execution_order, row in enumerate(
+        compiler.iter_compile_from_database(session=session, cards=cards),
+        start=1,
+    ):
+        _write_compiled_simulation_step_committed(
+            document_version_id=document_version_id,
+            row=row,
+            execution_order=execution_order,
+            valid_document_operation_ids=valid_document_operation_ids,
+            seen_document_operation_ids=seen_document_operation_ids,
+        )
+        updated_count += 1
+        broadcast_notify(
+            (WORKFLOW_EVENTS_CHANNEL,),
+            f"pre_row:{document_version_id}:{execution_order}",
+        )
+
+    _assert_all_rows_compiled(
+        valid_document_operation_ids=valid_document_operation_ids,
+        seen_document_operation_ids=seen_document_operation_ids,
+    )
+    return updated_count
+
+
+def _record_preprocess_compile_failure(
+    session: Session,
+    *,
+    document_version: DocumentVersion,
+    error: PreprocessorCompileError,
+) -> None:
+    """Store row-level Pre failure diagnostics on the sibling simulation step."""
+
+    if error.document_operation_id is None:
+        return
+
+    step = session.get(SimulationStep, int(error.document_operation_id))
+    if step is None:
+        return
+
+    step.document_version_id = document_version.document_version_id
+    step.preprocess_ready = False
+    metrics = dict(step.metrics or {})
+    metrics.update(
+        {
+            "preprocessor_status": "failed",
+            "preprocessor_error": str(error),
+            "preprocessor_failed_at": now_utc().isoformat(),
+            "operation_id": error.operation_id,
+            "document_operation_id": error.document_operation_id,
+            "operation_template_id": error.operation_template_id,
+        }
+    )
+    step.metrics = metrics
+
+    step_status = session.get(SimulationStepStatus, int(error.document_operation_id))
+    if step_status is None:
+        step_status = SimulationStepStatus(
+            document_operation_id=int(error.document_operation_id),
+            status=SimulationStepStatusEnum.failed,
+        )
+        session.add(step_status)
+    else:
+        step_status.status = SimulationStepStatusEnum.failed
+    step_status.cancel_requested = False
+    step_status.simulation_percent = 0
+    step_status.simulation_server_id = None
+    step_status.worker_name = None
+    step_status.started_at = None
+    step_status.heartbeat_at = None
+    step_status.finished_at = now_utc()
+    step_status.last_error = f"Preprocessor failed: {error}"
+    step_status.error_payload = {
+        "stage": "preprocessor",
+        "operation_id": error.operation_id,
+        "document_operation_id": error.document_operation_id,
+        "operation_template_id": error.operation_template_id,
+        "source_block_id": str(error.source_block_id) if error.source_block_id is not None else None,
+        "message": str(error),
+    }
 
 
 def _queue_runnable_step_status(step_status: SimulationStepStatus) -> None:
@@ -515,19 +899,22 @@ class PreJobExecutor(StageJobExecutor):
                     return
 
                 cards = build_process_cards_for_document_version(session, version)
-                compiled_program = self.compiler.compile_from_database(session=session, cards=cards)
-                created_steps = _rebuild_simulation_steps(
+                version.operations_count = len(cards)
+                updated_steps = _compile_and_write_simulation_steps_incrementally(
                     session,
                     document_version=version,
-                    compiled_program=compiled_program,
+                    cards=cards,
+                    compiler=self.compiler,
                 )
-                version.operations_count = len(cards)
                 expected_seconds = sum(
                     (
                         step_status.simulation_expected_duration_seconds or 0.0
                         for step_status in session.scalars(
                             select(SimulationStepStatus)
-                            .join(SimulationStep, SimulationStep.simulation_step_id == SimulationStepStatus.simulation_step_id)
+                            .join(
+                                SimulationStep,
+                                SimulationStep.document_operation_id == SimulationStepStatus.document_operation_id,
+                            )
                             .where(SimulationStep.document_version_id == version.document_version_id)
                         ).all()
                     ),
@@ -545,18 +932,32 @@ class PreJobExecutor(StageJobExecutor):
                     "Preprocessing completed document_version_id=%s cards=%s simulation_steps=%s",
                     version.document_version_id,
                     len(cards),
-                    created_steps,
+                    updated_steps,
                 )
         except PreprocessorCompileError as exc:
             with session_scope() as session:
                 version = session.get(DocumentVersion, int(job.job_id))
                 if version is not None:
+                    _record_preprocess_compile_failure(
+                        session,
+                        document_version=version,
+                        error=exc,
+                    )
                     version.preprocess_status = PreprocessStatus.failed
                     version.preprocess_finished_at = now_utc()
                     version.preprocess_error = str(exc)
+                    # A failed compile requires user/API correction before retry.
+                    # Leaving the run switch on makes the worker immediately
+                    # reclaim the same invalid document in a tight loop.
+                    version.run_switch_status = False
                     version.simulation_status = SimulationStatus.error if not version.is_editable else SimulationStatus.stop
                     version.run_switch_is_active = False if not version.is_editable else version.run_switch_is_active
-            LOGGER.exception("Preprocessing failed document_version_id=%s", job.job_id)
+            LOGGER.error(
+                "Preprocessing failed document_version_id=%s: %s",
+                job.job_id,
+                exc,
+                exc_info=LOGGER.isEnabledFor(logging.DEBUG),
+            )
         finally:
             broadcast_notify((WORKFLOW_EVENTS_CHANNEL, SOLVER_JOBS_CHANNEL, POST_JOBS_CHANNEL), "wake")
 
@@ -567,7 +968,7 @@ class SolverJobClaimer(StageJobClaimer):
         with session_scope() as session:
             stmt = (
                 select(SimulationStepStatus)
-                .join(SimulationStep, SimulationStep.simulation_step_id == SimulationStepStatus.simulation_step_id)
+                .join(SimulationStep, SimulationStep.document_operation_id == SimulationStepStatus.document_operation_id)
                 .join(DocumentVersion, DocumentVersion.document_version_id == SimulationStep.document_version_id)
                 .where(
                     SimulationStepStatus.status == SimulationStepStatusEnum.queued,
@@ -598,8 +999,8 @@ class SolverJobClaimer(StageJobClaimer):
             )
 
             return ClaimedStageJob(
-                job_id=step_status.simulation_step_id,
-                run_id=step_status.simulation_step.simulation_step_id,
+                job_id=step_status.document_operation_id,
+                run_id=step_status.simulation_step.document_operation_id,
                 stage=WorkflowStage.SOLVER,
                 worker_name=worker_name,
                 priority=step_status.simulation_step.document_version.simulation_priority or 0,
@@ -640,7 +1041,7 @@ class PostJobClaimer(StageJobClaimer):
         with session_scope() as session:
             stmt = (
                 select(PostprocessingTask)
-                .join(SimulationStep, SimulationStep.simulation_step_id == PostprocessingTask.simulation_step_id)
+                .join(SimulationStep, SimulationStep.document_operation_id == PostprocessingTask.document_operation_id)
                 .join(DocumentVersion, DocumentVersion.document_version_id == SimulationStep.document_version_id)
                 .where(
                     PostprocessingTask.status == PostprocessingTaskStatusEnum.queued,
@@ -673,7 +1074,7 @@ class PostJobClaimer(StageJobClaimer):
                 stage=WorkflowStage.POST,
                 worker_name=worker_name,
                 priority=task.simulation_step.document_version.simulation_priority or 0,
-                payload={"simulation_step_id": task.simulation_step_id},
+                payload={"document_operation_id": task.document_operation_id},
             )
 
 
@@ -745,7 +1146,7 @@ class DatabaseCoordinatorHooks:
                 active_step_count = session.execute(
                     select(func.count())
                     .select_from(SimulationStepStatus)
-                    .join(SimulationStep, SimulationStep.simulation_step_id == SimulationStepStatus.simulation_step_id)
+                    .join(SimulationStep, SimulationStep.document_operation_id == SimulationStepStatus.document_operation_id)
                     .where(
                         SimulationStep.document_version_id == version.document_version_id,
                         SimulationStepStatus.status.in_([SimulationStepStatusEnum.queued, SimulationStepStatusEnum.running]),
@@ -756,7 +1157,7 @@ class DatabaseCoordinatorHooks:
 
                 next_step_status = session.scalars(
                     select(SimulationStepStatus)
-                    .join(SimulationStep, SimulationStep.simulation_step_id == SimulationStepStatus.simulation_step_id)
+                    .join(SimulationStep, SimulationStep.document_operation_id == SimulationStepStatus.document_operation_id)
                     .where(
                         SimulationStep.document_version_id == version.document_version_id,
                         SimulationStepStatus.status.in_([SimulationStepStatusEnum.blocked, SimulationStepStatusEnum.failed]),
@@ -779,7 +1180,7 @@ class DatabaseCoordinatorHooks:
         with session_scope() as session:
             finished_steps = session.scalars(
                 select(SimulationStep)
-                .join(SimulationStepStatus, SimulationStepStatus.simulation_step_id == SimulationStep.simulation_step_id)
+                .join(SimulationStepStatus, SimulationStepStatus.document_operation_id == SimulationStep.document_operation_id)
                 .join(DocumentVersion, DocumentVersion.document_version_id == SimulationStep.document_version_id)
                 .where(
                     SimulationStepStatus.status == SimulationStepStatusEnum.finished,
@@ -792,7 +1193,7 @@ class DatabaseCoordinatorHooks:
                     select(func.count())
                     .select_from(PostprocessingTask)
                     .where(
-                        PostprocessingTask.simulation_step_id == step.simulation_step_id,
+                        PostprocessingTask.document_operation_id == step.document_operation_id,
                         PostprocessingTask.task_kind == "full",
                     )
                 ).scalar() or 0
@@ -800,7 +1201,7 @@ class DatabaseCoordinatorHooks:
                     continue
                 session.add(
                     PostprocessingTask(
-                        simulation_step_id=step.simulation_step_id,
+                        document_operation_id=step.document_operation_id,
                         task_kind="full",
                         status=PostprocessingTaskStatusEnum.queued,
                         queued_at=now_utc(),
@@ -830,7 +1231,7 @@ class DatabaseCoordinatorHooks:
                 finished_steps = session.execute(
                     select(func.count())
                     .select_from(SimulationStepStatus)
-                    .join(SimulationStep, SimulationStep.simulation_step_id == SimulationStepStatus.simulation_step_id)
+                    .join(SimulationStep, SimulationStep.document_operation_id == SimulationStepStatus.document_operation_id)
                     .where(
                         SimulationStep.document_version_id == version.document_version_id,
                         SimulationStepStatus.status == SimulationStepStatusEnum.finished,
@@ -838,7 +1239,7 @@ class DatabaseCoordinatorHooks:
                 ).scalar() or 0
                 running_steps = session.scalars(
                     select(SimulationStepStatus)
-                    .join(SimulationStep, SimulationStep.simulation_step_id == SimulationStepStatus.simulation_step_id)
+                    .join(SimulationStep, SimulationStep.document_operation_id == SimulationStepStatus.document_operation_id)
                     .where(
                         SimulationStep.document_version_id == version.document_version_id,
                         SimulationStepStatus.status == SimulationStepStatusEnum.running,
@@ -847,7 +1248,7 @@ class DatabaseCoordinatorHooks:
                 queued_step_count = session.execute(
                     select(func.count())
                     .select_from(SimulationStepStatus)
-                    .join(SimulationStep, SimulationStep.simulation_step_id == SimulationStepStatus.simulation_step_id)
+                    .join(SimulationStep, SimulationStep.document_operation_id == SimulationStepStatus.document_operation_id)
                     .where(
                         SimulationStep.document_version_id == version.document_version_id,
                         SimulationStepStatus.status == SimulationStepStatusEnum.queued,
@@ -856,7 +1257,7 @@ class DatabaseCoordinatorHooks:
                 blocked_step_count = session.execute(
                     select(func.count())
                     .select_from(SimulationStepStatus)
-                    .join(SimulationStep, SimulationStep.simulation_step_id == SimulationStepStatus.simulation_step_id)
+                    .join(SimulationStep, SimulationStep.document_operation_id == SimulationStepStatus.document_operation_id)
                     .where(
                         SimulationStep.document_version_id == version.document_version_id,
                         SimulationStepStatus.status == SimulationStepStatusEnum.blocked,
@@ -865,7 +1266,7 @@ class DatabaseCoordinatorHooks:
                 failed_step_count = session.execute(
                     select(func.count())
                     .select_from(SimulationStepStatus)
-                    .join(SimulationStep, SimulationStep.simulation_step_id == SimulationStepStatus.simulation_step_id)
+                    .join(SimulationStep, SimulationStep.document_operation_id == SimulationStepStatus.document_operation_id)
                     .where(
                         SimulationStep.document_version_id == version.document_version_id,
                         SimulationStepStatus.status == SimulationStepStatusEnum.failed,
@@ -874,7 +1275,7 @@ class DatabaseCoordinatorHooks:
 
                 posts = session.scalars(
                     select(PostprocessingTask)
-                    .join(SimulationStep, SimulationStep.simulation_step_id == PostprocessingTask.simulation_step_id)
+                    .join(SimulationStep, SimulationStep.document_operation_id == PostprocessingTask.document_operation_id)
                     .where(SimulationStep.document_version_id == version.document_version_id)
                 ).all()
                 running_post_count = sum(1 for task in posts if task.status == PostprocessingTaskStatusEnum.running)
@@ -885,7 +1286,7 @@ class DatabaseCoordinatorHooks:
                 expected_seconds = session.execute(
                     select(func.coalesce(func.sum(SimulationStepStatus.simulation_expected_duration_seconds), 0.0))
                     .select_from(SimulationStepStatus)
-                    .join(SimulationStep, SimulationStep.simulation_step_id == SimulationStepStatus.simulation_step_id)
+                    .join(SimulationStep, SimulationStep.document_operation_id == SimulationStepStatus.document_operation_id)
                     .where(SimulationStep.document_version_id == version.document_version_id)
                 ).scalar() or 0.0
                 new_expected_days = float(expected_seconds) / 86400.0 if expected_seconds else 0.0
@@ -947,7 +1348,7 @@ class DatabaseCoordinatorHooks:
                 if not version.run_switch_is_active and version.simulation_status not in {SimulationStatus.run, SimulationStatus.done}:
                     queued_steps = session.scalars(
                         select(SimulationStepStatus)
-                        .join(SimulationStep, SimulationStep.simulation_step_id == SimulationStepStatus.simulation_step_id)
+                        .join(SimulationStep, SimulationStep.document_operation_id == SimulationStepStatus.document_operation_id)
                         .where(
                             SimulationStep.document_version_id == version.document_version_id,
                             SimulationStepStatus.status.in_([SimulationStepStatusEnum.queued, SimulationStepStatusEnum.blocked]),

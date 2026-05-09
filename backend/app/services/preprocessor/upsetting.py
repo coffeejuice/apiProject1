@@ -118,6 +118,11 @@ def calculate_upsetting(
         raise UpsettingMathError(f"Unsupported upsetting template_id={template_id}")
     if speed_mm_per_s <= 0.0:
         raise UpsettingMathError(f"Working speed must be positive, got {speed_mm_per_s}")
+    if speed_mm_per_s > press_mode.working_speed_mm_per_s:
+        raise UpsettingMathError(
+            f"Working speed {speed_mm_per_s} exceeds press mode maximum "
+            f"{press_mode.working_speed_mm_per_s}"
+        )
 
     operation_specific_parameters: dict[str, Any] = {}
 
@@ -207,7 +212,7 @@ def calculate_upsetting(
     )
     final_width_of_contact_mm = final_geometry.width_mm
 
-    actual_speed_mm_per_s = min(speed_mm_per_s, press_mode.working_speed_mm_per_s)
+    actual_speed_mm_per_s = speed_mm_per_s
 
     open_die_height_max_before_working_stroke_mm = _open_die_height_max_before_working_stroke(
         template_id=template_id,
@@ -491,9 +496,16 @@ def _tail_chamfering_projection(
     width_axis = billet_width_orthogonal_to_axis
     factor = relative_chamfer_leg_orthogonal_to_billet_axis
     chamfer_leg_orthogonal = factor * width_axis
+    radicand = length_axis ** 2 - 4 * factor * width_axis ** 2 + 4 * (factor * width_axis) ** 2
+    if radicand < 0.0:
+        raise UpsettingMathError(
+            "Tail chamfering projection is undefined for current billet dimensions: "
+            f"length_axis={length_axis:g}, width_axis={width_axis:g}, "
+            f"relative_chamfer_leg={factor:g}, radicand={radicand:g}"
+        )
     chamfer_leg_along = 0.5 * (
         length_axis
-        - math.sqrt(length_axis ** 2 - 4 * factor * width_axis ** 2 + 4 * (factor * width_axis) ** 2)
+        - math.sqrt(radicand)
     )
     axis_inclination_angle_rad = math.atan(chamfer_leg_along / factor / width_axis)
     initial_vertical_projection = math.cos(axis_inclination_angle_rad) * length_axis + math.sin(axis_inclination_angle_rad) * width_axis

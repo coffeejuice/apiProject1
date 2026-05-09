@@ -24,6 +24,7 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 - Backend server: `http://127.0.0.1:8001` (`backend/run.py`)
 - Frontend dev server: `http://127.0.0.1:5173` (`frontend/vite.config.ts`)
 - Frontend default API base URL: `http://127.0.0.1:8001` (`frontend/src/lib/apiClient.ts`)
+- Runtime logs for API/Pre/Post/Coordinator are local JSONL rotating files under `LOGS_FILES_ROOT`; Solver logs are intentionally excluded from the frontend local log viewer for now.
 
 ## Current document/block model override (updated 2026-04-29)
 - Active document editor block types are semantic strings only:
@@ -35,16 +36,25 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 - New documents auto-create one fixed, non-removable `document` root block plus one removable `deformation` section with one initial `operation` child.
 - `heating` is a removable second-level section/container. Creating a `heating` section auto-creates one child `furnace` block. Multiple `furnace` children are allowed inside one heating section.
 - `document_heading`, `input_workpiece`, and numeric editor block IDs are obsolete for active editor flow. Older notes in this file mentioning them are historical and must not be used for new work.
-- Operation block templates are loaded from `backend/app/domain/operation_block_design_and_parsing_rules.yaml` through `GET /operation-templates`; the same YAML also defines the operation-type selector, common `target.parameters_calculation_mode` selector, and text parsing rules for materializing `document_operations`; the `Blocks` pane no longer exposes a block catalog.
+- Operation block templates are endpoint/service-owned code. `GET /operation-templates` exposes the editor-facing Operation block options; `backend/app/services/operation_blocks.py` owns Operation block defaults, selector payloads, and transient frontend metadata. The `Blocks` pane no longer exposes a block catalog.
 - `document_blocks.props` stores explicit user-authored properties only, grouped by namespace: `document_properties`, `heating_properties`, `deformation_properties`, `furnace_properties`, and `operation_properties`.
 - `document_properties.section_numbering_start` controls visual numbering of second-level Heating/Deformation sections and defaults to `2`.
-- `deformation` props now include inherited parser variables under `deformation_properties.deformation_variables`: `tail_chamfering_stroke`, `tail_flattening_stroke`, and `radial_feed`.
+- `deformation` props now include parser variables under `deformation_properties.deformation_variables`: `tail_chamfering_stroke` and `tail_flattening_stroke`; die selection settings under `deformation_properties.die_type_id`, `top_die_type_id`, `bottom_die_type_id`, `die_selection_mode`, `die_assembly_id`, `top_die_id`, and `bottom_die_id`; per-operation-type feed settings under `deformation_properties.feed_settings.<operation_type>.feed_direction_id`, `feed_first`, `feed_middle`, and `feed_last`; plus explicit old-project speed keys directly under `deformation_properties`: `speed_upsetting` and `speed_prolongation`.
+- `furnace` props now expose `furnace_properties.temperature_program`, an ordered list of furnace-control segments. Each segment has `type` (`hold`, `heat`, or `unload`), with hold rows carrying `duration_min` and `temperature_c`. `furnace_class_id` and direct `temperature` inputs are obsolete in the active UI; `furnace_properties.temperature` can still be maintained internally as a compatibility mirror of the last non-empty hold temperature for the current preprocessor bridge.
 - `operation` props store dynamic target values under nested JSON at `operation_properties.target`, with template metadata in `operation_template_id`, `operation_template_version`, `operation_kind`, and `template_snapshot`. Most operation types use `operation_properties.operation_text`, a multiline source parsed as right-arrow-separated sentences; `operation.rounding` uses `operation_properties.rounding_table` where one non-empty table row materializes one `document_operations` row.
-- `document_operations` is the materialized technological-operation layer between editable `document_blocks` and compiled `simulation_steps`. Backend regeneration evaluates block-to-block inheritance there only; inherited values are not written back into `document_blocks`.
-- `simulation_steps` now links back to `document_operations` through nullable `document_operation_id` and stores semantic `operation_template_id`, `operation_kind`, and `operation_label_snapshot`. It no longer stores or FK-links old operation-library `block_type_id`.
+- `document_operations` is the materialized technological-operation layer between editable `document_blocks` and compiled `simulation_steps`. It no longer stores inherited/effective namespace columns; each row stores final operation JSON in `operation_parameters`.
+- Regeneration now creates a first `document_operations` row from the root `document` block with `operation_template_id = document_initial_data` and `operation_kind = billet`. Its `operation_parameters` uses nested namespaces that render as chained-dot parameters: `document_info`, `process_data`, `material`, `input_stock`, and `mesh`. The preprocessor maps this semantic row to the legacy billet/NewBillet compiler path.
+- Furnace blocks materialize to `document_operations` rows with `operation_template_id = furnace`; `operation_parameters.temperature_program` contains the table rows from the Furnace block (`number`, `type`, `duration_min`, `temperature_c`).
+- Operation rows copy Deformation parameters into `operation_parameters` by explicit materialization code in `backend/app/services/document_operations.py`: die ids are copied to every child operation; `speed_upsetting` is copied only to generated Upsetting rows; `speed_prolongation` is copied to all generated deformation operations except Upsetting and Rounding; feed rows copy `feed_direction_id`, `feed_first`, `feed_middle`, and `feed_last` only for Tail Flattening, Cogging, Radial Cogging, and Transverse Cogging. Copying is strict direct-parent behavior: a Deformation section never inherits missing values from a previous Deformation section during operation materialization.
+- `simulation_steps.document_operation_id` is the primary key and required FK to `document_operations.document_operation_id` with cascade delete, enforcing one sibling simulation row per materialized operation row. Operation regeneration creates/removes sibling `simulation_steps` rows together with `document_operations`; valid operation rows set `simulation_steps.preprocess_ready = true`, and Pre later fills compiled output into the existing sibling rows. The active schema no longer has obsolete `simulation_step_id` or old operation-library `block_type_id`.
+- Surface preview meshes for Steps are generated only by the active Pre compiler with the restored legacy Trimesh/STL mesh-state path in `backend/app/services/preprocessor/legacy_surface_mesh.py`. The compiler carries previous-row final meshes through billet, heating/furnace, upsetting, prolongation/radial/full-die, and cutting rows, and `backend/app/orchestration/runtime_backend.py` writes JSON/STL artifacts row-by-row under `TEMP_FILES_ROOT/runs/<document_version_id>/<execution_order>/surface/document_operation_<id>/`. `backend/app/services/preprocessor/surface_mesh.py` is only the API payload/container. Hidden geometry-JSON extrusion fallback is forbidden: if a legacy artifact is missing or unreadable, the backend returns an explicit error and the UI shows that error. Compact artifact references are stored under `simulation_steps.metrics.surface_artifacts`; old DB `BYTEA` STL columns are still not restored.
 - `document_blocks_library` / `OperationsLibrary` was dropped. `time_between_operations` is keyed by semantic `operation_template_id` pairs plus `press_id`.
-- Pre operation definitions are built from `backend/app/domain/operation_block_design_and_parsing_rules.yaml`, semantic built-ins for document geometry/heating, and current geometry metadata. Migrated deformation math dispatch is semantic-template based; old numeric operation IDs are not part of active runtime dispatch.
-- Alembic history was compacted while the project is still pre-production. The active migration chain is one current-schema baseline: `0001_current_schema_baseline.py`.
+- Pre operation definitions are built from preprocessor-local semantic metadata in `backend/app/services/preprocessor/control_program_builder.py`, semantic built-ins for document geometry/heating, and current geometry metadata. Migrated deformation math dispatch is semantic-template based; old numeric operation IDs are not part of active runtime dispatch.
+- The old `is_simulation` split was removed from active Pre metadata/compiled rows; every valid `document_operations` row is treated as a simulation/preprocessor row.
+- The Pre worker persists compiled output into `simulation_steps` row-by-row. At Pre start, sibling rows are reset to `metrics.preprocessor_status = pending`; each successful row is committed in its own short transaction with `preprocessor_status = compiled` before the next row starts compiling; if a later row fails, previously compiled rows remain visible in the Steps view and the failed row receives diagnostics.
+- Draft documents can be manually requeued for Pre from the Steps tool through `POST /documents/{document_id}/simulation-steps/preprocess`; the endpoint keeps the existing saved `document_operations`/`simulation_steps` rows, sets the latest editable `document_versions` row to `preprocess_status = queued` with `run_switch_status = true`, and emits the Pre worker notification. It must not regenerate operations because regeneration deletes current compiled `simulation_steps` output before the worker has produced replacement rows.
+- Pre pipeline smoke checks live in `backend/scripts/check_preprocessor_pipeline.py`. Use `--list-support` for semantic adapter coverage, `--document-id <id>` for a dry run, and `--apply` to write compiled output into sibling `simulation_steps`. Current semantic Pre templates are expected to report real adapters only, with no intentional `generic_fallback`.
+- Alembic history was compacted while the project is still pre-production. The active chain starts from metadata baseline `0001_current_schema_baseline.py` and continues with normal incremental migrations.
 
 ## Backend configuration (`.env`) for setup/install
 - Backend settings are loaded by `backend/app/config.py` (`pydantic-settings`) from `backend/.env`.
@@ -54,6 +64,9 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - `LIBRARY_FILES_ROOT`
   - `NAS_MOUNT_ROOT`
   - `LOGS_FILES_ROOT`
+  - `LOGGING_LEVEL`
+  - `LOG_FILE_MAX_BYTES`
+  - `LOG_FILE_BACKUP_COUNT`
   - `TEMP_FILES_ROOT`
 - Keep secrets and machine-specific paths in `.env`; do not hardcode them in source files.
 
@@ -80,6 +93,7 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - `search` and `document_search_router`
   - `settings`
   - `library`
+  - `logs`
   - `operation_templates`
   - `workflow`
 - Not mounted in current `main.py`:
@@ -115,16 +129,22 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
     - `Actions` provides copy, cut, remove, paste-after-selected, and clear-selection controls previously shown above the main document canvas
     - `Clipboard` is frontend-session-only memory for block cut/copy/paste; new cut/copy sessions open this tab automatically
   - `Operations`: no middle pane; selecting the tool opens a split main editor where the left side is the regular document editor and the right side is a read-only `document_operations` table
+  - `Steps`: no middle pane; selecting the tool opens the `simulation_steps` inspector for the selected document and shows a narrow left step list; clicking the active `Steps` tool again hides only that left step list while keeping the main Steps inspector open
   - `Library`: narrow icon-only selector for `Dies`, `Die Assemblies`, `Presses`, and `Materials` main editor views; this pane omits a title/header and uses shared tooltips for labels
   - `Simulation`: no middle pane; selecting the tool switches the main editor area to a simulation dashboard
+  - `Logs`: no middle pane; selecting the tool switches the main editor area to a local log viewer for API, Pre, Post, and Coordinator logs
+    - selected service/worker log file can be cleared from the Logs toolbar via `DELETE /logs/{service}?worker_name=...`
   - `Users`: active user/session info
 - `MainEditorPane` routes active content:
   - default main view: `BlockEditor` (for `Projects`, `Documents`, `Blocks`, `Users`)
   - operations main view: split `BlockEditor` plus `DocumentOperationsView` (for `Operations`)
+  - steps main view: `SimulationStepsView` reading `GET /documents/{document_id}/simulation-steps` plus `GET /documents/{document_id}/blocks/root`; shows a narrow hideable left step list with visual-only Heating/Deformation/Furnace/Operation title cards, selected-step diagnostics, shared-scale 2D overlays, and outline-based 3D previews
   - library main views: `Dies`, `Die Assemblies`, `Presses`, `Materials` (for `Library`)
   - simulation main view: `Simulation` dashboard (for `Simulation`)
+  - logs main view: `LogsView` reading `GET /logs/services` and `GET /logs/{service}/tail`; Solver is not included
 - `BlockEditor` renders a visual document hierarchy over the flat `document_blocks` linked list:
   - the `document` block is shown as the document canvas/title area and contains Material, Input Workpiece, and Mesh setup properties
+  - the `document` block groups setup fields into compact Notion/Word-like sections: `Process data`, `Material`, `Input stock size`, and `Mesh`; section titles use one visual tab and their parameter tables use a second deeper tab
   - `Heating` and `Deformation` semantic block types are shown as second-level sections inside the document canvas
   - `Furnace` blocks following a `Heating` block are visually nested under that Heating until the next Heating/Deformation section
   - `Operation` blocks following a `Deformation` block are visually nested under that Deformation until the next Heating/Deformation section
@@ -133,8 +153,12 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - direct block click, input focus/click/change inside a block, successful drag/drop, insert, and paste make a block active; selection checkbox clicks and drag-handle clicks alone do not
   - document block selection is separate from active state; exactly one selected block drives the `Blocks > Actions` context menu, while multi-selection remains useful for drag-group preparation
   - Heating and Deformation section titles are auto-numbered from `document_properties.section_numbering_start`; a Heating immediately followed by a Deformation is shown as `N.1 Heating` and `N.2 Deformation`, otherwise each Heating/Deformation uses simple `N.` numbering
+  - the numbering start value is edited through a compact hover/focus control in the first Heating/Deformation title; subsequent section numbers are read-only
+  - Deformation sections are visually ordered as title/header first, then a die selector parameter block, then child Operation blocks, then Deformation parameter fields as a footer after the child operations; the underlying linked-list order remains `deformation -> operation...`
+  - the Deformation footer feed table is conditional: it renders only rows whose Operation type has feed and is present among that Deformation section's child Operation blocks; it excludes Upsetting, Tail Chamfering, Rounding, and Cutting; a new Deformation with no feed-consuming child operation types hides the feed table completely
   - Operation block titles are auto-numbered inside each Deformation section with simple `1.`, `2.`, `3.` numbering that restarts for every Deformation
-  - operation blocks always show a title; empty operations are titled `Empty operation`, and after selecting/saving a type the title uses the YAML template `display_name`
+  - operation blocks always show a title; empty operations are titled `Empty operation`, and after selecting/saving a type the title uses the endpoint-provided template `display_name`
+  - furnace blocks render a diagram/table switch for `furnace_properties.temperature_program`; diagram mode visualizes hold, heat-up, and unload segments, while table mode edits rows with `--`, `/`, and `\` type controls plus hold duration/temperature fields
   - operation type selector visibility is stateful: empty operations show it until a type is selected and saved; saved operations hide it by default; double-clicking the title reopens it; deactivating the block hides it and discards unsaved type changes
   - during drag, dense zero-height insertion markers show a thin blue `Insert here` line at the current drop target; hovering a block previews insertion after that block without adding permanent document spacing
   - document block move uses optimistic local reorder plus lightweight `framer-motion` position animation on block wrappers, so lower blocks slide smoothly to new positions instead of waiting for a backend refresh jump
@@ -150,11 +174,28 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 - `Operations` main view characteristics:
   - left pane reuses the current `BlockEditor` without changing document editing behavior
   - right pane calls `GET /documents/{document_id}/operations` and renders saved `document_operations` rows
-  - rows show operation order, operation type/label, compact chips for `operation_properties.target`, and parse status
+  - a compact refresh icon in the Operations pane calls `POST /documents/{document_id}/operations/regenerate` to manually rebuild rows from saved block data
+  - rows show operation order, operation type/label, compact chips for `operation_parameters`, and parse status
+  - invalid rows show visible parse diagnostics with the source sentence/table row and parser message, not only a tooltip
+  - the first row is the root Document-derived `document_initial_data` billet row, exposing `document_info.*`, `process_data.*`, `material.*`, `input_stock.*`, and `mesh.*` chips
+  - array-valued target rows, such as Furnace `temperature_program`, are expanded into indexed chained-dot chips like `temperature_program.1.type`
   - hovering a Furnace or Operation block highlights rows generated directly from that block
   - hovering a Heating section highlights rows generated from its Furnace children; hovering a Deformation section highlights rows generated from its Operation children
   - activating an Operation or Furnace block filters the right pane to rows generated by that active block
   - when the document has unsaved block changes, the right pane warns that operations reflect saved document state until the user saves
+- `Steps` main view characteristics:
+  - calls `GET /documents/{document_id}/simulation-steps` for the currently selected single document
+  - calls `GET /documents/{document_id}/blocks/root` to build a visual-only structure index for the left step list
+  - its compact refresh icon is an active Pre command: it calls `POST /documents/{document_id}/simulation-steps/preprocess`, then reloads the step list; it does not regenerate `document_operations` or erase current compiled rows
+  - renders a very narrow left list while the `Steps` tool button is active; clicking the active `Steps` button hides only this list and leaves the main Steps view open
+  - the left list has independent vertical scrolling, so long step lists do not scroll the selected-step 2D/3D/detail workspace
+  - the left list contains visual-only title cards for Heating/Deformation sections and Furnace/Operation child blocks with their visual numbers
+  - step cards are nested under those title cards and show saved user-entered variables from `document_operations.operation_parameters`
+  - the main list intentionally avoids a full raw DB-table layout
+  - selecting a step card opens detail panels for user operation parameters, `parameter_values`, `control_parameters`, `step_specific_parameters`, `initial_geometry`, `final_geometry`, `metrics`, status, and typed columns
+  - 2D visualization overlays `initial_geometry.cross_section_outline` and `final_geometry.cross_section_outline` with one shared proportional scale and small in-graphic tables for H/W/L/A and available strain/deformation metrics
+  - 3D visualization lazy-loads JSON triangular surface meshes from `GET /documents/{document_id}/simulation-steps/{document_operation_id}/surface`; this endpoint reads only legacy Trimesh JSON/STL artifacts written during Pre row compilation. If artifacts are absent, unreadable, or generated by a non-legacy source, the endpoint returns an explicit error and the frontend displays that error instead of synthesizing a local geometry fallback. Round cross-sections must come from the migrated old-project STL path, not from rectangular-prism approximation. Compact artifact references live in `simulation_steps.metrics.surface_artifacts`.
+  - selected-step artifact files can be downloaded through `/documents/{document_id}/simulation-steps/{document_operation_id}/surface/artifacts/{initial|final}/{json|stl}`.
 - `Dies` library view characteristics:
   - die card layout: top row = die name; second row = square STL preview on the left and die metadata on the right
   - each die card includes a small interactive STL preview window (camera-only interaction)
@@ -217,6 +258,7 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 - Source of truth for reusable visual primitives is `frontend/src/index.css` under `@layer components`.
 - Global typography uses a Noto-first multilingual sans stack (`--ui-font-sans` in `frontend/src/index.css` and `fontFamily.sans` in `frontend/tailwind.config.js`) with fallbacks for Cyrillic, CJK Chinese/Japanese/Korean, Arabic, Hebrew, Indic, Thai, and emoji; do not replace it with Latin-only font stacks.
 - Document editing uses a separate Word/Notion-like `doc-*` style family in `frontend/src/index.css`: clean page surface, borderless inputs, title-only block labels, indentation-based hierarchy, subtle hover tools, darker selected block background, and strong active block outline.
+- Compact mutually exclusive mode selectors in document blocks use the shared `doc-segmented-control` / `doc-segmented-button` standard. These controls are hidden in resting state and shown only on block hover, active block state, or focus-within; current examples are Deformation `Pair / Separate`, Operation `Manual / Auto / Optimization`, and Furnace `Diagram / Table`.
 - Required shared classes:
   - layout/panes: `ui-shell`, `ui-pane`, `ui-pane-header`, `ui-pane-body`
   - toolbar: `ui-toolbar`, `ui-toolbar-title`, `ui-toolbar-meta`
@@ -266,12 +308,12 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
   - linked-list ordering with `previous_block_id` and `next_block_id`
   - active block types are semantic strings: `document`, `heating`, `deformation`, `furnace`, and `operation`
   - new documents auto-create one fixed non-removable `document` block, then one `deformation` bundle containing its first `operation`
-  - `document` owns title/setup fields: `name`, `heat_no`, `finished_size`, `remarks`, `preview_status`, `material_id`, `geometry_type_id`, `weight`, `attributes`, `mesh_elements`, and `section_numbering_start`
-  - `heating` is a second-level container with inherited heating parameters
-  - `furnace` is a child of `heating` and stores furnace-specific parameters
-  - `deformation` is a section/container block; inherited parser variables live under `deformation_properties.deformation_variables`, and user-visible operation details live in child `operation` blocks
-  - `operation` stores YAML-backed template metadata, optional multiline operation text, optional rounding table rows, and nested dynamic `target` variables
-  - operation templates and parsing rules are defined in `backend/app/domain/operation_block_design_and_parsing_rules.yaml` and templates are exposed through `GET /operation-templates`
+  - `document` owns title/setup fields: `name`, `heat_no`, `finished_size`, `remarks`, `preview_status`, `material_id`, `geometry_type_id`, `weight`, `attributes`, `mesh_elements`, and `section_numbering_start`; these fields materialize to the `document_initial_data`/`billet` row in `document_operations`
+  - `heating` is a second-level container with no active editable parameters
+  - `furnace` is a child of `heating` and exposes the `temperature_program` used by the diagram/table editor; old direct `furnace_class_id` and `temperature` fields are not user-editable
+  - `deformation` is a section/container block; die settings live under old-project-compatible `deformation_properties.die_assembly_id`, `top_die_id`, and `bottom_die_id`, parser variables live under `deformation_properties.deformation_variables`, per-operation-type feed settings live under `deformation_properties.feed_settings`, explicit forming speeds live under `deformation_properties.speed_upsetting` and `speed_prolongation`, and user-visible operation details live in child `operation` blocks
+  - `operation` stores endpoint-provided template metadata, optional multiline operation text, optional rounding table rows, and nested dynamic `target` variables
+  - operation block template metadata is owned by `backend/app/services/operation_blocks.py` and exposed through `GET /operation-templates`; operation text/table materialization rules are explicit code in `backend/app/services/document_operations.py`
   - metadata flags: `is_system`, `is_removable`, `fixed_position`
 - Legacy ACL/share/version/server/log tables remain in models and DB for compatibility and existing flows.
 - Full database schema, table inventory, key columns, JSONB payload notes, and seeding-layout details are tracked in `.codex/context/DB_SCHEMA.md`.
@@ -387,9 +429,13 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 - Validate critical backend changes via focused manual checks and targeted tests when feasible.
 
 ## Migration policy
-- Active migration chain in `backend/alembic/versions/` is intentionally compacted to one baseline:
+- Active migration chain in `backend/alembic/versions/` starts from the compact baseline:
   - `0001_current_schema_baseline.py`
+  - `0002_simplify_document_operations_parameters.py`
+  - `0003_require_simulation_step_document_operation.py`
+  - `0004_use_document_operation_id_as_simulation_step_pk.py`
+  - `0005_materialize_simulation_step_siblings.py`
 - `backend/alembic/versions_backup/` was removed; active Alembic history is under `backend/alembic/versions/`.
-- Current head migration is `0001_current_schema`.
+- Current head migration is `0005_step_siblings`.
 - Existing pre-compaction development databases should be stamped with `alembic stamp --purge head` after confirming their schema matches current models.
-- The baseline migration uses `Base.metadata.create_all(checkfirst=True)` / `drop_all(checkfirst=True)` against registered SQLAlchemy models; follow-up migrations should be normal incremental migrations from `0001_current_schema`.
+- The baseline migration uses `Base.metadata.create_all(checkfirst=True)` / `drop_all(checkfirst=True)` against registered SQLAlchemy models; follow-up migrations are normal incremental migrations from `0001_current_schema`.

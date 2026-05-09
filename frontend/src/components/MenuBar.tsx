@@ -6,6 +6,7 @@ import Tooltip from './ui/Tooltip'
 interface MenuBarProps {
   meta: BlockEditorMeta
   hasDocument: boolean
+  documentTitle?: string | null
   onSave: () => void
   onCancel: () => void
   onUndo: () => void
@@ -17,6 +18,7 @@ interface MenuBarProps {
 export default function MenuBar({
   meta,
   hasDocument,
+  documentTitle = null,
   onSave,
   onCancel,
   onUndo,
@@ -25,13 +27,14 @@ export default function MenuBar({
   onShowSessions,
 }: MenuBarProps) {
   const disabled = !hasDocument || meta.isLoading
+  const title = hasDocument
+    ? meta.draftDocumentName || documentTitle || 'Untitled Document'
+    : documentTitle || 'No document selected'
 
   return (
     <header className="ui-toolbar">
       <div className="min-w-0">
-        <div className="ui-toolbar-title">
-          {hasDocument ? meta.draftDocumentName || 'Untitled Document' : 'No document selected'}
-        </div>
+        <div className="ui-toolbar-title">{title}</div>
         <div className="ui-toolbar-meta">
           Source document: {meta.sourceDocumentId ?? 'None'}
         </div>

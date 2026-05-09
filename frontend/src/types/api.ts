@@ -8,6 +8,58 @@ export interface ApiResponse<T = unknown> {
   errorCode?: string
 }
 
+export interface LogWorkerSummary {
+  service: string
+  worker_name: string
+  file_name: string
+  size_bytes: number
+  modified_at: string
+}
+
+export interface LogServiceSummary {
+  service: string
+  workers: LogWorkerSummary[]
+}
+
+export interface LogServicesResponse {
+  logs_root: string
+  services: LogServiceSummary[]
+}
+
+export interface LogEntry {
+  timestamp?: string
+  level?: string
+  service?: string
+  worker_name?: string
+  hostname?: string
+  pid?: number
+  logger?: string
+  module?: string
+  function?: string
+  line?: number
+  message?: string
+  exception?: string
+  raw?: boolean
+  [key: string]: unknown
+}
+
+export interface LogTailResponse {
+  service: string
+  worker_name: string
+  file_path: string
+  entries: LogEntry[]
+  missing: boolean
+}
+
+export interface LogClearResponse {
+  service: string
+  worker_name: string
+  file_path: string
+  cleared: boolean
+  existed: boolean
+  previous_size_bytes: number
+}
+
 // Auth
 export interface LoginRequest {
   login: string
@@ -301,6 +353,7 @@ export interface DocumentOperationRecord {
   operation_template_id?: string | null
   operation_kind: string
   label_snapshot?: string | null
+  operation_parameters?: Record<string, any>
   target: Record<string, any>
   parse_status: string
   parse_errors: Array<Record<string, any>>
@@ -310,6 +363,116 @@ export interface DocumentOperationRecord {
 export interface DocumentOperationListResponse {
   document_id: number
   operations: DocumentOperationRecord[]
+}
+
+export interface SimulationStepStatusRecord {
+  status: string
+  simulation_server_id?: number | null
+  worker_name?: string | null
+  attempt_no: number
+  retry_count: number
+  cancel_requested: boolean
+  simulation_percent: number
+  simulation_expected_duration_seconds?: number | null
+  queued_at?: string | null
+  started_at?: string | null
+  heartbeat_at?: string | null
+  finished_at?: string | null
+  runtime_artifacts: Record<string, any>
+  last_error?: string | null
+  error_payload?: Record<string, any> | null
+  updated_at?: string | null
+}
+
+export interface DocumentSimulationStepRecord {
+  document_operation_id: number
+  document_id: number
+  document_version_id: number
+  execution_order: number
+  source_block_id?: string | null
+  source_block_type_id: string
+  operation_order: number
+  operation_order_in_block: number
+  operation_template_id?: string | null
+  operation_kind: string
+  operation_label_snapshot?: string | null
+  operation_parameters: Record<string, any>
+  source_text_hash?: string | null
+  parse_status: string
+  parse_errors: Array<Record<string, any>>
+  parse_warnings: Array<Record<string, any>>
+  preprocess_ready: boolean
+  block_name_snapshot: string
+  library_name_snapshot: string
+  material_version_id?: number | null
+  press_id?: number | null
+  press_mode_id?: number | null
+  die_assembly_id?: number | null
+  top_die_id?: number | null
+  bottom_die_id?: number | null
+  left_die_id?: number | null
+  right_die_id?: number | null
+  parameter_values: Record<string, any>
+  control_parameters: Record<string, any>
+  step_specific_parameters: Record<string, any>
+  initial_geometry?: Record<string, any> | null
+  final_geometry?: Record<string, any> | null
+  metrics: Record<string, any>
+  accumulated_time_start_seconds?: number | null
+  duration_seconds?: number | null
+  accumulated_time_stop_seconds?: number | null
+  created_at: string
+  updated_at: string
+  status?: SimulationStepStatusRecord | null
+}
+
+export interface DocumentSimulationStepListResponse {
+  document_id: number
+  steps: DocumentSimulationStepRecord[]
+}
+
+export interface SimulationStepSurfaceMesh {
+  units: string
+  vertices: number[][]
+  faces: number[][]
+  bounds: Record<string, number>
+  vertex_count: number
+  face_count: number
+  cross_section_point_count: number
+  surface_area_mm2: number
+  volume_mm3: number
+}
+
+export interface SimulationStepSurfaceArtifactFile {
+  relative_path: string
+  size_bytes: number
+  url?: string | null
+}
+
+export interface SimulationStepSurfaceArtifact {
+  kind: string
+  geometry_hash?: string | null
+  summary: Record<string, any>
+  files: Record<string, SimulationStepSurfaceArtifactFile>
+  artifact_root?: string | null
+}
+
+export interface DocumentSimulationStepSurfaceResponse {
+  document_id: number
+  document_operation_id: number
+  initial?: SimulationStepSurfaceMesh | null
+  final?: SimulationStepSurfaceMesh | null
+  artifacts: Record<string, SimulationStepSurfaceArtifact>
+  source: string
+}
+
+export interface DocumentPreprocessQueueResponse {
+  document_id: number
+  document_version_id: number
+  preprocess_status: string
+  operations_count: number
+  queued: boolean
+  message: string
 }
 
 // Library DB tables

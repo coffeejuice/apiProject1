@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.auth import get_current_user
 from app.models.user import User
 from app.schemas import OperationTemplateResponse
-from app.services.operation_templates import get_operation_template, list_operation_templates
+from app.services.operation_blocks import get_operation_template, list_operation_templates
 
 
 router = APIRouter(prefix="/operation-templates", tags=["operation-templates"])

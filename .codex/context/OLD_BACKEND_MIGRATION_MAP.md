@@ -36,10 +36,12 @@ This map is intentionally migration-oriented:
     - `simulation_step_status`
     - `postprocessing_tasks`
   - old `post_operations` data moves into `postprocessing_tasks`
-- Planned `simulation_steps` semantics:
-  - use `block_type_id`, not `operation_type_id`
-  - do not carry old `parent_operation_type_id`; the new document block model is flat, not tree-shaped
-  - use `source_block_id` when step-to-block traceability is needed
+- Current `simulation_steps` semantics:
+  - use `document_operation_id` as the primary key and sibling identity for the source `document_operations` row
+  - do not use old numeric `operation_type_id`, `parent_operation_type_id`, or `block_type_id` in active runtime dispatch
+  - use semantic `operation_template_id`, `operation_kind`, and `source_block_id` snapshots for traceability
+  - create/remove sibling `simulation_steps` rows together with regenerated `document_operations`; valid operation rows set `preprocess_ready = true`
+  - do not keep old `is_simulation` branching; every valid materialized operation follows the same simulation-step path
 - Planned timing field naming:
   - `time_before_operation_seconds` -> `accumulated_time_start_seconds`
   - `total_time_seconds` -> `accumulated_time_stop_seconds`
@@ -60,15 +62,18 @@ This map is intentionally migration-oriented:
 This is the accepted target split for the old `server_pre_main` / `post_operations` runtime data.
 
 ### `simulation_steps`
-Immutable compiled step definition produced by `Pre`.
+Sibling execution rows for `document_operations`; `Pre` later fills compiled step definitions.
 
 | Column | Type | FK / Rule | Meaning |
 |---|---|---|---|
-| `simulation_step_id` | `BIGSERIAL` | PK | Step id |
-| `document_version_id` | `BIGINT NOT NULL` | FK -> `document_versions.document_version_id` `ON DELETE CASCADE` | Parent fixed document/run |
+| `document_operation_id` | `BIGINT NOT NULL` | PK + FK -> `document_operations.document_operation_id` `ON DELETE CASCADE` | Source operation and step identity |
+| `document_version_id` | `BIGINT NOT NULL` | FK -> `document_versions.document_version_id` `ON DELETE CASCADE` | Parent document version/run |
 | `execution_order` | `INT NOT NULL` | `UNIQUE(document_version_id, execution_order)` | Step order inside one run |
 | `source_block_id` | `UUID NULL` | FK -> `document_blocks.block_id` `ON DELETE SET NULL` | Source user block/card |
-| `block_type_id` | `SMALLINT NOT NULL` | FK -> `document_blocks_library.type_id` `ON DELETE RESTRICT` | Compiled block type |
+| `operation_template_id` | `VARCHAR(255) NULL` |  | Semantic operation template id |
+| `operation_kind` | `VARCHAR(63) NOT NULL` |  | Semantic operation kind |
+| `operation_label_snapshot` | `VARCHAR(255) NULL` |  | Stable operation label |
+| `preprocess_ready` | `BOOLEAN NOT NULL DEFAULT FALSE` |  | Row is valid and ready for Pre calculation |
 | `block_name_snapshot` | `VARCHAR(255) NOT NULL` |  | Stable user-facing block name |
 | `library_name_snapshot` | `VARCHAR(255) NOT NULL` |  | Stable library label |
 | `material_version_id` | `INT NULL` | FK -> `material_versions.material_version_id` `ON DELETE SET NULL` | Versioned material reference |
@@ -92,9 +97,8 @@ Immutable compiled step definition produced by `Pre`.
 | `updated_at` | `TIMESTAMP NOT NULL DEFAULT NOW()` |  | Audit |
 
 Accepted notes:
-- Use new `block` terminology, not old `operation` terminology.
+- Runtime execution is keyed by semantic operation rows, not by old numeric operation IDs.
 - Do not keep old `parent_operation_type_id`; the new document block model is flat.
-- `block_type_id` now follows the `document_blocks_library` naming.
 - `source_block_id` now follows the `document_blocks` naming.
 
 ### `simulation_step_status`
@@ -102,7 +106,7 @@ Mutable runtime state for one compiled simulation step.
 
 | Column | Type | FK / Rule | Meaning |
 |---|---|---|---|
-| `simulation_step_id` | `BIGINT NOT NULL` | PK + FK -> `simulation_steps.simulation_step_id` `ON DELETE CASCADE` | Status row for one compiled step |
+| `document_operation_id` | `BIGINT NOT NULL` | PK + FK -> `simulation_steps.document_operation_id` `ON DELETE CASCADE` | Status row for one compiled step |
 | `status` | `simulation_step_status_enum NOT NULL` | values: `blocked`, `queued`, `running`, `finished`, `failed`, `cancelled` | Current solver state |
 | `simulation_server_id` | `INT NULL` | FK -> `servers.id` `ON DELETE SET NULL` | Assigned solver PC |
 | `worker_name` | `VARCHAR(255) NULL` |  | Worker instance name |
@@ -126,8 +130,8 @@ Mutable postprocessing queue and output records derived from simulation steps.
 | Column | Type | FK / Rule | Meaning |
 |---|---|---|---|
 | `postprocessing_task_id` | `BIGSERIAL` | PK | Task id |
-| `simulation_step_id` | `BIGINT NOT NULL` | FK -> `simulation_steps.simulation_step_id` `ON DELETE CASCADE` | Source compiled step |
-| `task_kind` | `VARCHAR(63) NOT NULL DEFAULT 'full'` | `UNIQUE(simulation_step_id, task_kind)` | Postprocessing task type |
+| `document_operation_id` | `BIGINT NOT NULL` | FK -> `simulation_steps.document_operation_id` `ON DELETE CASCADE` | Source compiled step |
+| `task_kind` | `VARCHAR(63) NOT NULL DEFAULT 'full'` | `UNIQUE(document_operation_id, task_kind)` | Postprocessing task type |
 | `status` | `postprocessing_task_status_enum NOT NULL` | values: `queued`, `running`, `finished`, `failed`, `cancelled` | Current post state |
 | `postprocessing_server_id` | `INT NULL` | FK -> `servers.id` `ON DELETE SET NULL` | Assigned post worker PC |
 | `worker_name` | `VARCHAR(255) NULL` |  | Worker instance name |
@@ -305,7 +309,7 @@ Mutable postprocessing queue and output records derived from simulation steps.
   - Notes: do not block core migration on Fluent Bit integration.
 
 - `backend_old/forgelab/common/library_sql_query.py`
-  - Target: `backend/app/services/preprocessor/control_program_builder.py`, `backend/app/services/library_seed_service.py`, `backend/scripts/convert_operations.py`
+  - Target: `backend/app/services/preprocessor/control_program_builder.py`, `backend/app/services/library_seed_service.py`
   - Status: `split`
   - Notes: separate runtime library reads from one-time conversion/seeding helpers.
 
@@ -358,7 +362,7 @@ Mutable postprocessing queue and output records derived from simulation steps.
   - Notes: old client communication functions are superseded by FastAPI.
 
 - `backend_old/forgelab/sql_setup/create_operations.py`
-  - Target: `backend/scripts/convert_operations.py`, `backend/data/database_seeding/`
+  - Target: `backend/data/database_seeding/`
   - Status: `split`
 
 - `backend_old/forgelab/sql_setup/create_operations_table_functions.py`
@@ -443,12 +447,14 @@ Mutable postprocessing queue and output records derived from simulation steps.
   - Status: `split`
 
 - `backend_old/utils/add_operations.py`
-  - Target: `backend/scripts/convert_operations.py`
-  - Status: `defer`
+  - Target: none
+  - Status: `drop`
+  - Notes: old operation YAML conversion workflow was removed; active Operation metadata is localized in backend services.
 
 - `backend_old/utils/add_attributes_to_operations_json.py`
-  - Target: `backend/scripts/convert_operations.py`
-  - Status: `defer`
+  - Target: none
+  - Status: `drop`
+  - Notes: old operation YAML conversion workflow was removed; active Operation metadata is localized in backend services.
 
 - `backend_old/utils/add_die_records_from_library.py`
   - Target: `backend/scripts/` or seed conversion helpers

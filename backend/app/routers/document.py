@@ -3,13 +3,14 @@ from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import FileResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
 from app.database import get_db
 from app.models.document.block import Block
-from app.models.document.document import Document, DocumentEditSession
+from app.models.document.document import Document, DocumentEditSession, PreprocessStatus
 from app.models.document.document_operation import DocumentOperation
 from app.models.library.material import MaterialVersion
 from app.models.project import Project
@@ -21,6 +22,10 @@ from app.schemas import (
     DocumentDiffResponse,
     DocumentOperationListResponse,
     DocumentOperationResponse,
+    DocumentPreprocessQueueResponse,
+    DocumentSimulationStepListResponse,
+    DocumentSimulationStepResponse,
+    DocumentSimulationStepSurfaceResponse,
     DocumentLineageNode,
     DocumentLineageResponse,
     DocumentListResponse,
@@ -29,17 +34,27 @@ from app.schemas import (
     EditSessionListResponse,
     EditSessionResponse,
     EditSessionStartRequest,
+    SimulationStepStatusResponse,
 )
 from app.services.block_service import create_block, get_ordered_blocks
 from app.services.block_type_service import initialize_system_blocks
 from app.services.document_operations import regenerate_document_operations
+from app.services.preprocessor.operation_keys import DOCUMENT_INITIAL_DATA_TEMPLATE_ID, FURNACE_TEMPLATE_ID
+from app.services.preprocessor.surface_artifacts import (
+    ensure_surface_artifacts_for_step,
+    surface_artifact_abs_path,
+    with_surface_artifact_urls,
+)
+from app.services.preprocessor.surface_mesh import SurfaceMeshError
 from app.services.workflow_commands import (
     WorkflowCommandError,
     assert_document_editable,
     create_initial_working_version,
     get_latest_document_version,
     notify_after_edit,
+    queue_document_preprocessing,
 )
+from app.models.workflow_runtime import SimulationStep, SimulationStepStatus
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -143,14 +158,18 @@ def create_document(
         # Keep system blocks initialized for non-copy documents.
         initialize_system_blocks(db, document.document_id)
 
-    operations_count = regenerate_document_operations(db, document.document_id)
-    create_initial_working_version(
+    editable_version = create_initial_working_version(
         db,
         document,
         current_user=current_user,
         parent_version=get_latest_document_version(db, source.document_id) if source is not None else None,
-        preprocess_requested=source is not None and operations_count > 0,
+        preprocess_requested=False,
     )
+    operations_count = regenerate_document_operations(db, document.document_id)
+    editable_version.operations_count = operations_count
+    if source is not None and operations_count > 0:
+        editable_version.run_switch_status = True
+        editable_version.preprocess_status = PreprocessStatus.queued
 
     db.commit()
     db.refresh(document)
@@ -201,19 +220,10 @@ def get_document(
     return check_document_access(db, document_id, current_user.user_id)
 
 
-@router.get("/{document_id}/operations", response_model=DocumentOperationListResponse)
-def list_document_operations(
-    document_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    document = check_document_access(db, document_id, current_user.user_id)
-    rows = db.execute(
-        select(DocumentOperation)
-        .filter(DocumentOperation.document_id == document.document_id)
-        .order_by(DocumentOperation.operation_order.asc())
-    ).scalars().all()
-
+def _document_operations_response(
+    document: Document,
+    rows: list[DocumentOperation],
+) -> DocumentOperationListResponse:
     return DocumentOperationListResponse(
         document_id=document.document_id,
         operations=[
@@ -227,12 +237,8 @@ def list_document_operations(
                 operation_template_id=row.operation_template_id,
                 operation_kind=row.operation_kind,
                 label_snapshot=row.label_snapshot,
-                target=(
-                    row.operation_properties.get("target", {})
-                    if isinstance(row.operation_properties, dict)
-                    and isinstance(row.operation_properties.get("target"), dict)
-                    else {}
-                ),
+                operation_parameters=row.operation_parameters or {},
+                target=row.operation_parameters or {},
                 parse_status=row.parse_status,
                 parse_errors=row.parse_errors or [],
                 parse_warnings=row.parse_warnings or [],
@@ -240,6 +246,304 @@ def list_document_operations(
             for row in rows
         ],
     )
+
+
+def _ordered_document_operation_rows(db: Session, document_id: int) -> list[DocumentOperation]:
+    return db.execute(
+        select(DocumentOperation)
+        .filter(DocumentOperation.document_id == document_id)
+        .order_by(DocumentOperation.operation_order.asc())
+    ).scalars().all()
+
+
+def _simulation_step_status_response(
+    status_row: SimulationStepStatus | None,
+) -> SimulationStepStatusResponse | None:
+    if status_row is None:
+        return None
+    return SimulationStepStatusResponse(
+        status=status_row.status.value,
+        simulation_server_id=status_row.simulation_server_id,
+        worker_name=status_row.worker_name,
+        attempt_no=status_row.attempt_no,
+        retry_count=status_row.retry_count,
+        cancel_requested=status_row.cancel_requested,
+        simulation_percent=status_row.simulation_percent,
+        simulation_expected_duration_seconds=status_row.simulation_expected_duration_seconds,
+        queued_at=status_row.queued_at,
+        started_at=status_row.started_at,
+        heartbeat_at=status_row.heartbeat_at,
+        finished_at=status_row.finished_at,
+        runtime_artifacts=status_row.runtime_artifacts or {},
+        last_error=status_row.last_error,
+        error_payload=status_row.error_payload,
+        updated_at=status_row.updated_at,
+    )
+
+
+def _document_simulation_step_response(
+    *,
+    step: SimulationStep,
+    operation: DocumentOperation,
+) -> DocumentSimulationStepResponse:
+    return DocumentSimulationStepResponse(
+        document_operation_id=step.document_operation_id,
+        document_id=operation.document_id,
+        document_version_id=step.document_version_id,
+        execution_order=step.execution_order,
+        source_block_id=step.source_block_id,
+        source_block_type_id=operation.source_block_type_id,
+        operation_order=operation.operation_order,
+        operation_order_in_block=operation.operation_order_in_block,
+        operation_template_id=step.operation_template_id,
+        operation_kind=step.operation_kind,
+        operation_label_snapshot=step.operation_label_snapshot,
+        operation_parameters=operation.operation_parameters or {},
+        source_text_hash=operation.source_text_hash,
+        parse_status=operation.parse_status,
+        parse_errors=operation.parse_errors or [],
+        parse_warnings=operation.parse_warnings or [],
+        preprocess_ready=step.preprocess_ready,
+        block_name_snapshot=step.block_name_snapshot,
+        library_name_snapshot=step.library_name_snapshot,
+        material_version_id=step.material_version_id,
+        press_id=step.press_id,
+        press_mode_id=step.press_mode_id,
+        die_assembly_id=step.die_assembly_id,
+        top_die_id=step.top_die_id,
+        bottom_die_id=step.bottom_die_id,
+        left_die_id=step.left_die_id,
+        right_die_id=step.right_die_id,
+        parameter_values=step.parameter_values or {},
+        control_parameters=step.control_parameters or {},
+        step_specific_parameters=step.step_specific_parameters or {},
+        initial_geometry=step.initial_geometry,
+        final_geometry=step.final_geometry,
+        metrics=step.metrics or {},
+        accumulated_time_start_seconds=step.accumulated_time_start_seconds,
+        duration_seconds=step.duration_seconds,
+        accumulated_time_stop_seconds=step.accumulated_time_stop_seconds,
+        created_at=step.created_at,
+        updated_at=step.updated_at,
+        status=_simulation_step_status_response(step.status),
+    )
+
+
+@router.get("/{document_id}/operations", response_model=DocumentOperationListResponse)
+def list_document_operations(
+    document_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    document = check_document_access(db, document_id, current_user.user_id)
+    rows = _ordered_document_operation_rows(db, document.document_id)
+    needs_regeneration = (
+        not any(row.operation_template_id == DOCUMENT_INITIAL_DATA_TEMPLATE_ID for row in rows)
+        or any(
+            row.operation_template_id == FURNACE_TEMPLATE_ID
+            and (
+                not isinstance(row.operation_parameters, dict)
+                or "temperature_program" not in row.operation_parameters
+            )
+            for row in rows
+        )
+    )
+    if needs_regeneration:
+        try:
+            assert_document_editable(db, document.document_id)
+        except WorkflowCommandError:
+            pass
+        else:
+            regenerate_document_operations(db, document.document_id)
+            db.commit()
+            rows = _ordered_document_operation_rows(db, document.document_id)
+
+    return _document_operations_response(document, rows)
+
+
+@router.get("/{document_id}/simulation-steps", response_model=DocumentSimulationStepListResponse)
+def list_document_simulation_steps(
+    document_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    document = check_document_access(db, document_id, current_user.user_id)
+    rows = db.execute(
+        select(SimulationStep, DocumentOperation)
+        .join(
+            DocumentOperation,
+            DocumentOperation.document_operation_id == SimulationStep.document_operation_id,
+        )
+        .filter(DocumentOperation.document_id == document.document_id)
+        .order_by(SimulationStep.execution_order.asc(), DocumentOperation.operation_order.asc())
+    ).all()
+    return DocumentSimulationStepListResponse(
+        document_id=document.document_id,
+        steps=[
+            _document_simulation_step_response(step=step, operation=operation)
+            for step, operation in rows
+        ],
+    )
+
+
+@router.get(
+    "/{document_id}/simulation-steps/{document_operation_id}/surface",
+    response_model=DocumentSimulationStepSurfaceResponse,
+)
+def get_document_simulation_step_surface(
+    document_id: int,
+    document_operation_id: int,
+    max_outline_points: int = Query(default=128, ge=8, le=512),
+    force: bool = Query(default=False),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    document = check_document_access(db, document_id, current_user.user_id)
+    row = db.execute(
+        select(SimulationStep, DocumentOperation)
+        .join(
+            DocumentOperation,
+            DocumentOperation.document_operation_id == SimulationStep.document_operation_id,
+        )
+        .filter(
+            DocumentOperation.document_id == document.document_id,
+            SimulationStep.document_operation_id == document_operation_id,
+        )
+    ).first()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Simulation step not found")
+
+    step, _operation = row
+    try:
+        generated = ensure_surface_artifacts_for_step(
+            step,
+            document_id=document.document_id,
+            max_outline_points=max_outline_points,
+            force=force,
+        )
+    except SurfaceMeshError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    step.metrics = {
+        **(step.metrics or {}),
+        "surface_artifacts": generated.summary,
+    }
+    db.commit()
+
+    artifacts = with_surface_artifact_urls(
+        generated.summary,
+        document_id=document.document_id,
+        document_operation_id=step.document_operation_id,
+    ).get("artifacts", {})
+
+    return DocumentSimulationStepSurfaceResponse(
+        document_id=document.document_id,
+        document_operation_id=step.document_operation_id,
+        initial=generated.meshes["initial"].to_payload() if "initial" in generated.meshes else None,
+        final=generated.meshes["final"].to_payload() if "final" in generated.meshes else None,
+        artifacts=artifacts,
+        source=str(generated.summary.get("source") or "legacy_preprocessor_trimesh"),
+    )
+
+
+@router.get("/{document_id}/simulation-steps/{document_operation_id}/surface/artifacts/{kind}/{artifact_format}")
+def get_document_simulation_step_surface_artifact(
+    document_id: int,
+    document_operation_id: int,
+    kind: str,
+    artifact_format: str,
+    max_outline_points: int = Query(default=128, ge=8, le=512),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if kind not in {"initial", "final"}:
+        raise HTTPException(status_code=400, detail="kind must be 'initial' or 'final'")
+    if artifact_format not in {"json", "stl"}:
+        raise HTTPException(status_code=400, detail="artifact_format must be 'json' or 'stl'")
+
+    document = check_document_access(db, document_id, current_user.user_id)
+    row = db.execute(
+        select(SimulationStep, DocumentOperation)
+        .join(
+            DocumentOperation,
+            DocumentOperation.document_operation_id == SimulationStep.document_operation_id,
+        )
+        .filter(
+            DocumentOperation.document_id == document.document_id,
+            SimulationStep.document_operation_id == document_operation_id,
+        )
+    ).first()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Simulation step not found")
+
+    step, _operation = row
+    try:
+        generated = ensure_surface_artifacts_for_step(
+            step,
+            document_id=document.document_id,
+            max_outline_points=max_outline_points,
+        )
+    except SurfaceMeshError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if kind not in generated.meshes:
+        raise HTTPException(status_code=404, detail=f"{kind} surface artifact is not available")
+
+    path = surface_artifact_abs_path(step, kind, artifact_format)
+    filename = f"document_{document.document_id}_operation_{step.document_operation_id}_{kind}_surface.{artifact_format}"
+    media_type = "application/json" if artifact_format == "json" else "model/stl"
+    return FileResponse(path, media_type=media_type, filename=filename)
+
+
+@router.post("/{document_id}/simulation-steps/preprocess", response_model=DocumentPreprocessQueueResponse)
+def queue_document_simulation_steps_preprocess(
+    document_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    document = check_document_access(db, document_id, current_user.user_id)
+    try:
+        version, operations_count, queued = queue_document_preprocessing(
+            db,
+            document,
+            current_user=current_user,
+            regenerate_operations_before_queue=False,
+        )
+        db.commit()
+    except WorkflowCommandError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    notify_after_edit()
+    return DocumentPreprocessQueueResponse(
+        document_id=document.document_id,
+        document_version_id=version.document_version_id,
+        preprocess_status=version.preprocess_status.value,
+        operations_count=operations_count,
+        queued=queued,
+        message=(
+            "Preprocessor is already running for this document."
+            if not queued
+            else "Preprocessor run queued."
+        ),
+    )
+
+
+@router.post("/{document_id}/operations/regenerate", response_model=DocumentOperationListResponse)
+def regenerate_document_operations_endpoint(
+    document_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    document = check_document_access(db, document_id, current_user.user_id)
+    try:
+        assert_document_editable(db, document.document_id)
+        regenerate_document_operations(db, document.document_id)
+        db.commit()
+    except WorkflowCommandError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    rows = _ordered_document_operation_rows(db, document.document_id)
+    return _document_operations_response(document, rows)
 
 
 @router.patch("/{document_id}", response_model=DocumentResponse)
@@ -334,14 +638,18 @@ def copy_document(
         )
         previous_new_id = created.block_id
 
-    operations_count = regenerate_document_operations(db, copied.document_id)
-    create_initial_working_version(
+    editable_version = create_initial_working_version(
         db,
         copied,
         current_user=current_user,
         parent_version=parent_version,
-        preprocess_requested=operations_count > 0,
+        preprocess_requested=False,
     )
+    operations_count = regenerate_document_operations(db, copied.document_id)
+    editable_version.operations_count = operations_count
+    if operations_count > 0:
+        editable_version.run_switch_status = True
+        editable_version.preprocess_status = PreprocessStatus.queued
 
     db.commit()
     db.refresh(copied)

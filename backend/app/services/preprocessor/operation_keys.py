@@ -2,6 +2,7 @@
 
 FURNACE_TEMPLATE_ID = "furnace"
 HEATING_TEMPERATURE_DURATION_TEMPLATE_ID = "heating.temperature_duration"
+DOCUMENT_INITIAL_DATA_TEMPLATE_ID = "document_initial_data"
 GEOMETRY_TEMPLATE_PREFIX = "document.geometry."
 
 OPERATION_EMPTY_TEMPLATE_ID = "operation.empty"
@@ -43,6 +44,7 @@ RADIAL_ROTATION_HEIGHT_FEED = "radial.rotation_height_feed"
 RADIAL_HEIGHT_BITES = "radial.height_bites"
 RADIAL_PRESS_AXIS_FEED = "radial.press_axis_feed"
 RADIAL_INITIAL_ROTATIONS = "radial.initial_rotations"
+TRANSVERSE_ALL_IN_ONE = "transverse.all_in_one"
 TRANSVERSAL_ROTATION_HEIGHT = "transversal.rotation_height"
 CUTTING_HOT_KEEP_PERCENT = "cutting.hot_keep_percent"
 CUTTING_COLD_SAW_KEEP_PERCENT = "cutting.cold_saw_keep_percent"
@@ -64,17 +66,24 @@ RADIAL_PROLONGATION_TEMPLATE_IDS = frozenset(
     {
         RADIAL_ROTATION_HEIGHT_FEED,
         RADIAL_HEIGHT_BITES,
+        RADIAL_PRESS_AXIS_FEED,
+    }
+)
+FULL_DIE_TEMPLATE_IDS = frozenset(
+    {
+        TRANSVERSE_ALL_IN_ONE,
+        TRANSVERSAL_ROTATION_HEIGHT,
+    }
+)
+CUTTING_TEMPLATE_IDS = frozenset(
+    {
+        CUTTING_HOT_KEEP_PERCENT,
+        CUTTING_COLD_SAW_KEEP_PERCENT,
     }
 )
 PROLONGATION_TEMPLATE_IDS = (
     AXIAL_PROLONGATION_TEMPLATE_IDS
     | SPIRAL_PROLONGATION_TEMPLATE_IDS
     | RADIAL_PROLONGATION_TEMPLATE_IDS
-)
-
-NON_SIMULATION_OPERATION_TEMPLATE_IDS = frozenset(
-    {
-        OPERATION_EMPTY_TEMPLATE_ID,
-        RADIAL_INITIAL_ROTATIONS,
-    }
+    | FULL_DIE_TEMPLATE_IDS
 )

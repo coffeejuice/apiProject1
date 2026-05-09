@@ -5,7 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 import logging
 import math
-from typing import Any, Mapping, Sequence
+from collections.abc import Callable
+from typing import Any, Iterator, Mapping, Sequence
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -19,13 +20,16 @@ from app.services.preprocessor.control_program_builder import (
     load_operation_library_snapshot,
 )
 from app.services.preprocessor.geometry import GeneratedGeometry, GeometryBuilder
+from app.services.preprocessor.legacy_surface_mesh import (
+    LegacySurfaceMeshBuilder,
+    LegacySurfacePair,
+)
 from app.services.preprocessor.prolongation import (
-    AXIAL_PROLONGATION_TEMPLATE_IDS,
     ProlongationMathError,
-    RADIAL_PROLONGATION_TEMPLATE_IDS,
-    PROLONGATION_TEMPLATE_IDS,
     calculate_prolongation,
 )
+from app.services.preprocessor.surface_mesh import SurfaceMesh, SurfaceMeshError
+from app.services.preprocessor.cutting import CuttingMathError, calculate_cutting
 from app.services.preprocessor.upsetting import (
     DieDimensions,
     PressModeParameters,
@@ -33,8 +37,17 @@ from app.services.preprocessor.upsetting import (
     calculate_upsetting,
 )
 from app.services.preprocessor.operation_keys import (
+    AXIAL_PROLONGATION_TEMPLATE_IDS,
+    CUTTING_TEMPLATE_IDS,
+    FULL_DIE_TEMPLATE_IDS,
     FURNACE_TEMPLATE_ID,
     HEATING_TEMPERATURE_DURATION_TEMPLATE_ID,
+    PROLONGATION_TEMPLATE_IDS,
+    RADIAL_HEIGHT_BITES,
+    RADIAL_INITIAL_ROTATIONS,
+    RADIAL_PRESS_AXIS_FEED,
+    RADIAL_ROTATION_HEIGHT_FEED,
+    TRANSVERSAL_ROTATION_HEIGHT,
     UPSETTING_LENGTH_TARGET_TEMPLATE_IDS,
     UPSETTING_PRESSURE_CONTROL_TEMPLATE_IDS,
     UPSETTING_TAIL_FLATTENING,
@@ -44,7 +57,7 @@ from app.services.preprocessor.operation_keys import (
 
 LOGGER = logging.getLogger(__name__)
 
-FEED_DIRECTION_DEFAULT_ID = 3
+FEED_DIRECTION_DEFAULT_ID = 2
 FEED_DIRECTION_LEGACY_FIELD = "feed_direction_id"
 FEED_DIRECTION_UPSETTING_FIELD = "feed_direction_upsetting_id"
 FEED_DIRECTION_PROLONGATION_FIELD = "feed_direction_prolongation_id"
@@ -54,10 +67,64 @@ FEED_DIRECTION_FIELDS = (
     FEED_DIRECTION_PROLONGATION_FIELD,
     FEED_DIRECTION_TRANSVERSAL_COGGING_FIELD,
 )
+OLD_FORMING_SPEED_FIELDS = (
+    "speed_upsetting",
+    "speed_prolongation",
+)
+OPERATION_LOCAL_SPEED_FIELD = "speed"
 
 
 class PreprocessorCompileError(ValueError):
     """Raised when document cards cannot be compiled into control-program rows."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        operation_id: int | None = None,
+        document_operation_id: int | None = None,
+        operation_template_id: str | None = None,
+        source_block_id: object | None = None,
+    ) -> None:
+        self.message = message
+        self.operation_id = operation_id
+        self.document_operation_id = document_operation_id
+        self.operation_template_id = operation_template_id
+        self.source_block_id = source_block_id
+        super().__init__(self._formatted_message())
+
+    def with_card_context(self, card: "ProcessCard") -> "PreprocessorCompileError":
+        """Return the same compile error enriched with source operation context."""
+
+        if (
+            self.operation_id is not None
+            and self.document_operation_id is not None
+            and self.operation_template_id is not None
+            and self.source_block_id is not None
+        ):
+            return self
+        return PreprocessorCompileError(
+            self.message,
+            operation_id=self.operation_id or card.operation_id,
+            document_operation_id=self.document_operation_id or card.document_operation_id,
+            operation_template_id=self.operation_template_id or card.operation_template_id,
+            source_block_id=self.source_block_id or card.source_block_id,
+        )
+
+    def _formatted_message(self) -> str:
+        parts = [self.message]
+        context: list[str] = []
+        if self.operation_id is not None:
+            context.append(f"operation_id={self.operation_id}")
+        if self.document_operation_id is not None:
+            context.append(f"document_operation_id={self.document_operation_id}")
+        if self.operation_template_id:
+            context.append(f"operation_template_id={self.operation_template_id}")
+        if self.source_block_id is not None:
+            context.append(f"source_block_id={self.source_block_id}")
+        if context:
+            parts.append(f"({' '.join(context)})")
+        return " ".join(parts)
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,7 +168,6 @@ class CompiledControlProgramRow:
     parameter_values: dict[str, object]
     control_parameters: dict[str, object]
     operation_specific_parameters: dict[str, object]
-    is_simulation: bool
     is_geometry: bool
     press_id: int | None
     press_mode_id: int | None
@@ -118,6 +184,8 @@ class CompiledControlProgramRow:
     final_geometry: GeneratedGeometry | None
     initial_surface_area_mm2: float | None
     final_surface_area_mm2: float | None
+    initial_surface_mesh: SurfaceMesh | None = None
+    final_surface_mesh: SurfaceMesh | None = None
     metrics: dict[str, object] = field(default_factory=dict)
     compiler_notes: tuple[str, ...] = ()
     document_operation_id: int | None = None
@@ -140,6 +208,7 @@ class PreprocessorCompiler:
 
     def __init__(self, *, geometry_builder: GeometryBuilder | None = None) -> None:
         self._geometry_builder = geometry_builder or GeometryBuilder()
+        self._surface_builder = LegacySurfaceMeshBuilder()
 
     def compile(
         self,
@@ -148,49 +217,105 @@ class PreprocessorCompiler:
         *,
         default_press_id: int = 2,
     ) -> CompiledControlProgram:
-        compiled_rows: list[CompiledControlProgramRow] = []
+        compiled_rows = tuple(
+            self.iter_compile(
+                cards,
+                library_snapshot,
+                default_press_id=default_press_id,
+            )
+        )
+        return CompiledControlProgram(
+            rows=compiled_rows,
+            type_tree=library_snapshot.type_tree,
+            flattened_type_ids=tuple(row.operation_template_id or "" for row in compiled_rows),
+        )
+
+    def iter_compile(
+        self,
+        cards: Sequence[ProcessCard],
+        library_snapshot: OperationLibrarySnapshot,
+        *,
+        default_press_id: int = 2,
+    ) -> Iterator[CompiledControlProgramRow]:
+        """Yield compiled rows one by one.
+
+        The compiler state is still sequential because every row may depend on
+        the previous row geometry and accumulated process parameters. Yielding
+        each completed row lets the runtime persist useful diagnostics before a
+        later row fails.
+        """
+
         previous_row: CompiledControlProgramRow | None = None
         simulation_index = 0
         accumulated_parameters: dict[str, object] = {}
 
         for sequence_index, card in enumerate(cards):
-            operation = library_snapshot.get_operation(
-                card.operation_template_id,
-                type_id=card.type_id,
-            )
-            effective_card = (
-                self._with_accumulated_parameters(card, accumulated_parameters)
-                if operation.is_simulation
-                else card
-            )
-            parameter_values = self._extract_parameter_values(effective_card, operation)
-            control_parameters = self._extract_control_parameters(effective_card, operation)
-            simulation_row_index = simulation_index if operation.is_simulation else None
+            try:
+                LOGGER.info(
+                    "Pre compile row started operation_id=%s document_operation_id=%s operation_template_id=%s",
+                    card.operation_id,
+                    card.document_operation_id,
+                    card.operation_template_id,
+                )
+                operation = library_snapshot.get_operation(
+                    card.operation_template_id,
+                    type_id=card.type_id,
+                )
+                effective_card = self._with_accumulated_parameters(card, accumulated_parameters)
+                parameter_values = self._extract_parameter_values(effective_card, operation)
+                control_parameters = self._extract_control_parameters(effective_card, operation)
+                simulation_row_index = simulation_index
 
-            row = self._compile_row(
-                card=effective_card,
-                operation=operation,
-                sequence_index=sequence_index,
-                simulation_index=simulation_row_index,
-                parameter_values=parameter_values,
-                control_parameters=control_parameters,
-                previous_row=previous_row,
-                library_snapshot=library_snapshot,
-                default_press_id=default_press_id,
-            )
-            row = self._attach_card_metadata(row, effective_card)
-            compiled_rows.append(row)
+                row = self._compile_row(
+                    card=effective_card,
+                    operation=operation,
+                    sequence_index=sequence_index,
+                    simulation_index=simulation_row_index,
+                    parameter_values=parameter_values,
+                    control_parameters=control_parameters,
+                    previous_row=previous_row,
+                    library_snapshot=library_snapshot,
+                    default_press_id=default_press_id,
+                )
+                row = self._attach_card_metadata(row, effective_card)
 
-            if operation.is_simulation:
                 simulation_index += 1
-            elif operation.is_accumulate:
-                self._accumulate_parameters(accumulated_parameters, card)
-            previous_row = row
+                if operation.is_accumulate:
+                    self._accumulate_parameters(accumulated_parameters, card)
+                previous_row = row
+                LOGGER.info(
+                    "Pre compile row finished operation_id=%s document_operation_id=%s operation_template_id=%s operation_type=%s",
+                    card.operation_id,
+                    card.document_operation_id,
+                    card.operation_template_id,
+                    row.operation_type,
+                )
+                yield row
+            except Exception as exc:
+                wrapped = self._wrap_card_compile_error(exc, card)
+                LOGGER.error(
+                    "Pre compile row failed operation_id=%s document_operation_id=%s operation_template_id=%s: %s",
+                    card.operation_id,
+                    card.document_operation_id,
+                    card.operation_template_id,
+                    wrapped,
+                    exc_info=LOGGER.isEnabledFor(logging.DEBUG),
+                )
+                raise wrapped from exc
 
-        return CompiledControlProgram(
-            rows=tuple(compiled_rows),
-            type_tree=library_snapshot.type_tree,
-            flattened_type_ids=tuple(row.operation_template_id or "" for row in compiled_rows),
+    def _wrap_card_compile_error(
+        self,
+        exc: Exception,
+        card: ProcessCard,
+    ) -> PreprocessorCompileError:
+        if isinstance(exc, PreprocessorCompileError):
+            return exc.with_card_context(card)
+        return PreprocessorCompileError(
+            str(exc),
+            operation_id=card.operation_id,
+            document_operation_id=card.document_operation_id,
+            operation_template_id=card.operation_template_id,
+            source_block_id=card.source_block_id,
         )
 
     def compile_from_database(
@@ -210,6 +335,28 @@ class PreprocessorCompiler:
             default_press_id=default_press_id,
         )
         return self.compile(enriched_cards, snapshot, default_press_id=default_press_id)
+
+    def iter_compile_from_database(
+        self,
+        *,
+        session: Session,
+        cards: Sequence[ProcessCard],
+        default_press_id: int = 2,
+    ) -> Iterator[CompiledControlProgramRow]:
+        """Load database-backed metadata and yield compiled rows incrementally."""
+
+        snapshot = load_operation_library_snapshot(session)
+        enriched_cards = self._enrich_cards_from_database(
+            session=session,
+            cards=cards,
+            library_snapshot=snapshot,
+            default_press_id=default_press_id,
+        )
+        yield from self.iter_compile(
+            enriched_cards,
+            snapshot,
+            default_press_id=default_press_id,
+        )
 
     def _enrich_cards_from_database(
         self,
@@ -258,7 +405,7 @@ class PreprocessorCompiler:
                     self._die_properties(self._get_die(session, die_cache, bottom_die_id)),
                 )
 
-            fallback_press_id = default_press_id if operation is not None and operation.is_simulation else None
+            fallback_press_id = default_press_id if operation is not None else None
             press_id = self._first_optional_int(card.press_id, parameters.get("press_id"), fallback_press_id)
             press_mode_id = self._first_optional_int(card.press_mode_id, parameters.get("press_mode_id"))
             press_mode: PressMode | None = None
@@ -440,6 +587,28 @@ class PreprocessorCompiler:
                 library_snapshot=library_snapshot,
                 default_press_id=default_press_id,
             )
+        if operation.operation_template_id == RADIAL_INITIAL_ROTATIONS:
+            return self._compile_radial_initial_rotations_row(
+                card=card,
+                operation=operation,
+                sequence_index=sequence_index,
+                simulation_index=simulation_index,
+                parameter_values=parameter_values,
+                control_parameters=control_parameters,
+                previous_row=previous_row,
+                library_snapshot=library_snapshot,
+            )
+        if operation.operation_template_id in CUTTING_TEMPLATE_IDS:
+            return self._compile_cutting_row(
+                card=card,
+                operation=operation,
+                sequence_index=sequence_index,
+                simulation_index=simulation_index,
+                parameter_values=parameter_values,
+                control_parameters=control_parameters,
+                previous_row=previous_row,
+                library_snapshot=library_snapshot,
+            )
         return self._compile_generic_row(
             card=card,
             operation=operation,
@@ -563,6 +732,9 @@ class PreprocessorCompiler:
         surface_area = self._surface_area_mm2(geometry)
         step_control = card.material_label or control_parameters.get("material_short_name")
         metrics: dict[str, object] = {}
+        surface_pair = self._safe_surface_pair("billet", lambda: self._surface_builder.billet(geometry))
+        if surface_pair.notes:
+            metrics["legacy_surface_notes"] = list(surface_pair.notes)
         mesh_elements = self._coerce_optional_int(card.parameters.get("mesh_elements"))
         if mesh_elements is not None:
             metrics["mesh_elements"] = mesh_elements
@@ -581,7 +753,6 @@ class PreprocessorCompiler:
             parameter_values=parameter_values,
             control_parameters=control_parameters,
             operation_specific_parameters={},
-            is_simulation=operation.is_simulation,
             is_geometry=operation.is_geometry,
             press_id=card.press_id,
             press_mode_id=card.press_mode_id,
@@ -598,6 +769,8 @@ class PreprocessorCompiler:
             final_geometry=geometry,
             initial_surface_area_mm2=surface_area,
             final_surface_area_mm2=surface_area,
+            initial_surface_mesh=surface_pair.initial,
+            final_surface_mesh=surface_pair.final,
             metrics=metrics,
         )
 
@@ -615,12 +788,26 @@ class PreprocessorCompiler:
         previous = self._require_previous_row(previous_row, card, "furnace")
         final_geometry = self._require_geometry(previous.final_geometry, card, "furnace")
         furnace_class_id = self._optional_int_parameter(card, "furnace_class_id")
-        furnace_temperature = self._get_float_parameter(card, "temperature")
+        furnace_temperature = self._first_optional_float(card, "temperature")
+        if furnace_temperature is None:
+            furnace_temperature = self._last_program_temperature(card.parameters.get("temperature_program"))
+        if furnace_temperature is None:
+            raise PreprocessorCompileError(
+                f"Furnace card operation_id={card.operation_id} requires numeric parameter 'temperature' "
+                "or at least one hold row with temperature_c in temperature_program"
+            )
         operation_specific_parameters: dict[str, object] = {
             "furnace_class_id": furnace_class_id,
             "control_temperature_furnace_initial_c": previous.temperature_final_c,
             "control_temperature_furnace_final_c": furnace_temperature,
         }
+        surface_pair = self._safe_surface_pair(
+            "furnace",
+            lambda: self._surface_builder.static(previous.final_surface_mesh),
+        )
+        metrics = dict(previous.metrics)
+        if surface_pair.notes:
+            metrics["legacy_surface_notes"] = list(surface_pair.notes)
 
         return CompiledControlProgramRow(
             sequence_index=sequence_index,
@@ -637,7 +824,6 @@ class PreprocessorCompiler:
             parameter_values=parameter_values,
             control_parameters=control_parameters,
             operation_specific_parameters=operation_specific_parameters,
-            is_simulation=operation.is_simulation,
             is_geometry=operation.is_geometry,
             press_id=previous.press_id,
             press_mode_id=previous.press_mode_id,
@@ -654,7 +840,9 @@ class PreprocessorCompiler:
             final_geometry=final_geometry,
             initial_surface_area_mm2=previous.final_surface_area_mm2,
             final_surface_area_mm2=previous.final_surface_area_mm2,
-            metrics=dict(previous.metrics),
+            initial_surface_mesh=surface_pair.initial,
+            final_surface_mesh=surface_pair.final,
+            metrics=metrics,
         )
 
     def _compile_heat_row(
@@ -687,6 +875,13 @@ class PreprocessorCompiler:
             "control_temperature_furnace_initial_c": initial_temperature,
             "control_temperature_furnace_final_c": next_temperature,
         }
+        surface_pair = self._safe_surface_pair(
+            "heating",
+            lambda: self._surface_builder.static(previous.final_surface_mesh),
+        )
+        metrics = dict(previous.metrics)
+        if surface_pair.notes:
+            metrics["legacy_surface_notes"] = list(surface_pair.notes)
 
         return CompiledControlProgramRow(
             sequence_index=sequence_index,
@@ -703,7 +898,6 @@ class PreprocessorCompiler:
             parameter_values=parameter_values,
             control_parameters=control_parameters,
             operation_specific_parameters=operation_specific_parameters,
-            is_simulation=operation.is_simulation,
             is_geometry=operation.is_geometry,
             press_id=previous.press_id,
             press_mode_id=previous.press_mode_id,
@@ -720,6 +914,9 @@ class PreprocessorCompiler:
             final_geometry=final_geometry,
             initial_surface_area_mm2=previous.final_surface_area_mm2,
             final_surface_area_mm2=previous.final_surface_area_mm2,
+            initial_surface_mesh=surface_pair.initial,
+            final_surface_mesh=surface_pair.final,
+            metrics=metrics,
         )
 
     def _compile_upsetting_row(
@@ -825,6 +1022,19 @@ class PreprocessorCompiler:
         }
         metrics = dict(upsetting_result.metrics)
         self._store_feed_direction_metrics(metrics, operation, current_feed_direction_id)
+        surface_pair = self._safe_surface_pair(
+            "upsetting",
+            lambda: self._surface_builder.upsetting(
+                previous_final=previous.final_surface_mesh,
+                initial_geometry=initial_geometry,
+                final_geometry=upsetting_result.final_geometry,
+                metrics=metrics,
+                operation_specific_parameters=operation_specific_parameters,
+                template_id=operation.operation_template_id,
+            ),
+        )
+        if surface_pair.notes:
+            metrics["legacy_surface_notes"] = list(surface_pair.notes)
 
         notes = list(upsetting_result.compiler_notes)
         if upsetting_result.simulation_expected_duration_days is None:
@@ -846,7 +1056,6 @@ class PreprocessorCompiler:
             parameter_values=parameter_values,
             control_parameters=control_parameters,
             operation_specific_parameters=operation_specific_parameters,
-            is_simulation=operation.is_simulation,
             is_geometry=operation.is_geometry,
             press_id=resolved_press_id,
             press_mode_id=press_mode.press_mode_id,
@@ -863,6 +1072,8 @@ class PreprocessorCompiler:
             final_geometry=upsetting_result.final_geometry,
             initial_surface_area_mm2=upsetting_result.metrics.get("initial_surface_area_mm2"),
             final_surface_area_mm2=upsetting_result.metrics.get("final_surface_area_mm2"),
+            initial_surface_mesh=surface_pair.initial,
+            final_surface_mesh=surface_pair.final,
             metrics=metrics,
             compiler_notes=tuple(notes),
         )
@@ -923,6 +1134,7 @@ class PreprocessorCompiler:
         angle_deg = self._resolve_prolongation_angle(card)
         current_feed_direction_id = self._resolve_feed_direction_id(card=card, operation=operation)
         previous_feed_direction_id = self._resolve_previous_feed_direction_id(previous, operation)
+        compiled_operation_type = "FullDie" if operation.deformation_type == "full_die" else "Draw"
 
         try:
             result = calculate_prolongation(
@@ -947,7 +1159,7 @@ class PreprocessorCompiler:
                 rotation_per_bite_deg=self._first_optional_float(card, "rotation_per_bite") or 0.0,
                 current_feed_direction_id=current_feed_direction_id,
                 previous_feed_direction_id=previous_feed_direction_id,
-                is_same_operation_type_as_previous=previous.operation_type == "Draw",
+                is_same_operation_type_as_previous=previous.operation_type == compiled_operation_type,
                 mesh_elements=self._resolve_mesh_elements(card, previous),
                 extra_rotations={
                     "y_rotation": self._first_optional_float(card, "y_rotation") or 0.0,
@@ -967,6 +1179,19 @@ class PreprocessorCompiler:
         }
         metrics = dict(result.metrics)
         self._store_feed_direction_metrics(metrics, operation, current_feed_direction_id)
+        surface_pair = self._safe_surface_pair(
+            "prolongation",
+            lambda: self._surface_builder.prolongation(
+                previous_final=previous.final_surface_mesh,
+                initial_geometry=initial_geometry,
+                final_geometry=result.final_geometry,
+                metrics=metrics,
+                operation_specific_parameters=operation_specific_parameters,
+                template_id=operation.operation_template_id,
+            ),
+        )
+        if surface_pair.notes:
+            metrics["legacy_surface_notes"] = list(surface_pair.notes)
 
         notes = list(result.compiler_notes)
         if result.simulation_expected_duration_days is None:
@@ -986,13 +1211,12 @@ class PreprocessorCompiler:
             parent_type_id=operation.parent_type_id,
             process_name=operation.process_name,
             library_name=operation.library_name,
-            operation_type="Draw",
+            operation_type=compiled_operation_type,
             deformation_control="H",
             step_control=self._infer_step_control(operation),
             parameter_values=parameter_values,
             control_parameters=control_parameters,
             operation_specific_parameters=operation_specific_parameters,
-            is_simulation=operation.is_simulation,
             is_geometry=operation.is_geometry,
             press_id=resolved_press_id,
             press_mode_id=press_mode.press_mode_id,
@@ -1009,6 +1233,203 @@ class PreprocessorCompiler:
             final_geometry=result.final_geometry,
             initial_surface_area_mm2=result.metrics.get("initial_surface_area_mm2"),
             final_surface_area_mm2=result.metrics.get("final_surface_area_mm2"),
+            initial_surface_mesh=surface_pair.initial,
+            final_surface_mesh=surface_pair.final,
+            metrics=metrics,
+            compiler_notes=tuple(notes),
+        )
+
+    def _compile_radial_initial_rotations_row(
+        self,
+        *,
+        card: ProcessCard,
+        operation: OperationTypeDefinition,
+        sequence_index: int,
+        simulation_index: int | None,
+        parameter_values: dict[str, object],
+        control_parameters: dict[str, object],
+        previous_row: CompiledControlProgramRow | None,
+        library_snapshot: OperationLibrarySnapshot,
+    ) -> CompiledControlProgramRow:
+        previous = self._require_previous_row(previous_row, card, "radial initial rotations")
+        geometry = self._require_geometry(previous.final_geometry, card, "radial initial rotations")
+        time_before = self._resolve_time_between_operations(
+            card=card,
+            operation=operation,
+            previous_row=previous,
+            library_snapshot=library_snapshot,
+            press_mode_id=previous.press_mode_id,
+        ) or 0.0
+        rotations = (
+            ("x", self._first_float_parameter(card, "rotation_1_x", default=0.0)),
+            ("y", self._first_float_parameter(card, "rotation_2_y", default=0.0)),
+            ("x", self._first_float_parameter(card, "rotation_3_x", default=0.0)),
+            ("y", self._first_float_parameter(card, "rotation_4_y", default=0.0)),
+        )
+        total_time_seconds = previous.total_time_seconds + time_before
+        metrics = dict(previous.metrics)
+        metrics.update(
+            {
+                "radial_initial_rotations": rotations,
+                "time_before_pass_seconds": time_before,
+            }
+        )
+        surface_pair = self._safe_surface_pair(
+            "radial initial rotations",
+            lambda: self._surface_builder.static(previous.final_surface_mesh),
+        )
+        if surface_pair.notes:
+            metrics["legacy_surface_notes"] = list(surface_pair.notes)
+        operation_specific_parameters = {
+            **control_parameters,
+            "raw_parameters": dict(card.parameters),
+            "radial_initial_rotations": rotations,
+            "radial_rotations": rotations,
+            "deformation_geometry_ported": True,
+        }
+
+        return CompiledControlProgramRow(
+            sequence_index=sequence_index,
+            simulation_index=simulation_index,
+            operation_id=card.operation_id,
+            source_block_id=card.source_block_id,
+            type_id=card.type_id,
+            parent_type_id=operation.parent_type_id,
+            process_name=operation.process_name,
+            library_name=operation.library_name,
+            operation_type="RadialInitialRotations",
+            deformation_control="NA",
+            step_control=self._infer_step_control(operation),
+            parameter_values=parameter_values,
+            control_parameters=control_parameters,
+            operation_specific_parameters=operation_specific_parameters,
+            is_geometry=operation.is_geometry,
+            press_id=previous.press_id,
+            press_mode_id=previous.press_mode_id,
+            material_id=previous.material_id,
+            material_label=previous.material_label,
+            weight_kg=previous.weight_kg,
+            duration_seconds=0.0,
+            total_time_seconds=total_time_seconds,
+            temperature_initial_c=previous.temperature_final_c,
+            temperature_final_c=previous.temperature_final_c,
+            time_before_operation_seconds=time_before,
+            simulation_expected_duration_days=0.0,
+            initial_geometry=geometry,
+            final_geometry=geometry,
+            initial_surface_area_mm2=previous.final_surface_area_mm2,
+            final_surface_area_mm2=previous.final_surface_area_mm2,
+            initial_surface_mesh=surface_pair.initial,
+            final_surface_mesh=surface_pair.final,
+            metrics=metrics,
+        )
+
+    def _compile_cutting_row(
+        self,
+        *,
+        card: ProcessCard,
+        operation: OperationTypeDefinition,
+        sequence_index: int,
+        simulation_index: int | None,
+        parameter_values: dict[str, object],
+        control_parameters: dict[str, object],
+        previous_row: CompiledControlProgramRow | None,
+        library_snapshot: OperationLibrarySnapshot,
+    ) -> CompiledControlProgramRow:
+        previous = self._require_previous_row(previous_row, card, "cutting")
+        initial_geometry = self._require_geometry(previous.final_geometry, card, "cutting")
+        self._validate_explicit_speed_fields(
+            card=card,
+            parameter_values=parameter_values,
+            control_parameters=control_parameters,
+        )
+        time_before = self._resolve_time_between_operations(
+            card=card,
+            operation=operation,
+            previous_row=previous,
+            library_snapshot=library_snapshot,
+            press_mode_id=previous.press_mode_id,
+        )
+        pieces_count = self._optional_int_parameter(card, "pieces_count")
+        piece_number = self._optional_int_parameter(card, "piece_number")
+        if pieces_count is None:
+            raise PreprocessorCompileError(f"Cutting card operation_id={card.operation_id} requires pieces_count")
+        if piece_number is None:
+            raise PreprocessorCompileError(f"Cutting card operation_id={card.operation_id} requires piece_number")
+
+        try:
+            cutting_result = calculate_cutting(
+                template_id=operation.operation_template_id,
+                initial_geometry=initial_geometry,
+                pieces_count=pieces_count,
+                piece_number=piece_number,
+                percentage_to_keep=self._first_float_parameter(card, "percentage_to_keep"),
+                previous_total_time_seconds=previous.total_time_seconds,
+                time_between_operation_seconds=time_before,
+            )
+        except CuttingMathError as exc:
+            raise PreprocessorCompileError(
+                f"Cutting card operation_id={card.operation_id} cannot be compiled: {exc}"
+            ) from exc
+
+        operation_specific_parameters = {
+            **control_parameters,
+            **cutting_result.operation_specific_parameters,
+            "raw_parameters": dict(card.parameters),
+        }
+        speed_value = self._first_optional_float(card, "speed_prolongation", "speed")
+        if speed_value is not None:
+            operation_specific_parameters["speed_prolongation"] = speed_value
+        metrics = dict(cutting_result.metrics)
+        surface_pair = self._safe_surface_pair(
+            "cutting",
+            lambda: self._surface_builder.cutting(
+                previous_final=previous.final_surface_mesh,
+                final_geometry=cutting_result.final_geometry,
+                template_id=operation.operation_template_id,
+            ),
+        )
+        if surface_pair.notes:
+            metrics["legacy_surface_notes"] = list(surface_pair.notes)
+
+        notes = list(cutting_result.compiler_notes)
+        if cutting_result.simulation_expected_duration_days is None:
+            notes.append("Simulation expected duration estimate is not ported yet.")
+        duration_seconds = cutting_result.total_time_seconds - previous.total_time_seconds
+
+        return CompiledControlProgramRow(
+            sequence_index=sequence_index,
+            simulation_index=simulation_index,
+            operation_id=card.operation_id,
+            source_block_id=card.source_block_id,
+            type_id=card.type_id,
+            parent_type_id=operation.parent_type_id,
+            process_name=operation.process_name,
+            library_name=operation.library_name,
+            operation_type="Cut",
+            deformation_control="P",
+            step_control=self._infer_step_control(operation),
+            parameter_values=parameter_values,
+            control_parameters=control_parameters,
+            operation_specific_parameters=operation_specific_parameters,
+            is_geometry=operation.is_geometry,
+            press_id=previous.press_id,
+            press_mode_id=previous.press_mode_id,
+            material_id=previous.material_id,
+            material_label=previous.material_label,
+            weight_kg=previous.weight_kg,
+            duration_seconds=duration_seconds,
+            total_time_seconds=cutting_result.total_time_seconds,
+            temperature_initial_c=previous.temperature_final_c,
+            temperature_final_c=previous.temperature_final_c,
+            time_before_operation_seconds=cutting_result.time_before_operation_seconds,
+            simulation_expected_duration_days=cutting_result.simulation_expected_duration_days,
+            initial_geometry=initial_geometry,
+            final_geometry=cutting_result.final_geometry,
+            initial_surface_area_mm2=cutting_result.metrics.get("initial_surface_area_mm2"),
+            final_surface_area_mm2=cutting_result.metrics.get("final_surface_area_mm2"),
+            initial_surface_mesh=surface_pair.initial,
+            final_surface_mesh=surface_pair.final,
             metrics=metrics,
             compiler_notes=tuple(notes),
         )
@@ -1045,7 +1466,7 @@ class PreprocessorCompiler:
             resolved_press_id = previous_row.press_id
         if resolved_press_mode_id is None and previous_row is not None:
             resolved_press_mode_id = previous_row.press_mode_id
-        if resolved_press_id is None and operation.is_simulation:
+        if resolved_press_id is None:
             resolved_press_id = default_press_id
 
         time_before = self._resolve_time_between_operations(
@@ -1057,11 +1478,17 @@ class PreprocessorCompiler:
         )
 
         notes: list[str] = []
-        if operation.is_simulation and not operation.is_geometry:
+        if not operation.is_geometry:
             notes.append("Control row compiled without operation-family-specific deformation math.")
 
         total_time_seconds = previous_row.total_time_seconds if previous_row is not None else 0.0
         temperature = previous_row.temperature_final_c if previous_row is not None else None
+        surface_pair = self._safe_surface_pair(
+            "generic",
+            lambda: self._surface_builder.static(previous_row.final_surface_mesh if previous_row is not None else None),
+        )
+        if surface_pair.notes:
+            metrics["legacy_surface_notes"] = list(surface_pair.notes)
 
         return CompiledControlProgramRow(
             sequence_index=sequence_index,
@@ -1078,7 +1505,6 @@ class PreprocessorCompiler:
             parameter_values=parameter_values,
             control_parameters=control_parameters,
             operation_specific_parameters={"raw_parameters": dict(card.parameters)},
-            is_simulation=operation.is_simulation,
             is_geometry=operation.is_geometry,
             press_id=resolved_press_id,
             press_mode_id=resolved_press_mode_id,
@@ -1095,6 +1521,8 @@ class PreprocessorCompiler:
             final_geometry=previous_geometry,
             initial_surface_area_mm2=previous_surface_area,
             final_surface_area_mm2=previous_surface_area,
+            initial_surface_mesh=surface_pair.initial,
+            final_surface_mesh=surface_pair.final,
             metrics=metrics,
             compiler_notes=tuple(notes),
         )
@@ -1122,7 +1550,7 @@ class PreprocessorCompiler:
         library_snapshot: OperationLibrarySnapshot,
         press_mode_id: int | None,
     ) -> float | None:
-        if previous_row is None or press_mode_id is None or not operation.is_simulation:
+        if previous_row is None or press_mode_id is None:
             return None
         if not operation.operation_template_id or not previous_row.operation_template_id:
             return None
@@ -1206,39 +1634,86 @@ class PreprocessorCompiler:
         control_parameters: Mapping[str, object],
         press_mode: PressModeParameters,
     ) -> float:
+        self._validate_explicit_speed_fields(
+            card=card,
+            parameter_values=parameter_values,
+            control_parameters=control_parameters,
+        )
+
         candidate_names: list[str] = []
+        has_operation_local_speed = OPERATION_LOCAL_SPEED_FIELD in operation.db_column_names
+        if has_operation_local_speed:
+            candidate_names.append(OPERATION_LOCAL_SPEED_FIELD)
         if operation.speed_column_name:
             candidate_names.append(operation.speed_column_name)
-        candidate_names.extend(("speed", "working_speed", "target_speed"))
+        if not has_operation_local_speed:
+            candidate_names.append(OPERATION_LOCAL_SPEED_FIELD)
 
         seen: set[str] = set()
         for name in candidate_names:
             if name in seen:
                 continue
             seen.add(name)
-            raw_value = parameter_values.get(name)
-            if raw_value is None:
-                raw_value = control_parameters.get(name)
-            if raw_value is None:
-                raw_value = card.parameters.get(name)
+            raw_value = self._first_present_value(
+                parameter_values.get(name),
+                control_parameters.get(name),
+                card.parameters.get(name),
+            )
             if raw_value is None:
                 continue
             try:
                 value = float(raw_value)
             except (TypeError, ValueError):
-                continue
+                raise PreprocessorCompileError(
+                    f"Card operation_id={card.operation_id} parameter {name!r} must be numeric"
+                )
             if value > 0.0:
+                if value > press_mode.working_speed_mm_per_s:
+                    raise PreprocessorCompileError(
+                        f"Card operation_id={card.operation_id} parameter {name!r}={value:g} mm/s exceeds "
+                        f"press mode working speed {press_mode.working_speed_mm_per_s:g} mm/s"
+                    )
                 return value
+            raise PreprocessorCompileError(
+                f"Card operation_id={card.operation_id} parameter {name!r} must be positive"
+            )
 
-        return press_mode.working_speed_mm_per_s
+        required_name = operation.speed_column_name or OPERATION_LOCAL_SPEED_FIELD
+        raise PreprocessorCompileError(
+            f"Card operation_id={card.operation_id} requires explicit positive {required_name!r} [mm/s]"
+        )
+
+    def _validate_explicit_speed_fields(
+        self,
+        *,
+        card: ProcessCard,
+        parameter_values: Mapping[str, object],
+        control_parameters: Mapping[str, object],
+    ) -> None:
+        speed_field_names = (*OLD_FORMING_SPEED_FIELDS, OPERATION_LOCAL_SPEED_FIELD)
+        for name in speed_field_names:
+            raw_value = self._first_present_value(
+                parameter_values.get(name),
+                control_parameters.get(name),
+                card.parameters.get(name),
+            )
+            if raw_value is None:
+                continue
+            try:
+                value = float(raw_value)
+            except (TypeError, ValueError) as exc:
+                raise PreprocessorCompileError(
+                    f"Card operation_id={card.operation_id} parameter {name!r} must be numeric"
+                ) from exc
+            if value <= 0.0:
+                raise PreprocessorCompileError(
+                    f"Card operation_id={card.operation_id} parameter {name!r} must be positive"
+                )
 
     def _feed_direction_field_for_operation(self, operation: OperationTypeDefinition) -> str:
         if operation.speed_column_name == "speed_upsetting" or operation.deformation_type == "upsetting":
             return FEED_DIRECTION_UPSETTING_FIELD
-        if (
-            operation.speed_column_name == "speed_transversal_cogging"
-            or operation.deformation_type == "full_die"
-        ):
+        if operation.deformation_type == "full_die":
             return FEED_DIRECTION_TRANSVERSAL_COGGING_FIELD
         return FEED_DIRECTION_PROLONGATION_FIELD
 
@@ -1359,12 +1834,44 @@ class PreprocessorCompiler:
                 ) from exc
         return None
 
+    def _last_program_temperature(self, value: object) -> float | None:
+        if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
+            return None
+        last_temperature: float | None = None
+        for raw_row in value:
+            if not isinstance(raw_row, Mapping):
+                continue
+            if str(raw_row.get("type") or "hold") != "hold":
+                continue
+            raw_temperature = raw_row.get("temperature_c")
+            if raw_temperature in (None, ""):
+                continue
+            try:
+                last_temperature = float(raw_temperature)
+            except (TypeError, ValueError) as exc:
+                raise PreprocessorCompileError(
+                    f"temperature_program hold row temperature_c={raw_temperature!r} must be numeric"
+                ) from exc
+        return last_temperature
+
+    @staticmethod
+    def _first_present_value(*values: object) -> object | None:
+        for value in values:
+            if value is None:
+                continue
+            if isinstance(value, str) and value.strip() == "":
+                continue
+            return value
+        return None
+
     def _resolve_prolongation_angle(self, card: ProcessCard) -> float:
         template_id = card.operation_template_id or ""
         if template_id in AXIAL_PROLONGATION_TEMPLATE_IDS:
             return self._first_optional_float(card, "rotation", "angle") or 0.0
-        if template_id in RADIAL_PROLONGATION_TEMPLATE_IDS:
+        if template_id in {RADIAL_ROTATION_HEIGHT_FEED, RADIAL_HEIGHT_BITES}:
             return self._first_optional_float(card, "rotation_manipulator", "angle") or 0.0
+        if template_id == RADIAL_PRESS_AXIS_FEED or template_id in FULL_DIE_TEMPLATE_IDS:
+            return self._first_optional_float(card, "rotation", "angle") or 0.0
         return 0.0
 
     def _parse_skip_bites(self, value: object) -> tuple[int, ...]:
@@ -1415,15 +1922,25 @@ class PreprocessorCompiler:
         return None
 
     def _infer_step_control(self, operation: OperationTypeDefinition) -> str | None:
+        if operation.operation_template_id in CUTTING_TEMPLATE_IDS:
+            return "StepsNum"
         if "num_of_bites" in operation.db_column_names:
             return "StepsNum"
-        if operation.is_simulation:
-            return "Feed"
-        return None
+        return "Feed"
 
     def _surface_area_mm2(self, geometry: GeneratedGeometry) -> float:
         perimeter = self._outline_perimeter_mm(geometry.cross_section_outline)
         return 2.0 * geometry.cross_section_area_mm2 + perimeter * geometry.length_mm
+
+    def _safe_surface_pair(self, context: str, producer: Callable[[], LegacySurfacePair]) -> LegacySurfacePair:
+        """Run legacy surface generation and fail loudly on missing algorithms/data."""
+
+        try:
+            return producer()
+        except SurfaceMeshError as exc:
+            raise PreprocessorCompileError(
+                f"Legacy STL mesh generation failed for {context}: {exc}"
+            ) from exc
 
     def _outline_perimeter_mm(self, outline: Sequence[tuple[float, float]]) -> float:
         if len(outline) < 2:

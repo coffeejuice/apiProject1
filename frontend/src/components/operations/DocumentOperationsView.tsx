@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { apiClient } from '../../lib/apiClient'
 import type { BlockData, DocumentOperationListResponse, DocumentOperationRecord } from '../../types/api'
+import Tooltip from '../ui/Tooltip'
 
 interface DocumentOperationsViewProps {
   documentId: string | null
@@ -21,6 +22,21 @@ const HEATING_BLOCK_TYPE_ID = 'heating'
 const DEFORMATION_BLOCK_TYPE_ID = 'deformation'
 const FURNACE_BLOCK_TYPE_ID = 'furnace'
 const OPERATION_BLOCK_TYPE_ID = 'operation'
+
+function RegenerateIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M18.7 8.1A7.3 7.3 0 0 0 5.2 6.7M5 3.8v3.4h3.4M5.3 15.9a7.3 7.3 0 0 0 13.5 1.4M19 20.2v-3.4h-3.4"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    </svg>
+  )
+}
 
 function isSectionBlock(block: BlockData): boolean {
   return block.block_type_id === HEATING_BLOCK_TYPE_ID || block.block_type_id === DEFORMATION_BLOCK_TYPE_ID
@@ -112,6 +128,15 @@ function flattenTargetEntries(target: Record<string, unknown>, prefix = ''): Tar
     if (fullKey === 'parameters_calculation_mode') {
       return []
     }
+    if (Array.isArray(value)) {
+      if (value.every((entry) => entry && typeof entry === 'object' && !Array.isArray(entry))) {
+        return value.flatMap((entry, index) =>
+          flattenTargetEntries(entry as Record<string, unknown>, `${fullKey}.${index + 1}`)
+        )
+      }
+      const formatted = formatValue(value)
+      return formatted === '' ? [] : [{ key: fullKey, value: formatted }]
+    }
     if (value && typeof value === 'object' && !Array.isArray(value)) {
       return flattenTargetEntries(value as Record<string, unknown>, fullKey)
     }
@@ -125,17 +150,54 @@ function operationLabel(operation: DocumentOperationRecord): string {
 }
 
 function parseErrorText(operation: DocumentOperationRecord): string {
+  return parseErrorDiagnostics(operation)
+    .map((diagnostic) => diagnostic.text)
+    .join('; ')
+}
+
+function parseErrorDiagnostics(operation: DocumentOperationRecord): Array<{ key: string; text: string }> {
   return operation.parse_errors
     .map((entry) => {
-      if (typeof entry.message === 'string') {
-        return entry.message
+      const location = parseErrorLocation(entry)
+      const source = parseErrorSource(entry)
+      const message = parseErrorMessage(entry)
+      const parts = [location, source, message].filter(Boolean)
+      return {
+        key: `${location || 'error'}-${source || ''}-${message}`,
+        text: parts.join(': '),
       }
-      if (typeof entry.error === 'string') {
-        return entry.error
-      }
-      return JSON.stringify(entry)
     })
-    .join('; ')
+    .filter((diagnostic) => diagnostic.text.trim().length > 0)
+}
+
+function parseErrorLocation(entry: Record<string, unknown>): string {
+  if (entry.sentence !== undefined && entry.sentence !== null) {
+    return `Sentence ${entry.sentence}`
+  }
+  if (entry.row !== undefined && entry.row !== null) {
+    return `Table row ${entry.row}`
+  }
+  return 'Parse error'
+}
+
+function parseErrorSource(entry: Record<string, unknown>): string {
+  if (typeof entry.source_sentence === 'string' && entry.source_sentence.trim()) {
+    return `"${entry.source_sentence}"`
+  }
+  if (entry.source_row && typeof entry.source_row === 'object') {
+    return formatValue(entry.source_row)
+  }
+  return ''
+}
+
+function parseErrorMessage(entry: Record<string, unknown>): string {
+  if (typeof entry.message === 'string') {
+    return entry.message
+  }
+  if (typeof entry.error === 'string') {
+    return entry.error
+  }
+  return JSON.stringify(entry)
 }
 
 export default function DocumentOperationsView({
@@ -148,6 +210,7 @@ export default function DocumentOperationsView({
 }: DocumentOperationsViewProps) {
   const [operations, setOperations] = useState<DocumentOperationRecord[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isRegenerating, setIsRegenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const blocksById = useMemo(
@@ -174,14 +237,14 @@ export default function DocumentOperationsView({
   }, [activeSourceIds, isFocused, operations])
 
   useEffect(() => {
-    if (!documentId) {
-      setOperations([])
-      setError(null)
-      return
-    }
-
     let cancelled = false
-    const loadOperations = async () => {
+    const load = async () => {
+      if (!documentId) {
+        setOperations([])
+        setError(null)
+        return
+      }
+
       setIsLoading(true)
       setError(null)
       const response = await apiClient.get<DocumentOperationListResponse>(`/documents/${documentId}/operations`)
@@ -197,11 +260,29 @@ export default function DocumentOperationsView({
       setIsLoading(false)
     }
 
-    void loadOperations()
+    void load()
     return () => {
       cancelled = true
     }
   }, [documentId, saveStatus])
+
+  const regenerateOperations = async () => {
+    if (!documentId || hasUnsavedChanges || isLoading || isRegenerating) {
+      return
+    }
+
+    setIsRegenerating(true)
+    setError(null)
+    const response = await apiClient.post<DocumentOperationListResponse>(
+      `/documents/${documentId}/operations/regenerate`
+    )
+    if (!response.ok || !response.data) {
+      setError(response.errorMessage || 'Failed to regenerate document operations')
+    } else {
+      setOperations(response.data.operations || [])
+    }
+    setIsRegenerating(false)
+  }
 
   if (!documentId) {
     return (
@@ -212,6 +293,10 @@ export default function DocumentOperationsView({
   }
 
   const focusTitle = isFocused ? getBlockTitle(activeBlock) : null
+  const regenerateDisabled = hasUnsavedChanges || isLoading || isRegenerating
+  const regenerateTip = hasUnsavedChanges
+    ? 'Save document before regenerating operations'
+    : 'Regenerate operations'
 
   return (
     <aside className="operations-panel">
@@ -222,7 +307,20 @@ export default function DocumentOperationsView({
             {isFocused ? `Focused: ${focusTitle}` : 'All saved materialized records'}
           </div>
         </div>
-        <div className="ui-badge">{visibleOperations.length} rows</div>
+        <div className="operations-header-actions">
+          <Tooltip content={regenerateTip}>
+            <button
+              type="button"
+              className="operations-icon-button"
+              onClick={regenerateOperations}
+              aria-disabled={regenerateDisabled}
+              aria-label="Regenerate operations"
+            >
+              <RegenerateIcon className={isRegenerating ? 'operations-icon-spin' : ''} />
+            </button>
+          </Tooltip>
+          <div className="ui-badge">{visibleOperations.length} rows</div>
+        </div>
       </div>
 
       {hasUnsavedChanges ? (
@@ -241,7 +339,7 @@ export default function DocumentOperationsView({
             <tr>
               <th>#</th>
               <th>Type</th>
-              <th>Target parameters</th>
+              <th>Operation parameters</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -250,8 +348,10 @@ export default function DocumentOperationsView({
               const isHighlighted =
                 hoveredSourceIds.has(operation.source_block_id) ||
                 activeSourceIds.has(operation.source_block_id)
-              const targetEntries = flattenTargetEntries(operation.target || {})
+              const operationParameters = operation.operation_parameters || operation.target || {}
+              const targetEntries = flattenTargetEntries(operationParameters)
               const errorText = parseErrorText(operation)
+              const errorDiagnostics = parseErrorDiagnostics(operation)
               return (
                 <tr
                   key={operation.document_operation_id}
@@ -277,6 +377,15 @@ export default function DocumentOperationsView({
                     ) : (
                       <span className="operations-muted">No target parameters</span>
                     )}
+                    {errorDiagnostics.length > 0 ? (
+                      <div className="operations-parse-diagnostics" aria-label="Parse error details">
+                        {errorDiagnostics.map((diagnostic, index) => (
+                          <div key={`${operation.document_operation_id}-${diagnostic.key}-${index}`} className="operations-parse-error">
+                            {diagnostic.text}
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
                   </td>
                   <td>
                     <span

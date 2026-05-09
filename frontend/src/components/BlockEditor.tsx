@@ -15,7 +15,7 @@ import { useBlockClipboardStore } from '../stores/useBlockClipboardStore'
 import { apiClient } from '../lib/apiClient'
 import { applyFieldLengthLimits } from '../lib/blockFieldLimits'
 import { loadDocumentResumeState, saveDocumentResumeState } from '../lib/documentResumeState'
-import { getBlockComponent, BlockData } from './blocks'
+import { getBlockComponent, type BlockData, type SectionNumberingControl } from './blocks'
 import type {
   DocumentLineageResponse,
   EditSession,
@@ -115,6 +115,12 @@ const OPERATION_TYPE_NAMESPACE_KEYS = [
   'target',
   'template_snapshot',
 ] as const
+const OPERATION_TEMPLATE_TO_DEFORMATION_FEED_KEY: Record<string, string> = {
+  'operation.tail_flattening': 'tail_flattening',
+  'operation.cogging': 'cogging',
+  'operation.radial': 'radial',
+  'operation.transversal': 'transversal',
+}
 
 type ShortcutShiftDirection = 'up' | 'down'
 type ShortcutInsertPosition = 'above' | 'below'
@@ -166,6 +172,16 @@ type DocumentVisualSection =
 interface DocumentVisualLayout {
   heading: BlockData | null
   sections: DocumentVisualSection[]
+}
+
+interface RenderBlockCardOptions {
+  renderVariant?: string
+  showToolbar?: boolean
+  elementId?: string | null
+  keySuffix?: string
+  dropPreviousBlockId?: string | null
+  sectionNumberingControl?: SectionNumberingControl
+  deformationFeedKeys?: string[]
 }
 
 function coercePositiveInteger(value: unknown, fallback: number): number {
@@ -642,6 +658,21 @@ function getOperationTemplateIdFromProps(props: Record<string, unknown> | undefi
   return value === null || value === undefined ? '' : String(value)
 }
 
+function getDeformationFeedKeysFromChildren(children: BlockData[]): string[] {
+  const keys = new Set<string>()
+  children.forEach((child) => {
+    if (child.block_type_id !== OPERATION_BLOCK_TYPE_ID) {
+      return
+    }
+    const templateId = getOperationTemplateIdFromProps(child.props)
+    const feedKey = OPERATION_TEMPLATE_TO_DEFORMATION_FEED_KEY[templateId]
+    if (feedKey) {
+      keys.add(feedKey)
+    }
+  })
+  return Array.from(keys)
+}
+
 function hasUnsavedOperationTypeChange(
   draftProps: Record<string, unknown>,
   baselineProps: Record<string, unknown>
@@ -784,6 +815,10 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     )
     return buildSectionNumbers(documentVisualLayout.sections, sectionNumberingStart)
   }, [documentVisualLayout.heading?.props?.section_numbering_start, documentVisualLayout.sections])
+
+  const firstTopLevelSectionBlockId = useMemo(() => {
+    return documentVisualLayout.sections.find((section) => section.kind === 'section')?.block.block_id || null
+  }, [documentVisualLayout.sections])
 
   const activeDocumentBlock = useMemo(
     () => draftBlocks.find((block) => block.block_id === activeDocumentBlockId) || null,
@@ -1142,6 +1177,34 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     setRedoStack([])
     setSaveStatus('idle')
     setSaveError(null)
+  }
+
+  const buildSectionNumberingControl = (): SectionNumberingControl | undefined => {
+    const heading = documentVisualLayout.heading
+    if (!heading) {
+      return undefined
+    }
+
+    const baselineHeadingProps = savedBlocksById.get(heading.block_id)?.props || {}
+    const currentValue = String(heading.props?.section_numbering_start ?? 2)
+    const baselineValue = String(baselineHeadingProps.section_numbering_start ?? 2)
+
+    return {
+      value: currentValue,
+      isDirty: currentValue !== baselineValue,
+      onChange: (value: string) => {
+        handleBlockUpdate(heading.block_id, {
+          ...(heading.props || {}),
+          section_numbering_start: value,
+        })
+      },
+      onReset: () => {
+        handleBlockUpdate(heading.block_id, {
+          ...(heading.props || {}),
+          section_numbering_start: baselineHeadingProps.section_numbering_start ?? 2,
+        })
+      },
+    }
   }
 
   const handleSaveChanges = async (): Promise<boolean> => {
@@ -2058,7 +2121,12 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     setActiveDocumentBlockId(null)
   }
 
-  const renderBlockCard = (block: BlockData, className = '', sectionNumber: string | null = null) => {
+  const renderBlockCard = (
+    block: BlockData,
+    className = '',
+    sectionNumber: string | null = null,
+    options: RenderBlockCardOptions = {}
+  ) => {
     const BlockComponent = getBlockComponent(block.block_type_id)
     const baselineProps = savedBlocksById.get(block.block_id)?.props || {}
     const isActivatable = canActivateBlock(block)
@@ -2068,6 +2136,10 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     const isRecentlyInserted = recentlyInsertedBlockIds.has(block.block_id)
     const activeSectionInsertMenu = sectionInsertMenu?.blockId === block.block_id ? sectionInsertMenu : null
     const blockName = getBlockDisplayName(block)
+    const elementId = options.elementId === undefined ? `block-${block.block_id}` : options.elementId
+    const showToolbar = options.showToolbar ?? true
+    const reactKey = options.keySuffix ? `${block.block_id}-${options.keySuffix}` : block.block_id
+    const dropPreviousBlockId = options.dropPreviousBlockId === undefined ? block.block_id : options.dropPreviousBlockId
     const wrapperTone = [
       isSelected ? 'doc-block-selected' : '',
       isActive ? 'doc-block-active' : '',
@@ -2104,6 +2176,9 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
         isActive={isActive}
         saveStatus={saveStatus}
         sectionNumber={sectionNumber}
+        sectionNumberingControl={options.sectionNumberingControl}
+        renderVariant={options.renderVariant}
+        deformationFeedKeys={options.deformationFeedKeys}
         onUpdate={handleBlockUpdate}
       />
     ) : (
@@ -2118,8 +2193,8 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     if (!isActivatable) {
       return (
         <div
-          key={block.block_id}
-          id={`block-${block.block_id}`}
+          key={reactKey}
+          id={elementId || undefined}
           data-block-id={block.block_id}
           className={`doc-block-wrapper scroll-mt-28 ${className}`}
         >
@@ -2132,8 +2207,8 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
       <motion.div
         layout="position"
         transition={BLOCK_LAYOUT_TRANSITION}
-        key={block.block_id}
-        id={`block-${block.block_id}`}
+        key={reactKey}
+        id={elementId || undefined}
         data-block-id={block.block_id}
         data-document-activatable-block="true"
         className={`doc-block-wrapper group scroll-mt-28 ${wrapperTone} ${className}`}
@@ -2144,95 +2219,97 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
         onClickCapture={(event) => maybeActivateFromInteraction(event.target)}
         onFocusCapture={(event) => maybeActivateFromInteraction(event.target)}
         onDragOver={(event) => {
-          handleDropLineDragOver(event, block.block_id)
+          handleDropLineDragOver(event, dropPreviousBlockId)
           if (event.defaultPrevented) {
             event.stopPropagation()
           }
         }}
         onDrop={(event) => {
-          void handleDropAtBlock(event, block.block_id)
+          void handleDropAtBlock(event, dropPreviousBlockId)
         }}
       >
-        <div className="doc-block-toolbar">
-          <div className="flex min-w-0 items-center gap-2">
-            {isSelectable ? (
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={() => toggleSelectedDocumentBlock(block)}
-                data-block-action-silent="true"
-                className="h-3.5 w-3.5 accent-stone-700"
-                aria-label={`Select ${blockName}`}
-              />
-            ) : null}
+        {showToolbar ? (
+          <div className="doc-block-toolbar">
+            <div className="flex min-w-0 items-center gap-2">
+              {isSelectable ? (
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => toggleSelectedDocumentBlock(block)}
+                  data-block-action-silent="true"
+                  className="h-3.5 w-3.5 accent-stone-700"
+                  aria-label={`Select ${blockName}`}
+                />
+              ) : null}
 
-            <button
-              type="button"
-              onClick={handleInlineInsertButtonClick}
-              data-block-action-silent="true"
-              disabled={false}
-              className="doc-block-control disabled:cursor-not-allowed"
-              aria-label={
-                isTopLevelDocumentSection(block)
-                  ? `Choose section type to insert near ${blockName}. Shift-click inserts above.`
-                  : `Insert ${blockName} below. Shift-click to insert above.`
-              }
-              title={
-                isTopLevelDocumentSection(block)
-                  ? `Choose section type to insert below. Shift-click chooses above.`
-                  : `Insert ${blockName} below. Shift-click inserts above.`
-              }
-            >
-              ＋
-            </button>
-
-            {activeSectionInsertMenu ? (
-              <div
-                className="doc-inline-insert-menu"
+              <button
+                type="button"
+                onClick={handleInlineInsertButtonClick}
                 data-block-action-silent="true"
-                onClick={(event) => event.stopPropagation()}
+                disabled={false}
+                className="doc-block-control disabled:cursor-not-allowed"
+                aria-label={
+                  isTopLevelDocumentSection(block)
+                    ? `Choose section type to insert near ${blockName}. Shift-click inserts above.`
+                    : `Insert ${blockName} below. Shift-click to insert above.`
+                }
+                title={
+                  isTopLevelDocumentSection(block)
+                    ? `Choose section type to insert below. Shift-click chooses above.`
+                    : `Insert ${blockName} below. Shift-click inserts above.`
+                }
               >
-                <button
-                  type="button"
-                  onClick={() => {
-                    void handleInlineTopLevelSectionInsert(
-                      block,
-                      HEATING_SECTION_TYPE_ID,
-                      activeSectionInsertMenu.position
-                    )
-                  }}
-                >
-                  Heating
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    void handleInlineTopLevelSectionInsert(
-                      block,
-                      DEFORMATION_SECTION_TYPE_ID,
-                      activeSectionInsertMenu.position
-                    )
-                  }}
-                >
-                  Deformation
-                </button>
-              </div>
-            ) : null}
+                ＋
+              </button>
 
-            <button
-              type="button"
-              draggable={block.fixed_position === null}
-              onDragStart={(event) => handleDocumentBlockDragStart(event, block)}
-              onDragEnd={() => setDropPreviewPreviousBlockId(undefined)}
-              data-block-action-silent="true"
-              disabled={block.fixed_position !== null}
-              className="doc-block-control cursor-grab disabled:cursor-not-allowed"
-              aria-label={`Drag ${blockName}`}
-            >
-              ⋮⋮
-            </button>
+              {activeSectionInsertMenu ? (
+                <div
+                  className="doc-inline-insert-menu"
+                  data-block-action-silent="true"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleInlineTopLevelSectionInsert(
+                        block,
+                        HEATING_SECTION_TYPE_ID,
+                        activeSectionInsertMenu.position
+                      )
+                    }}
+                  >
+                    Heating
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleInlineTopLevelSectionInsert(
+                        block,
+                        DEFORMATION_SECTION_TYPE_ID,
+                        activeSectionInsertMenu.position
+                      )
+                    }}
+                  >
+                    Deformation
+                  </button>
+                </div>
+              ) : null}
+
+              <button
+                type="button"
+                draggable={block.fixed_position === null}
+                onDragStart={(event) => handleDocumentBlockDragStart(event, block)}
+                onDragEnd={() => setDropPreviewPreviousBlockId(undefined)}
+                data-block-action-silent="true"
+                disabled={block.fixed_position !== null}
+                className="doc-block-control cursor-grab disabled:cursor-not-allowed"
+                aria-label={`Drag ${blockName}`}
+              >
+                ⋮⋮
+              </button>
+            </div>
           </div>
-        </div>
+        ) : null}
 
         {blockContent}
       </motion.div>
@@ -2268,6 +2345,61 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
       )
     }
 
+    if (isDeformationSection(section.block)) {
+      const sectionNumber = sectionNumbersByBlockId.get(section.block.block_id) || null
+      const sectionNumberingControl = section.block.block_id === firstTopLevelSectionBlockId
+        ? buildSectionNumberingControl()
+        : undefined
+      return (
+        <section
+          key={section.block.block_id}
+          className="doc-section doc-deformation-section"
+          onDragOver={(event) => handleDropLineDragOver(event, dropTarget)}
+          onDrop={(event) => {
+            void handleDropAtBlock(event, dropTarget)
+          }}
+        >
+          {renderBlockCard(section.block, 'doc-deformation-header-block', sectionNumber, {
+            renderVariant: 'deformation-header',
+            keySuffix: 'header',
+            sectionNumberingControl,
+          })}
+
+          {renderBlockCard(section.block, 'doc-deformation-dies-block', null, {
+            renderVariant: 'deformation-dies',
+            showToolbar: false,
+            elementId: null,
+            keySuffix: 'dies',
+            dropPreviousBlockId: section.block.block_id,
+          })}
+
+          {section.children.length > 0 ? (
+            <div className="doc-children">
+              {section.children.map((child, index) => {
+                const previousBlockId = index === 0 ? section.block.block_id : section.children[index - 1].block_id
+                const childNumber = isOperationBlock(child) ? `${index + 1}.` : null
+                return (
+                  <div key={child.block_id}>
+                    {renderDropLine(previousBlockId, `${section.block.block_id}-before-${child.block_id}`)}
+                    {renderBlockCard(child, '', childNumber)}
+                  </div>
+                )
+              })}
+            </div>
+          ) : null}
+
+          {renderBlockCard(section.block, 'doc-deformation-parameters-footer', null, {
+            renderVariant: 'deformation-parameters',
+            showToolbar: false,
+            elementId: null,
+            keySuffix: 'parameters',
+            dropPreviousBlockId: dropTarget,
+            deformationFeedKeys: getDeformationFeedKeysFromChildren(section.children),
+          })}
+        </section>
+      )
+    }
+
     return (
       <section
         key={section.block.block_id}
@@ -2277,7 +2409,11 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
           void handleDropAtBlock(event, dropTarget)
         }}
       >
-        {renderBlockCard(section.block, '', sectionNumbersByBlockId.get(section.block.block_id) || null)}
+        {renderBlockCard(section.block, '', sectionNumbersByBlockId.get(section.block.block_id) || null, {
+          sectionNumberingControl: section.block.block_id === firstTopLevelSectionBlockId
+            ? buildSectionNumberingControl()
+            : undefined,
+        })}
 
         {section.children.length > 0 ? (
           <div className="doc-children">

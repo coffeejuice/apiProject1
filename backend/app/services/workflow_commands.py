@@ -258,6 +258,46 @@ def mark_document_edited(
     return version
 
 
+def queue_document_preprocessing(
+    db: Session,
+    document: Document,
+    *,
+    current_user: User | None = None,
+    regenerate_operations_before_queue: bool = False,
+) -> tuple[DocumentVersion, int, bool]:
+    """Queue an editable document for a manual or UI-triggered Pre run."""
+
+    version = ensure_editable_version(db, document, current_user=current_user)
+    if version.preprocess_status is PreprocessStatus.running:
+        operations_count = count_document_operations(db, document.document_id)
+        version.operations_count = operations_count
+        version.last_modified = now_utc()
+        document.updated_at = version.last_modified
+        return version, operations_count, False
+
+    if regenerate_operations_before_queue:
+        operations_count = regenerate_document_operations(db, document.document_id)
+    else:
+        operations_count = count_document_operations(db, document.document_id)
+
+    version.operations_count = operations_count
+    version.run_switch_status = True
+    version.run_switch_is_active = False
+    version.preprocess_status = PreprocessStatus.queued
+    version.preprocess_worker_name = None
+    version.preprocess_started_at = None
+    version.preprocess_finished_at = None
+    version.preprocess_error = None
+    version.simulation_status = SimulationStatus.stop
+    version.simulation_percent = 0
+    version.simulation_server_id = None
+    version.finished_at = None
+    version.ran_at = None
+    version.last_modified = now_utc()
+    document.updated_at = version.last_modified
+    return version, operations_count, True
+
+
 def queue_document_for_simulation(
     db: Session,
     document: Document,
@@ -403,14 +443,18 @@ def fork_fixed_document(
         )
         previous_new_id = created.block_id
 
-    regenerate_document_operations(db, forked.document_id)
-    create_initial_working_version(
+    editable_version = create_initial_working_version(
         db,
         forked,
         current_user=current_user,
         parent_version=source_version,
-        preprocess_requested=count_document_operations(db, forked.document_id) > 0,
+        preprocess_requested=False,
     )
+    operations_count = regenerate_document_operations(db, forked.document_id)
+    editable_version.operations_count = operations_count
+    if operations_count > 0:
+        editable_version.run_switch_status = True
+        editable_version.preprocess_status = PreprocessStatus.queued
     forked.updated_at = now_utc()
     return forked
 

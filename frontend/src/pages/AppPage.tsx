@@ -12,7 +12,9 @@ import {
   LibraryDiesView,
   LibraryPressesView,
 } from '../components/library/LibraryViews'
+import LogsView from '../components/runtimeLogs/LogsView'
 import DocumentOperationsView from '../components/operations/DocumentOperationsView'
+import SimulationStepsView from '../components/simulationSteps/SimulationStepsView'
 import SimulationView from '../components/simulation/SimulationView'
 import { loadDocumentResumeState, saveDocumentResumeState } from '../lib/documentResumeState'
 import { useDocumentsStore } from '../stores/useDocumentsStore'
@@ -97,6 +99,12 @@ function resolveMainEditorView(toolView: ToolView, libraryView: LibraryEditorVie
   }
   if (toolView === 'operations') {
     return 'operations'
+  }
+  if (toolView === 'simulationSteps') {
+    return 'simulationSteps'
+  }
+  if (toolView === 'logs') {
+    return 'logs'
   }
   return 'blockEditor'
 }
@@ -275,6 +283,7 @@ export default function AppPage() {
         <MenuBar
           meta={editorMeta}
           hasDocument={hasDocument}
+          documentTitle={currentDoc?.name ?? null}
           onSave={() => callEditor((editor) => editor.saveChanges())}
           onCancel={() => callEditor((editor) => editor.cancelChanges())}
           onUndo={() => callEditor((editor) => editor.undo())}
@@ -300,7 +309,12 @@ export default function AppPage() {
           />
 
           <div className="flex-1 min-w-0 flex flex-col">
-            {mainEditorView !== 'blockEditor' && mainEditorView !== 'operations' && mainEditorView !== 'materials' && mainEditorView !== 'simulation' ? (
+            {mainEditorView !== 'blockEditor' &&
+            mainEditorView !== 'operations' &&
+            mainEditorView !== 'simulationSteps' &&
+            mainEditorView !== 'materials' &&
+            mainEditorView !== 'simulation' &&
+            mainEditorView !== 'logs' ? (
               <section className="border-b border-[rgba(55,53,47,0.09)] bg-[#fbfbfa] flex-shrink-0">
                 <div className="ui-pane-header flex items-center justify-between gap-3">
                   <div className="ui-pane-title">Library actions</div>
@@ -393,6 +407,15 @@ export default function AppPage() {
                 <SimulationView
                   users={users}
                   currentUserId={user?.user_id ?? null}
+                />
+              )}
+              logsView={<LogsView />}
+              simulationStepsView={(
+                <SimulationStepsView
+                  documentId={currentDoc?.id ?? null}
+                  isStepListVisible={activeToolView === 'simulationSteps'}
+                  activeBlockId={editorMeta.activeDocumentBlockId}
+                  hoveredBlockId={editorMeta.hoveredDocumentBlockId}
                 />
               )}
               operationsView={(
