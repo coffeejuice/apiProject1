@@ -12,7 +12,7 @@ import {
   LibraryDiesView,
   LibraryPressesView,
 } from '../components/library/LibraryViews'
-import LogsView from '../components/runtimeLogs/LogsView'
+import LogsView, { type LogFocusRequest } from '../components/runtimeLogs/LogsView'
 import DocumentOperationsView from '../components/operations/DocumentOperationsView'
 import SimulationStepsView from '../components/simulationSteps/SimulationStepsView'
 import SimulationView from '../components/simulation/SimulationView'
@@ -135,6 +135,10 @@ export default function AppPage() {
   const [activeLibraryView, setActiveLibraryView] = useState<LibraryEditorView>('dies')
   const [mainEditorView, setMainEditorView] = useState<MainEditorView>('blockEditor')
   const [editorMeta, setEditorMeta] = useState<BlockEditorMeta>(EMPTY_EDITOR_META)
+  const [logFocusRequest, setLogFocusRequest] = useState<LogFocusRequest | null>(null)
+  const [pendingSourceBlockFocusId, setPendingSourceBlockFocusId] = useState<string | null>(null)
+  const [showPreprocessorResults, setShowPreprocessorResults] = useState(false)
+  const [showPostprocessorResults, setShowPostprocessorResults] = useState(false)
 
   const [selectedDieId, setSelectedDieId] = useState<number | null>(null)
   const [selectedDieAssemblyId, setSelectedDieAssemblyId] = useState<number | null>(null)
@@ -266,6 +270,42 @@ export default function AppPage() {
     callEditor((editor) => editor.clearSelectedBlocks())
   }
 
+  const handleOpenPreLogs = (query: string) => {
+    setLogFocusRequest({
+      service: 'pre',
+      query,
+      severityFilter: 'warnings_errors',
+      nonce: Date.now(),
+    })
+    setActiveToolView('logs')
+    setMainEditorView('logs')
+  }
+
+  const handleOpenSourceBlock = (blockId: string) => {
+    setPendingSourceBlockFocusId(blockId)
+    setActiveToolView('blocks')
+    setMainEditorView('blockEditor')
+  }
+
+  useEffect(() => {
+    if (!pendingSourceBlockFocusId || mainEditorView !== 'blockEditor') {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      const editor = editorRef.current
+      if (!editor) {
+        return
+      }
+      editor.clearSelectedBlocks()
+      editor.makeBlockActive(pendingSourceBlockFocusId)
+      editor.scrollToBlock(pendingSourceBlockFocusId)
+      setPendingSourceBlockFocusId(null)
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [mainEditorView, pendingSourceBlockFocusId])
+
   const hasDocument = (mainEditorView === 'blockEditor' || mainEditorView === 'operations') && Boolean(currentDoc?.id)
 
   const libraryActions = useMemo(() => {
@@ -290,6 +330,10 @@ export default function AppPage() {
           onRedo={() => callEditor((editor) => editor.redo())}
           onShowLineage={() => callEditor((editor) => editor.showLineage())}
           onShowSessions={() => callEditor((editor) => editor.showSessions())}
+          showPreprocessorResults={showPreprocessorResults}
+          showPostprocessorResults={showPostprocessorResults}
+          onTogglePreprocessorResults={() => setShowPreprocessorResults((value) => !value)}
+          onTogglePostprocessorResults={() => setShowPostprocessorResults((value) => !value)}
         />
 
         <div className="flex flex-1 min-h-0">
@@ -351,6 +395,8 @@ export default function AppPage() {
               blockEditorView={(
                 <BlockEditor
                   ref={editorRef}
+                  showPreprocessorResults={showPreprocessorResults}
+                  showPostprocessorResults={showPostprocessorResults}
                   onMetaChange={setEditorMeta}
                 />
               )}
@@ -409,13 +455,15 @@ export default function AppPage() {
                   currentUserId={user?.user_id ?? null}
                 />
               )}
-              logsView={<LogsView />}
+              logsView={<LogsView focusRequest={logFocusRequest} />}
               simulationStepsView={(
                 <SimulationStepsView
                   documentId={currentDoc?.id ?? null}
                   isStepListVisible={activeToolView === 'simulationSteps'}
                   activeBlockId={editorMeta.activeDocumentBlockId}
                   hoveredBlockId={editorMeta.hoveredDocumentBlockId}
+                  onOpenPreLogs={handleOpenPreLogs}
+                  onOpenSourceBlock={handleOpenSourceBlock}
                 />
               )}
               operationsView={(
@@ -423,6 +471,8 @@ export default function AppPage() {
                   <div className="operations-document-pane">
                     <BlockEditor
                       ref={editorRef}
+                      showPreprocessorResults={showPreprocessorResults}
+                      showPostprocessorResults={showPostprocessorResults}
                       onMetaChange={setEditorMeta}
                     />
                   </div>

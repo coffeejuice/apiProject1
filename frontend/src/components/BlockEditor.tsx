@@ -16,6 +16,7 @@ import { apiClient } from '../lib/apiClient'
 import { applyFieldLengthLimits } from '../lib/blockFieldLimits'
 import { loadDocumentResumeState, saveDocumentResumeState } from '../lib/documentResumeState'
 import { getBlockComponent, type BlockData, type SectionNumberingControl } from './blocks'
+import DocumentInlineResults from './inlineResults/DocumentInlineResults'
 import type {
   DocumentLineageResponse,
   EditSession,
@@ -84,6 +85,8 @@ export interface BlockEditorHandle {
 
 interface BlockEditorProps {
   className?: string
+  showPreprocessorResults?: boolean
+  showPostprocessorResults?: boolean
   onMetaChange?: (meta: BlockEditorMeta) => void
 }
 
@@ -739,7 +742,12 @@ function isInteractiveShortcutTarget(target: EventTarget | null): boolean {
 }
 
 const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function BlockEditor(
-  { className, onMetaChange },
+  {
+    className,
+    showPreprocessorResults = false,
+    showPostprocessorResults = false,
+    onMetaChange,
+  },
   ref
 ) {
   const [savedBlocks, setSavedBlocks] = useState<BlockData[]>([])
@@ -828,6 +836,24 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
   const selectedDocumentBlocksInOrder = useMemo(() => {
     return draftBlocks.filter((block) => selectedDocumentBlockIds.has(block.block_id))
   }, [draftBlocks, selectedDocumentBlockIds])
+
+  const inlineResultContextBlockId = useMemo(() => {
+    if (!showPreprocessorResults && !showPostprocessorResults) {
+      return null
+    }
+    if (selectedDocumentBlocksInOrder.length === 1) {
+      return selectedDocumentBlocksInOrder[0].block_id
+    }
+    if (selectedDocumentBlocksInOrder.length === 0) {
+      return activeDocumentBlockId
+    }
+    return null
+  }, [
+    activeDocumentBlockId,
+    selectedDocumentBlocksInOrder,
+    showPostprocessorResults,
+    showPreprocessorResults,
+  ])
 
   const activeDocumentBlockLabel = activeDocumentBlock ? getBlockDisplayName(activeDocumentBlock) : null
   const selectedDocumentBlockLabel = selectedDocumentBlocksInOrder.length === 1
@@ -2121,6 +2147,25 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     setActiveDocumentBlockId(null)
   }
 
+  const renderInlineResultsForBlock = (block: BlockData) => {
+    if (inlineResultContextBlockId !== block.block_id) {
+      return null
+    }
+    if (!showPreprocessorResults && !showPostprocessorResults) {
+      return null
+    }
+    return (
+      <DocumentInlineResults
+        documentId={currentDoc?.id ?? null}
+        blocks={draftBlocks}
+        contextBlockId={block.block_id}
+        showPreprocessor={showPreprocessorResults}
+        showPostprocessor={showPostprocessorResults}
+        hasUnsavedChanges={hasUnsavedChanges}
+      />
+    )
+  }
+
   const renderBlockCard = (
     block: BlockData,
     className = '',
@@ -2337,6 +2382,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
                 <div key={child.block_id}>
                   {renderDropLine(previousBlockId, `${section.key}-before-${child.block_id}`)}
                   {renderBlockCard(child)}
+                  {renderInlineResultsForBlock(child)}
                 </div>
               )
             })}
@@ -2382,6 +2428,7 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
                   <div key={child.block_id}>
                     {renderDropLine(previousBlockId, `${section.block.block_id}-before-${child.block_id}`)}
                     {renderBlockCard(child, '', childNumber)}
+                    {renderInlineResultsForBlock(child)}
                   </div>
                 )
               })}
@@ -2396,6 +2443,8 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
             dropPreviousBlockId: dropTarget,
             deformationFeedKeys: getDeformationFeedKeysFromChildren(section.children),
           })}
+
+          {renderInlineResultsForBlock(section.block)}
         </section>
       )
     }
@@ -2422,15 +2471,18 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
               const childNumber = isDeformationSection(section.block) && isOperationBlock(child)
                 ? `${index + 1}.`
                 : null
-              return (
-                <div key={child.block_id}>
-                  {renderDropLine(previousBlockId, `${section.block.block_id}-before-${child.block_id}`)}
-                  {renderBlockCard(child, '', childNumber)}
-                </div>
-              )
-            })}
-          </div>
-        ) : null}
+                return (
+                  <div key={child.block_id}>
+                    {renderDropLine(previousBlockId, `${section.block.block_id}-before-${child.block_id}`)}
+                    {renderBlockCard(child, '', childNumber)}
+                    {renderInlineResultsForBlock(child)}
+                  </div>
+                )
+              })}
+            </div>
+          ) : null}
+
+        {renderInlineResultsForBlock(section.block)}
       </section>
     )
   }

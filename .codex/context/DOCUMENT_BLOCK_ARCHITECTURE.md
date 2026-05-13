@@ -42,12 +42,12 @@ Configuration/setup details (including `.env` editing during install) are tracke
   - `operation_kind`
   - `template_snapshot`
 - The preprocessor bridge reads `document_operations.operation_parameters` directly and stores compiled runtime output in `simulation_steps` using semantic source fields. `simulation_steps.document_operation_id` is the primary key and required cascade FK to its source `document_operations` row; operation materialization creates/removes the sibling `simulation_steps` row immediately, and valid operation rows set `preprocess_ready = true` for Pre. Obsolete `simulation_step_id` is not part of the active schema.
-- The root `document` block materializes into the first `document_operations` row with `operation_template_id = document_initial_data` and `operation_kind = billet`. Its target uses nested namespaces `document_info`, `process_data`, `material`, `input_stock`, and `mesh`; the Operations view displays these as chained-dot parameters. The Pre bridge maps this row to the legacy billet/NewBillet compiler path.
+- The root `document` block materializes into the first `document_operations` row with `operation_template_id = document_initial_data` and `operation_kind = billet`. Its target uses nested namespaces `document_info`, `production_data`, `material`, `input_stock`, and `mesh`; the Operations view displays these as chained-dot parameters. The Pre bridge maps this row to the legacy billet/NewBillet compiler path.
 - Each `furnace` block materializes into a `document_operations` row with `operation_template_id = furnace`; its `operation_parameters.temperature_program` stores the editable Furnace table rows as `number`, `type`, `duration_min`, and `temperature_c`.
 - Pre operation definitions are preprocessor-local semantic metadata plus semantic built-ins, not `document_blocks_library` rows. Compiler dispatch and timing lookup use semantic operation template IDs.
 - Current semantic Pre compiler coverage should use real adapters for all active templates, including billet/document initial data, Furnace/Heating, Upsetting, axial/spiral/radial/full-die deformation, radial initial rotations, transverse/transversal cogging, and cutting. New semantic operation templates must update the adapter support map instead of silently falling back to generic compilation.
 - The preprocessor no longer carries an `is_simulation` split; all valid materialized operation rows follow the same simulation-step path.
-- Pre compile/parse failures include row context (`operation_id`, `document_operation_id`, `operation_template_id`, `source_block_id`) whenever available and are written to sibling `simulation_steps` diagnostics plus `simulation_step_status.failed` so failed rows can be traced back to their source block.
+- Pre compile/parse failures include row context (`operation_id`, `document_operation_id`, `operation_template_id`, `source_block_id`) whenever available and are written to sibling `simulation_steps.calculations` diagnostics plus runtime `simulation_step_status.failed` so failed rows can be traced back to their source block.
 - Pre worker output is persisted incrementally: before a run, current sibling `simulation_steps` rows are reset to pending output; every successfully compiled row is committed immediately; a later compile failure leaves earlier compiled rows available for troubleshooting and marks the failing row as failed.
 - `document_operations` is regenerated from `document_blocks` after structural and prop edits. It stores final per-row JSON in `operation_parameters`; direct parent Deformation values are copied there by explicit materialization rules and no inherited/effective namespace columns are stored. A Deformation section does not inherit missing copied values from previous Deformation sections.
 - The Steps tool can explicitly requeue the latest editable document version for Pre with `POST /documents/{document_id}/simulation-steps/preprocess`; this is the active troubleshooting/retry path after a failed draft Pre run. The command uses existing saved operation/step rows and must not regenerate `document_operations`, because that would erase visible compiled `simulation_steps` data before the next Pre run writes replacements.
@@ -189,20 +189,22 @@ Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockE
     - opens a split main workspace with the regular document editor on the left and a read-only `document_operations` table on the right
     - the right table shows saved materialized operation records and warns when unsaved document edits mean the table is not yet regenerated
   - `Steps` (no middle pane)
-    - opens a `simulation_steps` inspector for the selected document
+    - opens a Pre troubleshooting inspector for the selected document
+    - the default response is grouped by provenance: `simulation_step` from `simulation_steps`, runtime `simulation_step_status`, and `diagnostics` from API/log context
+    - selected-step related Pre log records are loaded separately from `GET /logs/pre/related`; the main steps response must stay a pure DB/status snapshot plus API metadata
     - when the `Steps` tool button is active, the view displays a very narrow left step list; clicking the active `Steps` button again hides only this list while keeping the Steps inspector open
     - the left step list scrolls independently from the right selected-step details/2D/3D workspace
     - the left step list is built from `GET /documents/{document_id}/blocks/root` plus `GET /documents/{document_id}/simulation-steps`
     - the left step list includes visual-only title cards for numbered Heating/Deformation sections and numbered Furnace/Operation children
-    - step cards are nested under those visual title cards and show saved user-entered values from `document_operations.operation_parameters`
-    - the main detail area displays selected-step JSON diagnostics, status errors, shared-scale 2D geometry overlays, and lazy-loaded legacy-STL surface-mesh 3D previews
-    - selected-step surface artifacts are generated during Pre compilation by the restored legacy Trimesh/STL mesh-state path and stored as JSON/STL files outside the default list payload; only compact references are persisted in `simulation_steps.metrics.surface_artifacts`
+    - step cards are nested under those visual title cards and show compact Pre-output chips from `simulation_steps.calculations` and `simulation_steps.pre_output`
+    - the main detail area displays selected-step JSON diagnostics, related Pre log records, status errors, shared-scale 2D geometry overlays, and lazy-loaded legacy-STL surface-mesh 3D previews
+    - selected-step surface artifacts are generated during Pre compilation by the restored legacy Trimesh/STL mesh-state path and stored as JSON/STL files outside the default list payload; only compact references are persisted in `simulation_steps.calculations.surface_artifacts`
     - if a selected row has no legacy Pre artifact yet, the backend surface endpoint returns an explicit error; hidden geometry synthesis from `simulation_steps` JSON is forbidden
   - `Library` (selector for `Dies`, `Die Assemblies`, `Presses`, `Materials`)
   - `Simulation` (no middle pane content; selecting it opens the Simulation dashboard in the main pane)
   - `Logs` (no middle pane content; selecting it opens local API/Pre/Post/Coordinator log tailing in the main pane; Solver logs are excluded)
   - `Users` (current user/session information)
-- `MenuBar` contains document-level controls (`Save`, `Cancel`, `Undo`, `Redo`, `Lineage`, `Sessions`) and save/dirty status.
+- `MenuBar` contains document-level controls (`Save`, `Cancel`, `Undo`, `Redo`, `Lineage`, `Sessions`), save/dirty status, and explicit `Preprocessor` / `Postprocessor` inline result toggles.
 - `MainEditorPane` routes active content:
   - `BlockEditor` when current tool is `Projects`, `Documents`, `Blocks`, or `Users`
   - split `BlockEditor` + `DocumentOperationsView` when current tool is `Operations`
@@ -214,7 +216,7 @@ Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockE
   - source data remains the flat `document_blocks` linked list; no `parent_block_id` is stored
   - document rendering intentionally uses borderless `doc-*` classes from `frontend/src/index.css` to keep the canvas close to a Microsoft Word / Notion page: blocks are identified by title text, hierarchy is shown by indentation, and regular form controls look like document text until hover/focus
   - the first `document` block is rendered as the document canvas/title area
-  - inside the Document block, title/setup fields are grouped into compact sections: `Process data`, `Material`, `Input stock size`, and `Mesh`; section headings are indented one tab and parameter rows are indented one additional tab
+  - inside the Document block, title/setup fields are grouped into compact sections: `Production data`, `Material`, `Input stock size`, and `Mesh`; section headings are indented one tab and parameter rows are indented one additional tab
   - `Heating` and `Deformation` semantic block types are rendered as second-level sections inside that canvas
   - `Furnace` blocks after a Heating section are rendered as children of that Heating until the next Heating/Deformation section appears
   - `Operation` blocks after a Deformation section are rendered as children of that Deformation until the next Heating/Deformation section appears
@@ -250,6 +252,10 @@ Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockE
     - normal click on `+` inserts below; Shift-click on `+` inserts above
   - all block types render their editable layout all the time
   - compact mutually exclusive mode controls use a shared pill-like segmented style and are hidden unless the block is hovered, active, or focused; this applies to Deformation `Pair / Separate`, Operation `Manual / Auto / Optimization`, and Furnace `Diagram / Table`
+  - inline result display is opt-in from the `MenuBar` result toggles; with `Preprocessor` enabled, only the active block or exactly one selected block gets one inline result panel
+  - inline Pre panels filter `simulation_steps` by direct source context: Operation/Furnace blocks use their own source rows, while Deformation/Heating sections use rows from their direct Operation/Furnace children
+  - inline Pre panels reuse the same side-by-side 2D and 3D preview components as the Steps view and call the same selected-step surface endpoint, so missing legacy mesh artifacts remain explicit errors rather than hidden generated fallback geometry
+  - inline Post panels currently show an explicit unavailable placeholder until Post migration defines real result payloads
   - operation blocks always show a title; empty operations use `Empty operation`, and selected operation types use the endpoint-provided `display_name`
   - operation type selector visibility is stateful:
     - empty operations show the selector until a type is selected and saved

@@ -130,19 +130,13 @@ class SimulationStep(Base):
         default=None,
     )
 
-    parameter_values: Mapped[dict[str, Any]] = mapped_column(
+    pre_input: Mapped[dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,
         server_default="{}",
     )
-    control_parameters: Mapped[dict[str, Any]] = mapped_column(
-        JSONB,
-        nullable=False,
-        default=dict,
-        server_default="{}",
-    )
-    step_specific_parameters: Mapped[dict[str, Any]] = mapped_column(
+    pre_output: Mapped[dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,
@@ -150,7 +144,7 @@ class SimulationStep(Base):
     )
     initial_geometry: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True, default=None)
     final_geometry: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True, default=None)
-    metrics: Mapped[dict[str, Any]] = mapped_column(
+    calculations: Mapped[dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,

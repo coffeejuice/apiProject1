@@ -69,7 +69,7 @@ Sibling execution rows for `document_operations`; `Pre` later fills compiled ste
 | `document_operation_id` | `BIGINT NOT NULL` | PK + FK -> `document_operations.document_operation_id` `ON DELETE CASCADE` | Source operation and step identity |
 | `document_version_id` | `BIGINT NOT NULL` | FK -> `document_versions.document_version_id` `ON DELETE CASCADE` | Parent document version/run |
 | `execution_order` | `INT NOT NULL` | `UNIQUE(document_version_id, execution_order)` | Step order inside one run |
-| `source_block_id` | `UUID NULL` | FK -> `document_blocks.block_id` `ON DELETE SET NULL` | Source user block/card |
+| `source_block_id` | `UUID NULL` | FK -> `document_blocks.block_id` `ON DELETE SET NULL` | Source user document operation block |
 | `operation_template_id` | `VARCHAR(255) NULL` |  | Semantic operation template id |
 | `operation_kind` | `VARCHAR(63) NOT NULL` |  | Semantic operation kind |
 | `operation_label_snapshot` | `VARCHAR(255) NULL` |  | Stable operation label |
@@ -84,12 +84,11 @@ Sibling execution rows for `document_operations`; `Pre` later fills compiled ste
 | `bottom_die_id` | `INT NULL` | FK -> `dies.id` `ON DELETE SET NULL` | Bottom die |
 | `left_die_id` | `INT NULL` | FK -> `dies.id` `ON DELETE SET NULL` | Left die |
 | `right_die_id` | `INT NULL` | FK -> `dies.id` `ON DELETE SET NULL` | Right die |
-| `parameter_values` | `JSONB NOT NULL DEFAULT '{}'` |  | Raw normalized block values |
-| `control_parameters` | `JSONB NOT NULL DEFAULT '{}'` |  | Solver control inputs |
-| `step_specific_parameters` | `JSONB NOT NULL DEFAULT '{}'` |  | Precomputed step-specific payload |
+| `pre_input` | `JSONB NOT NULL DEFAULT '{}'` |  | Compact normalized Pre input/debug context |
+| `pre_output` | `JSONB NOT NULL DEFAULT '{}'` |  | Generated Pre output consumed by Solver/Post |
 | `initial_geometry` | `JSONB NULL` |  | Geometry before this step |
 | `final_geometry` | `JSONB NULL` |  | Expected geometry after this step |
-| `metrics` | `JSONB NOT NULL DEFAULT '{}'` |  | Calculated scalar values |
+| `calculations` | `JSONB NOT NULL DEFAULT '{}'` |  | Calculated scalar values, dashboard summaries, artifact metadata, and Pre diagnostics |
 | `accumulated_time_start_seconds` | `DOUBLE PRECISION NULL` |  | Absolute start time on compiled process timeline |
 | `duration_seconds` | `DOUBLE PRECISION NULL` |  | Step duration estimate |
 | `accumulated_time_stop_seconds` | `DOUBLE PRECISION NULL` |  | Absolute stop time on compiled process timeline |
@@ -182,7 +181,7 @@ Mutable postprocessing queue and output records derived from simulation steps.
 
 ## Preprocessing Area
 - Current migrated compiler support:
-  - billet geometry cards `68..79`
+  - billet geometry document-operation records `68..79`
   - furnace operation `10` with merged furnace class and initial temperature fields
   - deformation requirement operation `26` with merged press, speed, and feed fields accumulated into forming simulation rows
   - heating operation `23`

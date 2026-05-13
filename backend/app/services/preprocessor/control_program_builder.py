@@ -1,4 +1,4 @@
-"""Control-program construction helpers derived from editable process cards."""
+"""Control-program construction helpers derived from document operation outputs."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ class OperationTypeDefinition:
     row: int
     text_id: str
     library_name: str
-    process_name: str
+    operation_display_name: str
     labels: tuple[str, ...]
     db_column_names: tuple[str, ...]
     is_geometry: bool
@@ -139,7 +139,7 @@ class SemanticOperationDefinitionSpec:
 
     operation_template_id: str
     label: str
-    process_name: str
+    operation_display_name: str
     labels: tuple[str, ...]
     db_column_names: tuple[str, ...]
     deformation_type: str | None
@@ -323,7 +323,7 @@ def _semantic_operation_definitions() -> list[OperationTypeDefinition]:
                 row=row,
                 text_id=spec.operation_template_id,
                 library_name=spec.label,
-                process_name=spec.process_name,
+                operation_display_name=spec.operation_display_name,
                 labels=spec.labels,
                 db_column_names=spec.db_column_names,
                 is_geometry=False,
@@ -352,7 +352,7 @@ def _geometry_operation_definitions() -> list[OperationTypeDefinition]:
                 row=row,
                 text_id=f"{GEOMETRY_TEMPLATE_PREFIX}{geometry.type_id}",
                 library_name=label,
-                process_name=label,
+                operation_display_name=label,
                 labels=geometry.labels,
                 db_column_names=geometry.labels,
                 is_geometry=True,
@@ -378,7 +378,7 @@ def _builtin_operation_definitions() -> list[OperationTypeDefinition]:
             row=0,
             text_id=DOCUMENT_INITIAL_DATA_TEMPLATE_ID,
             library_name="Billet",
-            process_name="Document initial data",
+            operation_display_name="Document initial data",
             labels=(
                 "Document name",
                 "Heat No",
@@ -390,9 +390,9 @@ def _builtin_operation_definitions() -> list[OperationTypeDefinition]:
             ),
             db_column_names=(
                 "document_info.name",
-                "process_data.heat_no",
-                "process_data.finished_size",
-                "process_data.remarks",
+                "production_data.heat_no",
+                "production_data.finished_size",
+                "production_data.remarks",
                 "material.material_id",
                 "material.material_name",
                 "input_stock.geometry_type_id",
@@ -419,7 +419,7 @@ def _builtin_operation_definitions() -> list[OperationTypeDefinition]:
             row=1,
             text_id=FURNACE_TEMPLATE_ID,
             library_name="Furnace",
-            process_name="Furnace",
+            operation_display_name="Furnace",
             labels=("Furnace class", "Temperature"),
             db_column_names=("furnace_class_id", "temperature"),
             is_geometry=False,
@@ -439,7 +439,7 @@ def _builtin_operation_definitions() -> list[OperationTypeDefinition]:
             row=2,
             text_id=HEATING_TEMPERATURE_DURATION_TEMPLATE_ID,
             library_name="Heating",
-            process_name="Heating",
+            operation_display_name="Heating",
             labels=("Temperature", "Duration"),
             db_column_names=("temperature", "duration"),
             is_geometry=False,

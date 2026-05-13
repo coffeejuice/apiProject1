@@ -33,8 +33,21 @@ def _column_names(table_name: str) -> set[str]:
     return {str(column["name"]) for column in inspector.get_columns(table_name)}
 
 
+def _table_exists(table_name: str) -> bool:
+    inspector = sa.inspect(op.get_bind())
+    return table_name in inspector.get_table_names()
+
+
 def upgrade() -> None:
-    if "preprocess_ready" not in _column_names("simulation_steps"):
+    step_columns = _column_names("simulation_steps")
+    payload_columns = (
+        ("pre_input", "pre_output", "calculations")
+        if "pre_input" in step_columns
+        else ("control_parameters", "step_specific_parameters", "metrics")
+    )
+    status_table = "status" if _table_exists("status") else "simulation_step_status"
+
+    if "preprocess_ready" not in step_columns:
         op.add_column(
             "simulation_steps",
             sa.Column("preprocess_ready", sa.Boolean(), nullable=False, server_default=sa.text("false")),
@@ -53,7 +66,7 @@ def upgrade() -> None:
 
     op.execute(
         sa.text(
-            """
+            f"""
             WITH latest_versions AS (
                 SELECT DISTINCT ON (document_id)
                        document_id,
@@ -73,10 +86,9 @@ def upgrade() -> None:
                 preprocess_ready,
                 block_name_snapshot,
                 library_name_snapshot,
-                parameter_values,
-                control_parameters,
-                step_specific_parameters,
-                metrics
+                {payload_columns[0]},
+                {payload_columns[1]},
+                {payload_columns[2]}
             )
             SELECT
                 operation.document_operation_id,
@@ -102,10 +114,9 @@ def upgrade() -> None:
                     operation.operation_kind,
                     operation.source_block_type_id
                 ),
-                '{}'::jsonb,
-                '{}'::jsonb,
-                '{}'::jsonb,
-                '{}'::jsonb
+                '{{}}'::jsonb,
+                '{{}}'::jsonb,
+                '{{}}'::jsonb
             FROM document_operations AS operation
             JOIN latest_versions ON latest_versions.document_id = operation.document_id
             ON CONFLICT (document_operation_id) DO UPDATE
@@ -125,8 +136,8 @@ def upgrade() -> None:
 
     op.execute(
         sa.text(
-            """
-            INSERT INTO simulation_step_status (
+            f"""
+            INSERT INTO {status_table} (
                 document_operation_id,
                 status,
                 attempt_no,
@@ -142,7 +153,7 @@ def upgrade() -> None:
                 0,
                 false,
                 0,
-                '{}'::jsonb
+                '{{}}'::jsonb
             FROM simulation_steps AS step
             JOIN document_operations AS operation
               ON operation.document_operation_id = step.document_operation_id
@@ -155,8 +166,8 @@ def upgrade() -> None:
 
     op.execute(
         sa.text(
-            """
-            DELETE FROM simulation_step_status AS status
+            f"""
+            DELETE FROM {status_table} AS status
             USING document_operations AS operation
             WHERE status.document_operation_id = operation.document_operation_id
               AND (

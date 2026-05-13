@@ -13,6 +13,10 @@ interface MenuBarProps {
   onRedo: () => void
   onShowLineage: () => void
   onShowSessions: () => void
+  showPreprocessorResults: boolean
+  showPostprocessorResults: boolean
+  onTogglePreprocessorResults: () => void
+  onTogglePostprocessorResults: () => void
 }
 
 export default function MenuBar({
@@ -25,6 +29,10 @@ export default function MenuBar({
   onRedo,
   onShowLineage,
   onShowSessions,
+  showPreprocessorResults,
+  showPostprocessorResults,
+  onTogglePreprocessorResults,
+  onTogglePostprocessorResults,
 }: MenuBarProps) {
   const disabled = !hasDocument || meta.isLoading
   const title = hasDocument
@@ -62,6 +70,37 @@ export default function MenuBar({
         >
           Cancel
         </button>
+
+        <div className="inline-flex rounded-full border border-[rgba(55,53,47,0.12)] bg-white p-0.5 text-[11px] shadow-sm">
+          <button
+            type="button"
+            onClick={onTogglePreprocessorResults}
+            disabled={disabled}
+            aria-pressed={showPreprocessorResults}
+            className={`rounded-full px-2.5 py-1 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+              showPreprocessorResults
+                ? 'bg-[rgba(55,53,47,0.88)] text-white'
+                : 'text-[rgba(55,53,47,0.58)] hover:bg-[rgba(55,53,47,0.06)]'
+            }`}
+            title="Show or hide inline Preprocessor results in the document"
+          >
+            Preprocessor
+          </button>
+          <button
+            type="button"
+            onClick={onTogglePostprocessorResults}
+            disabled={disabled}
+            aria-pressed={showPostprocessorResults}
+            className={`rounded-full px-2.5 py-1 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+              showPostprocessorResults
+                ? 'bg-[rgba(55,53,47,0.88)] text-white'
+                : 'text-[rgba(55,53,47,0.58)] hover:bg-[rgba(55,53,47,0.06)]'
+            }`}
+            title="Show or hide inline Postprocessor results in the document"
+          >
+            Postprocessor
+          </button>
+        </div>
 
         <button
           type="button"

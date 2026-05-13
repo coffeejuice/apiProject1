@@ -12,53 +12,33 @@
       <change beforePath="$PROJECT_DIR$/.codex/context/DOCUMENT_BLOCK_ARCHITECTURE.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/DOCUMENT_BLOCK_ARCHITECTURE.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.codex/context/OLD_BACKEND_MIGRATION_MAP.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/OLD_BACKEND_MIGRATION_MAP.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.codex/context/PROJECT_CONTEXT.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/PROJECT_CONTEXT.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.codex/context/TODO_BACKEND_PREPROCESSOR_REWORK.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/TODO_BACKEND_PREPROCESSOR_REWORK.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.env.example" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/domain/block_schemas/common.yaml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/domain/block_schemas/deformation.yaml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/domain/block_schemas/document.yaml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/domain/block_schemas/furnace.yaml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/domain/block_schemas/heating.yaml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/domain/block_schemas/operation.yaml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/domain/operation_block_design_and_parsing_rules.yaml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/document_operation.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/document_operation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/0005_materialize_simulation_step_siblings.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/versions/0005_materialize_simulation_step_siblings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block_types/document_geometry.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/document_geometry.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/models/workflow_runtime.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/workflow_runtime.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/orchestration/coordinator.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/orchestration/coordinator.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/orchestration/runtime_backend.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/orchestration/runtime_backend.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/routers/document.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/document.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/operation_templates.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/operation_templates.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/routers/logs.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/logs.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/block_props.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/block_props.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/block_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/block_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/block_type_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/block_type_service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/services/document_operations.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/document_operations.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/operation_blocks.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/operation_blocks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/operation_templates.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/compiler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/control_program_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/control_program_builder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/operation_keys.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/operation_keys.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/prolongation.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/prolongation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/upsetting.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/upsetting.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/workflow_commands.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/workflow_commands.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/workers/post_worker.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/workers/post_worker.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/workers/pre_worker.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/workers/pre_worker.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/scripts/convert_operations.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/scripts/operations.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/geometry.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/geometry.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/surface_artifacts.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/surface_artifacts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/logs/api/api.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/api/api.jsonl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/scripts/check_preprocessor_pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/check_preprocessor_pipeline.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/scripts/operations.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend_old/tasks0509" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/tasks0509" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/BlockEditor.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/BlockEditor.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/MainEditorPane.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/MainEditorPane.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/MenuBar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/MenuBar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/ToolsPane.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ToolsPane.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/ToolsSwitcher.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ToolsSwitcher.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/BlockRegistry.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/blocks/BlockRegistry.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/DocumentBlock.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/blocks/DocumentBlock.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/OperationBlock.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/blocks/OperationBlock.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/editorPaneTypes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/editorPaneTypes.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/operations/DocumentOperationsView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/operations/DocumentOperationsView.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/index.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/runtimeLogs/LogsView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/runtimeLogs/LogsView.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/simulationSteps/SimulationStepsView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/simulationSteps/SimulationStepsView.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/AppPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AppPage.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/types/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/types/api.ts" afterDir="false" />
     </list>
@@ -68,7 +48,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="541" />
+    <option name="cachedIndexableFilesCount" value="614" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="FileTemplateManagerImpl">
@@ -98,6 +78,7 @@
     &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
     &quot;Python.Backend Server.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Pre.executor&quot;: &quot;Run&quot;,
     &quot;Python.example.executor&quot;: &quot;Run&quot;,
     &quot;Python.gui_client.executor&quot;: &quot;Run&quot;,
     &quot;Python.main.executor&quot;: &quot;Run&quot;,
@@ -114,7 +95,7 @@
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/alextub/Documents/forgelab&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/alextub/Documents/apiProject1/backend&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.stylelint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -194,6 +175,32 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="Pre" type="PythonConfigurationType" factoryName="Python">
+      <module name="apiProject1" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+        <env name=" FORGELAB_WORKER_NAME" value="pre-1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/backend" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="app.workers.pre_worker" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="true" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration default="true" type="ShConfigurationType">
       <option name="SCRIPT_TEXT" value="" />
       <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
@@ -223,14 +230,15 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Python.Backend Server" />
+      <item itemvalue="Python.Pre" />
       <item itemvalue="npm.Dev Server" />
     </list>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-PY-261.23567.174" />
-        <option value="bundled-python-sdk-024ed6589d45-c2ffad84badb-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.23567.174" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-WS-261.23567.141" />
       </set>
     </attachedChunks>
   </component>
@@ -324,7 +332,10 @@
       <workItem from="1777426694782" duration="734000" />
       <workItem from="1777506462992" duration="1266000" />
       <workItem from="1777600940118" duration="622000" />
-      <workItem from="1777882455437" duration="4487000" />
+      <workItem from="1777882455437" duration="5977000" />
+      <workItem from="1778340305574" duration="75000" />
+      <workItem from="1778384105936" duration="2982000" />
+      <workItem from="1778667063456" duration="1477000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -555,7 +566,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Add GUI client" />
     <MESSAGE value="*.xml" />
     <MESSAGE value="SqlAlchemy ORM 2.0, split models, move tables from forgelab" />
     <MESSAGE value="Moved all tables from forgelab" />
@@ -580,12 +590,14 @@
     <MESSAGE value="Add blocks, blocks list and blocks clipboard" />
     <MESSAGE value="Add parsing of Blocks -&gt; Operations" />
     <MESSAGE value="Add new Blocks vs Operations view" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add new Blocks vs Operations view" />
+    <MESSAGE value="Add new Logs and Steps views" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add new Logs and Steps views" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/apiProject1$gui_client.coverage" NAME="gui_client Coverage Results" MODIFIED="1768468851893" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/apiProject1$main.coverage" NAME="main Coverage Results" MODIFIED="1768523636270" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/gui_client_v2" />
     <SUITE FILE_PATH="coverage/apiProject1$example.coverage" NAME="example Coverage Results" MODIFIED="1768285098953" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/apiProject1$Backend_Server.coverage" NAME="Backend Server Coverage Results" MODIFIED="1777882487639" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend" />
+    <SUITE FILE_PATH="coverage/apiProject1$Pre.coverage" NAME="Pre Coverage Results" MODIFIED="1778667299481" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend" />
+    <SUITE FILE_PATH="coverage/apiProject1$Backend_Server.coverage" NAME="Backend Server Coverage Results" MODIFIED="1778667295330" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend" />
   </component>
 </project>

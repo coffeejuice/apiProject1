@@ -27,7 +27,7 @@ class GeometryTypeDefinition:
 
 @dataclass(frozen=True, slots=True)
 class GeneratedGeometry:
-    """Computed billet geometry derived from one card's parameters."""
+    """Computed billet geometry derived from one document operation output."""
 
     type_id: int
     shape: str

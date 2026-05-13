@@ -327,7 +327,7 @@ def _document_initial_target(
                 "last_modified": _isoformat(version.last_modified) if version is not None else None,
             },
         },
-        "process_data": {
+        "production_data": {
             "heat_no": document_properties.get("heat_no"),
             "finished_size": document_properties.get("finished_size"),
             "remarks": document_properties.get("remarks"),
@@ -882,10 +882,9 @@ def _add_simulation_step_sibling(
         block_name_snapshot=snapshot_label,
         library_name_snapshot=snapshot_label,
         material_version_id=document.material_version_id if document is not None else None,
-        parameter_values={},
-        control_parameters={},
-        step_specific_parameters={},
-        metrics={},
+        pre_input={},
+        pre_output={},
+        calculations={},
     )
     session.add(simulation_step)
     if is_preprocess_ready:

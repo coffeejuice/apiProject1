@@ -193,23 +193,14 @@ class SimulationStepStatusResponse(BaseModel):
     updated_at: Optional[datetime] = None
 
 
-class DocumentSimulationStepResponse(BaseModel):
+class SimulationStepResponse(BaseModel):
     document_operation_id: int
-    document_id: int
     document_version_id: int
     execution_order: int
     source_block_id: Optional[UUID] = None
-    source_block_type_id: str
-    operation_order: int
-    operation_order_in_block: int
     operation_template_id: Optional[str] = None
     operation_kind: str
     operation_label_snapshot: Optional[str] = None
-    operation_parameters: Dict[str, Any] = Field(default_factory=dict)
-    source_text_hash: Optional[str] = None
-    parse_status: str
-    parse_errors: List[Dict[str, Any]] = Field(default_factory=list)
-    parse_warnings: List[Dict[str, Any]] = Field(default_factory=list)
     preprocess_ready: bool
     block_name_snapshot: str
     library_name_snapshot: str
@@ -221,18 +212,28 @@ class DocumentSimulationStepResponse(BaseModel):
     bottom_die_id: Optional[int] = None
     left_die_id: Optional[int] = None
     right_die_id: Optional[int] = None
-    parameter_values: Dict[str, Any] = Field(default_factory=dict)
-    control_parameters: Dict[str, Any] = Field(default_factory=dict)
-    step_specific_parameters: Dict[str, Any] = Field(default_factory=dict)
+    pre_input: Dict[str, Any] = Field(default_factory=dict)
+    pre_output: Dict[str, Any] = Field(default_factory=dict)
     initial_geometry: Optional[Dict[str, Any]] = None
     final_geometry: Optional[Dict[str, Any]] = None
-    metrics: Dict[str, Any] = Field(default_factory=dict)
+    calculations: Dict[str, Any] = Field(default_factory=dict)
     accumulated_time_start_seconds: Optional[float] = None
     duration_seconds: Optional[float] = None
     accumulated_time_stop_seconds: Optional[float] = None
     created_at: datetime
     updated_at: datetime
-    status: Optional[SimulationStepStatusResponse] = None
+
+
+class SimulationStepDiagnosticsResponse(BaseModel):
+    response_sources: Dict[str, str] = Field(default_factory=dict)
+    related_log_query: Dict[str, Any] = Field(default_factory=dict)
+    api_messages: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class DocumentSimulationStepResponse(BaseModel):
+    simulation_step: SimulationStepResponse
+    simulation_step_status: Optional[SimulationStepStatusResponse] = None
+    diagnostics: SimulationStepDiagnosticsResponse = Field(default_factory=SimulationStepDiagnosticsResponse)
 
 
 class DocumentSimulationStepListResponse(BaseModel):

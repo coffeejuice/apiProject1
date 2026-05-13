@@ -6,6 +6,11 @@ import type {
   DocumentSimulationStepListResponse,
   DocumentSimulationStepRecord,
   DocumentSimulationStepSurfaceResponse,
+  LogRelatedResponse,
+  RelatedLogRecord,
+  SimulationStepDiagnosticsRecord,
+  SimulationStepRecord,
+  SimulationStepStatusRecord,
   SimulationStepSurfaceMesh,
 } from '../../types/api'
 import type { BlockData } from '../blocks/BlockRegistry'
@@ -15,6 +20,8 @@ interface SimulationStepsViewProps {
   isStepListVisible?: boolean
   activeBlockId?: string | null
   hoveredBlockId?: string | null
+  onOpenPreLogs?: (query: string) => void
+  onOpenSourceBlock?: (blockId: string) => void
 }
 
 const DOCUMENT_BLOCK_TYPE_ID = 'document'
@@ -31,9 +38,54 @@ interface StepVisualSection {
 type StepListItem =
   | { kind: 'section'; block: BlockData; title: string; number: string | null; relatedBlockIds: string[] }
   | { kind: 'source'; block: BlockData; title: string; number: string | null; relatedBlockIds: string[] }
-  | { kind: 'step'; step: DocumentSimulationStepRecord }
+  | { kind: 'step'; step: SimulationStepViewRecord }
 
-type MeshViewMode = 'overlay' | 'side_by_side'
+type SimulationStepViewRecord = SimulationStepRecord & {
+  simulation_step: SimulationStepRecord
+  diagnostics: SimulationStepDiagnosticsRecord
+  simulation_step_status?: SimulationStepStatusRecord | null
+}
+
+function toStepViewRecord(record: DocumentSimulationStepRecord): SimulationStepViewRecord {
+  const simulationStep = record.simulation_step
+  const normalizedStep: SimulationStepRecord = {
+    ...simulationStep,
+    pre_input: simulationStep.pre_input || simulationStep.control_parameters || {},
+    pre_output: simulationStep.pre_output || simulationStep.step_specific_parameters || {},
+    calculations: simulationStep.calculations || simulationStep.metrics || {},
+  }
+  const simulationStepStatus = record.simulation_step_status || null
+  return {
+    ...normalizedStep,
+    simulation_step: normalizedStep,
+    diagnostics: record.diagnostics || {
+      response_sources: {},
+      related_log_query: {},
+      api_messages: [],
+    },
+    simulation_step_status: simulationStepStatus,
+  }
+}
+
+export type MeshViewMode = 'overlay' | 'side_by_side'
+type StepIssueSeverity = 'info' | 'warning' | 'error' | 'blocked'
+type StepIssueKind = 'pre' | 'artifact' | 'status' | 'readiness' | 'diagnostic'
+
+interface StepIssue {
+  severity: StepIssueSeverity
+  kind: StepIssueKind
+  title: string
+  message: string
+  sourceBlockId?: string | null
+  raw?: unknown
+}
+
+interface StepIssueSummary {
+  preErrors: number
+  missingArtifacts: number
+  warnings: number
+  blocked: number
+}
 
 type Vector3 = [number, number, number]
 
@@ -49,7 +101,7 @@ interface GeometryMarker {
   label?: string
 }
 
-interface GeometrySummary {
+export interface GeometrySummary {
   shape?: string
   width?: number
   height?: number
@@ -502,10 +554,14 @@ function flattenUserParameters(
   return output
 }
 
-function userParameterChips(step: DocumentSimulationStepRecord): string[] {
-  const operationParameters = asRecord(step.operation_parameters)
-  const chips = flattenUserParameters(operationParameters, '', [], 5)
-  return chips.length > 0 ? chips : ['no user variables']
+function preOutputChips(step: SimulationStepViewRecord): string[] {
+  const calculations = asRecord(step.calculations)
+  const preOutput = asRecord(step.pre_output)
+  const chips = [
+    ...flattenUserParameters(calculations, '', [], 3),
+    ...flattenUserParameters(preOutput, '', [], 2),
+  ]
+  return chips.length > 0 ? chips : ['no Pre variables']
 }
 
 function statusClass(status: string | undefined): string {
@@ -590,7 +646,7 @@ function parseOutline(value: unknown): Array<[number, number]> {
   return points
 }
 
-function summarizeGeometry(raw: Record<string, unknown> | null | undefined): GeometrySummary | null {
+export function summarizeGeometry(raw: Record<string, unknown> | null | undefined): GeometrySummary | null {
   if (!raw || typeof raw !== 'object') {
     return null
   }
@@ -717,7 +773,7 @@ function metricValue(metrics: Record<string, unknown> | undefined, keys: string[
   return undefined
 }
 
-function Geometry2DPreview({
+export function Geometry2DPreview({
   initial,
   final,
   metrics,
@@ -1116,7 +1172,7 @@ function DimensionGuide({
   )
 }
 
-function Geometry3DPreview({
+export function Geometry3DPreview({
   geometry,
   kind,
   surface,
@@ -1172,7 +1228,7 @@ function Geometry3DPreview({
   )
 }
 
-function Geometry3DOverlayPreview({
+export function Geometry3DOverlayPreview({
   initialGeometry,
   finalGeometry,
   initialSurface,
@@ -1236,6 +1292,55 @@ function Geometry3DOverlayPreview({
           <BasisStatus initial={initialGeometry} final={finalGeometry} />
         </foreignObject>
       </svg>
+    </div>
+  )
+}
+
+export function StepGeometryPreviewGrid({
+  step,
+  surfaceMesh,
+  isSurfaceLoading,
+  meshViewMode = 'overlay',
+}: {
+  step: SimulationStepViewRecord
+  surfaceMesh?: DocumentSimulationStepSurfaceResponse | null
+  isSurfaceLoading?: boolean
+  meshViewMode?: MeshViewMode
+}) {
+  const initialGeometry = summarizeGeometry(step.initial_geometry)
+  const finalGeometry = summarizeGeometry(step.final_geometry)
+  const selectedSurfaceMesh =
+    surfaceMesh?.document_operation_id === step.document_operation_id ? surfaceMesh : null
+
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <Geometry2DPreview initial={initialGeometry} final={finalGeometry} metrics={step.calculations} />
+      <div className="min-w-0">
+        {meshViewMode === 'overlay' ? (
+          <Geometry3DOverlayPreview
+            initialGeometry={initialGeometry}
+            finalGeometry={finalGeometry}
+            initialSurface={selectedSurfaceMesh?.initial}
+            finalSurface={selectedSurfaceMesh?.final}
+            isSurfaceLoading={isSurfaceLoading}
+          />
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            <Geometry3DPreview
+              geometry={initialGeometry}
+              kind="initial"
+              surface={selectedSurfaceMesh?.initial}
+              isSurfaceLoading={isSurfaceLoading}
+            />
+            <Geometry3DPreview
+              geometry={finalGeometry}
+              kind="final"
+              surface={selectedSurfaceMesh?.final}
+              isSurfaceLoading={isSurfaceLoading}
+            />
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -1419,29 +1524,23 @@ function VariableGroupPanel({
   )
 }
 
-function stepStatus(step: DocumentSimulationStepRecord): string {
-  const metricStatus = typeof step.metrics?.preprocessor_status === 'string'
-    ? step.metrics.preprocessor_status
+function stepStatus(step: SimulationStepViewRecord): string {
+  const calculationStatus = typeof step.calculations?.preprocessor_status === 'string'
+    ? step.calculations.preprocessor_status
     : undefined
-  if (step.parse_status?.toLowerCase() === 'error') {
-    return 'parse error'
-  }
-  if (step.status?.status?.toLowerCase() === 'failed') {
-    return step.status.status
+  if (step.simulation_step_status?.status?.toLowerCase() === 'failed') {
+    return step.simulation_step_status.status
   }
   if (step.preprocess_ready && !step.initial_geometry && !step.final_geometry) {
-    return metricStatus || step.status?.status || 'pending'
+    return calculationStatus || step.simulation_step_status?.status || 'pending'
   }
-  return metricStatus || step.status?.status || (step.preprocess_ready ? 'ready' : 'not ready')
+  return calculationStatus || step.simulation_step_status?.status || (step.preprocess_ready ? 'ready' : 'not ready')
 }
 
-function stepStateDescription(step: DocumentSimulationStepRecord): string {
+function stepStateDescription(step: SimulationStepViewRecord): string {
   const status = stepStatus(step).toLowerCase()
   if (status === 'failed') {
-    return 'Pre failed on this row. The row keeps the source context needed to locate the problematic document block.'
-  }
-  if (status === 'parse error') {
-    return 'The source Operation/Furnace data could not be parsed, so Pre must not compile this row until the document block is corrected.'
+    return 'Pre or runtime execution failed on this row. Use the simulation_step_status, diagnostics, and related log query for troubleshooting.'
   }
   if (!step.preprocess_ready) {
     return 'This sibling simulation step exists, but its source document operation is not ready for Pre compilation.'
@@ -1455,59 +1554,47 @@ function stepStateDescription(step: DocumentSimulationStepRecord): string {
   return 'Pre output is available for this row.'
 }
 
-function sourceContextValue(step: DocumentSimulationStepRecord): string | null {
-  const parseRecords = [
-    ...(Array.isArray(step.parse_errors) ? step.parse_errors : []),
-    ...(Array.isArray(step.parse_warnings) ? step.parse_warnings : []),
-  ]
-  for (const item of parseRecords) {
-    if (item.source_sentence !== undefined) {
-      return `sentence: ${compactJson(item.source_sentence)}`
-    }
-    if (item.source_row !== undefined) {
-      return `table row: ${compactJson(item.source_row)}`
-    }
+function stepError(step: SimulationStepViewRecord): string | null {
+  if (step.simulation_step_status?.last_error) {
+    return step.simulation_step_status.last_error
   }
-  const parameters = asRecord(step.operation_parameters)
-  if (parameters.source_sentence !== undefined) {
-    return `sentence: ${compactJson(parameters.source_sentence)}`
+  if (typeof step.calculations?.preprocessor_error === 'string') {
+    return step.calculations.preprocessor_error
   }
-  if (parameters.source_row !== undefined) {
-    return `table row: ${compactJson(parameters.source_row)}`
+  if (step.simulation_step_status?.error_payload && jsonCount(step.simulation_step_status.error_payload) > 0) {
+    return JSON.stringify(step.simulation_step_status.error_payload)
   }
   return null
 }
 
-function stepError(step: DocumentSimulationStepRecord): string | null {
-  if (step.status?.last_error) {
-    return step.status.last_error
+function issueMessage(value: unknown): string {
+  if (value === null || value === undefined || value === '') {
+    return ''
   }
-  if (typeof step.metrics?.preprocessor_error === 'string') {
-    return step.metrics.preprocessor_error
+  if (typeof value === 'string') {
+    return value
   }
-  if (step.status?.error_payload && jsonCount(step.status.error_payload) > 0) {
-    return JSON.stringify(step.status.error_payload)
+  const record = asRecord(value)
+  const message = record.message || record.error || record.warning || record.detail
+  if (typeof message === 'string') {
+    return message
   }
-  return null
+  return compactJson(value)
 }
 
-function stepDiagnostics(step: DocumentSimulationStepRecord): string[] {
+function artifactIssueMessages(step: SimulationStepViewRecord): string[] {
   const messages: string[] = []
   const addMessage = (value: unknown) => {
-    if (value === null || value === undefined || value === '') {
-      return
-    }
-    const message = compactJson(value)
+    const message = issueMessage(value)
     if (message && !messages.includes(message)) {
       messages.push(message)
     }
   }
 
-  addMessage(stepError(step))
-  addMessage(step.metrics?.legacy_surface_artifact_error)
-  addMessage(step.metrics?.surface_artifact_error)
+  addMessage(step.calculations?.legacy_surface_artifact_error)
+  addMessage(step.calculations?.surface_artifact_error)
 
-  const surfaceArtifacts = asRecord(step.metrics?.surface_artifacts)
+  const surfaceArtifacts = asRecord(step.calculations?.surface_artifacts)
   addMessage(surfaceArtifacts.artifact_storage_error)
   const artifacts = asRecord(surfaceArtifacts.artifacts)
   Object.values(artifacts).forEach((artifact) => {
@@ -1517,17 +1604,373 @@ function stepDiagnostics(step: DocumentSimulationStepRecord): string[] {
     }
   })
 
-  ;(Array.isArray(step.parse_errors) ? step.parse_errors : []).forEach((errorItem) => {
-    addMessage(errorItem.message || errorItem.error || errorItem)
-  })
-  ;(Array.isArray(step.parse_warnings) ? step.parse_warnings : []).forEach((warningItem) => {
-    addMessage(warningItem.message || warningItem.warning || warningItem)
-  })
-
   return messages
 }
 
-function operationTitle(step: DocumentSimulationStepRecord): string {
+function stepIssues(step: SimulationStepViewRecord, activeSurfaceError?: string | null): StepIssue[] {
+  const issues: StepIssue[] = []
+  const sourceBlockId = step.source_block_id
+
+  const preprocessorError = typeof step.calculations?.preprocessor_error === 'string'
+    ? step.calculations.preprocessor_error
+    : null
+  if (preprocessorError) {
+    issues.push({
+      severity: 'error',
+      kind: 'pre',
+      title: 'Preprocessor failed',
+      message: preprocessorError,
+      sourceBlockId,
+      raw: {
+        document_operation_id: step.document_operation_id,
+        operation_template_id: step.operation_template_id,
+        preprocessor_error: preprocessorError,
+      },
+    })
+  }
+
+  if (step.simulation_step_status?.status?.toLowerCase() === 'failed') {
+    issues.push({
+      severity: 'error',
+      kind: 'status',
+      title: 'Step failed',
+      message: step.simulation_step_status.last_error || 'The runtime status for this step is failed.',
+      sourceBlockId,
+      raw: step.simulation_step_status,
+    })
+  }
+
+  if (!step.preprocess_ready) {
+    issues.push({
+      severity: 'blocked',
+      kind: 'readiness',
+      title: 'Preprocessor is blocked',
+      message: 'This operation row is not ready for Pre compilation. Fix source input before retrying.',
+      sourceBlockId,
+      raw: { preprocess_ready: step.preprocess_ready },
+    })
+  }
+
+  artifactIssueMessages(step).forEach((message) => {
+    issues.push({
+      severity: 'warning',
+      kind: 'artifact',
+      title: 'Surface artifact problem',
+      message,
+      sourceBlockId,
+      raw: message,
+    })
+  })
+
+  if (activeSurfaceError) {
+    issues.push({
+      severity: 'warning',
+      kind: 'artifact',
+      title: 'Surface preview unavailable',
+      message: activeSurfaceError,
+      sourceBlockId,
+      raw: activeSurfaceError,
+    })
+  }
+
+  if (issues.length === 0 && stepStatus(step).toLowerCase() !== 'compiled') {
+    issues.push({
+      severity: 'info',
+      kind: 'status',
+      title: 'Pre output status',
+      message: stepStateDescription(step),
+      sourceBlockId,
+      raw: { status: stepStatus(step) },
+    })
+  }
+
+  const apiMessages = Array.isArray(step.diagnostics?.api_messages) ? step.diagnostics.api_messages : []
+  apiMessages.forEach((messageItem) => {
+    const record = asRecord(messageItem)
+    const severityValue = typeof record.severity === 'string' ? record.severity.toLowerCase() : 'info'
+    const severity: StepIssueSeverity = severityValue === 'error'
+      ? 'error'
+      : severityValue === 'warning'
+        ? 'warning'
+        : 'info'
+    issues.push({
+      severity,
+      kind: 'diagnostic',
+      title: 'API diagnostic',
+      message: issueMessage(messageItem),
+      sourceBlockId,
+      raw: messageItem,
+    })
+  })
+
+  return issues
+}
+
+function summarizeStepIssues(steps: SimulationStepViewRecord[]): StepIssueSummary {
+  return steps.reduce<StepIssueSummary>((summary, step) => {
+    const issues = stepIssues(step)
+    if (issues.some((issue) => (issue.kind === 'pre' || issue.kind === 'status') && issue.severity === 'error')) {
+      summary.preErrors += 1
+    }
+    if (issues.some((issue) => issue.kind === 'artifact')) {
+      summary.missingArtifacts += 1
+    }
+    summary.warnings += issues.filter((issue) => issue.severity === 'warning').length
+    summary.blocked += issues.filter((issue) => issue.severity === 'blocked').length
+    return summary
+  }, {
+    preErrors: 0,
+    missingArtifacts: 0,
+    warnings: 0,
+    blocked: 0,
+  })
+}
+
+function preLogSearchQuery(step: SimulationStepViewRecord): string {
+  const relatedLogQuery = asRecord(step.diagnostics?.related_log_query)
+  const searchTerms = Array.isArray(relatedLogQuery.search_terms)
+    ? relatedLogQuery.search_terms
+        .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    : []
+  if (searchTerms.length > 0) {
+    return searchTerms.join(' ')
+  }
+  const queryParts = Object.entries(relatedLogQuery)
+    .filter(([key, value]) => (
+      key !== 'service'
+      && key !== 'search_terms'
+      && value !== null
+      && value !== undefined
+      && value !== ''
+    ))
+    .map(([key, value]) => `${key}=${value}`)
+  if (queryParts.length > 0) {
+    return queryParts.join(' ')
+  }
+  if (step.document_operation_id) {
+    return `document_operation_id=${step.document_operation_id}`
+  }
+  if (step.source_block_id) {
+    return String(step.source_block_id)
+  }
+  return step.operation_template_id || ''
+}
+
+function issueSeverityClass(severity: StepIssueSeverity): string {
+  if (severity === 'error') {
+    return 'border-red-200 bg-red-50 text-red-800'
+  }
+  if (severity === 'blocked') {
+    return 'border-orange-200 bg-orange-50 text-orange-800'
+  }
+  if (severity === 'warning') {
+    return 'border-amber-200 bg-amber-50 text-amber-800'
+  }
+  return 'border-sky-200 bg-sky-50 text-sky-800'
+}
+
+function issueBadgeClass(severity: StepIssueSeverity): string {
+  if (severity === 'error') {
+    return 'border-red-200 bg-white text-red-700'
+  }
+  if (severity === 'blocked') {
+    return 'border-orange-200 bg-white text-orange-700'
+  }
+  if (severity === 'warning') {
+    return 'border-amber-200 bg-white text-amber-700'
+  }
+  return 'border-sky-200 bg-white text-sky-700'
+}
+
+function issueSummaryTotal(summary: StepIssueSummary): number {
+  return summary.preErrors + summary.missingArtifacts + summary.warnings + summary.blocked
+}
+
+function StepIssueStrip({
+  issues,
+  preLogQuery,
+  onOpenPreLogs,
+  onOpenSourceBlock,
+}: {
+  issues: StepIssue[]
+  preLogQuery: string
+  onOpenPreLogs?: (query: string) => void
+  onOpenSourceBlock?: (blockId: string) => void
+}) {
+  if (issues.length === 0) {
+    return null
+  }
+
+  const primaryIssue = issues[0]
+  const sourceBlockId = issues.find((issue) => issue.sourceBlockId)?.sourceBlockId || null
+  const rawDiagnostics = issues
+    .map((issue) => issue.raw)
+    .filter((value) => value !== null && value !== undefined && value !== '')
+
+  return (
+    <section className={`rounded-xl border px-3 py-2 text-[12px] ${issueSeverityClass(primaryIssue.severity)}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.04em] ${issueBadgeClass(primaryIssue.severity)}`}>
+              {primaryIssue.severity}
+            </span>
+            <span className="font-semibold">{primaryIssue.title}</span>
+            {issues.length > 1 ? (
+              <span className="text-[11px] opacity-75">+{issues.length - 1} more</span>
+            ) : null}
+          </div>
+          <div className="mt-1 break-words leading-snug">{primaryIssue.message}</div>
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {sourceBlockId && onOpenSourceBlock ? (
+            <button type="button" className="ui-btn h-8 bg-white" onClick={() => onOpenSourceBlock(sourceBlockId)}>
+              Go to source block
+            </button>
+          ) : null}
+          {preLogQuery && onOpenPreLogs ? (
+            <button type="button" className="ui-btn h-8 bg-white" onClick={() => onOpenPreLogs(preLogQuery)}>
+              Open Pre logs
+            </button>
+          ) : null}
+        </div>
+      </div>
+      {issues.length > 1 ? (
+        <div className="mt-2 grid gap-1">
+          {issues.slice(1).map((issue, index) => (
+            <div key={`${issue.kind}-${issue.severity}-${index}`} className="rounded-md bg-white/60 px-2 py-1">
+              <span className="font-semibold">{issue.title}:</span> {issue.message}
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {rawDiagnostics.length > 0 ? (
+        <details className="mt-2">
+          <summary className="cursor-pointer text-[11px] font-semibold opacity-75">Raw diagnostics</summary>
+          <pre className="mt-1 max-h-56 overflow-auto whitespace-pre-wrap rounded-md bg-white/70 px-2 py-1 text-[11px] text-[rgba(55,53,47,0.72)]">
+            {JSON.stringify(rawDiagnostics, null, 2)}
+          </pre>
+        </details>
+      ) : null}
+    </section>
+  )
+}
+
+function logLevelClass(level: string | undefined): string {
+  switch ((level || '').toUpperCase()) {
+    case 'ERROR':
+    case 'CRITICAL':
+      return 'border-red-200 bg-red-50 text-red-700'
+    case 'WARNING':
+      return 'border-amber-200 bg-amber-50 text-amber-700'
+    case 'DEBUG':
+      return 'border-slate-200 bg-slate-50 text-slate-500'
+    default:
+      return 'border-emerald-200 bg-emerald-50 text-emerald-700'
+  }
+}
+
+function logEntrySource(record: RelatedLogRecord): string {
+  const entry = record.entry || {}
+  const logger = typeof entry.logger === 'string' && entry.logger ? entry.logger : record.worker_name
+  const fn = typeof entry.function === 'string' && entry.function ? entry.function : ''
+  const line = typeof entry.line === 'number' || typeof entry.line === 'string' ? String(entry.line) : ''
+  return fn ? `${logger} · ${fn}${line ? `:${line}` : ''}` : logger
+}
+
+function logEntryMessage(record: RelatedLogRecord): string {
+  const message = record.entry?.message
+  if (typeof message === 'string' && message.trim()) {
+    return message
+  }
+  try {
+    return JSON.stringify(record.entry)
+  } catch {
+    return String(record.entry)
+  }
+}
+
+function RelatedPreLogsPanel({
+  response,
+  isLoading,
+  error,
+  preLogQuery,
+  onOpenPreLogs,
+}: {
+  response: LogRelatedResponse | null
+  isLoading: boolean
+  error: string | null
+  preLogQuery: string
+  onOpenPreLogs?: (query: string) => void
+}) {
+  const entries = response?.entries || []
+  return (
+    <section className="rounded-xl border border-[rgba(55,53,47,0.10)] bg-white">
+      <div className="flex items-center justify-between gap-2 border-b border-[rgba(55,53,47,0.07)] px-3 py-1.5">
+        <div>
+          <div className="text-[12px] font-semibold text-[rgba(55,53,47,0.78)]">Related Pre log records</div>
+          <div className="mt-0.5 text-[10px] text-[rgba(55,53,47,0.42)]">
+            {isLoading
+              ? 'Loading...'
+              : `${entries.length} records · workers ${(response?.searched_workers || []).join(', ') || 'pre'}`}
+          </div>
+        </div>
+        {preLogQuery && onOpenPreLogs ? (
+          <button type="button" className="ui-btn h-7 text-[11px]" onClick={() => onOpenPreLogs(preLogQuery)}>
+            Open logs
+          </button>
+        ) : null}
+      </div>
+      {error ? (
+        <div className="px-3 py-2 text-[11px] text-red-700">{error}</div>
+      ) : entries.length > 0 ? (
+        <div className="overflow-hidden">
+          <table className="w-full border-collapse text-[11px] leading-tight">
+            <tbody>
+              {entries.map((record, index) => (
+                <tr
+                  key={`${record.worker_name}-${record.entry.timestamp || index}-${index}`}
+                  className="border-b border-[rgba(55,53,47,0.055)] last:border-b-0 align-top"
+                >
+                  <td className="w-[92px] px-2 py-1 font-mono text-[10px] text-[rgba(55,53,47,0.42)]">
+                    {formatDate(typeof record.entry.timestamp === 'string' ? record.entry.timestamp : undefined)}
+                  </td>
+                  <td className="w-[72px] px-1 py-1">
+                    <span className={`inline-flex rounded-full border px-1.5 py-0.5 text-[9px] font-semibold ${logLevelClass(record.entry.level)}`}>
+                      {record.entry.level || 'LOG'}
+                    </span>
+                  </td>
+                  <td className="px-2 py-1">
+                    <div className="font-medium text-[rgba(55,53,47,0.72)]">{logEntrySource(record)}</div>
+                    <div className="mt-0.5 break-words text-[rgba(55,53,47,0.78)]">{logEntryMessage(record)}</div>
+                    {record.match_reasons.length > 0 ? (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {record.match_reasons.map((reason) => (
+                          <span
+                            key={reason}
+                            className="rounded bg-[#f5f4f1] px-1.5 py-0.5 font-mono text-[9px] text-[rgba(55,53,47,0.50)]"
+                          >
+                            {reason}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="px-3 py-3 text-[11px] text-[rgba(55,53,47,0.42)]">
+          No matching Pre log records in the recent log tail.
+        </div>
+      )}
+    </section>
+  )
+}
+
+function operationTitle(step: SimulationStepViewRecord): string {
   return step.operation_label_snapshot || step.operation_template_id || step.operation_kind
 }
 
@@ -1535,22 +1978,15 @@ function hasAnyRelatedBlock(blockIds: string[], highlightBlockIds: Set<string>):
   return blockIds.some((blockId) => highlightBlockIds.has(blockId))
 }
 
-function stepSummaryTableValue(step: DocumentSimulationStepRecord): Record<string, unknown> {
-  const sourceContext = sourceContextValue(step)
-  const diagnostics = stepDiagnostics(step)
+function stepSummaryTableValue(step: SimulationStepViewRecord): Record<string, unknown> {
   return {
     title: `Step ${step.execution_order}: ${operationTitle(step)}`,
     status: stepStatus(step),
     state: stepStateDescription(step),
     document_operation_id: step.document_operation_id,
-    operation_order: step.operation_order,
-    operation_order_in_block: step.operation_order_in_block,
     operation_template_id: step.operation_template_id || '-',
     source_block_id: step.source_block_id || '-',
-    source: sourceContext || '-',
-    parse_status: step.parse_status || '-',
     updated_at: formatDate(step.updated_at),
-    diagnostics: diagnostics.length > 0 ? diagnostics : undefined,
   }
 }
 
@@ -1562,18 +1998,20 @@ function StepListPanel({
   visibleRowsCount,
   totalRowsCount,
   isFiltered,
+  issueSummary,
   onSelectStep,
   onRefresh,
   highlightedBlockIds,
   onHoverBlockIds,
 }: {
   items: StepListItem[]
-  selectedStep: DocumentSimulationStepRecord | null
+  selectedStep: SimulationStepViewRecord | null
   isLoading: boolean
   isQueueingPre: boolean
   visibleRowsCount: number
   totalRowsCount: number
   isFiltered: boolean
+  issueSummary: StepIssueSummary
   onSelectStep: (stepId: number) => void
   onRefresh: () => void
   highlightedBlockIds: Set<string>
@@ -1600,6 +2038,26 @@ function StepListPanel({
             <RefreshIcon className={`h-4 w-4 ${isLoading || isQueueingPre ? 'animate-spin' : ''}`} />
           </button>
         </div>
+        {issueSummaryTotal(issueSummary) > 0 ? (
+          <div className="mt-2 grid grid-cols-2 gap-1 text-[9px]">
+            {issueSummary.preErrors > 0 ? (
+              <span className="rounded border border-red-200 bg-red-50 px-1 py-0.5 text-red-700">Pre {issueSummary.preErrors}</span>
+            ) : null}
+            {issueSummary.missingArtifacts > 0 ? (
+              <span className="rounded border border-amber-200 bg-amber-50 px-1 py-0.5 text-amber-700">Artifacts {issueSummary.missingArtifacts}</span>
+            ) : null}
+            {issueSummary.warnings > 0 ? (
+              <span className="rounded border border-amber-200 bg-amber-50 px-1 py-0.5 text-amber-700">Warnings {issueSummary.warnings}</span>
+            ) : null}
+            {issueSummary.blocked > 0 ? (
+              <span className="rounded border border-orange-200 bg-orange-50 px-1 py-0.5 text-orange-700">Blocked {issueSummary.blocked}</span>
+            ) : null}
+          </div>
+        ) : (
+          <div className="mt-2 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[9px] text-emerald-700">
+            No document issues
+          </div>
+        )}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-1.5 py-2">
         <div className="space-y-1">
@@ -1647,7 +2105,7 @@ function StepListPanel({
             const isRelated = step.source_block_id ? highlightedBlockIds.has(step.source_block_id) : false
             const status = stepStatus(step)
             const errorMessage = stepError(step)
-            const chips = userParameterChips(step)
+            const chips = preOutputChips(step)
 
             return (
               <button
@@ -1710,13 +2168,13 @@ function StepListPanel({
   )
 }
 
-function buildStepListItems(blocks: BlockData[], steps: DocumentSimulationStepRecord[]): StepListItem[] {
+function buildStepListItems(blocks: BlockData[], steps: SimulationStepViewRecord[]): StepListItem[] {
   if (blocks.length === 0) {
     return steps.map((step) => ({ kind: 'step', step }))
   }
 
   const usedStepIds = new Set<number>()
-  const stepsByBlockId = new Map<string, DocumentSimulationStepRecord[]>()
+  const stepsByBlockId = new Map<string, SimulationStepViewRecord[]>()
   steps.forEach((step) => {
     if (!step.source_block_id) {
       return
@@ -1790,8 +2248,10 @@ export default function SimulationStepsView({
   isStepListVisible = true,
   activeBlockId = null,
   hoveredBlockId = null,
+  onOpenPreLogs,
+  onOpenSourceBlock,
 }: SimulationStepsViewProps) {
-  const [steps, setSteps] = useState<DocumentSimulationStepRecord[]>([])
+  const [steps, setSteps] = useState<SimulationStepViewRecord[]>([])
   const [blocks, setBlocks] = useState<BlockData[]>([])
   const [selectedStepId, setSelectedStepId] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -1801,6 +2261,9 @@ export default function SimulationStepsView({
   const [surfaceMesh, setSurfaceMesh] = useState<DocumentSimulationStepSurfaceResponse | null>(null)
   const [isSurfaceLoading, setIsSurfaceLoading] = useState(false)
   const [surfaceError, setSurfaceError] = useState<string | null>(null)
+  const [relatedPreLogs, setRelatedPreLogs] = useState<LogRelatedResponse | null>(null)
+  const [isRelatedPreLogsLoading, setIsRelatedPreLogsLoading] = useState(false)
+  const [relatedPreLogsError, setRelatedPreLogsError] = useState<string | null>(null)
   const [hoveredBlockIds, setHoveredBlockIds] = useState<string[]>([])
   const [meshViewMode, setMeshViewMode] = useState<MeshViewMode>('overlay')
 
@@ -1825,11 +2288,19 @@ export default function SimulationStepsView({
     }
     return visibleSteps.find((step) => step.document_operation_id === selectedStepId) || visibleSteps[0]
   }, [selectedStepId, visibleSteps])
+  const selectedStepIssues = useMemo(
+    () => selectedStep ? stepIssues(selectedStep, surfaceError) : [],
+    [selectedStep, surfaceError]
+  )
+  const selectedStepPreLogQuery = useMemo(
+    () => selectedStep ? preLogSearchQuery(selectedStep) : '',
+    [selectedStep]
+  )
+  const documentIssueSummary = useMemo(
+    () => summarizeStepIssues(steps),
+    [steps]
+  )
 
-  const initialGeometry = summarizeGeometry(selectedStep?.initial_geometry)
-  const finalGeometry = summarizeGeometry(selectedStep?.final_geometry)
-  const selectedSurfaceMesh =
-    selectedStep && surfaceMesh?.document_operation_id === selectedStep.document_operation_id ? surfaceMesh : null
   const stepListItems = useMemo(() => buildStepListItems(blocks, visibleSteps), [blocks, visibleSteps])
   const highlightedBlockIds = useMemo(() => {
     const blockIds = new Set<string>()
@@ -1865,7 +2336,7 @@ export default function SimulationStepsView({
       setIsLoading(false)
       return
     }
-    const nextSteps = response.data.steps || []
+    const nextSteps = (response.data.steps || []).map(toStepViewRecord)
     setSteps(nextSteps)
     setSelectedStepId((previous) => {
       if (previous && nextSteps.some((step) => step.document_operation_id === previous)) {
@@ -1946,6 +2417,52 @@ export default function SimulationStepsView({
     }
   }, [documentId, selectedStep?.document_operation_id])
 
+  useEffect(() => {
+    if (!selectedStep) {
+      setRelatedPreLogs(null)
+      setRelatedPreLogsError(null)
+      setIsRelatedPreLogsLoading(false)
+      return
+    }
+
+    let isCancelled = false
+    setRelatedPreLogs(null)
+    setRelatedPreLogsError(null)
+    setIsRelatedPreLogsLoading(true)
+
+    apiClient
+      .get<LogRelatedResponse>('/logs/pre/related', {
+        params: {
+          document_operation_id: selectedStep.document_operation_id,
+          document_version_id: selectedStep.document_version_id,
+          execution_order: selectedStep.execution_order,
+          operation_template_id: selectedStep.operation_template_id || undefined,
+          source_block_id: selectedStep.source_block_id || undefined,
+          lines: 3000,
+          limit: 12,
+        },
+      })
+      .then((response) => {
+        if (isCancelled) {
+          return
+        }
+        if (!response.ok || !response.data) {
+          setRelatedPreLogsError(response.errorMessage || 'Failed to load related Pre logs.')
+          return
+        }
+        setRelatedPreLogs(response.data)
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsRelatedPreLogsLoading(false)
+        }
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [selectedStep?.document_operation_id])
+
   if (!documentId) {
     return (
       <section className="flex h-full min-h-0 items-center justify-center bg-[#fbfbfa] text-sm text-[rgba(55,53,47,0.55)]">
@@ -1978,6 +2495,7 @@ export default function SimulationStepsView({
               visibleRowsCount={visibleSteps.length}
               totalRowsCount={steps.length}
               isFiltered={activeSourceBlockIds.size > 0}
+              issueSummary={documentIssueSummary}
               onSelectStep={setSelectedStepId}
               onRefresh={() => void queuePreprocess()}
               highlightedBlockIds={highlightedBlockIds}
@@ -2017,48 +2535,29 @@ export default function SimulationStepsView({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <Geometry2DPreview initial={initialGeometry} final={finalGeometry} metrics={selectedStep.metrics} />
-                <div className="min-w-0">
-                  {meshViewMode === 'overlay' ? (
-                    <Geometry3DOverlayPreview
-                      initialGeometry={initialGeometry}
-                      finalGeometry={finalGeometry}
-                      initialSurface={selectedSurfaceMesh?.initial}
-                      finalSurface={selectedSurfaceMesh?.final}
-                      isSurfaceLoading={isSurfaceLoading}
-                    />
-                  ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      <Geometry3DPreview
-                        geometry={initialGeometry}
-                        kind="initial"
-                        surface={selectedSurfaceMesh?.initial}
-                        isSurfaceLoading={isSurfaceLoading}
-                      />
-                      <Geometry3DPreview
-                        geometry={finalGeometry}
-                        kind="final"
-                        surface={selectedSurfaceMesh?.final}
-                        isSurfaceLoading={isSurfaceLoading}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
+              <StepGeometryPreviewGrid
+                step={selectedStep}
+                surfaceMesh={surfaceMesh}
+                isSurfaceLoading={isSurfaceLoading}
+                meshViewMode={meshViewMode}
+              />
 
-              {surfaceError ? (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-700">
-                  Legacy STL mesh preview is unavailable: {surfaceError}
-                </div>
-              ) : null}
+              <StepIssueStrip
+                issues={selectedStepIssues}
+                preLogQuery={selectedStepPreLogQuery}
+                onOpenPreLogs={onOpenPreLogs}
+                onOpenSourceBlock={onOpenSourceBlock}
+              />
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-3">
-                  <VariableGroupPanel title="User operation parameters" value={selectedStep.operation_parameters} />
-                  <VariableGroupPanel title="Parameter values" value={selectedStep.parameter_values} />
-                  <VariableGroupPanel title="Control parameters" value={selectedStep.control_parameters} />
-                  <VariableGroupPanel title="Step-specific parameters" value={selectedStep.step_specific_parameters} />
+                  <VariableGroupPanel title="simulation_steps.pre_input" value={selectedStep.pre_input} />
+                  <VariableGroupPanel title="simulation_steps.pre_output" value={selectedStep.pre_output} />
+                  <VariableGroupPanel
+                    title="simulation_steps.calculations"
+                    value={selectedStep.calculations}
+                    hiddenTopLevelKeys={HIDDEN_METRIC_KEYS}
+                  />
                 </div>
 
                 <div className="space-y-3">
@@ -2071,30 +2570,25 @@ export default function SimulationStepsView({
                     }}
                     hiddenTopLevelKeys={HIDDEN_GEOMETRY_KEYS}
                   />
-                  <VariableGroupPanel
-                    title="Pre metrics"
-                    value={selectedStep.metrics}
-                    hiddenTopLevelKeys={HIDDEN_METRIC_KEYS}
+                  <VariableGroupPanel title="simulation_step_status" value={selectedStep.simulation_step_status} />
+                  <VariableGroupPanel title="Diagnostics / API response" value={selectedStep.diagnostics} />
+                  <RelatedPreLogsPanel
+                    response={relatedPreLogs}
+                    isLoading={isRelatedPreLogsLoading}
+                    error={relatedPreLogsError}
+                    preLogQuery={selectedStepPreLogQuery}
+                    onOpenPreLogs={onOpenPreLogs}
                   />
-                  <VariableGroupPanel title="Status" value={selectedStep.status} />
                   <VariableGroupPanel
-                    title="Typed columns"
+                    title="simulation_steps typed columns"
                     value={{
                       document_operation_id: selectedStep.document_operation_id,
-                      document_id: selectedStep.document_id,
                       document_version_id: selectedStep.document_version_id,
                       execution_order: selectedStep.execution_order,
                       source_block_id: selectedStep.source_block_id,
-                      source_block_type_id: selectedStep.source_block_type_id,
-                      operation_order: selectedStep.operation_order,
-                      operation_order_in_block: selectedStep.operation_order_in_block,
                       operation_template_id: selectedStep.operation_template_id,
                       operation_kind: selectedStep.operation_kind,
                       operation_label_snapshot: selectedStep.operation_label_snapshot,
-                      source_text_hash: selectedStep.source_text_hash,
-                      parse_status: selectedStep.parse_status,
-                      parse_errors: selectedStep.parse_errors,
-                      parse_warnings: selectedStep.parse_warnings,
                       block_name_snapshot: selectedStep.block_name_snapshot,
                       library_name_snapshot: selectedStep.library_name_snapshot,
                       material_version_id: selectedStep.material_version_id,

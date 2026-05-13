@@ -15,10 +15,10 @@ It covers:
 
 If source code or migrations conflict with this file, source code is authoritative and this file must be updated.
 
-## DB consistency snapshot (updated 2026-05-07)
+## DB consistency snapshot (updated 2026-05-10)
 - Alembic code state:
-  - current head migration file: `0005_materialize_simulation_step_siblings.py`
-  - current head revision: `0005_step_siblings`
+  - current head migration file: `0007_restore_simulation_step_status_name.py`
+  - current head revision: `0007_restore_step_status_name`
 - Previous incremental migration history was compacted into the current-schema baseline while the project is still pre-production.
 - Current schema shape of note:
   - active editor block IDs are semantic strings: `document`, `heating`, `deformation`, `furnace`, `operation`
@@ -38,12 +38,12 @@ If source code or migrations conflict with this file, source code is authoritati
   - `operation_properties.rounding_table` stores Rounding input rows; one non-empty row generates one `document_operations` row
   - `document_operations` is the materialized technological-operation table between editable `document_blocks` and compiled `simulation_steps`; it stores final per-row JSONB in `operation_parameters`
   - `document_operations` copies Deformation values only from the direct parent Deformation section during materialization; missing values are not inherited from previous Deformation sections
-  - the root `document` block materializes as the first `document_operations` row with `operation_template_id = document_initial_data`, `operation_kind = billet`, and target namespaces `document_info`, `process_data`, `material`, `input_stock`, and `mesh`; Pre maps it to the legacy billet/NewBillet compiler path
+  - the root `document` block materializes as the first `document_operations` row with `operation_template_id = document_initial_data`, `operation_kind = billet`, and target namespaces `document_info`, `production_data`, `material`, `input_stock`, and `mesh`; Pre maps it to the legacy billet/NewBillet compiler path
   - `furnace` blocks materialize as `document_operations` rows with `operation_template_id = furnace`; `operation_parameters.temperature_program` stores Furnace table rows with `number`, `type`, `duration_min`, and `temperature_c`
   - `simulation_steps.document_operation_id` is both the primary key and required cascade FK to `document_operations.document_operation_id`; old `simulation_steps.simulation_step_id` and `simulation_steps.block_type_id` were removed
   - `document_operations` regeneration creates one sibling `simulation_steps` row for each materialized operation row; deleting/replacing operations removes/replaces sibling simulation rows through the cascade FK
   - all valid materialized operations are treated as simulation/preprocessor candidates; sibling creation initially sets `simulation_steps.preprocess_ready` for valid rows, and an active Pre run temporarily resets it until each row is successfully compiled
-  - Pre compile/parse failures are stored on the affected sibling row: `simulation_steps.metrics.preprocessor_status = failed` and `simulation_step_status.status = failed` with `last_error/error_payload`
+  - Pre compile/parse failures are stored on the affected sibling row: `simulation_steps.calculations.preprocessor_status = failed` and `simulation_step_status.status = failed` with `last_error/error_payload`
   - old Pre `is_simulation` metadata was removed; there is no active simulated vs non-simulated operation split
   - semantic Pre adapter coverage is complete for the current operation templates: billet/document initial data, Furnace/Heating, Upsetting, axial/spiral/radial/full-die deformation, radial initial rotations, transverse/transversal cogging, and cutting templates should not compile through generic fallback
   - `projects.material_id` points to `materials.material_id`
@@ -82,7 +82,7 @@ If source code or migrations conflict with this file, source code is authoritati
 - Verification status:
   - backend `python3 -m compileall backend/app` and backend `.venv` `python -m compileall app` pass
   - frontend `npm run typecheck` and `npm run build` pass
-  - backend `.venv` `alembic current` should report `0005_step_siblings (head)` after migration
+  - backend `.venv` `alembic current` should report `0007_restore_step_status_name (head)` after migration
   - backend `.venv` `alembic check` should report `No new upgrade operations detected.` after migration
   - expected active runtime tables include `document_blocks`, `document_operations`, `simulation_steps`, `simulation_step_status`, and `postprocessing_tasks`
   - direct SQLAlchemy inspection confirms `document_operations.legacy_type_id` is absent, `time_between_operations` uses semantic template columns, and `simulation_steps.simulation_step_id` / `simulation_steps.block_type_id` are absent
@@ -128,8 +128,8 @@ If source code or migrations conflict with this file, source code is authoritati
   - `servers`
   - `settings`
   - `share_links`
-  - `simulation_step_status`
   - `simulation_steps`
+  - `simulation_step_status`
   - `time_between_operations`
   - `users`
 
@@ -148,7 +148,7 @@ If source code or migrations conflict with this file, source code is authoritati
   - ordering/source: `operation_order`, `operation_order_in_block`, `source_block_type_id`
   - template source: `operation_template_id`, `operation_kind`, `label_snapshot`
   - materialized JSONB payloads: `operation_parameters`, `template_snapshot`
-  - root Document row convention: `source_block_type_id = document`, `operation_template_id = document_initial_data`, `operation_kind = billet`, `label_snapshot = Document initial data`, and `operation_parameters` grouped under `document_info`, `process_data`, `material`, `input_stock`, and `mesh`
+  - root Document row convention: `source_block_type_id = document`, `operation_template_id = document_initial_data`, `operation_kind = billet`, `label_snapshot = Document initial data`, and `operation_parameters` grouped under `document_info`, `production_data`, `material`, `input_stock`, and `mesh`
   - Furnace row convention: `source_block_type_id = furnace`, `operation_template_id = furnace`, `operation_kind = furnace`, and `operation_parameters.temperature_program` is an array of table-row objects copied from `furnace_properties.temperature_program`
   - Operation row convention: generated operation parameters plus copied Deformation die/feed/speed values are stored directly under `operation_parameters` using the final segment of source chained-dot paths
   - parser audit for Operation blocks: `source_text_hash`, `parse_status`, `parse_errors`, `parse_warnings`; parse error payloads may include `sentence` + `source_sentence` for text input or `row` + `source_row` for table input
@@ -170,16 +170,18 @@ If source code or migrations conflict with this file, source code is authoritati
 - `simulation_steps`
   - sibling execution rows created together with `document_operations`; Pre updates these rows with compiled execution data for the active `document_version`
   - read endpoint: `GET /documents/{document_id}/simulation-steps`
-    - returns all `simulation_steps` rows for the document, joined to source `document_operations` and optional `simulation_step_status`
-    - includes source `document_operations.operation_parameters` so the frontend `Steps` left list can show saved user-entered operation variables next to compiled Pre status
-    - used by the frontend `Steps` tool for compact list/detail inspection plus 2D compiled-geometry previews
+    - returns all `simulation_steps` rows for the document, validated through `document_versions.document_id`, without joining source `document_operations` into the default payload
+    - response rows are grouped by provenance: `simulation_step` from `simulation_steps`, `simulation_step_status` from the runtime `simulation_step_status` table, and `diagnostics` from API/log context
+    - `diagnostics.related_log_query.search_terms` provides machine-readable troubleshooting context for `GET /logs/pre/related`; actual log records are loaded lazily for the selected step, not embedded in the hot list payload
+    - source/user-entered `document_operations.operation_parameters` belongs to the Operations view or an explicit trace action, not the default Steps dashboard payload
+    - used by the frontend `Steps` tool for compact Pre troubleshooting, grouped list/detail inspection, and 2D/3D compiled-geometry previews
   - lazy surface endpoint: `GET /documents/{document_id}/simulation-steps/{document_operation_id}/surface`
     - returns JSON triangular surface meshes (`vertices`, `faces`, bounds, area/volume summary)
     - reads JSON/STL artifacts generated row-by-row by the Pre compiler through the restored legacy Trimesh/STL mesh-state path in `backend/app/services/preprocessor/legacy_surface_mesh.py`
     - never synthesizes fallback meshes from `simulation_steps` geometry JSON; missing, unreadable, or non-legacy artifacts are reported as explicit errors
     - keeps mesh payloads out of the default `simulation_steps` list response
     - writes/read selected-step JSON/STL files through `backend/app/services/preprocessor/surface_artifacts.py` under `TEMP_FILES_ROOT/runs/<document_version_id>/<execution_order>/surface/document_operation_<id>/`
-    - records only compact artifact metadata under `simulation_steps.metrics.surface_artifacts`
+    - records only compact artifact metadata under `simulation_steps.calculations.surface_artifacts`
     - replaces the old-project DB-coupled binary-STL preview path for interactive Steps inspection; old `initial_3d_stl` / `final_3d_stl` DB columns are not restored
   - lazy surface artifact endpoints:
     - `GET /documents/{document_id}/simulation-steps/{document_operation_id}/surface/artifacts/{initial|final}/{json|stl}`
@@ -203,13 +205,12 @@ If source code or migrations conflict with this file, source code is authoritati
   - machine/tooling refs:
     - `press_id`, `press_mode_id`, `die_assembly_id`, `top_die_id`, `bottom_die_id`, `left_die_id`, `right_die_id`
   - compiled JSONB payloads:
-    - `parameter_values`
-    - `control_parameters`
-    - `step_specific_parameters`
+    - `pre_input`
+    - `pre_output`
     - `initial_geometry`
     - `final_geometry`
-    - `metrics`
-      - Pre run diagnostics use `metrics.preprocessor_status` values such as `pending`, `compiled`, and `failed`
+    - `calculations`
+      - Pre run diagnostics use `calculations.preprocessor_status` values such as `pending`, `compiled`, and `failed`
   - compiled timeline fields:
     - `accumulated_time_start_seconds`
     - `duration_seconds`

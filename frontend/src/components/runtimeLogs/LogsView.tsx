@@ -4,7 +4,56 @@ import { apiClient } from '../../lib/apiClient'
 import type { LogClearResponse, LogEntry, LogServicesResponse, LogServiceSummary, LogTailResponse } from '../../types/api'
 
 const LOG_SERVICES = ['api', 'pre', 'post', 'coordinator'] as const
-const LOG_LEVELS = ['', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+const LOG_VIEW_STATE_KEY = 'forgelab-logs-view-state'
+const LOG_SEVERITY_FILTERS = [
+  { id: 'all', label: 'All records' },
+  { id: 'warnings_errors', label: 'Warnings + errors' },
+  { id: 'errors', label: 'Errors only' },
+] as const
+
+type LogServiceName = (typeof LOG_SERVICES)[number]
+type LogSeverityFilter = (typeof LOG_SEVERITY_FILTERS)[number]['id']
+
+export interface LogFocusRequest {
+  service: LogServiceName
+  query: string
+  severityFilter?: LogSeverityFilter
+  workerName?: string
+  nonce: number
+}
+
+interface PersistedLogsViewState {
+  selectedService?: string
+  selectedWorker?: string
+  lineCount?: number
+  severityFilter?: LogSeverityFilter
+  query?: string
+}
+
+interface LogsViewProps {
+  focusRequest?: LogFocusRequest | null
+}
+
+function loadPersistedState(): PersistedLogsViewState {
+  try {
+    const rawValue = window.sessionStorage.getItem(LOG_VIEW_STATE_KEY)
+    if (!rawValue) {
+      return {}
+    }
+    const parsed = JSON.parse(rawValue)
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+function persistState(state: PersistedLogsViewState) {
+  try {
+    window.sessionStorage.setItem(LOG_VIEW_STATE_KEY, JSON.stringify(state))
+  } catch {
+    // Session persistence is a convenience only.
+  }
+}
 
 function formatTime(value: string | undefined): string {
   if (!value) {
@@ -58,14 +107,55 @@ function serviceByName(services: LogServiceSummary[], service: string): LogServi
   return services.find((entry) => entry.service === service)
 }
 
-export default function LogsView() {
+function isLogServiceName(value: unknown): value is LogServiceName {
+  return typeof value === 'string' && LOG_SERVICES.includes(value as LogServiceName)
+}
+
+function isSeverityFilter(value: unknown): value is LogSeverityFilter {
+  return typeof value === 'string' && LOG_SEVERITY_FILTERS.some((filter) => filter.id === value)
+}
+
+function isErrorLevel(level: string | undefined): boolean {
+  const normalized = (level || '').toUpperCase()
+  return normalized === 'ERROR' || normalized === 'CRITICAL'
+}
+
+function isWarningOrErrorLevel(level: string | undefined): boolean {
+  const normalized = (level || '').toUpperCase()
+  return normalized === 'WARNING' || normalized === 'ERROR' || normalized === 'CRITICAL'
+}
+
+function matchesSeverityFilter(entry: LogEntry, filter: LogSeverityFilter): boolean {
+  if (filter === 'errors') {
+    return isErrorLevel(entry.level)
+  }
+  if (filter === 'warnings_errors') {
+    return isWarningOrErrorLevel(entry.level)
+  }
+  return true
+}
+
+function workerNamesForService(services: LogServiceSummary[], service: string): string[] {
+  const workers = serviceByName(services, service)?.workers.map((worker) => worker.worker_name) || []
+  return workers.length > 0 ? workers : [service]
+}
+
+export default function LogsView({ focusRequest = null }: LogsViewProps) {
+  const persistedState = useMemo(loadPersistedState, [])
   const [services, setServices] = useState<LogServiceSummary[]>([])
   const [logsRoot, setLogsRoot] = useState('')
-  const [selectedService, setSelectedService] = useState<string>('api')
-  const [selectedWorker, setSelectedWorker] = useState<string>('api')
-  const [lineCount, setLineCount] = useState(300)
-  const [level, setLevel] = useState('')
-  const [query, setQuery] = useState('')
+  const [selectedService, setSelectedService] = useState<string>(() => (
+    isLogServiceName(persistedState.selectedService) ? persistedState.selectedService : 'api'
+  ))
+  const [selectedWorker, setSelectedWorker] = useState<string>(() => persistedState.selectedWorker || 'api')
+  const [lineCount, setLineCount] = useState(() => {
+    const persistedLineCount = Number(persistedState.lineCount)
+    return Number.isFinite(persistedLineCount) && persistedLineCount >= 1 ? Math.min(persistedLineCount, 2000) : 300
+  })
+  const [severityFilter, setSeverityFilter] = useState<LogSeverityFilter>(() => (
+    isSeverityFilter(persistedState.severityFilter) ? persistedState.severityFilter : 'all'
+  ))
+  const [query, setQuery] = useState(() => persistedState.query || '')
   const [entries, setEntries] = useState<LogEntry[]>([])
   const [filePath, setFilePath] = useState('')
   const [missing, setMissing] = useState(false)
@@ -81,9 +171,12 @@ export default function LogsView() {
   )
 
   const workerNames = useMemo(() => {
-    const workers = selectedServiceSummary?.workers.map((worker) => worker.worker_name) || []
-    return workers.length > 0 ? workers : [selectedService]
-  }, [selectedService, selectedServiceSummary?.workers])
+    return workerNamesForService(services, selectedService)
+  }, [selectedService, services])
+
+  const visibleEntries = useMemo(() => {
+    return entries.filter((entry) => matchesSeverityFilter(entry, severityFilter))
+  }, [entries, severityFilter])
 
   const loadServices = async () => {
     setIsLoadingServices(true)
@@ -98,15 +191,23 @@ export default function LogsView() {
     setLogsRoot(response.data.logs_root || '')
   }
 
-  const loadTail = async () => {
+  const loadTail = async (overrides: {
+    service?: string
+    worker?: string
+    lines?: number
+    query?: string
+  } = {}) => {
+    const service = overrides.service || selectedService
+    const worker = overrides.worker || selectedWorker
+    const lines = overrides.lines || lineCount
+    const searchQuery = overrides.query ?? query
     setIsLoadingTail(true)
     setError(null)
-    const response = await apiClient.get<LogTailResponse>(`/logs/${selectedService}/tail`, {
+    const response = await apiClient.get<LogTailResponse>(`/logs/${service}/tail`, {
       params: {
-        worker_name: selectedWorker,
-        lines: lineCount,
-        level: level || undefined,
-        q: query.trim() || undefined,
+        worker_name: worker,
+        lines,
+        q: searchQuery.trim() || undefined,
       },
     })
     setIsLoadingTail(false)
@@ -149,6 +250,16 @@ export default function LogsView() {
   }, [])
 
   useEffect(() => {
+    persistState({
+      selectedService,
+      selectedWorker,
+      lineCount,
+      severityFilter,
+      query,
+    })
+  }, [lineCount, query, selectedService, selectedWorker, severityFilter])
+
+  useEffect(() => {
     const workers = selectedServiceSummary?.workers || []
     if (workers.length > 0 && !workers.some((worker) => worker.worker_name === selectedWorker)) {
       setSelectedWorker(workers[0].worker_name)
@@ -164,6 +275,30 @@ export default function LogsView() {
   }, [selectedService, selectedWorker])
 
   useEffect(() => {
+    if (!focusRequest) {
+      return
+    }
+    const nextService = focusRequest.service
+    const nextWorkers = workerNamesForService(services, nextService)
+    const nextWorker = focusRequest.workerName && nextWorkers.includes(focusRequest.workerName)
+      ? focusRequest.workerName
+      : nextWorkers[0] || nextService
+    const nextLineCount = Math.max(lineCount, 1000)
+    const nextSeverityFilter = focusRequest.severityFilter || 'warnings_errors'
+    setSelectedService(nextService)
+    setSelectedWorker(nextWorker)
+    setQuery(focusRequest.query)
+    setSeverityFilter(nextSeverityFilter)
+    setLineCount(nextLineCount)
+    void loadTail({
+      service: nextService,
+      worker: nextWorker,
+      lines: nextLineCount,
+      query: focusRequest.query,
+    })
+  }, [focusRequest?.nonce])
+
+  useEffect(() => {
     if (!autoRefresh) {
       return undefined
     }
@@ -172,7 +307,7 @@ export default function LogsView() {
       void loadTail()
     }, 5000)
     return () => window.clearInterval(intervalId)
-  }, [autoRefresh, selectedService, selectedWorker, lineCount, level, query])
+  }, [autoRefresh, selectedService, selectedWorker, lineCount, query])
 
   return (
     <section className="flex h-full min-h-0 flex-col bg-[#fbfbfa]">
@@ -241,13 +376,22 @@ export default function LogsView() {
             ))}
           </select>
 
-          <select value={level} onChange={(event) => setLevel(event.target.value)} className="ui-input h-8 w-32">
-            {LOG_LEVELS.map((item) => (
-              <option key={item || 'all'} value={item}>
-                {item || 'All levels'}
-              </option>
+          <div className="inline-flex rounded-full border border-[rgba(55,53,47,0.12)] bg-white p-0.5">
+            {LOG_SEVERITY_FILTERS.map((filter) => (
+              <button
+                key={filter.id}
+                type="button"
+                onClick={() => setSeverityFilter(filter.id)}
+                className={`rounded-full px-2.5 py-1 text-[11px] transition ${
+                  severityFilter === filter.id
+                    ? 'bg-[rgba(55,53,47,0.82)] text-white'
+                    : 'text-[rgba(55,53,47,0.62)] hover:bg-[rgba(55,53,47,0.06)]'
+                }`}
+              >
+                {filter.label}
+              </button>
             ))}
-          </select>
+          </div>
 
           <input
             type="number"
@@ -271,10 +415,26 @@ export default function LogsView() {
             placeholder="Filter text..."
             className="ui-input h-8 min-w-52 flex-1"
           />
+          <button type="button" className="ui-btn h-8" onClick={() => void loadTail()} disabled={isLoadingTail}>
+            Search
+          </button>
+          {query ? (
+            <button
+              type="button"
+              className="ui-btn h-8"
+              onClick={() => {
+                setQuery('')
+                void loadTail({ query: '' })
+              }}
+              disabled={isLoadingTail}
+            >
+              Clear search
+            </button>
+          ) : null}
         </div>
 
         <div className="mt-2 truncate text-[11px] text-[rgba(55,53,47,0.45)]">
-          Root: {logsRoot || '—'} · File: {filePath || '—'}
+          Root: {logsRoot || '—'} · File: {filePath || '—'} · Showing {visibleEntries.length} / {entries.length} loaded records
         </div>
       </div>
 
@@ -302,14 +462,14 @@ export default function LogsView() {
               </tr>
             </thead>
             <tbody>
-              {entries.length === 0 ? (
+              {visibleEntries.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-3 py-8 text-center text-[rgba(55,53,47,0.45)]">
                     No log lines to show.
                   </td>
                 </tr>
               ) : (
-                entries.map((entry, index) => {
+                visibleEntries.map((entry, index) => {
                   const details = entryDetails(entry)
                   return (
                     <tr key={`${entry.timestamp || 'line'}-${index}`} className="border-b border-[rgba(55,53,47,0.06)] align-top">

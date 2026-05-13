@@ -26,7 +26,7 @@ from app.orchestration.runtime_backend import (
     PreJobClaimer,
     PreJobExecutor,
     _rebuild_simulation_steps,
-    build_process_cards_for_document_version,
+    build_document_operation_outputs_for_document_version,
 )
 from app.services.block_props import DEFORMATION_PROPERTIES, DOCUMENT_PROPERTIES, OPERATION_PROPERTIES
 from app.services.block_service import (
@@ -372,7 +372,7 @@ def _verify_billet_output(document_id: int) -> list[str]:
             return ["missing document_initial_data operation row"]
 
         target = dict(operation.operation_parameters or {})
-        for namespace in ("document_info", "process_data", "material", "input_stock", "mesh"):
+        for namespace in ("document_info", "production_data", "material", "input_stock", "mesh"):
             if namespace not in target:
                 errors.append(f"document_initial_data operation_parameters missing {namespace}")
 
@@ -399,9 +399,9 @@ def _verify_billet_output(document_id: int) -> list[str]:
             ):
                 if key not in geometry:
                     errors.append(f"simulation_steps.{field} missing {key}")
-        metrics = dict(step.metrics or {})
-        if "mesh_elements" not in metrics:
-            errors.append("simulation_steps.metrics missing mesh_elements")
+        calculations = dict(step.calculations or {})
+        if "mesh_elements" not in calculations:
+            errors.append("simulation_steps.calculations missing mesh_elements")
         if step.operation_template_id != DOCUMENT_INITIAL_DATA_TEMPLATE_ID:
             errors.append(
                 f"simulation_steps.operation_template_id expected {DOCUMENT_INITIAL_DATA_TEMPLATE_ID}, got {step.operation_template_id}"
@@ -422,12 +422,12 @@ def _compile(document_id: int, *, apply: bool, verify_billet: bool = False) -> i
             return 2
 
         try:
-            cards = build_process_cards_for_document_version(session, version)
+            document_operation_outputs = build_document_operation_outputs_for_document_version(session, version)
             print(
-                f"document_id={document_id} document_version_id={version.document_version_id} cards={len(cards)}",
+                f"document_id={document_id} document_version_id={version.document_version_id} document_operation_outputs={len(document_operation_outputs)}",
                 flush=True,
             )
-            compiled = PreprocessorCompiler().compile_from_database(session=session, cards=cards)
+            compiled = PreprocessorCompiler().compile_from_database(session=session, document_operation_outputs=document_operation_outputs)
         except PreprocessorCompileError as exc:
             print(f"PREPROCESSOR_COMPILE_ERROR: {exc}", file=sys.stderr)
             return 1
@@ -644,25 +644,25 @@ def _validate_failure_diagnostics(document_id: int) -> int:
         if step is None:
             errors.append(f"missing simulation_steps sibling for document_operation_id={document_operation_id}")
         else:
-            metrics = dict(step.metrics or {})
-            if metrics.get("preprocessor_status") != "failed":
-                errors.append("simulation_steps.metrics.preprocessor_status is not failed")
-            if controlled_message not in str(metrics.get("preprocessor_error") or ""):
-                errors.append("simulation_steps.metrics.preprocessor_error does not include controlled failure message")
+            calculations = dict(step.calculations or {})
+            if calculations.get("preprocessor_status") != "failed":
+                errors.append("simulation_steps.calculations.preprocessor_status is not failed")
+            if controlled_message not in str(calculations.get("preprocessor_error") or ""):
+                errors.append("simulation_steps.calculations.preprocessor_error does not include controlled failure message")
 
         step_status = session.get(SimulationStepStatus, document_operation_id)
         if step_status is None:
-            errors.append(f"missing simulation_step_status sibling for document_operation_id={document_operation_id}")
+            errors.append(f"missing status sibling for document_operation_id={document_operation_id}")
         else:
             if step_status.status != SimulationStepStatusEnum.failed:
-                errors.append(f"expected simulation_step_status.status=failed, got {step_status.status}")
+                errors.append(f"expected status.status=failed, got {step_status.status}")
             if controlled_message not in str(step_status.last_error or ""):
-                errors.append("simulation_step_status.last_error does not include controlled failure message")
+                errors.append("status.last_error does not include controlled failure message")
             error_payload = dict(step_status.error_payload or {})
             if error_payload.get("document_operation_id") != document_operation_id:
-                errors.append("simulation_step_status.error_payload has wrong document_operation_id")
+                errors.append("status.error_payload has wrong document_operation_id")
             if controlled_message not in str(error_payload.get("message") or ""):
-                errors.append("simulation_step_status.error_payload.message does not include controlled failure message")
+                errors.append("status.error_payload.message does not include controlled failure message")
 
     if errors:
         for error in errors:

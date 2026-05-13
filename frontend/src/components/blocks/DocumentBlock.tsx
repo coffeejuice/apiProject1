@@ -382,9 +382,9 @@ export default function DocumentBlock({
     </section>
   )
 
-  const renderProcessDataBlock = () => (
+  const renderProductionDataBlock = () => (
     renderDocumentSection(
-      'Process data',
+      'Production data',
       <table className="doc-table">
         <tbody>
           <tr className="doc-table-row">
@@ -511,7 +511,7 @@ export default function DocumentBlock({
       {renderDocumentMetadata()}
 
       <div className="doc-document-blocks">
-        {renderProcessDataBlock()}
+        {renderProductionDataBlock()}
         {renderMergedSetupBlocks()}
       </div>
     </div>

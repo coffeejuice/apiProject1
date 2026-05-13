@@ -5,7 +5,7 @@ from .compiler import (
     CompiledControlProgramRow,
     PreprocessorCompiler,
     PreprocessorCompileError,
-    ProcessCard,
+    DocumentOperationOutput,
 )
 from .control_program_builder import (
     ControlProgramError,
@@ -71,7 +71,7 @@ __all__ = [
     "PressModeParameters",
     "PreprocessorCompiler",
     "PreprocessorCompileError",
-    "ProcessCard",
+    "DocumentOperationOutput",
     "PROLONGATION_TEMPLATE_IDS",
     "ProlongationComputationResult",
     "ProlongationMathError",

@@ -51,6 +51,23 @@ export interface LogTailResponse {
   missing: boolean
 }
 
+export interface RelatedLogRecord {
+  service: string
+  worker_name: string
+  file_path: string
+  match_reasons: string[]
+  entry: LogEntry
+}
+
+export interface LogRelatedResponse {
+  service: string
+  worker_name?: string | null
+  searched_workers: string[]
+  missing_workers: string[]
+  search: Record<string, any>
+  entries: RelatedLogRecord[]
+}
+
 export interface LogClearResponse {
   service: string
   worker_name: string
@@ -384,23 +401,14 @@ export interface SimulationStepStatusRecord {
   updated_at?: string | null
 }
 
-export interface DocumentSimulationStepRecord {
+export interface SimulationStepRecord {
   document_operation_id: number
-  document_id: number
   document_version_id: number
   execution_order: number
   source_block_id?: string | null
-  source_block_type_id: string
-  operation_order: number
-  operation_order_in_block: number
   operation_template_id?: string | null
   operation_kind: string
   operation_label_snapshot?: string | null
-  operation_parameters: Record<string, any>
-  source_text_hash?: string | null
-  parse_status: string
-  parse_errors: Array<Record<string, any>>
-  parse_warnings: Array<Record<string, any>>
   preprocess_ready: boolean
   block_name_snapshot: string
   library_name_snapshot: string
@@ -412,18 +420,32 @@ export interface DocumentSimulationStepRecord {
   bottom_die_id?: number | null
   left_die_id?: number | null
   right_die_id?: number | null
-  parameter_values: Record<string, any>
-  control_parameters: Record<string, any>
-  step_specific_parameters: Record<string, any>
+  pre_input: Record<string, any>
+  pre_output: Record<string, any>
   initial_geometry?: Record<string, any> | null
   final_geometry?: Record<string, any> | null
-  metrics: Record<string, any>
+  calculations: Record<string, any>
+  parameter_values?: Record<string, any>
+  control_parameters?: Record<string, any>
+  step_specific_parameters?: Record<string, any>
+  metrics?: Record<string, any>
   accumulated_time_start_seconds?: number | null
   duration_seconds?: number | null
   accumulated_time_stop_seconds?: number | null
   created_at: string
   updated_at: string
-  status?: SimulationStepStatusRecord | null
+}
+
+export interface SimulationStepDiagnosticsRecord {
+  response_sources: Record<string, string>
+  related_log_query: Record<string, any>
+  api_messages: Array<Record<string, any>>
+}
+
+export interface DocumentSimulationStepRecord {
+  simulation_step: SimulationStepRecord
+  simulation_step_status?: SimulationStepStatusRecord | null
+  diagnostics: SimulationStepDiagnosticsRecord
 }
 
 export interface DocumentSimulationStepListResponse {
@@ -473,44 +495,6 @@ export interface DocumentPreprocessQueueResponse {
   operations_count: number
   queued: boolean
   message: string
-}
-
-// Library DB tables
-export interface OperationBlockTypeRecord {
-  type_id: number
-  parent_type_id?: number | null
-  row: number
-  process_fixed_row?: number | null
-  allow_copies: boolean
-  text_id: string
-  library_name: string
-  process_name: string
-  labels: string[]
-  db_column_names: string[]
-  foreign_keys: string[]
-  is_simulation: boolean
-  is_geometry: boolean
-  is_die_assembly: boolean
-  is_custom_die_assembly: boolean
-  is_press: boolean
-  is_feed: boolean
-  is_top_die: boolean
-  is_bottom_die: boolean
-  is_speed: boolean
-  is_billet_category: boolean
-  is_heating_category: boolean
-  is_forming_category: boolean
-  is_forming_operation: boolean
-  is_surface_treatment_operation: boolean
-  deformation_type?: string | null
-  speed_column_name?: string | null
-  trigger?: string | null
-  is_initialize: boolean
-  is_accumulate: boolean
-  is_keep: boolean
-  is_obsolete: boolean
-  has_children: boolean
-  insertable: boolean
 }
 
 export interface OperationTemplateFieldRecord {

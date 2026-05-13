@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.auth import get_current_user
 from app.database import get_db
 from app.models.document.block import Block
-from app.models.document.document import Document, DocumentEditSession, PreprocessStatus
+from app.models.document.document import Document, DocumentEditSession, DocumentVersion, PreprocessStatus
 from app.models.document.document_operation import DocumentOperation
 from app.models.library.material import MaterialVersion
 from app.models.project import Project
@@ -34,6 +34,8 @@ from app.schemas import (
     EditSessionListResponse,
     EditSessionResponse,
     EditSessionStartRequest,
+    SimulationStepDiagnosticsResponse,
+    SimulationStepResponse,
     SimulationStepStatusResponse,
 )
 from app.services.block_service import create_block, get_ordered_blocks
@@ -281,28 +283,15 @@ def _simulation_step_status_response(
     )
 
 
-def _document_simulation_step_response(
-    *,
-    step: SimulationStep,
-    operation: DocumentOperation,
-) -> DocumentSimulationStepResponse:
-    return DocumentSimulationStepResponse(
+def _simulation_step_response(step: SimulationStep) -> SimulationStepResponse:
+    return SimulationStepResponse(
         document_operation_id=step.document_operation_id,
-        document_id=operation.document_id,
         document_version_id=step.document_version_id,
         execution_order=step.execution_order,
         source_block_id=step.source_block_id,
-        source_block_type_id=operation.source_block_type_id,
-        operation_order=operation.operation_order,
-        operation_order_in_block=operation.operation_order_in_block,
         operation_template_id=step.operation_template_id,
         operation_kind=step.operation_kind,
         operation_label_snapshot=step.operation_label_snapshot,
-        operation_parameters=operation.operation_parameters or {},
-        source_text_hash=operation.source_text_hash,
-        parse_status=operation.parse_status,
-        parse_errors=operation.parse_errors or [],
-        parse_warnings=operation.parse_warnings or [],
         preprocess_ready=step.preprocess_ready,
         block_name_snapshot=step.block_name_snapshot,
         library_name_snapshot=step.library_name_snapshot,
@@ -314,19 +303,99 @@ def _document_simulation_step_response(
         bottom_die_id=step.bottom_die_id,
         left_die_id=step.left_die_id,
         right_die_id=step.right_die_id,
-        parameter_values=step.parameter_values or {},
-        control_parameters=step.control_parameters or {},
-        step_specific_parameters=step.step_specific_parameters or {},
+        pre_input=step.pre_input or {},
+        pre_output=step.pre_output or {},
         initial_geometry=step.initial_geometry,
         final_geometry=step.final_geometry,
-        metrics=step.metrics or {},
+        calculations=step.calculations or {},
         accumulated_time_start_seconds=step.accumulated_time_start_seconds,
         duration_seconds=step.duration_seconds,
         accumulated_time_stop_seconds=step.accumulated_time_stop_seconds,
         created_at=step.created_at,
         updated_at=step.updated_at,
-        status=_simulation_step_status_response(step.status),
     )
+
+
+def _simulation_step_diagnostics_response(step: SimulationStep) -> SimulationStepDiagnosticsResponse:
+    status_row = step.status
+    search_terms = [f"document_operation_id={step.document_operation_id}"]
+    if step.operation_template_id:
+        search_terms.append(f"operation_template_id={step.operation_template_id}")
+    if step.source_block_id is not None:
+        search_terms.append(f"source_block_id={step.source_block_id}")
+    related_log_query = {
+        "service": "pre",
+        "search_terms": search_terms,
+        "document_operation_id": step.document_operation_id,
+        "document_version_id": step.document_version_id,
+        "execution_order": step.execution_order,
+        "operation_template_id": step.operation_template_id,
+    }
+    if step.source_block_id is not None:
+        related_log_query["source_block_id"] = str(step.source_block_id)
+    if status_row is not None and status_row.worker_name:
+        related_log_query["worker_name"] = status_row.worker_name
+
+    api_messages = [
+        {
+            "severity": "info",
+            "message": "This response intentionally separates simulation_steps output from simulation_step_status runtime state.",
+        }
+    ]
+    calculations = step.calculations or {}
+    if isinstance(calculations.get("preprocessor_error"), str):
+        api_messages.append(
+            {
+                "severity": "error",
+                "message": calculations["preprocessor_error"],
+                "source": "simulation_steps.calculations.preprocessor_error",
+            }
+        )
+    if status_row is not None and status_row.last_error:
+        api_messages.append(
+            {
+                "severity": "error",
+                "message": status_row.last_error,
+                "source": "simulation_step_status.last_error",
+            }
+        )
+
+    return SimulationStepDiagnosticsResponse(
+        response_sources={
+            "simulation_step": "simulation_steps",
+            "simulation_step_status": "simulation_step_status",
+            "diagnostics": "API-composed troubleshooting metadata",
+        },
+        related_log_query=related_log_query,
+        api_messages=api_messages,
+    )
+
+
+def _document_simulation_step_response(*, step: SimulationStep) -> DocumentSimulationStepResponse:
+    return DocumentSimulationStepResponse(
+        simulation_step=_simulation_step_response(step),
+        simulation_step_status=_simulation_step_status_response(step.status),
+        diagnostics=_simulation_step_diagnostics_response(step),
+    )
+
+
+def _get_simulation_step_for_document(
+    *,
+    db: Session,
+    document_id: int,
+    document_operation_id: int,
+) -> SimulationStep | None:
+    return db.execute(
+        select(SimulationStep)
+        .join(
+            DocumentVersion,
+            DocumentVersion.document_version_id == SimulationStep.document_version_id,
+        )
+        .filter(
+            DocumentVersion.document_id == document_id,
+            SimulationStep.document_operation_id == document_operation_id,
+        )
+    ).scalars().first()
 
 
 @router.get("/{document_id}/operations", response_model=DocumentOperationListResponse)
@@ -368,20 +437,20 @@ def list_document_simulation_steps(
     db: Session = Depends(get_db),
 ):
     document = check_document_access(db, document_id, current_user.user_id)
-    rows = db.execute(
-        select(SimulationStep, DocumentOperation)
+    steps = db.execute(
+        select(SimulationStep)
         .join(
-            DocumentOperation,
-            DocumentOperation.document_operation_id == SimulationStep.document_operation_id,
+            DocumentVersion,
+            DocumentVersion.document_version_id == SimulationStep.document_version_id,
         )
-        .filter(DocumentOperation.document_id == document.document_id)
-        .order_by(SimulationStep.execution_order.asc(), DocumentOperation.operation_order.asc())
-    ).all()
+        .filter(DocumentVersion.document_id == document.document_id)
+        .order_by(SimulationStep.execution_order.asc(), SimulationStep.document_operation_id.asc())
+    ).scalars().all()
     return DocumentSimulationStepListResponse(
         document_id=document.document_id,
         steps=[
-            _document_simulation_step_response(step=step, operation=operation)
-            for step, operation in rows
+            _document_simulation_step_response(step=step)
+            for step in steps
         ],
     )
 
@@ -399,21 +468,14 @@ def get_document_simulation_step_surface(
     db: Session = Depends(get_db),
 ):
     document = check_document_access(db, document_id, current_user.user_id)
-    row = db.execute(
-        select(SimulationStep, DocumentOperation)
-        .join(
-            DocumentOperation,
-            DocumentOperation.document_operation_id == SimulationStep.document_operation_id,
-        )
-        .filter(
-            DocumentOperation.document_id == document.document_id,
-            SimulationStep.document_operation_id == document_operation_id,
-        )
-    ).first()
-    if row is None:
+    step = _get_simulation_step_for_document(
+        db=db,
+        document_id=document.document_id,
+        document_operation_id=document_operation_id,
+    )
+    if step is None:
         raise HTTPException(status_code=404, detail="Simulation step not found")
 
-    step, _operation = row
     try:
         generated = ensure_surface_artifacts_for_step(
             step,
@@ -424,8 +486,8 @@ def get_document_simulation_step_surface(
     except SurfaceMeshError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    step.metrics = {
-        **(step.metrics or {}),
+    step.calculations = {
+        **(step.calculations or {}),
         "surface_artifacts": generated.summary,
     }
     db.commit()
@@ -462,21 +524,14 @@ def get_document_simulation_step_surface_artifact(
         raise HTTPException(status_code=400, detail="artifact_format must be 'json' or 'stl'")
 
     document = check_document_access(db, document_id, current_user.user_id)
-    row = db.execute(
-        select(SimulationStep, DocumentOperation)
-        .join(
-            DocumentOperation,
-            DocumentOperation.document_operation_id == SimulationStep.document_operation_id,
-        )
-        .filter(
-            DocumentOperation.document_id == document.document_id,
-            SimulationStep.document_operation_id == document_operation_id,
-        )
-    ).first()
-    if row is None:
+    step = _get_simulation_step_for_document(
+        db=db,
+        document_id=document.document_id,
+        document_operation_id=document_operation_id,
+    )
+    if step is None:
         raise HTTPException(status_code=404, detail="Simulation step not found")
 
-    step, _operation = row
     try:
         generated = ensure_surface_artifacts_for_step(
             step,

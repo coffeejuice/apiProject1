@@ -47,7 +47,7 @@ from app.services.preprocessor.compiler import (
     CompiledControlProgramRow,
     PreprocessorCompiler,
     PreprocessorCompileError,
-    ProcessCard,
+    DocumentOperationOutput,
 )
 from app.services.preprocessor.surface_artifacts import write_surface_artifacts_for_compiled_meshes
 from app.services.preprocessor.geometry import GeneratedGeometry
@@ -118,8 +118,8 @@ def _compiled_row_to_step_payload(
     duration_seconds = float(row.duration_seconds or 0.0)
     stop_seconds = float(row.total_time_seconds or 0.0)
     start_seconds = max(0.0, stop_seconds - duration_seconds)
-    metrics = dict(row.metrics or {})
-    metrics.update(
+    calculations = dict(row.metrics or {})
+    calculations.update(
         {
             "operation_id": row.operation_id,
             "operation_type": row.operation_type,
@@ -134,8 +134,8 @@ def _compiled_row_to_step_payload(
             "weight_kg": row.weight_kg,
         }
     )
-    step_specific_parameters = dict(row.operation_specific_parameters or {})
-    step_specific_parameters.update(
+    pre_output = dict(row.operation_specific_parameters or {})
+    pre_output.update(
         {
             "operation_id": row.operation_id,
             "operation_type": row.operation_type,
@@ -148,19 +148,18 @@ def _compiled_row_to_step_payload(
         "document_operation_id": row.document_operation_id,
         "operation_template_id": row.operation_template_id,
         "operation_kind": row.operation_kind or row.operation_type or "generic",
-        "operation_label_snapshot": row.operation_label or row.process_name,
+        "operation_label_snapshot": row.operation_label or row.operation_display_name,
         "source_block_id": row.source_block_id,
-        "block_name_snapshot": row.process_name,
+        "block_name_snapshot": row.operation_display_name,
         "library_name_snapshot": row.library_name,
         "material_version_id": material_version_id,
         "press_id": row.press_id,
         "press_mode_id": row.press_mode_id,
-        "parameter_values": dict(row.parameter_values or {}),
-        "control_parameters": dict(row.control_parameters or {}),
-        "step_specific_parameters": step_specific_parameters,
+        "pre_input": dict(row.control_parameters or {}),
+        "pre_output": pre_output,
         "initial_geometry": _serialize_geometry(row.initial_geometry),
         "final_geometry": _serialize_geometry(row.final_geometry),
-        "metrics": metrics,
+        "calculations": calculations,
         "accumulated_time_start_seconds": start_seconds,
         "duration_seconds": row.duration_seconds,
         "accumulated_time_stop_seconds": stop_seconds,
@@ -214,7 +213,11 @@ def _document_initial_parameters_from_target(target: object) -> dict[str, object
     input_stock = as_dict(target_mapping.get("input_stock"))
     material = as_dict(target_mapping.get("material"))
     mesh = as_dict(target_mapping.get("mesh"))
-    process_data = as_dict(target_mapping.get("process_data"))
+    production_data = as_dict(
+        target_mapping.get("production_data")
+        if "production_data" in target_mapping
+        else target_mapping.get("process_data")
+    )
     document_info = as_dict(target_mapping.get("document_info"))
     attributes = as_dict(input_stock.get("attributes"))
 
@@ -230,16 +233,16 @@ def _document_initial_parameters_from_target(target: object) -> dict[str, object
             "material_id": material.get("material_id"),
             "material_name": material.get("material_name"),
             "material_version_id": material.get("material_version_id"),
-            "heat_no": process_data.get("heat_no"),
-            "finished_size": process_data.get("finished_size"),
-            "remarks": process_data.get("remarks"),
+            "heat_no": production_data.get("heat_no"),
+            "finished_size": production_data.get("finished_size"),
+            "remarks": production_data.get("remarks"),
             "document_name": document_info.get("name"),
         }
     )
     return parameters
 
 
-def build_process_cards_for_document_version(session: Session, document_version: DocumentVersion) -> tuple[ProcessCard, ...]:
+def build_document_operation_outputs_for_document_version(session: Session, document_version: DocumentVersion) -> tuple[DocumentOperationOutput, ...]:
     document = session.get(Document, document_version.document_id) if document_version.document_id is not None else None
     if document is None:
         return ()
@@ -252,7 +255,7 @@ def build_process_cards_for_document_version(session: Session, document_version:
     )
     material_id = material_version.material_id if material_version is not None else (project.material_id if project else None)
     current_material_id = material_id
-    cards: list[ProcessCard] = []
+    document_operation_outputs: list[DocumentOperationOutput] = []
     operation_id = 1
 
     operation_rows = session.scalars(
@@ -296,8 +299,8 @@ def build_process_cards_for_document_version(session: Session, document_version:
                 block_material_id = _coerce_int(parameters.get("material_id"))
                 if block_material_id is not None:
                     current_material_id = block_material_id
-                cards.append(
-                    ProcessCard(
+                document_operation_outputs.append(
+                    DocumentOperationOutput(
                         operation_id=operation_id,
                         type_id=_coerce_int(parameters.get("geometry_type_id")),
                         parameters=parameters,
@@ -322,8 +325,8 @@ def build_process_cards_for_document_version(session: Session, document_version:
             block_material_id = _coerce_int(parameters.get("material_id"))
             if block_material_id is not None:
                 current_material_id = block_material_id
-            cards.append(
-                ProcessCard(
+            document_operation_outputs.append(
+                DocumentOperationOutput(
                     operation_id=operation_id,
                     parameters=parameters,
                     document_operation_id=row.document_operation_id,
@@ -342,9 +345,9 @@ def build_process_cards_for_document_version(session: Session, document_version:
                 )
             )
             operation_id += 1
-        return tuple(cards)
+        return tuple(document_operation_outputs)
 
-    return tuple(cards)
+    return tuple(document_operation_outputs)
 
 
 def _valid_document_operations_for_version(
@@ -415,12 +418,11 @@ def _prepare_simulation_steps_for_pre_run(
         step.bottom_die_id = None
         step.left_die_id = None
         step.right_die_id = None
-        step.parameter_values = {}
-        step.control_parameters = {}
-        step.step_specific_parameters = {}
+        step.pre_input = {}
+        step.pre_output = {}
         step.initial_geometry = None
         step.final_geometry = None
-        step.metrics = {
+        step.calculations = {
             "preprocessor_status": "pending",
             "document_operation_id": document_operation_id,
             "operation_template_id": operation_row.operation_template_id,
@@ -484,8 +486,8 @@ def _write_compiled_simulation_step(
         step = SimulationStep(document_operation_id=document_operation_id)
         session.add(step)
 
-    metrics = dict(payload["metrics"])
-    metrics.update(
+    calculations = dict(payload["calculations"])
+    calculations.update(
         {
             "preprocessor_status": "compiled",
             "document_operation_id": document_operation_id,
@@ -510,9 +512,8 @@ def _write_compiled_simulation_step(
     step.bottom_die_id = _coerce_int(row.control_parameters.get("bottom_die_id"))
     step.left_die_id = _coerce_int(row.control_parameters.get("left_die_id"))
     step.right_die_id = _coerce_int(row.control_parameters.get("right_die_id"))
-    step.parameter_values = payload["parameter_values"]
-    step.control_parameters = payload["control_parameters"]
-    step.step_specific_parameters = payload["step_specific_parameters"]
+    step.pre_input = payload["pre_input"]
+    step.pre_output = payload["pre_output"]
     step.initial_geometry = payload["initial_geometry"]
     step.final_geometry = payload["final_geometry"]
     compiled_meshes = {
@@ -531,7 +532,7 @@ def _write_compiled_simulation_step(
             force=True,
         )
         if generated_surface_artifacts is not None:
-            metrics["surface_artifacts"] = generated_surface_artifacts.summary
+            calculations["surface_artifacts"] = generated_surface_artifacts.summary
     except Exception as exc:
         LOGGER.warning(
             "Failed to write legacy surface artifacts document_version_id=%s document_operation_id=%s: %s",
@@ -539,8 +540,8 @@ def _write_compiled_simulation_step(
             document_operation_id,
             exc,
         )
-        metrics["legacy_surface_artifact_error"] = str(exc)
-    step.metrics = metrics
+        calculations["legacy_surface_artifact_error"] = str(exc)
+    step.calculations = calculations
     step.accumulated_time_start_seconds = payload["accumulated_time_start_seconds"]
     step.duration_seconds = payload["duration_seconds"]
     step.accumulated_time_stop_seconds = payload["accumulated_time_stop_seconds"]
@@ -657,7 +658,7 @@ def _compile_and_write_simulation_steps_incrementally(
     session: Session,
     *,
     document_version: DocumentVersion,
-    cards: Sequence[ProcessCard],
+    document_operation_outputs: Sequence[DocumentOperationOutput],
     compiler: PreprocessorCompiler,
 ) -> int:
     """Compile and persist Pre output row-by-row.
@@ -672,9 +673,9 @@ def _compile_and_write_simulation_steps_incrementally(
         session,
         document_version=document_version,
     )
-    if len(cards) != len(valid_document_operations):
+    if len(document_operation_outputs) != len(valid_document_operations):
         raise PreprocessorCompileError(
-            f"Process card count {len(cards)} does not match valid document operation count "
+            f"Document operation output count {len(document_operation_outputs)} does not match valid document operation count "
             f"{len(valid_document_operations)} for document_id={document_version.document_id}."
         )
     valid_document_operation_ids = _prepare_simulation_steps_for_pre_run(
@@ -689,7 +690,7 @@ def _compile_and_write_simulation_steps_incrementally(
     seen_document_operation_ids: set[int] = set()
     updated_count = 0
     for execution_order, row in enumerate(
-        compiler.iter_compile_from_database(session=session, cards=cards),
+        compiler.iter_compile_from_database(session=session, document_operation_outputs=document_operation_outputs),
         start=1,
     ):
         _write_compiled_simulation_step_committed(
@@ -729,8 +730,8 @@ def _record_preprocess_compile_failure(
 
     step.document_version_id = document_version.document_version_id
     step.preprocess_ready = False
-    metrics = dict(step.metrics or {})
-    metrics.update(
+    calculations = dict(step.calculations or {})
+    calculations.update(
         {
             "preprocessor_status": "failed",
             "preprocessor_error": str(error),
@@ -740,7 +741,7 @@ def _record_preprocess_compile_failure(
             "operation_template_id": error.operation_template_id,
         }
     )
-    step.metrics = metrics
+    step.calculations = calculations
 
     step_status = session.get(SimulationStepStatus, int(error.document_operation_id))
     if step_status is None:
@@ -898,12 +899,12 @@ class PreJobExecutor(StageJobExecutor):
                 if version is None or version.document_id is None:
                     return
 
-                cards = build_process_cards_for_document_version(session, version)
-                version.operations_count = len(cards)
+                document_operation_outputs = build_document_operation_outputs_for_document_version(session, version)
+                version.operations_count = len(document_operation_outputs)
                 updated_steps = _compile_and_write_simulation_steps_incrementally(
                     session,
                     document_version=version,
-                    cards=cards,
+                    document_operation_outputs=document_operation_outputs,
                     compiler=self.compiler,
                 )
                 expected_seconds = sum(
@@ -929,9 +930,9 @@ class PreJobExecutor(StageJobExecutor):
                 version.simulation_server_id = None
                 version.last_modified = now_utc()
                 LOGGER.info(
-                    "Preprocessing completed document_version_id=%s cards=%s simulation_steps=%s",
+                    "Preprocessing completed document_version_id=%s document_operation_outputs=%s simulation_steps=%s",
                     version.document_version_id,
-                    len(cards),
+                    len(document_operation_outputs),
                     updated_steps,
                 )
         except PreprocessorCompileError as exc:

@@ -75,7 +75,7 @@ OPERATION_LOCAL_SPEED_FIELD = "speed"
 
 
 class PreprocessorCompileError(ValueError):
-    """Raised when document cards cannot be compiled into control-program rows."""
+    """Raised when document operation outputs cannot be compiled into control-program rows."""
 
     def __init__(
         self,
@@ -93,7 +93,7 @@ class PreprocessorCompileError(ValueError):
         self.source_block_id = source_block_id
         super().__init__(self._formatted_message())
 
-    def with_card_context(self, card: "ProcessCard") -> "PreprocessorCompileError":
+    def with_operation_output_context(self, operation_output: "DocumentOperationOutput") -> "PreprocessorCompileError":
         """Return the same compile error enriched with source operation context."""
 
         if (
@@ -105,10 +105,10 @@ class PreprocessorCompileError(ValueError):
             return self
         return PreprocessorCompileError(
             self.message,
-            operation_id=self.operation_id or card.operation_id,
-            document_operation_id=self.document_operation_id or card.document_operation_id,
-            operation_template_id=self.operation_template_id or card.operation_template_id,
-            source_block_id=self.source_block_id or card.source_block_id,
+            operation_id=self.operation_id or operation_output.operation_id,
+            document_operation_id=self.document_operation_id or operation_output.document_operation_id,
+            operation_template_id=self.operation_template_id or operation_output.operation_template_id,
+            source_block_id=self.source_block_id or operation_output.source_block_id,
         )
 
     def _formatted_message(self) -> str:
@@ -128,8 +128,8 @@ class PreprocessorCompileError(ValueError):
 
 
 @dataclass(frozen=True, slots=True)
-class ProcessCard:
-    """User-facing process card normalized for the first compiler slice."""
+class DocumentOperationOutput:
+    """Materialized document operation row normalized for the Pre compiler."""
 
     operation_id: int
     type_id: int | None = None
@@ -160,7 +160,7 @@ class CompiledControlProgramRow:
     source_block_id: object | None
     type_id: int | None
     parent_type_id: str | None
-    process_name: str
+    operation_display_name: str
     library_name: str
     operation_type: str
     deformation_control: str
@@ -204,7 +204,7 @@ class CompiledControlProgram:
 
 
 class PreprocessorCompiler:
-    """Compile operation cards into initial control-program rows."""
+    """Compile document operation outputs into initial control-program rows."""
 
     def __init__(self, *, geometry_builder: GeometryBuilder | None = None) -> None:
         self._geometry_builder = geometry_builder or GeometryBuilder()
@@ -212,14 +212,14 @@ class PreprocessorCompiler:
 
     def compile(
         self,
-        cards: Sequence[ProcessCard],
+        document_operation_outputs: Sequence[DocumentOperationOutput],
         library_snapshot: OperationLibrarySnapshot,
         *,
         default_press_id: int = 2,
     ) -> CompiledControlProgram:
         compiled_rows = tuple(
             self.iter_compile(
-                cards,
+                document_operation_outputs,
                 library_snapshot,
                 default_press_id=default_press_id,
             )
@@ -232,7 +232,7 @@ class PreprocessorCompiler:
 
     def iter_compile(
         self,
-        cards: Sequence[ProcessCard],
+        document_operation_outputs: Sequence[DocumentOperationOutput],
         library_snapshot: OperationLibrarySnapshot,
         *,
         default_press_id: int = 2,
@@ -249,25 +249,28 @@ class PreprocessorCompiler:
         simulation_index = 0
         accumulated_parameters: dict[str, object] = {}
 
-        for sequence_index, card in enumerate(cards):
+        for sequence_index, operation_output in enumerate(document_operation_outputs):
             try:
                 LOGGER.info(
                     "Pre compile row started operation_id=%s document_operation_id=%s operation_template_id=%s",
-                    card.operation_id,
-                    card.document_operation_id,
-                    card.operation_template_id,
+                    operation_output.operation_id,
+                    operation_output.document_operation_id,
+                    operation_output.operation_template_id,
                 )
                 operation = library_snapshot.get_operation(
-                    card.operation_template_id,
-                    type_id=card.type_id,
+                    operation_output.operation_template_id,
+                    type_id=operation_output.type_id,
                 )
-                effective_card = self._with_accumulated_parameters(card, accumulated_parameters)
-                parameter_values = self._extract_parameter_values(effective_card, operation)
-                control_parameters = self._extract_control_parameters(effective_card, operation)
+                effective_operation_output = self._with_accumulated_parameters(
+                    operation_output,
+                    accumulated_parameters,
+                )
+                parameter_values = self._extract_parameter_values(effective_operation_output, operation)
+                control_parameters = self._extract_control_parameters(effective_operation_output, operation)
                 simulation_row_index = simulation_index
 
                 row = self._compile_row(
-                    card=effective_card,
+                    operation_output=effective_operation_output,
                     operation=operation,
                     sequence_index=sequence_index,
                     simulation_index=simulation_row_index,
@@ -277,115 +280,115 @@ class PreprocessorCompiler:
                     library_snapshot=library_snapshot,
                     default_press_id=default_press_id,
                 )
-                row = self._attach_card_metadata(row, effective_card)
+                row = self._attach_operation_output_metadata(row, effective_operation_output)
 
                 simulation_index += 1
                 if operation.is_accumulate:
-                    self._accumulate_parameters(accumulated_parameters, card)
+                    self._accumulate_parameters(accumulated_parameters, operation_output)
                 previous_row = row
                 LOGGER.info(
                     "Pre compile row finished operation_id=%s document_operation_id=%s operation_template_id=%s operation_type=%s",
-                    card.operation_id,
-                    card.document_operation_id,
-                    card.operation_template_id,
+                    operation_output.operation_id,
+                    operation_output.document_operation_id,
+                    operation_output.operation_template_id,
                     row.operation_type,
                 )
                 yield row
             except Exception as exc:
-                wrapped = self._wrap_card_compile_error(exc, card)
+                wrapped = self._wrap_operation_output_compile_error(exc, operation_output)
                 LOGGER.error(
                     "Pre compile row failed operation_id=%s document_operation_id=%s operation_template_id=%s: %s",
-                    card.operation_id,
-                    card.document_operation_id,
-                    card.operation_template_id,
+                    operation_output.operation_id,
+                    operation_output.document_operation_id,
+                    operation_output.operation_template_id,
                     wrapped,
                     exc_info=LOGGER.isEnabledFor(logging.DEBUG),
                 )
                 raise wrapped from exc
 
-    def _wrap_card_compile_error(
+    def _wrap_operation_output_compile_error(
         self,
         exc: Exception,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
     ) -> PreprocessorCompileError:
         if isinstance(exc, PreprocessorCompileError):
-            return exc.with_card_context(card)
+            return exc.with_operation_output_context(operation_output)
         return PreprocessorCompileError(
             str(exc),
-            operation_id=card.operation_id,
-            document_operation_id=card.document_operation_id,
-            operation_template_id=card.operation_template_id,
-            source_block_id=card.source_block_id,
+            operation_id=operation_output.operation_id,
+            document_operation_id=operation_output.document_operation_id,
+            operation_template_id=operation_output.operation_template_id,
+            source_block_id=operation_output.source_block_id,
         )
 
     def compile_from_database(
         self,
         *,
         session: Session,
-        cards: Sequence[ProcessCard],
+        document_operation_outputs: Sequence[DocumentOperationOutput],
         default_press_id: int = 2,
     ) -> CompiledControlProgram:
-        """Load the library snapshot from the database and compile cards."""
+        """Load the library snapshot from the database and compile document operation outputs."""
 
         snapshot = load_operation_library_snapshot(session)
-        enriched_cards = self._enrich_cards_from_database(
+        enriched_operation_outputs = self._enrich_operation_outputs_from_database(
             session=session,
-            cards=cards,
+            document_operation_outputs=document_operation_outputs,
             library_snapshot=snapshot,
             default_press_id=default_press_id,
         )
-        return self.compile(enriched_cards, snapshot, default_press_id=default_press_id)
+        return self.compile(enriched_operation_outputs, snapshot, default_press_id=default_press_id)
 
     def iter_compile_from_database(
         self,
         *,
         session: Session,
-        cards: Sequence[ProcessCard],
+        document_operation_outputs: Sequence[DocumentOperationOutput],
         default_press_id: int = 2,
     ) -> Iterator[CompiledControlProgramRow]:
         """Load database-backed metadata and yield compiled rows incrementally."""
 
         snapshot = load_operation_library_snapshot(session)
-        enriched_cards = self._enrich_cards_from_database(
+        enriched_operation_outputs = self._enrich_operation_outputs_from_database(
             session=session,
-            cards=cards,
+            document_operation_outputs=document_operation_outputs,
             library_snapshot=snapshot,
             default_press_id=default_press_id,
         )
         yield from self.iter_compile(
-            enriched_cards,
+            enriched_operation_outputs,
             snapshot,
             default_press_id=default_press_id,
         )
 
-    def _enrich_cards_from_database(
+    def _enrich_operation_outputs_from_database(
         self,
         *,
         session: Session,
-        cards: Sequence[ProcessCard],
+        document_operation_outputs: Sequence[DocumentOperationOutput],
         library_snapshot: OperationLibrarySnapshot,
         default_press_id: int,
-    ) -> tuple[ProcessCard, ...]:
+    ) -> tuple[DocumentOperationOutput, ...]:
         die_cache: dict[int, Die | None] = {}
         assembly_cache: dict[int, DieAssembly | None] = {}
         press_mode_cache: dict[int, PressMode | None] = {}
         default_press_mode_cache: dict[int, PressMode | None] = {}
         material_cache: dict[int, Material | None] = {}
 
-        enriched_cards: list[ProcessCard] = []
-        for card in cards:
+        enriched_operation_outputs: list[DocumentOperationOutput] = []
+        for operation_output in document_operation_outputs:
             operation = library_snapshot.get_operation(
-                card.operation_template_id,
-                type_id=card.type_id,
+                operation_output.operation_template_id,
+                type_id=operation_output.type_id,
             )
-            parameters = dict(card.parameters)
+            parameters = dict(operation_output.parameters)
 
             die_assembly_id = self._first_optional_int(
-                card.die_assembly_id,
+                operation_output.die_assembly_id,
                 parameters.get("die_assembly_id"),
             )
-            top_die_id = self._first_optional_int(card.top_die_id, parameters.get("top_die_id"))
-            bottom_die_id = self._first_optional_int(card.bottom_die_id, parameters.get("bottom_die_id"))
+            top_die_id = self._first_optional_int(operation_output.top_die_id, parameters.get("top_die_id"))
+            bottom_die_id = self._first_optional_int(operation_output.bottom_die_id, parameters.get("bottom_die_id"))
             if (top_die_id is None or bottom_die_id is None) and die_assembly_id is not None:
                 assembly = self._get_die_assembly(session, assembly_cache, die_assembly_id)
                 if assembly is not None:
@@ -406,8 +409,8 @@ class PreprocessorCompiler:
                 )
 
             fallback_press_id = default_press_id if operation is not None else None
-            press_id = self._first_optional_int(card.press_id, parameters.get("press_id"), fallback_press_id)
-            press_mode_id = self._first_optional_int(card.press_mode_id, parameters.get("press_mode_id"))
+            press_id = self._first_optional_int(operation_output.press_id, parameters.get("press_id"), fallback_press_id)
+            press_mode_id = self._first_optional_int(operation_output.press_mode_id, parameters.get("press_mode_id"))
             press_mode: PressMode | None = None
             if press_mode_id is None and press_id is not None:
                 press_mode = self._get_default_press_mode(session, default_press_mode_cache, press_id)
@@ -423,47 +426,47 @@ class PreprocessorCompiler:
             if press_mode_id is not None:
                 parameters["press_mode_id"] = press_mode_id
 
-            material_label = card.material_label
-            if material_label is None and card.material_id is not None:
-                material = self._get_material(session, material_cache, card.material_id)
+            material_label = operation_output.material_label
+            if material_label is None and operation_output.material_id is not None:
+                material = self._get_material(session, material_cache, operation_output.material_id)
                 if material is not None:
                     material_label = material.name
 
-            enriched_cards.append(
-                ProcessCard(
-                    operation_id=card.operation_id,
-                    type_id=card.type_id,
+            enriched_operation_outputs.append(
+                DocumentOperationOutput(
+                    operation_id=operation_output.operation_id,
+                    type_id=operation_output.type_id,
                     parameters=parameters,
-                    document_operation_id=card.document_operation_id,
-                    operation_template_id=card.operation_template_id,
-                    operation_kind=card.operation_kind,
-                    operation_label=card.operation_label,
-                    source_block_id=card.source_block_id,
+                    document_operation_id=operation_output.document_operation_id,
+                    operation_template_id=operation_output.operation_template_id,
+                    operation_kind=operation_output.operation_kind,
+                    operation_label=operation_output.operation_label,
+                    source_block_id=operation_output.source_block_id,
                     press_id=press_id,
                     press_mode_id=press_mode_id,
                     die_assembly_id=die_assembly_id,
                     top_die_id=top_die_id,
                     bottom_die_id=bottom_die_id,
-                    material_id=card.material_id,
+                    material_id=operation_output.material_id,
                     material_label=material_label,
-                    weight_kg=card.weight_kg,
-                    volume_mm3=card.volume_mm3,
+                    weight_kg=operation_output.weight_kg,
+                    volume_mm3=operation_output.volume_mm3,
                 )
             )
 
-        return tuple(enriched_cards)
+        return tuple(enriched_operation_outputs)
 
-    def _attach_card_metadata(
+    def _attach_operation_output_metadata(
         self,
         row: CompiledControlProgramRow,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
     ) -> CompiledControlProgramRow:
         return replace(
             row,
-            document_operation_id=card.document_operation_id,
-            operation_template_id=card.operation_template_id,
-            operation_kind=card.operation_kind,
-            operation_label=card.operation_label,
+            document_operation_id=operation_output.document_operation_id,
+            operation_template_id=operation_output.operation_template_id,
+            operation_kind=operation_output.operation_kind,
+            operation_label=operation_output.operation_label,
         )
 
     def _get_die(self, session: Session, cache: dict[int, Die | None], die_id: int) -> Die | None:
@@ -524,7 +527,7 @@ class PreprocessorCompiler:
     def _compile_row(
         self,
         *,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation: OperationTypeDefinition,
         sequence_index: int,
         simulation_index: int | None,
@@ -536,7 +539,7 @@ class PreprocessorCompiler:
     ) -> CompiledControlProgramRow:
         if operation.is_geometry:
             return self._compile_billet_row(
-                card=card,
+                operation_output=operation_output,
                 operation=operation,
                 sequence_index=sequence_index,
                 simulation_index=simulation_index,
@@ -545,7 +548,7 @@ class PreprocessorCompiler:
             )
         if operation.operation_template_id == FURNACE_TEMPLATE_ID:
             return self._compile_furnace_row(
-                card=card,
+                operation_output=operation_output,
                 operation=operation,
                 sequence_index=sequence_index,
                 simulation_index=simulation_index,
@@ -555,7 +558,7 @@ class PreprocessorCompiler:
             )
         if operation.operation_template_id == HEATING_TEMPERATURE_DURATION_TEMPLATE_ID:
             return self._compile_heat_row(
-                card=card,
+                operation_output=operation_output,
                 operation=operation,
                 sequence_index=sequence_index,
                 simulation_index=simulation_index,
@@ -565,7 +568,7 @@ class PreprocessorCompiler:
             )
         if operation.operation_template_id in UPSETTING_TEMPLATE_IDS:
             return self._compile_upsetting_row(
-                card=card,
+                operation_output=operation_output,
                 operation=operation,
                 sequence_index=sequence_index,
                 simulation_index=simulation_index,
@@ -577,7 +580,7 @@ class PreprocessorCompiler:
             )
         if operation.operation_template_id in PROLONGATION_TEMPLATE_IDS:
             return self._compile_prolongation_row(
-                card=card,
+                operation_output=operation_output,
                 operation=operation,
                 sequence_index=sequence_index,
                 simulation_index=simulation_index,
@@ -589,7 +592,7 @@ class PreprocessorCompiler:
             )
         if operation.operation_template_id == RADIAL_INITIAL_ROTATIONS:
             return self._compile_radial_initial_rotations_row(
-                card=card,
+                operation_output=operation_output,
                 operation=operation,
                 sequence_index=sequence_index,
                 simulation_index=simulation_index,
@@ -600,7 +603,7 @@ class PreprocessorCompiler:
             )
         if operation.operation_template_id in CUTTING_TEMPLATE_IDS:
             return self._compile_cutting_row(
-                card=card,
+                operation_output=operation_output,
                 operation=operation,
                 sequence_index=sequence_index,
                 simulation_index=simulation_index,
@@ -610,7 +613,7 @@ class PreprocessorCompiler:
                 library_snapshot=library_snapshot,
             )
         return self._compile_generic_row(
-            card=card,
+            operation_output=operation_output,
             operation=operation,
             sequence_index=sequence_index,
             simulation_index=simulation_index,
@@ -623,129 +626,129 @@ class PreprocessorCompiler:
 
     def _extract_parameter_values(
         self,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation: OperationTypeDefinition,
     ) -> dict[str, object]:
         values: dict[str, object] = {}
         for name in operation.db_column_names:
-            values[name] = card.parameters.get(name)
+            values[name] = operation_output.parameters.get(name)
         return values
 
     def _extract_control_parameters(
         self,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation: OperationTypeDefinition,
     ) -> dict[str, object]:
         return {
             key: value
-            for key, value in card.parameters.items()
+            for key, value in operation_output.parameters.items()
             if key not in operation.db_column_names
         }
 
     def _with_accumulated_parameters(
         self,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         accumulated_parameters: Mapping[str, object],
-    ) -> ProcessCard:
+    ) -> DocumentOperationOutput:
         if not accumulated_parameters:
-            return card
+            return operation_output
 
         parameters = dict(accumulated_parameters)
-        local_parameters = dict(card.parameters)
+        local_parameters = dict(operation_output.parameters)
         if (
             "press_id" in accumulated_parameters
-            and self._coerce_optional_int(card.parameters.get("press_id")) is None
+            and self._coerce_optional_int(operation_output.parameters.get("press_id")) is None
         ):
             local_parameters.pop("press_mode_id", None)
             local_parameters.pop("press_mode_properties", None)
         parameters.update(local_parameters)
-        return ProcessCard(
-            operation_id=card.operation_id,
-            type_id=card.type_id,
+        return DocumentOperationOutput(
+            operation_id=operation_output.operation_id,
+            type_id=operation_output.type_id,
             parameters=parameters,
-            document_operation_id=card.document_operation_id,
-            operation_template_id=card.operation_template_id,
-            operation_kind=card.operation_kind,
-            operation_label=card.operation_label,
-            source_block_id=card.source_block_id,
-            press_id=self._first_optional_int(parameters.get("press_id"), card.press_id),
-            press_mode_id=self._first_optional_int(parameters.get("press_mode_id"), card.press_mode_id),
-            die_assembly_id=self._first_optional_int(parameters.get("die_assembly_id"), card.die_assembly_id),
-            top_die_id=self._first_optional_int(parameters.get("top_die_id"), card.top_die_id),
-            bottom_die_id=self._first_optional_int(parameters.get("bottom_die_id"), card.bottom_die_id),
-            material_id=self._first_optional_int(parameters.get("material_id"), card.material_id),
-            material_label=card.material_label,
-            weight_kg=card.weight_kg,
-            volume_mm3=card.volume_mm3,
+            document_operation_id=operation_output.document_operation_id,
+            operation_template_id=operation_output.operation_template_id,
+            operation_kind=operation_output.operation_kind,
+            operation_label=operation_output.operation_label,
+            source_block_id=operation_output.source_block_id,
+            press_id=self._first_optional_int(parameters.get("press_id"), operation_output.press_id),
+            press_mode_id=self._first_optional_int(parameters.get("press_mode_id"), operation_output.press_mode_id),
+            die_assembly_id=self._first_optional_int(parameters.get("die_assembly_id"), operation_output.die_assembly_id),
+            top_die_id=self._first_optional_int(parameters.get("top_die_id"), operation_output.top_die_id),
+            bottom_die_id=self._first_optional_int(parameters.get("bottom_die_id"), operation_output.bottom_die_id),
+            material_id=self._first_optional_int(parameters.get("material_id"), operation_output.material_id),
+            material_label=operation_output.material_label,
+            weight_kg=operation_output.weight_kg,
+            volume_mm3=operation_output.volume_mm3,
         )
 
     def _accumulate_parameters(
         self,
         accumulated_parameters: dict[str, object],
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
     ) -> None:
-        accumulated_parameters.update(card.parameters)
-        if card.press_id is not None:
-            accumulated_parameters["press_id"] = card.press_id
-        if card.press_mode_id is not None:
-            accumulated_parameters["press_mode_id"] = card.press_mode_id
-        if card.die_assembly_id is not None:
-            accumulated_parameters["die_assembly_id"] = card.die_assembly_id
-        if card.top_die_id is not None:
-            accumulated_parameters["top_die_id"] = card.top_die_id
-        if card.bottom_die_id is not None:
-            accumulated_parameters["bottom_die_id"] = card.bottom_die_id
+        accumulated_parameters.update(operation_output.parameters)
+        if operation_output.press_id is not None:
+            accumulated_parameters["press_id"] = operation_output.press_id
+        if operation_output.press_mode_id is not None:
+            accumulated_parameters["press_mode_id"] = operation_output.press_mode_id
+        if operation_output.die_assembly_id is not None:
+            accumulated_parameters["die_assembly_id"] = operation_output.die_assembly_id
+        if operation_output.top_die_id is not None:
+            accumulated_parameters["top_die_id"] = operation_output.top_die_id
+        if operation_output.bottom_die_id is not None:
+            accumulated_parameters["bottom_die_id"] = operation_output.bottom_die_id
 
     def _build_geometry_if_needed(
         self,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation: OperationTypeDefinition,
     ) -> GeneratedGeometry | None:
         if not operation.is_geometry:
             return None
-        if card.type_id is None:
+        if operation_output.type_id is None:
             raise PreprocessorCompileError(
-                f"Geometry card operation_id={card.operation_id} requires geometry type_id"
+                f"Geometry operation_output operation_id={operation_output.operation_id} requires geometry type_id"
             )
-        if card.volume_mm3 is None:
+        if operation_output.volume_mm3 is None:
             raise PreprocessorCompileError(
-                f"Geometry card operation_id={card.operation_id} requires volume_mm3"
+                f"Geometry operation_output operation_id={operation_output.operation_id} requires volume_mm3"
             )
         return self._geometry_builder.build(
-            type_id=card.type_id,
-            parameters=card.parameters,
-            volume_mm3=card.volume_mm3,
+            type_id=operation_output.type_id,
+            parameters=operation_output.parameters,
+            volume_mm3=operation_output.volume_mm3,
         )
 
     def _compile_billet_row(
         self,
         *,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation: OperationTypeDefinition,
         sequence_index: int,
         simulation_index: int | None,
         parameter_values: dict[str, object],
         control_parameters: dict[str, object],
     ) -> CompiledControlProgramRow:
-        geometry = self._build_geometry_if_needed(card, operation)
+        geometry = self._build_geometry_if_needed(operation_output, operation)
         assert geometry is not None
         surface_area = self._surface_area_mm2(geometry)
-        step_control = card.material_label or control_parameters.get("material_short_name")
+        step_control = operation_output.material_label or control_parameters.get("material_short_name")
         metrics: dict[str, object] = {}
         surface_pair = self._safe_surface_pair("billet", lambda: self._surface_builder.billet(geometry))
         if surface_pair.notes:
             metrics["legacy_surface_notes"] = list(surface_pair.notes)
-        mesh_elements = self._coerce_optional_int(card.parameters.get("mesh_elements"))
+        mesh_elements = self._coerce_optional_int(operation_output.parameters.get("mesh_elements"))
         if mesh_elements is not None:
             metrics["mesh_elements"] = mesh_elements
         return CompiledControlProgramRow(
             sequence_index=sequence_index,
             simulation_index=simulation_index,
-            operation_id=card.operation_id,
-            source_block_id=card.source_block_id,
-            type_id=card.type_id,
+            operation_id=operation_output.operation_id,
+            source_block_id=operation_output.source_block_id,
+            type_id=operation_output.type_id,
             parent_type_id=operation.parent_type_id,
-            process_name=operation.process_name,
+            operation_display_name=operation.operation_display_name,
             library_name=operation.library_name,
             operation_type="NewBillet",
             deformation_control="NA",
@@ -754,11 +757,11 @@ class PreprocessorCompiler:
             control_parameters=control_parameters,
             operation_specific_parameters={},
             is_geometry=operation.is_geometry,
-            press_id=card.press_id,
-            press_mode_id=card.press_mode_id,
-            material_id=card.material_id,
-            material_label=card.material_label,
-            weight_kg=card.weight_kg,
+            press_id=operation_output.press_id,
+            press_mode_id=operation_output.press_mode_id,
+            material_id=operation_output.material_id,
+            material_label=operation_output.material_label,
+            weight_kg=operation_output.weight_kg,
             duration_seconds=0.0,
             total_time_seconds=0.0,
             temperature_initial_c=None,
@@ -777,7 +780,7 @@ class PreprocessorCompiler:
     def _compile_furnace_row(
         self,
         *,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation: OperationTypeDefinition,
         sequence_index: int,
         simulation_index: int | None,
@@ -785,15 +788,15 @@ class PreprocessorCompiler:
         control_parameters: dict[str, object],
         previous_row: CompiledControlProgramRow | None,
     ) -> CompiledControlProgramRow:
-        previous = self._require_previous_row(previous_row, card, "furnace")
-        final_geometry = self._require_geometry(previous.final_geometry, card, "furnace")
-        furnace_class_id = self._optional_int_parameter(card, "furnace_class_id")
-        furnace_temperature = self._first_optional_float(card, "temperature")
+        previous = self._require_previous_row(previous_row, operation_output, "furnace")
+        final_geometry = self._require_geometry(previous.final_geometry, operation_output, "furnace")
+        furnace_class_id = self._optional_int_parameter(operation_output, "furnace_class_id")
+        furnace_temperature = self._first_optional_float(operation_output, "temperature")
         if furnace_temperature is None:
-            furnace_temperature = self._last_program_temperature(card.parameters.get("temperature_program"))
+            furnace_temperature = self._last_program_temperature(operation_output.parameters.get("temperature_program"))
         if furnace_temperature is None:
             raise PreprocessorCompileError(
-                f"Furnace card operation_id={card.operation_id} requires numeric parameter 'temperature' "
+                f"Furnace operation_output operation_id={operation_output.operation_id} requires numeric parameter 'temperature' "
                 "or at least one hold row with temperature_c in temperature_program"
             )
         operation_specific_parameters: dict[str, object] = {
@@ -812,11 +815,11 @@ class PreprocessorCompiler:
         return CompiledControlProgramRow(
             sequence_index=sequence_index,
             simulation_index=simulation_index,
-            operation_id=card.operation_id,
-            source_block_id=card.source_block_id,
-            type_id=card.type_id,
+            operation_id=operation_output.operation_id,
+            source_block_id=operation_output.source_block_id,
+            type_id=operation_output.type_id,
             parent_type_id=operation.parent_type_id,
-            process_name=operation.process_name,
+            operation_display_name=operation.operation_display_name,
             library_name=operation.library_name,
             operation_type="Furnace",
             deformation_control="NA",
@@ -848,7 +851,7 @@ class PreprocessorCompiler:
     def _compile_heat_row(
         self,
         *,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation: OperationTypeDefinition,
         sequence_index: int,
         simulation_index: int | None,
@@ -856,17 +859,17 @@ class PreprocessorCompiler:
         control_parameters: dict[str, object],
         previous_row: CompiledControlProgramRow | None,
     ) -> CompiledControlProgramRow:
-        previous = self._require_previous_row(previous_row, card, "heating")
-        final_geometry = self._require_geometry(previous.final_geometry, card, "heating")
-        duration_minutes = self._get_float_parameter(card, "duration")
+        previous = self._require_previous_row(previous_row, operation_output, "heating")
+        final_geometry = self._require_geometry(previous.final_geometry, operation_output, "heating")
+        duration_minutes = self._get_float_parameter(operation_output, "duration")
         duration_seconds = duration_minutes * 60.0
         furnace_class_id = self._first_optional_int(
-            card.parameters.get("furnace_class_id"),
+            operation_output.parameters.get("furnace_class_id"),
             control_parameters.get("furnace_class_id"),
             previous.control_parameters.get("furnace_class_id"),
             previous.operation_specific_parameters.get("furnace_class_id"),
         )
-        next_temperature = self._get_float_parameter(card, "temperature")
+        next_temperature = self._get_float_parameter(operation_output, "temperature")
         initial_temperature = previous.temperature_final_c
 
         operation_specific_parameters: dict[str, object] = {
@@ -886,11 +889,11 @@ class PreprocessorCompiler:
         return CompiledControlProgramRow(
             sequence_index=sequence_index,
             simulation_index=simulation_index,
-            operation_id=card.operation_id,
-            source_block_id=card.source_block_id,
-            type_id=card.type_id,
+            operation_id=operation_output.operation_id,
+            source_block_id=operation_output.source_block_id,
+            type_id=operation_output.type_id,
             parent_type_id=operation.parent_type_id,
-            process_name=operation.process_name,
+            operation_display_name=operation.operation_display_name,
             library_name=operation.library_name,
             operation_type="Heat",
             deformation_control="NA",
@@ -922,7 +925,7 @@ class PreprocessorCompiler:
     def _compile_upsetting_row(
         self,
         *,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation: OperationTypeDefinition,
         sequence_index: int,
         simulation_index: int | None,
@@ -932,48 +935,48 @@ class PreprocessorCompiler:
         library_snapshot: OperationLibrarySnapshot,
         default_press_id: int,
     ) -> CompiledControlProgramRow:
-        previous = self._require_previous_row(previous_row, card, "upsetting")
-        initial_geometry = self._require_geometry(previous.final_geometry, card, "upsetting")
-        resolved_press_id = self._first_optional_int(card.press_id, previous.press_id, default_press_id)
+        previous = self._require_previous_row(previous_row, operation_output, "upsetting")
+        initial_geometry = self._require_geometry(previous.final_geometry, operation_output, "upsetting")
+        resolved_press_id = self._first_optional_int(operation_output.press_id, previous.press_id, default_press_id)
         resolved_press_mode_id = self._first_optional_int(
-            card.press_mode_id,
+            operation_output.press_mode_id,
             self._coerce_optional_int(control_parameters.get("press_mode_id")),
             previous.press_mode_id,
         )
         time_before = self._resolve_time_between_operations(
-            card=card,
+            operation_output=operation_output,
             operation=operation,
             previous_row=previous,
             library_snapshot=library_snapshot,
             press_mode_id=resolved_press_mode_id,
         )
         top_die = self._resolve_die_dimensions(
-            card=card,
+            operation_output=operation_output,
             side="top",
             control_parameters=control_parameters,
             operation_family="Upsetting",
         )
         bottom_die = self._resolve_die_dimensions(
-            card=card,
+            operation_output=operation_output,
             side="bottom",
             control_parameters=control_parameters,
             operation_family="Upsetting",
         )
         press_mode = self._resolve_press_mode_parameters(
-            card=card,
+            operation_output=operation_output,
             control_parameters=control_parameters,
             default_id=resolved_press_mode_id,
             operation_family="Upsetting",
         )
         target_speed = self._resolve_speed_mm_per_s(
-            card=card,
+            operation_output=operation_output,
             operation=operation,
             parameter_values=parameter_values,
             control_parameters=control_parameters,
             press_mode=press_mode,
         )
-        angle_deg = self._first_float_parameter(card, "angle", default=0.0)
-        current_feed_direction_id = self._resolve_feed_direction_id(card=card, operation=operation)
+        angle_deg = self._first_float_parameter(operation_output, "angle", default=0.0)
+        current_feed_direction_id = self._resolve_feed_direction_id(operation_output=operation_output, operation=operation)
         previous_feed_direction_id = self._resolve_previous_feed_direction_id(previous, operation)
         operation_template_id = operation.operation_template_id
 
@@ -981,13 +984,13 @@ class PreprocessorCompiler:
         stroke_mm: float | None = None
         if operation_template_id in UPSETTING_LENGTH_TARGET_TEMPLATE_IDS:
             final_length_input_mm = self._first_float_parameter(
-                card,
+                operation_output,
                 "height",
                 "final_length",
                 "length",
             )
         elif operation_template_id == UPSETTING_TAIL_FLATTENING:
-            stroke_mm = self._first_float_parameter(card, "stroke", "penetration")
+            stroke_mm = self._first_float_parameter(operation_output, "stroke", "penetration")
 
         try:
             upsetting_result = calculate_upsetting(
@@ -1005,18 +1008,18 @@ class PreprocessorCompiler:
                 is_same_operation_type_as_previous=previous.operation_type == "Upset",
                 current_feed_direction_id=current_feed_direction_id,
                 previous_feed_direction_id=previous_feed_direction_id,
-                mesh_elements=self._resolve_mesh_elements(card, previous),
+                mesh_elements=self._resolve_mesh_elements(operation_output, previous),
             )
         except UpsettingMathError as exc:
             raise PreprocessorCompileError(
-                f"Upsetting card operation_id={card.operation_id} cannot be compiled: {exc}"
+                f"Upsetting operation_output operation_id={operation_output.operation_id} cannot be compiled: {exc}"
             ) from exc
 
         deformation_control = "P" if operation_template_id in UPSETTING_PRESSURE_CONTROL_TEMPLATE_IDS else "H"
         operation_specific_parameters = {
             **control_parameters,
             **upsetting_result.operation_specific_parameters,
-            "raw_parameters": dict(card.parameters),
+            "raw_parameters": dict(operation_output.parameters),
             "radial_rotations": [("x", angle_deg), ("y", 90.0)],
             "deformation_geometry_ported": True,
         }
@@ -1044,11 +1047,11 @@ class PreprocessorCompiler:
         return CompiledControlProgramRow(
             sequence_index=sequence_index,
             simulation_index=simulation_index,
-            operation_id=card.operation_id,
-            source_block_id=card.source_block_id,
-            type_id=card.type_id,
+            operation_id=operation_output.operation_id,
+            source_block_id=operation_output.source_block_id,
+            type_id=operation_output.type_id,
             parent_type_id=operation.parent_type_id,
-            process_name=operation.process_name,
+            operation_display_name=operation.operation_display_name,
             library_name=operation.library_name,
             operation_type="Upset",
             deformation_control=deformation_control,
@@ -1081,7 +1084,7 @@ class PreprocessorCompiler:
     def _compile_prolongation_row(
         self,
         *,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation: OperationTypeDefinition,
         sequence_index: int,
         simulation_index: int | None,
@@ -1091,48 +1094,48 @@ class PreprocessorCompiler:
         library_snapshot: OperationLibrarySnapshot,
         default_press_id: int,
     ) -> CompiledControlProgramRow:
-        previous = self._require_previous_row(previous_row, card, "prolongation")
-        initial_geometry = self._require_geometry(previous.final_geometry, card, "prolongation")
-        resolved_press_id = self._first_optional_int(card.press_id, previous.press_id, default_press_id)
+        previous = self._require_previous_row(previous_row, operation_output, "prolongation")
+        initial_geometry = self._require_geometry(previous.final_geometry, operation_output, "prolongation")
+        resolved_press_id = self._first_optional_int(operation_output.press_id, previous.press_id, default_press_id)
         resolved_press_mode_id = self._first_optional_int(
-            card.press_mode_id,
+            operation_output.press_mode_id,
             self._coerce_optional_int(control_parameters.get("press_mode_id")),
             previous.press_mode_id,
         )
         time_before = self._resolve_time_between_operations(
-            card=card,
+            operation_output=operation_output,
             operation=operation,
             previous_row=previous,
             library_snapshot=library_snapshot,
             press_mode_id=resolved_press_mode_id,
         )
         top_die = self._resolve_die_dimensions(
-            card=card,
+            operation_output=operation_output,
             side="top",
             control_parameters=control_parameters,
             operation_family="Prolongation",
         )
         bottom_die = self._resolve_die_dimensions(
-            card=card,
+            operation_output=operation_output,
             side="bottom",
             control_parameters=control_parameters,
             operation_family="Prolongation",
         )
         press_mode = self._resolve_press_mode_parameters(
-            card=card,
+            operation_output=operation_output,
             control_parameters=control_parameters,
             default_id=resolved_press_mode_id,
             operation_family="Prolongation",
         )
         target_speed = self._resolve_speed_mm_per_s(
-            card=card,
+            operation_output=operation_output,
             operation=operation,
             parameter_values=parameter_values,
             control_parameters=control_parameters,
             press_mode=press_mode,
         )
-        angle_deg = self._resolve_prolongation_angle(card)
-        current_feed_direction_id = self._resolve_feed_direction_id(card=card, operation=operation)
+        angle_deg = self._resolve_prolongation_angle(operation_output)
+        current_feed_direction_id = self._resolve_feed_direction_id(operation_output=operation_output, operation=operation)
         previous_feed_direction_id = self._resolve_previous_feed_direction_id(previous, operation)
         compiled_operation_type = "FullDie" if operation.deformation_type == "full_die" else "Draw"
 
@@ -1147,34 +1150,34 @@ class PreprocessorCompiler:
                 previous_total_time_seconds=previous.total_time_seconds,
                 time_between_operation_seconds=time_before,
                 angle_deg=angle_deg,
-                final_height_mm=self._first_optional_float(card, "height", "final_height"),
-                final_diameter_mm=self._first_optional_float(card, "diameter", "final_diameter"),
-                radial_feed_mm=self._first_optional_float(card, "radial_feed"),
-                feed_mm=self._first_optional_float(card, "feed", "feed_first"),
-                feed_first_mm=self._first_optional_float(card, "feed_first"),
-                feed_middle_mm=self._first_optional_float(card, "feed_middle"),
-                feed_last_mm=self._first_optional_float(card, "feed_last"),
-                num_of_bites_input=self._coerce_optional_int(card.parameters.get("num_of_bites")),
-                skip_bites=self._parse_skip_bites(card.parameters.get("skip_bites")),
-                rotation_per_bite_deg=self._first_optional_float(card, "rotation_per_bite") or 0.0,
+                final_height_mm=self._first_optional_float(operation_output, "height", "final_height"),
+                final_diameter_mm=self._first_optional_float(operation_output, "diameter", "final_diameter"),
+                radial_feed_mm=self._first_optional_float(operation_output, "radial_feed"),
+                feed_mm=self._first_optional_float(operation_output, "feed", "feed_first"),
+                feed_first_mm=self._first_optional_float(operation_output, "feed_first"),
+                feed_middle_mm=self._first_optional_float(operation_output, "feed_middle"),
+                feed_last_mm=self._first_optional_float(operation_output, "feed_last"),
+                num_of_bites_input=self._coerce_optional_int(operation_output.parameters.get("num_of_bites")),
+                skip_bites=self._parse_skip_bites(operation_output.parameters.get("skip_bites")),
+                rotation_per_bite_deg=self._first_optional_float(operation_output, "rotation_per_bite") or 0.0,
                 current_feed_direction_id=current_feed_direction_id,
                 previous_feed_direction_id=previous_feed_direction_id,
                 is_same_operation_type_as_previous=previous.operation_type == compiled_operation_type,
-                mesh_elements=self._resolve_mesh_elements(card, previous),
+                mesh_elements=self._resolve_mesh_elements(operation_output, previous),
                 extra_rotations={
-                    "y_rotation": self._first_optional_float(card, "y_rotation") or 0.0,
-                    "z_rotation": self._first_optional_float(card, "z_rotation") or 0.0,
+                    "y_rotation": self._first_optional_float(operation_output, "y_rotation") or 0.0,
+                    "z_rotation": self._first_optional_float(operation_output, "z_rotation") or 0.0,
                 },
             )
         except ProlongationMathError as exc:
             raise PreprocessorCompileError(
-                f"Prolongation card operation_id={card.operation_id} cannot be compiled: {exc}"
+                f"Prolongation operation_output operation_id={operation_output.operation_id} cannot be compiled: {exc}"
             ) from exc
 
         operation_specific_parameters = {
             **control_parameters,
             **result.operation_specific_parameters,
-            "raw_parameters": dict(card.parameters),
+            "raw_parameters": dict(operation_output.parameters),
             "deformation_geometry_ported": True,
         }
         metrics = dict(result.metrics)
@@ -1198,18 +1201,18 @@ class PreprocessorCompiler:
             notes.append("Simulation expected duration estimate is not ported yet.")
         duration_seconds = result.total_time_seconds - previous.total_time_seconds
 
-        mesh_elements = self._coerce_optional_int(card.parameters.get("mesh_elements"))
+        mesh_elements = self._coerce_optional_int(operation_output.parameters.get("mesh_elements"))
         if mesh_elements is not None:
             metrics["mesh_elements"] = mesh_elements
 
         return CompiledControlProgramRow(
             sequence_index=sequence_index,
             simulation_index=simulation_index,
-            operation_id=card.operation_id,
-            source_block_id=card.source_block_id,
-            type_id=card.type_id,
+            operation_id=operation_output.operation_id,
+            source_block_id=operation_output.source_block_id,
+            type_id=operation_output.type_id,
             parent_type_id=operation.parent_type_id,
-            process_name=operation.process_name,
+            operation_display_name=operation.operation_display_name,
             library_name=operation.library_name,
             operation_type=compiled_operation_type,
             deformation_control="H",
@@ -1242,7 +1245,7 @@ class PreprocessorCompiler:
     def _compile_radial_initial_rotations_row(
         self,
         *,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation: OperationTypeDefinition,
         sequence_index: int,
         simulation_index: int | None,
@@ -1251,20 +1254,20 @@ class PreprocessorCompiler:
         previous_row: CompiledControlProgramRow | None,
         library_snapshot: OperationLibrarySnapshot,
     ) -> CompiledControlProgramRow:
-        previous = self._require_previous_row(previous_row, card, "radial initial rotations")
-        geometry = self._require_geometry(previous.final_geometry, card, "radial initial rotations")
+        previous = self._require_previous_row(previous_row, operation_output, "radial initial rotations")
+        geometry = self._require_geometry(previous.final_geometry, operation_output, "radial initial rotations")
         time_before = self._resolve_time_between_operations(
-            card=card,
+            operation_output=operation_output,
             operation=operation,
             previous_row=previous,
             library_snapshot=library_snapshot,
             press_mode_id=previous.press_mode_id,
         ) or 0.0
         rotations = (
-            ("x", self._first_float_parameter(card, "rotation_1_x", default=0.0)),
-            ("y", self._first_float_parameter(card, "rotation_2_y", default=0.0)),
-            ("x", self._first_float_parameter(card, "rotation_3_x", default=0.0)),
-            ("y", self._first_float_parameter(card, "rotation_4_y", default=0.0)),
+            ("x", self._first_float_parameter(operation_output, "rotation_1_x", default=0.0)),
+            ("y", self._first_float_parameter(operation_output, "rotation_2_y", default=0.0)),
+            ("x", self._first_float_parameter(operation_output, "rotation_3_x", default=0.0)),
+            ("y", self._first_float_parameter(operation_output, "rotation_4_y", default=0.0)),
         )
         total_time_seconds = previous.total_time_seconds + time_before
         metrics = dict(previous.metrics)
@@ -1282,7 +1285,7 @@ class PreprocessorCompiler:
             metrics["legacy_surface_notes"] = list(surface_pair.notes)
         operation_specific_parameters = {
             **control_parameters,
-            "raw_parameters": dict(card.parameters),
+            "raw_parameters": dict(operation_output.parameters),
             "radial_initial_rotations": rotations,
             "radial_rotations": rotations,
             "deformation_geometry_ported": True,
@@ -1291,11 +1294,11 @@ class PreprocessorCompiler:
         return CompiledControlProgramRow(
             sequence_index=sequence_index,
             simulation_index=simulation_index,
-            operation_id=card.operation_id,
-            source_block_id=card.source_block_id,
-            type_id=card.type_id,
+            operation_id=operation_output.operation_id,
+            source_block_id=operation_output.source_block_id,
+            type_id=operation_output.type_id,
             parent_type_id=operation.parent_type_id,
-            process_name=operation.process_name,
+            operation_display_name=operation.operation_display_name,
             library_name=operation.library_name,
             operation_type="RadialInitialRotations",
             deformation_control="NA",
@@ -1327,7 +1330,7 @@ class PreprocessorCompiler:
     def _compile_cutting_row(
         self,
         *,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation: OperationTypeDefinition,
         sequence_index: int,
         simulation_index: int | None,
@@ -1336,26 +1339,26 @@ class PreprocessorCompiler:
         previous_row: CompiledControlProgramRow | None,
         library_snapshot: OperationLibrarySnapshot,
     ) -> CompiledControlProgramRow:
-        previous = self._require_previous_row(previous_row, card, "cutting")
-        initial_geometry = self._require_geometry(previous.final_geometry, card, "cutting")
+        previous = self._require_previous_row(previous_row, operation_output, "cutting")
+        initial_geometry = self._require_geometry(previous.final_geometry, operation_output, "cutting")
         self._validate_explicit_speed_fields(
-            card=card,
+            operation_output=operation_output,
             parameter_values=parameter_values,
             control_parameters=control_parameters,
         )
         time_before = self._resolve_time_between_operations(
-            card=card,
+            operation_output=operation_output,
             operation=operation,
             previous_row=previous,
             library_snapshot=library_snapshot,
             press_mode_id=previous.press_mode_id,
         )
-        pieces_count = self._optional_int_parameter(card, "pieces_count")
-        piece_number = self._optional_int_parameter(card, "piece_number")
+        pieces_count = self._optional_int_parameter(operation_output, "pieces_count")
+        piece_number = self._optional_int_parameter(operation_output, "piece_number")
         if pieces_count is None:
-            raise PreprocessorCompileError(f"Cutting card operation_id={card.operation_id} requires pieces_count")
+            raise PreprocessorCompileError(f"Cutting operation_output operation_id={operation_output.operation_id} requires pieces_count")
         if piece_number is None:
-            raise PreprocessorCompileError(f"Cutting card operation_id={card.operation_id} requires piece_number")
+            raise PreprocessorCompileError(f"Cutting operation_output operation_id={operation_output.operation_id} requires piece_number")
 
         try:
             cutting_result = calculate_cutting(
@@ -1363,21 +1366,21 @@ class PreprocessorCompiler:
                 initial_geometry=initial_geometry,
                 pieces_count=pieces_count,
                 piece_number=piece_number,
-                percentage_to_keep=self._first_float_parameter(card, "percentage_to_keep"),
+                percentage_to_keep=self._first_float_parameter(operation_output, "percentage_to_keep"),
                 previous_total_time_seconds=previous.total_time_seconds,
                 time_between_operation_seconds=time_before,
             )
         except CuttingMathError as exc:
             raise PreprocessorCompileError(
-                f"Cutting card operation_id={card.operation_id} cannot be compiled: {exc}"
+                f"Cutting operation_output operation_id={operation_output.operation_id} cannot be compiled: {exc}"
             ) from exc
 
         operation_specific_parameters = {
             **control_parameters,
             **cutting_result.operation_specific_parameters,
-            "raw_parameters": dict(card.parameters),
+            "raw_parameters": dict(operation_output.parameters),
         }
-        speed_value = self._first_optional_float(card, "speed_prolongation", "speed")
+        speed_value = self._first_optional_float(operation_output, "speed_prolongation", "speed")
         if speed_value is not None:
             operation_specific_parameters["speed_prolongation"] = speed_value
         metrics = dict(cutting_result.metrics)
@@ -1400,11 +1403,11 @@ class PreprocessorCompiler:
         return CompiledControlProgramRow(
             sequence_index=sequence_index,
             simulation_index=simulation_index,
-            operation_id=card.operation_id,
-            source_block_id=card.source_block_id,
-            type_id=card.type_id,
+            operation_id=operation_output.operation_id,
+            source_block_id=operation_output.source_block_id,
+            type_id=operation_output.type_id,
             parent_type_id=operation.parent_type_id,
-            process_name=operation.process_name,
+            operation_display_name=operation.operation_display_name,
             library_name=operation.library_name,
             operation_type="Cut",
             deformation_control="P",
@@ -1437,7 +1440,7 @@ class PreprocessorCompiler:
     def _compile_generic_row(
         self,
         *,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation: OperationTypeDefinition,
         sequence_index: int,
         simulation_index: int | None,
@@ -1450,18 +1453,18 @@ class PreprocessorCompiler:
         previous_geometry = previous_row.final_geometry if previous_row is not None else None
         previous_surface_area = previous_row.final_surface_area_mm2 if previous_row is not None else None
         metrics = dict(previous_row.metrics or {}) if previous_row is not None else {}
-        mesh_elements = self._coerce_optional_int(card.parameters.get("mesh_elements"))
+        mesh_elements = self._coerce_optional_int(operation_output.parameters.get("mesh_elements"))
         if mesh_elements is not None:
             metrics["mesh_elements"] = mesh_elements
         for feed_direction_field in FEED_DIRECTION_FIELDS:
-            feed_direction_id = self._coerce_optional_int(card.parameters.get(feed_direction_field))
+            feed_direction_id = self._coerce_optional_int(operation_output.parameters.get(feed_direction_field))
             if feed_direction_id is not None:
                 metrics[feed_direction_field] = feed_direction_id
-        legacy_feed_direction_id = self._coerce_optional_int(card.parameters.get(FEED_DIRECTION_LEGACY_FIELD))
+        legacy_feed_direction_id = self._coerce_optional_int(operation_output.parameters.get(FEED_DIRECTION_LEGACY_FIELD))
         if legacy_feed_direction_id is not None:
             metrics[FEED_DIRECTION_LEGACY_FIELD] = legacy_feed_direction_id
-        resolved_press_id = card.press_id
-        resolved_press_mode_id = card.press_mode_id
+        resolved_press_id = operation_output.press_id
+        resolved_press_mode_id = operation_output.press_mode_id
         if resolved_press_id is None and previous_row is not None:
             resolved_press_id = previous_row.press_id
         if resolved_press_mode_id is None and previous_row is not None:
@@ -1470,7 +1473,7 @@ class PreprocessorCompiler:
             resolved_press_id = default_press_id
 
         time_before = self._resolve_time_between_operations(
-            card=card,
+            operation_output=operation_output,
             operation=operation,
             previous_row=previous_row,
             library_snapshot=library_snapshot,
@@ -1493,24 +1496,24 @@ class PreprocessorCompiler:
         return CompiledControlProgramRow(
             sequence_index=sequence_index,
             simulation_index=simulation_index,
-            operation_id=card.operation_id,
-            source_block_id=card.source_block_id,
-            type_id=card.type_id,
+            operation_id=operation_output.operation_id,
+            source_block_id=operation_output.source_block_id,
+            type_id=operation_output.type_id,
             parent_type_id=operation.parent_type_id,
-            process_name=operation.process_name,
+            operation_display_name=operation.operation_display_name,
             library_name=operation.library_name,
-            operation_type=operation.process_name,
+            operation_type=operation.operation_display_name,
             deformation_control="NA",
             step_control=self._infer_step_control(operation),
             parameter_values=parameter_values,
             control_parameters=control_parameters,
-            operation_specific_parameters={"raw_parameters": dict(card.parameters)},
+            operation_specific_parameters={"raw_parameters": dict(operation_output.parameters)},
             is_geometry=operation.is_geometry,
             press_id=resolved_press_id,
             press_mode_id=resolved_press_mode_id,
-            material_id=card.material_id if card.material_id is not None else (previous_row.material_id if previous_row else None),
-            material_label=card.material_label if card.material_label is not None else (previous_row.material_label if previous_row else None),
-            weight_kg=card.weight_kg if card.weight_kg is not None else (previous_row.weight_kg if previous_row else None),
+            material_id=operation_output.material_id if operation_output.material_id is not None else (previous_row.material_id if previous_row else None),
+            material_label=operation_output.material_label if operation_output.material_label is not None else (previous_row.material_label if previous_row else None),
+            weight_kg=operation_output.weight_kg if operation_output.weight_kg is not None else (previous_row.weight_kg if previous_row else None),
             duration_seconds=None,
             total_time_seconds=total_time_seconds,
             temperature_initial_c=temperature,
@@ -1529,12 +1532,12 @@ class PreprocessorCompiler:
 
     def _resolve_mesh_elements(
         self,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         previous_row: CompiledControlProgramRow | None,
     ) -> int | None:
         """Use a local override, otherwise carry the title-level mesh setting forward."""
 
-        mesh_elements = self._coerce_optional_int(card.parameters.get("mesh_elements"))
+        mesh_elements = self._coerce_optional_int(operation_output.parameters.get("mesh_elements"))
         if mesh_elements is not None:
             return mesh_elements
         if previous_row is None:
@@ -1544,7 +1547,7 @@ class PreprocessorCompiler:
     def _resolve_time_between_operations(
         self,
         *,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation: OperationTypeDefinition,
         previous_row: CompiledControlProgramRow | None,
         library_snapshot: OperationLibrarySnapshot,
@@ -1573,69 +1576,69 @@ class PreprocessorCompiler:
     def _resolve_die_dimensions(
         self,
         *,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         side: str,
         control_parameters: Mapping[str, object],
         operation_family: str = "Forming",
     ) -> DieDimensions:
         mapping_key = f"{side}_die_dimensions"
-        raw_mapping = self._first_mapping(card.parameters.get(mapping_key), control_parameters.get(mapping_key))
+        raw_mapping = self._first_mapping(operation_output.parameters.get(mapping_key), control_parameters.get(mapping_key))
         if raw_mapping is None:
-            die_id = self._coerce_optional_int(card.parameters.get(f"{side}_die_id"))
+            die_id = self._coerce_optional_int(operation_output.parameters.get(f"{side}_die_id"))
             if side == "top":
-                die_id = self._first_optional_int(card.top_die_id, die_id)
+                die_id = self._first_optional_int(operation_output.top_die_id, die_id)
             else:
-                die_id = self._first_optional_int(card.bottom_die_id, die_id)
+                die_id = self._first_optional_int(operation_output.bottom_die_id, die_id)
             raise PreprocessorCompileError(
-                f"{operation_family} card operation_id={card.operation_id} requires {mapping_key}; "
+                f"{operation_family} operation_output operation_id={operation_output.operation_id} requires {mapping_key}; "
                 f"resolved {side}_die_id={die_id!r}"
             )
         default_id = None
         if side == "top":
-            default_id = self._first_optional_int(card.top_die_id, self._coerce_optional_int(card.parameters.get("top_die_id")))
+            default_id = self._first_optional_int(operation_output.top_die_id, self._coerce_optional_int(operation_output.parameters.get("top_die_id")))
         else:
-            default_id = self._first_optional_int(card.bottom_die_id, self._coerce_optional_int(card.parameters.get("bottom_die_id")))
+            default_id = self._first_optional_int(operation_output.bottom_die_id, self._coerce_optional_int(operation_output.parameters.get("bottom_die_id")))
         try:
             return DieDimensions.from_mapping(dict(raw_mapping), default_id=default_id)
         except Exception as exc:
             raise PreprocessorCompileError(
-                f"{operation_family} card operation_id={card.operation_id} has invalid {mapping_key}: {exc}"
+                f"{operation_family} operation_output operation_id={operation_output.operation_id} has invalid {mapping_key}: {exc}"
             ) from exc
 
     def _resolve_press_mode_parameters(
         self,
         *,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         control_parameters: Mapping[str, object],
         default_id: int | None,
         operation_family: str = "Forming",
     ) -> PressModeParameters:
         raw_mapping = self._first_mapping(
-            card.parameters.get("press_mode_properties"),
+            operation_output.parameters.get("press_mode_properties"),
             control_parameters.get("press_mode_properties"),
         )
         if raw_mapping is None:
             raise PreprocessorCompileError(
-                f"{operation_family} card operation_id={card.operation_id} requires press_mode_properties"
+                f"{operation_family} operation_output operation_id={operation_output.operation_id} requires press_mode_properties"
             )
         try:
             return PressModeParameters.from_mapping(dict(raw_mapping), default_id=default_id)
         except Exception as exc:
             raise PreprocessorCompileError(
-                f"{operation_family} card operation_id={card.operation_id} has invalid press_mode_properties: {exc}"
+                f"{operation_family} operation_output operation_id={operation_output.operation_id} has invalid press_mode_properties: {exc}"
             ) from exc
 
     def _resolve_speed_mm_per_s(
         self,
         *,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation: OperationTypeDefinition,
         parameter_values: Mapping[str, object],
         control_parameters: Mapping[str, object],
         press_mode: PressModeParameters,
     ) -> float:
         self._validate_explicit_speed_fields(
-            card=card,
+            operation_output=operation_output,
             parameter_values=parameter_values,
             control_parameters=control_parameters,
         )
@@ -1657,7 +1660,7 @@ class PreprocessorCompiler:
             raw_value = self._first_present_value(
                 parameter_values.get(name),
                 control_parameters.get(name),
-                card.parameters.get(name),
+                operation_output.parameters.get(name),
             )
             if raw_value is None:
                 continue
@@ -1665,28 +1668,28 @@ class PreprocessorCompiler:
                 value = float(raw_value)
             except (TypeError, ValueError):
                 raise PreprocessorCompileError(
-                    f"Card operation_id={card.operation_id} parameter {name!r} must be numeric"
+                    f"Operation output operation_id={operation_output.operation_id} parameter {name!r} must be numeric"
                 )
             if value > 0.0:
                 if value > press_mode.working_speed_mm_per_s:
                     raise PreprocessorCompileError(
-                        f"Card operation_id={card.operation_id} parameter {name!r}={value:g} mm/s exceeds "
+                        f"Operation output operation_id={operation_output.operation_id} parameter {name!r}={value:g} mm/s exceeds "
                         f"press mode working speed {press_mode.working_speed_mm_per_s:g} mm/s"
                     )
                 return value
             raise PreprocessorCompileError(
-                f"Card operation_id={card.operation_id} parameter {name!r} must be positive"
+                f"Operation output operation_id={operation_output.operation_id} parameter {name!r} must be positive"
             )
 
         required_name = operation.speed_column_name or OPERATION_LOCAL_SPEED_FIELD
         raise PreprocessorCompileError(
-            f"Card operation_id={card.operation_id} requires explicit positive {required_name!r} [mm/s]"
+            f"Operation output operation_id={operation_output.operation_id} requires explicit positive {required_name!r} [mm/s]"
         )
 
     def _validate_explicit_speed_fields(
         self,
         *,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         parameter_values: Mapping[str, object],
         control_parameters: Mapping[str, object],
     ) -> None:
@@ -1695,7 +1698,7 @@ class PreprocessorCompiler:
             raw_value = self._first_present_value(
                 parameter_values.get(name),
                 control_parameters.get(name),
-                card.parameters.get(name),
+                operation_output.parameters.get(name),
             )
             if raw_value is None:
                 continue
@@ -1703,11 +1706,11 @@ class PreprocessorCompiler:
                 value = float(raw_value)
             except (TypeError, ValueError) as exc:
                 raise PreprocessorCompileError(
-                    f"Card operation_id={card.operation_id} parameter {name!r} must be numeric"
+                    f"Operation output operation_id={operation_output.operation_id} parameter {name!r} must be numeric"
                 ) from exc
             if value <= 0.0:
                 raise PreprocessorCompileError(
-                    f"Card operation_id={card.operation_id} parameter {name!r} must be positive"
+                    f"Operation output operation_id={operation_output.operation_id} parameter {name!r} must be positive"
                 )
 
     def _feed_direction_field_for_operation(self, operation: OperationTypeDefinition) -> str:
@@ -1720,13 +1723,13 @@ class PreprocessorCompiler:
     def _resolve_feed_direction_id(
         self,
         *,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation: OperationTypeDefinition,
     ) -> int:
         field = self._feed_direction_field_for_operation(operation)
         return (
-            self._coerce_optional_int(card.parameters.get(field))
-            or self._coerce_optional_int(card.parameters.get(FEED_DIRECTION_LEGACY_FIELD))
+            self._coerce_optional_int(operation_output.parameters.get(field))
+            or self._coerce_optional_int(operation_output.parameters.get(FEED_DIRECTION_LEGACY_FIELD))
             or FEED_DIRECTION_DEFAULT_ID
         )
 
@@ -1754,83 +1757,83 @@ class PreprocessorCompiler:
     def _require_previous_row(
         self,
         previous_row: CompiledControlProgramRow | None,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation_family: str,
     ) -> CompiledControlProgramRow:
         if previous_row is None:
             raise PreprocessorCompileError(
-                f"{operation_family.capitalize()} card operation_id={card.operation_id} requires a previous compiled row"
+                f"{operation_family.capitalize()} operation output operation_id={operation_output.operation_id} requires a previous compiled row"
             )
         return previous_row
 
     def _require_geometry(
         self,
         geometry: GeneratedGeometry | None,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         operation_family: str,
     ) -> GeneratedGeometry:
         if geometry is None:
             raise PreprocessorCompileError(
-                f"{operation_family.capitalize()} card operation_id={card.operation_id} requires carried billet geometry"
+                f"{operation_family.capitalize()} operation output operation_id={operation_output.operation_id} requires carried billet geometry"
             )
         return geometry
 
-    def _get_float_parameter(self, card: ProcessCard, name: str) -> float:
-        value = card.parameters.get(name)
+    def _get_float_parameter(self, operation_output: DocumentOperationOutput, name: str) -> float:
+        value = operation_output.parameters.get(name)
         if value is None:
             raise PreprocessorCompileError(
-                f"Card operation_id={card.operation_id} requires numeric parameter {name!r}"
+                f"Operation output operation_id={operation_output.operation_id} requires numeric parameter {name!r}"
             )
         try:
             return float(value)
         except (TypeError, ValueError) as exc:
             raise PreprocessorCompileError(
-                f"Card operation_id={card.operation_id} parameter {name!r} must be numeric"
+                f"Operation output operation_id={operation_output.operation_id} parameter {name!r} must be numeric"
             ) from exc
 
-    def _optional_int_parameter(self, card: ProcessCard, name: str) -> int | None:
-        value = card.parameters.get(name)
+    def _optional_int_parameter(self, operation_output: DocumentOperationOutput, name: str) -> int | None:
+        value = operation_output.parameters.get(name)
         if value is None or value == "":
             return None
         try:
             return int(value)
         except (TypeError, ValueError) as exc:
             raise PreprocessorCompileError(
-                f"Card operation_id={card.operation_id} parameter {name!r} must be an integer"
+                f"Operation output operation_id={operation_output.operation_id} parameter {name!r} must be an integer"
             ) from exc
 
     def _first_float_parameter(
         self,
-        card: ProcessCard,
+        operation_output: DocumentOperationOutput,
         *names: str,
         default: float | None = None,
     ) -> float:
         for name in names:
-            value = card.parameters.get(name)
+            value = operation_output.parameters.get(name)
             if value is None:
                 continue
             try:
                 return float(value)
             except (TypeError, ValueError) as exc:
                 raise PreprocessorCompileError(
-                    f"Card operation_id={card.operation_id} parameter {name!r} must be numeric"
+                    f"Operation output operation_id={operation_output.operation_id} parameter {name!r} must be numeric"
                 ) from exc
         if default is not None:
             return default
         raise PreprocessorCompileError(
-            f"Card operation_id={card.operation_id} requires one of numeric parameters {names!r}"
+            f"Operation output operation_id={operation_output.operation_id} requires one of numeric parameters {names!r}"
         )
 
-    def _first_optional_float(self, card: ProcessCard, *names: str) -> float | None:
+    def _first_optional_float(self, operation_output: DocumentOperationOutput, *names: str) -> float | None:
         for name in names:
-            value = card.parameters.get(name)
+            value = operation_output.parameters.get(name)
             if value is None or value == "":
                 continue
             try:
                 return float(value)
             except (TypeError, ValueError) as exc:
                 raise PreprocessorCompileError(
-                    f"Card operation_id={card.operation_id} parameter {name!r} must be numeric"
+                    f"Operation output operation_id={operation_output.operation_id} parameter {name!r} must be numeric"
                 ) from exc
         return None
 
@@ -1864,14 +1867,14 @@ class PreprocessorCompiler:
             return value
         return None
 
-    def _resolve_prolongation_angle(self, card: ProcessCard) -> float:
-        template_id = card.operation_template_id or ""
+    def _resolve_prolongation_angle(self, operation_output: DocumentOperationOutput) -> float:
+        template_id = operation_output.operation_template_id or ""
         if template_id in AXIAL_PROLONGATION_TEMPLATE_IDS:
-            return self._first_optional_float(card, "rotation", "angle") or 0.0
+            return self._first_optional_float(operation_output, "rotation", "angle") or 0.0
         if template_id in {RADIAL_ROTATION_HEIGHT_FEED, RADIAL_HEIGHT_BITES}:
-            return self._first_optional_float(card, "rotation_manipulator", "angle") or 0.0
+            return self._first_optional_float(operation_output, "rotation_manipulator", "angle") or 0.0
         if template_id == RADIAL_PRESS_AXIS_FEED or template_id in FULL_DIE_TEMPLATE_IDS:
-            return self._first_optional_float(card, "rotation", "angle") or 0.0
+            return self._first_optional_float(operation_output, "rotation", "angle") or 0.0
         return 0.0
 
     def _parse_skip_bites(self, value: object) -> tuple[int, ...]:

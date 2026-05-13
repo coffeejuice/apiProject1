@@ -9,77 +9,77 @@ from typing import Any
 GEOMETRY_TYPES: dict[str, dict[str, Any]] = {
     "68": {
         "library_name": "◯ - round D [mm]",
-        "process_name": "◯ - round D {} mm",
+        "title_template": "◯ - round D {} mm",
         "labels": ["Diameter of billet [mm]:"],
         "db_columns": ["diameter"],
         "sql_types": ["NUMERIC(9, 3)"],
     },
     "69": {
         "library_name": "◯ - round D, Tail edge radius [mm]",
-        "process_name": "◯ - round D {}, tail edge radius {} mm",
+        "title_template": "◯ - round D {}, tail edge radius {} mm",
         "labels": ["Diameter of billet [mm]:", "Tail radius [mm]:"],
         "db_columns": ["diameter", "tail_radius"],
         "sql_types": ["NUMERIC(9, 3)", "NUMERIC(9, 3)"],
     },
     "70": {
         "library_name": "◯ - round D, Tail chamfer x 45° [mm]",
-        "process_name": "◯ - round D {} mm, tail edge chamfer {} mm x 45°",
+        "title_template": "◯ - round D {} mm, tail edge chamfer {} mm x 45°",
         "labels": ["Diameter of billet [mm]:", "Tail chamfer [mm]:"],
         "db_columns": ["diameter", "tail_chamfer"],
         "sql_types": ["NUMERIC(9, 3)", "NUMERIC(9, 3)"],
     },
     "71": {
         "library_name": "◯ - round L/D ratio",
-        "process_name": "◯ - round L/D ratio = {}",
+        "title_template": "◯ - round L/D ratio = {}",
         "labels": ["Length/Diameter billet ratio:"],
         "db_columns": ["length_to_diameter_ratio"],
         "sql_types": ["REAL"],
     },
     "72": {
         "library_name": "⬜ - square H [mm]",
-        "process_name": "⬜ - square H {} mm",
+        "title_template": "⬜ - square H {} mm",
         "labels": ["Height of ⬜ billet section [mm]:"],
         "db_columns": ["side_of_square"],
         "sql_types": ["NUMERIC(9, 3)"],
     },
     "73": {
         "library_name": "⬜ - square H, Diagonal [mm]",
-        "process_name": "⬜ - square H {}, diagonal {} mm",
+        "title_template": "⬜ - square H {}, diagonal {} mm",
         "labels": ["Height of ⬜ billet section [mm]:", "Diagonal of section[mm]:"],
         "db_columns": ["side_of_square", "diagonal"],
         "sql_types": ["NUMERIC(9, 3)", "NUMERIC(9, 3)"],
     },
     "74": {
         "library_name": "⬜ - square L/H ratio",
-        "process_name": "⬜ - square L/H ratio = {}",
+        "title_template": "⬜ - square L/H ratio = {}",
         "labels": ["Length/Height billet ratio:"],
         "db_columns": ["length_to_side_ratio"],
         "sql_types": ["REAL"],
     },
     "75": {
         "library_name": "▯ - rectangle H x W [mm]",
-        "process_name": "▯ - rectangle H x W = {} x {} mm",
+        "title_template": "▯ - rectangle H x W = {} x {} mm",
         "labels": ["Height of billet section [mm]:", "Width of billet section [mm]:"],
         "db_columns": ["height", "width"],
         "sql_types": ["NUMERIC(9, 3)", "NUMERIC(9, 3)"],
     },
     "76": {
         "library_name": "▯ - rectangle H/W ratio, L/Thickness ratio",
-        "process_name": "▯ - rectangle H/W ratio = {}, L/Thickness ratio = {}",
+        "title_template": "▯ - rectangle H/W ratio = {}, L/Thickness ratio = {}",
         "labels": ["Height/Width of billet section:", "Length/Thickness:"],
         "db_columns": ["height_to_width_ratio", "length_to_thickness_ratio"],
         "sql_types": ["REAL", "REAL"],
     },
     "77": {
         "library_name": "▯ - rectangle H x W, Diagonal [mm]",
-        "process_name": "▯ - rectangle H x W = {} x {}, diagonal {} mm",
+        "title_template": "▯ - rectangle H x W = {} x {}, diagonal {} mm",
         "labels": ["Height of billet section [mm]:", "Width of billet section [mm]:", "Diagonal of section [mm]:"],
         "db_columns": ["height", "width", "diagonal"],
         "sql_types": ["NUMERIC(9, 3)", "NUMERIC(9, 3)", "NUMERIC(9, 3)"],
     },
     "78": {
         "library_name": "▯ - rectangle H x W, Two diagonals [mm]",
-        "process_name": "▯ - rectangle H x W = {} x {}, diagonal #1 = {}, diagonal #2 = {} mm",
+        "title_template": "▯ - rectangle H x W = {} x {}, diagonal #1 = {}, diagonal #2 = {} mm",
         "labels": [
             "Height of billet section [mm]:",
             "Width of billet section [mm]:",
@@ -91,7 +91,7 @@ GEOMETRY_TYPES: dict[str, dict[str, Any]] = {
     },
     "79": {
         "library_name": "⬣ - octagon H [mm]",
-        "process_name": "⬣ - octagon H = {} mm",
+        "title_template": "⬣ - octagon H = {} mm",
         "labels": ["Height of octagon section [mm]"],
         "db_columns": ["height"],
         "sql_types": ["NUMERIC(9, 3)"],
@@ -106,7 +106,7 @@ def generate_billet_geometry_title(geometry_type_id: str, attributes: dict[str, 
         return "Input Workpiece"
 
     geometry_type = GEOMETRY_TYPES[geometry_type_id]
-    process_name = str(geometry_type["process_name"])
+    title_template = str(geometry_type["title_template"])
 
     values = []
     for column_name in geometry_type["db_columns"]:
@@ -114,7 +114,7 @@ def generate_billet_geometry_title(geometry_type_id: str, attributes: dict[str, 
         values.append(str(value) if value else "_")
 
     try:
-        return process_name.format(*values)
+        return title_template.format(*values)
     except (IndexError, KeyError):
         return str(geometry_type["library_name"])
 
