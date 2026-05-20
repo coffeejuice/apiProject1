@@ -13,7 +13,7 @@ from typing import Any
 from app.config import settings
 
 
-LOGGABLE_SERVICES = ("api", "pre", "post", "coordinator")
+LOGGABLE_SERVICES = ("frontend", "api", "pre", "post", "solver", "coordinator")
 _HOSTNAME = socket.gethostname()
 _STANDARD_RECORD_KEYS = set(logging.LogRecord("", 0, "", 0, "", (), None).__dict__)
 

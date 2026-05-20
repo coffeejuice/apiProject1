@@ -137,7 +137,8 @@ def serialize_billet_geometry_props(props: dict[str, Any]) -> dict[str, Any]:
                 "id": type_id,
                 "name": data["library_name"],
                 "labels": data["labels"],
-                "columns": data["db_columns"],
+                "colum"
+                "ns": data["db_columns"],
             }
             for type_id, data in sorted(GEOMETRY_TYPES.items(), key=lambda item: int(item[0]))
         ],

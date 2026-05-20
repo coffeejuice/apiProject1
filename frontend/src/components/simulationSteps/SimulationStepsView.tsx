@@ -14,6 +14,7 @@ import type {
   SimulationStepSurfaceMesh,
 } from '../../types/api'
 import type { BlockData } from '../blocks/BlockRegistry'
+import SurfaceMeshThreeView, { type SurfaceMeshLayer } from './SurfaceMeshThreeView'
 
 interface SimulationStepsViewProps {
   documentId: string | null
@@ -845,231 +846,6 @@ export function Geometry2DPreview({
   )
 }
 
-function projectedIsoPoint(lengthAxis: number, crossX: number, crossY: number): [number, number] {
-  return [lengthAxis * 0.72 - crossX * 0.72, lengthAxis * 0.34 + crossX * 0.34 - crossY * 0.82]
-}
-
-function pointsToPath(points: Array<[number, number]>): string {
-  if (points.length === 0) {
-    return ''
-  }
-  return points.map(([x, y], index) => `${index === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`).join(' ') + ' Z'
-}
-
-function colorWithAlpha(color: string, alpha: number): string {
-  return color.replace('rgb', 'rgba').replace(')', `,${alpha})`)
-}
-
-interface ProjectedSurfaceMesh {
-  faces: Array<Array<[number, number]>>
-  edges: Array<[[number, number], [number, number]]>
-  rimEdges: Array<[[number, number], [number, number]]>
-  bounds: { minX: number; maxX: number; minY: number; maxY: number }
-}
-
-interface ProjectedIsoBounds {
-  minX: number
-  maxX: number
-  minY: number
-  maxY: number
-}
-
-function surfaceRawVertices(surface: SimulationStepSurfaceMesh): Vector3[] {
-  return surface.vertices
-    .map((vertex): Vector3 | null => {
-      if (!Array.isArray(vertex) || vertex.length < 3) {
-        return null
-      }
-      const x = toNumber(vertex[0])
-      const y = toNumber(vertex[1])
-      const z = toNumber(vertex[2])
-      return x !== undefined && y !== undefined && z !== undefined ? [x, y, z] : null
-    })
-    .filter((vertex): vertex is Vector3 => vertex !== null)
-}
-
-function projectedBoundsForSurfaces(surfaces: Array<SimulationStepSurfaceMesh | null | undefined>): ProjectedIsoBounds | null {
-  const projectedPoints = surfaces
-    .filter((surface): surface is SimulationStepSurfaceMesh => Boolean(surface))
-    .flatMap((surface) => surfaceRawVertices(surface).map(([x, y, z]) => projectedIsoPoint(x, y, z)))
-  if (projectedPoints.length === 0) {
-    return null
-  }
-  const xs = projectedPoints.map(([x]) => x)
-  const ys = projectedPoints.map(([, y]) => y)
-  return {
-    minX: Math.min(...xs),
-    maxX: Math.max(...xs),
-    minY: Math.min(...ys),
-    maxY: Math.max(...ys),
-  }
-}
-
-function screenBounds(points: Array<[number, number]>): { minX: number; maxX: number; minY: number; maxY: number } {
-  const xs = points.map(([x]) => x)
-  const ys = points.map(([, y]) => y)
-  return {
-    minX: Math.min(...xs),
-    maxX: Math.max(...xs),
-    minY: Math.min(...ys),
-    maxY: Math.max(...ys),
-  }
-}
-
-function surfaceEdges(
-  surface: SimulationStepSurfaceMesh,
-  rawVertices: Vector3[],
-  projected: Array<[number, number]>
-): { edges: ProjectedSurfaceMesh['edges']; rimEdges: ProjectedSurfaceMesh['rimEdges'] } {
-  const edgeByKey = new Map<string, [number, number]>()
-  surface.faces.forEach((face) => {
-    if (!Array.isArray(face) || face.length < 3) {
-      return
-    }
-    for (let index = 0; index < face.length; index += 1) {
-      const start = face[index]
-      const end = face[(index + 1) % face.length]
-      if (!Number.isInteger(start) || !Number.isInteger(end)) {
-        continue
-      }
-      const a = Math.min(start, end)
-      const b = Math.max(start, end)
-      if (!rawVertices[a] || !rawVertices[b]) {
-        continue
-      }
-      edgeByKey.set(`${a}:${b}`, [a, b])
-    }
-  })
-
-  const xValues = rawVertices.map(([x]) => x)
-  const minAxis = Math.min(...xValues)
-  const maxAxis = Math.max(...xValues)
-  const axisTolerance = Math.max((maxAxis - minAxis) * 0.025, 1e-6)
-  const edges: ProjectedSurfaceMesh['edges'] = []
-  const rimEdges: ProjectedSurfaceMesh['rimEdges'] = []
-
-  edgeByKey.forEach(([a, b]) => {
-    const projectedA = projected[a]
-    const projectedB = projected[b]
-    if (!projectedA || !projectedB) {
-      return
-    }
-    const edge: [[number, number], [number, number]] = [projectedA, projectedB]
-    edges.push(edge)
-    const aX = rawVertices[a][0]
-    const bX = rawVertices[b][0]
-    const onMinRim = Math.abs(aX - minAxis) <= axisTolerance && Math.abs(bX - minAxis) <= axisTolerance
-    const onMaxRim = Math.abs(aX - maxAxis) <= axisTolerance && Math.abs(bX - maxAxis) <= axisTolerance
-    if (onMinRim || onMaxRim) {
-      rimEdges.push(edge)
-    }
-  })
-
-  return { edges, rimEdges }
-}
-
-function buildProjectedSurfaceMesh(
-  surface: SimulationStepSurfaceMesh,
-  width: number,
-  height: number,
-  sharedBounds?: ProjectedIsoBounds | null
-): ProjectedSurfaceMesh | null {
-  const rawVertices = surfaceRawVertices(surface)
-  if (rawVertices.length === 0 || surface.faces.length === 0) {
-    return null
-  }
-
-  const rawProjected = rawVertices.map(([x, y, z]) => projectedIsoPoint(x, y, z))
-  const bounds = sharedBounds || projectedBoundsForSurfaces([surface])
-  if (!bounds) {
-    return null
-  }
-  const spanX = Math.max(bounds.maxX - bounds.minX, 1)
-  const spanY = Math.max(bounds.maxY - bounds.minY, 1)
-  const padding = 16
-  const scale = Math.min((width - padding * 2) / spanX, (height - padding * 2) / spanY)
-  const offsetX = (width - spanX * scale) * 0.5 - bounds.minX * scale
-  const offsetY = (height - spanY * scale) * 0.5 - bounds.minY * scale
-  const projected = rawProjected.map(([x, y]): [number, number] => [offsetX + x * scale, offsetY + y * scale])
-
-  const faces = surface.faces
-    .map((face) => {
-      if (!Array.isArray(face)) {
-        return null
-      }
-      const points = face
-        .map((index) => Number.isInteger(index) ? projected[index] : undefined)
-        .filter((point): point is [number, number] => Array.isArray(point))
-      if (points.length < 3) {
-        return null
-      }
-      const depth = face.reduce((total, index) => {
-        const vertex = Number.isInteger(index) ? rawVertices[index] : undefined
-        return vertex ? total + vertex[0] - vertex[1] + vertex[2] : total
-      }, 0) / Math.max(face.length, 1)
-      return { points, depth }
-    })
-    .filter((face): face is { points: Array<[number, number]>; depth: number } => face !== null)
-    .sort((a, b) => a.depth - b.depth)
-    .map((face) => face.points)
-
-  if (faces.length === 0) {
-    return null
-  }
-  const edgeData = surfaceEdges(surface, rawVertices, projected)
-  return {
-    faces,
-    edges: edgeData.edges,
-    rimEdges: edgeData.rimEdges,
-    bounds: screenBounds(projected),
-  }
-}
-
-function renderSurfaceMesh(
-  projectedSurface: ProjectedSurfaceMesh,
-  color: string,
-  options?: { strong?: boolean; fillAlpha?: number }
-) {
-  const fillAlpha = options?.fillAlpha ?? 0.075
-  const strong = Boolean(options?.strong)
-  return (
-    <>
-      {projectedSurface.faces.map((face, index) => (
-        <path
-          key={`face-${index}`}
-          d={pointsToPath(face)}
-          fill={colorWithAlpha(color, index % 2 === 0 ? fillAlpha : fillAlpha * 0.72)}
-          stroke={colorWithAlpha(color, strong ? 0.20 : 0.16)}
-          strokeWidth={strong ? '0.75' : '0.55'}
-        />
-      ))}
-      {projectedSurface.edges.map(([start, end], index) => (
-        <line
-          key={`edge-${index}`}
-          x1={start[0]}
-          y1={start[1]}
-          x2={end[0]}
-          y2={end[1]}
-          stroke={colorWithAlpha(color, strong ? 0.40 : 0.30)}
-          strokeWidth={strong ? '0.75' : '0.55'}
-        />
-      ))}
-      {projectedSurface.rimEdges.map(([start, end], index) => (
-        <line
-          key={`rim-${index}`}
-          x1={start[0]}
-          y1={start[1]}
-          x2={end[0]}
-          y2={end[1]}
-          stroke={colorWithAlpha(color, 0.72)}
-          strokeWidth={strong ? '1.8' : '1.35'}
-          strokeLinecap="round"
-        />
-      ))}
-    </>
-  )
-}
-
 function geometryStatsMetrics({
   initialGeometry,
   finalGeometry,
@@ -1134,44 +910,6 @@ function BasisStatus({ initial, final }: { initial: GeometrySummary | null; fina
   )
 }
 
-function DimensionGuide({
-  projectedSurface,
-  geometry,
-  width,
-  height,
-  color,
-}: {
-  projectedSurface: ProjectedSurfaceMesh
-  geometry: GeometrySummary | null
-  width: number
-  height: number
-  color: string
-}) {
-  const y = Math.min(height - 18, projectedSurface.bounds.maxY + 18)
-  const x1 = Math.max(18, projectedSurface.bounds.minX)
-  const x2 = Math.min(width - 18, projectedSurface.bounds.maxX)
-  if (x2 - x1 < 40) {
-    return null
-  }
-  return (
-    <g>
-      <line x1={x1} y1={y} x2={x2} y2={y} stroke={colorWithAlpha(color, 0.55)} strokeWidth="1" />
-      <line x1={x1} y1={y - 4} x2={x1} y2={y + 4} stroke={colorWithAlpha(color, 0.55)} strokeWidth="1" />
-      <line x1={x2} y1={y - 4} x2={x2} y2={y + 4} stroke={colorWithAlpha(color, 0.55)} strokeWidth="1" />
-      <text
-        x={(x1 + x2) / 2}
-        y={y - 5}
-        textAnchor="middle"
-        fill={colorWithAlpha(color, 0.72)}
-        fontSize="10"
-        fontFamily={GEOMETRY_VIEW_FONT_FAMILY}
-      >
-        L {formatMetricValue(geometry?.length, 'length')}
-      </text>
-    </g>
-  )
-}
-
 export function Geometry3DPreview({
   geometry,
   kind,
@@ -1183,10 +921,20 @@ export function Geometry3DPreview({
   surface?: SimulationStepSurfaceMesh | null
   isSurfaceLoading?: boolean
 }) {
-  const color = kind === 'initial' ? 'rgb(100,116,139)' : 'rgb(16,185,129)'
-  const width = 320
-  const height = 220
-  const projectedSurface = surface ? buildProjectedSurfaceMesh(surface, width, height, projectedBoundsForSurfaces([surface])) : null
+  const color = kind === 'initial' ? '#64748b' : '#10b981'
+  const layers = useMemo<SurfaceMeshLayer[]>(
+    () => surface
+      ? [{
+          key: kind,
+          surface,
+          color,
+          opacity: 0.32,
+          edgeOpacity: 0.14,
+          sharpEdgeOpacity: 0.9,
+        }]
+      : [],
+    [color, kind, surface]
+  )
 
   return (
     <div className="rounded-xl border border-[rgba(55,53,47,0.10)] bg-white p-3">
@@ -1195,27 +943,15 @@ export function Geometry3DPreview({
           3D {kind} geometry
         </div>
         <div className={GEOMETRY_VIEW_NOTE_CLASS}>
-          {isSurfaceLoading ? 'loading legacy mesh...' : projectedSurface ? `${surface?.face_count ?? 0} faces` : 'no legacy mesh'}
+          {isSurfaceLoading ? 'loading legacy mesh...' : surface ? `${surface.face_count ?? 0} faces` : 'no legacy mesh'}
         </div>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-[220px] w-full rounded-lg bg-[#faf9f7]">
-        {projectedSurface ? (
-          <>
-            {renderSurfaceMesh(projectedSurface, color, { strong: true, fillAlpha: 0.09 })}
-            <DimensionGuide
-              projectedSurface={projectedSurface}
-              geometry={geometry}
-              width={width}
-              height={height}
-              color={color}
-            />
-          </>
-        ) : (
-          <text x={width / 2} y={height / 2} textAnchor="middle" fill="rgba(55,53,47,0.45)" fontSize="10" fontFamily={GEOMETRY_VIEW_FONT_FAMILY}>
-            {isSurfaceLoading ? 'Loading legacy STL mesh...' : 'Legacy STL mesh is unavailable'}
-          </text>
-        )}
-      </svg>
+      <SurfaceMeshThreeView
+        layers={layers}
+        isLoading={isSurfaceLoading}
+        emptyMessage="Legacy STL mesh is unavailable"
+        className="h-[220px] w-full"
+      />
       <div className="mt-2 grid grid-cols-2 gap-1 font-mono text-[10px] leading-tight text-[rgba(55,53,47,0.58)]">
         <div>Width: {formatMetricValue(geometry?.width || geometry?.diameter, 'length')}</div>
         <div>Height: {formatMetricValue(geometry?.height || geometry?.diameter, 'length')}</div>
@@ -1241,15 +977,27 @@ export function Geometry3DOverlayPreview({
   finalSurface?: SimulationStepSurfaceMesh | null
   isSurfaceLoading?: boolean
 }) {
-  const width = 680
-  const height = 300
-  const sharedBounds = projectedBoundsForSurfaces([initialSurface, finalSurface])
-  const initialProjected = initialSurface && sharedBounds
-    ? buildProjectedSurfaceMesh(initialSurface, width, height, sharedBounds)
-    : null
-  const finalProjected = finalSurface && sharedBounds
-    ? buildProjectedSurfaceMesh(finalSurface, width, height, sharedBounds)
-    : null
+  const layers = useMemo<SurfaceMeshLayer[]>(
+    () => [
+      {
+        key: 'initial',
+        surface: initialSurface,
+        color: '#64748b',
+        opacity: 0.22,
+        edgeOpacity: 0.10,
+        sharpEdgeOpacity: 0.52,
+      },
+      {
+        key: 'final',
+        surface: finalSurface,
+        color: '#10b981',
+        opacity: 0.34,
+        edgeOpacity: 0.12,
+        sharpEdgeOpacity: 0.92,
+      },
+    ].filter((layer) => layer.surface),
+    [initialSurface, finalSurface]
+  )
   const statsRows = geometryStatsMetrics({
     initialGeometry,
     finalGeometry,
@@ -1267,31 +1015,20 @@ export function Geometry3DOverlayPreview({
           <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Final</span>
         </div>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-[300px] w-full rounded-lg bg-[#faf9f7]">
-        <rect x="0" y="0" width={width} height={height} fill="#faf9f7" />
-        {initialProjected ? renderSurfaceMesh(initialProjected, 'rgb(100,116,139)', { fillAlpha: 0.055 }) : null}
-        {finalProjected ? renderSurfaceMesh(finalProjected, 'rgb(16,185,129)', { strong: true, fillAlpha: 0.075 }) : null}
-        {initialProjected ? (
-          <DimensionGuide
-            projectedSurface={initialProjected}
-            geometry={initialGeometry}
-            width={width}
-            height={height}
-            color="rgb(100,116,139)"
-          />
-        ) : null}
-        {!initialProjected && !finalProjected ? (
-          <text x={width / 2} y={height / 2} textAnchor="middle" fill="rgba(55,53,47,0.45)" fontSize="10" fontFamily={GEOMETRY_VIEW_FONT_FAMILY}>
-            {isSurfaceLoading ? 'Loading legacy STL meshes...' : 'Legacy STL meshes are unavailable'}
-          </text>
-        ) : null}
-        <foreignObject x="14" y="14" width={statsTableWidth} height="62">
+      <div className="relative h-[300px] w-full overflow-hidden rounded-lg bg-[#faf9f7]">
+        <SurfaceMeshThreeView
+          layers={layers}
+          isLoading={isSurfaceLoading}
+          emptyMessage="Legacy STL meshes are unavailable"
+          className="h-full w-full"
+        />
+        <div className="pointer-events-none absolute left-3 top-3" style={{ width: statsTableWidth }}>
           <GeometryStatsTable rows={statsRows} />
-        </foreignObject>
-        <foreignObject x={width - 214} y={height - 76} width="200" height="62">
+        </div>
+        <div className="pointer-events-none absolute bottom-3 right-3 w-[200px]">
           <BasisStatus initial={initialGeometry} final={finalGeometry} />
-        </foreignObject>
-      </svg>
+        </div>
+      </div>
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { apiClient } from '../../lib/apiClient'
 import type { LogClearResponse, LogEntry, LogServicesResponse, LogServiceSummary, LogTailResponse } from '../../types/api'
 
-const LOG_SERVICES = ['api', 'pre', 'post', 'coordinator'] as const
+const LOG_SERVICES = ['frontend', 'api', 'pre', 'post', 'solver', 'coordinator'] as const
 const LOG_VIEW_STATE_KEY = 'forgelab-logs-view-state'
 const LOG_SEVERITY_FILTERS = [
   { id: 'all', label: 'All records' },
@@ -316,7 +316,7 @@ export default function LogsView({ focusRequest = null }: LogsViewProps) {
           <div>
             <h1 className="text-[15px] font-semibold text-[rgba(55,53,47,0.88)]">Logs</h1>
             <div className="mt-0.5 text-[11px] text-[rgba(55,53,47,0.48)]">
-              API, Pre, Post, and Coordinator local files. Solver logs are excluded.
+              Frontend, API, Pre, Post, Solver, and Coordinator local files.
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">

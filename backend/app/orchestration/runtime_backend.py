@@ -770,6 +770,85 @@ def _record_preprocess_compile_failure(
     }
 
 
+def _job_error_payload(*, stage: str, job: ClaimedStageJob, error: Exception) -> dict[str, object]:
+    return {
+        "stage": stage,
+        "job_id": job.job_id,
+        "run_id": job.run_id,
+        "worker_name": job.worker_name,
+        "error_type": type(error).__name__,
+        "message": str(error),
+        "failed_at": now_utc().isoformat(),
+    }
+
+
+def record_pre_job_unexpected_failure(job: ClaimedStageJob, error: Exception) -> None:
+    """Mark a Pre job failed after an unhandled worker-level exception."""
+
+    with session_scope() as session:
+        version = session.get(DocumentVersion, int(job.job_id))
+        if version is None:
+            return
+
+        if isinstance(error, PreprocessorCompileError):
+            _record_preprocess_compile_failure(
+                session,
+                document_version=version,
+                error=error,
+            )
+
+        version.preprocess_status = PreprocessStatus.failed
+        version.preprocess_finished_at = now_utc()
+        version.preprocess_error = f"Unexpected Pre worker error: {error}"
+        version.preprocess_worker_name = None
+        version.run_switch_status = False
+        version.simulation_status = SimulationStatus.error if not version.is_editable else SimulationStatus.stop
+        version.run_switch_is_active = False if not version.is_editable else version.run_switch_is_active
+        version.last_modified = now_utc()
+
+    broadcast_notify((WORKFLOW_EVENTS_CHANNEL,), "pre_failed")
+
+
+def record_solver_job_unexpected_failure(job: ClaimedStageJob, error: Exception) -> None:
+    """Mark a Solver step failed after an unhandled worker-level exception."""
+
+    with session_scope() as session:
+        step_status = session.get(SimulationStepStatus, int(job.job_id))
+        if step_status is None:
+            return
+
+        step_status.status = SimulationStepStatusEnum.failed
+        step_status.cancel_requested = False
+        step_status.simulation_percent = 0
+        step_status.finished_at = now_utc()
+        step_status.heartbeat_at = None
+        step_status.simulation_server_id = None
+        step_status.worker_name = None
+        step_status.last_error = f"Unexpected Solver worker error: {error}"
+        step_status.error_payload = _job_error_payload(stage="solver", job=job, error=error)
+
+    broadcast_notify((WORKFLOW_EVENTS_CHANNEL, SOLVER_JOBS_CHANNEL), "solver_failed")
+
+
+def record_post_job_unexpected_failure(job: ClaimedStageJob, error: Exception) -> None:
+    """Mark a Post task failed after an unhandled worker-level exception."""
+
+    with session_scope() as session:
+        task = session.get(PostprocessingTask, int(job.job_id))
+        if task is None:
+            return
+
+        task.status = PostprocessingTaskStatusEnum.failed
+        task.finished_at = now_utc()
+        task.heartbeat_at = None
+        task.postprocessing_server_id = None
+        task.worker_name = None
+        task.last_error = f"Unexpected Post worker error: {error}"
+        task.error_payload = _job_error_payload(stage="postprocessor", job=job, error=error)
+
+    broadcast_notify((WORKFLOW_EVENTS_CHANNEL, POST_JOBS_CHANNEL), "post_failed")
+
+
 def _queue_runnable_step_status(step_status: SimulationStepStatus) -> None:
     if step_status.status is SimulationStepStatusEnum.failed:
         step_status.retry_count += 1
@@ -923,6 +1002,7 @@ class PreJobExecutor(StageJobExecutor):
                 )
                 version.simulation_expected_duration_days = expected_seconds / 86400.0 if expected_seconds else 0.0
                 version.preprocess_status = PreprocessStatus.ready
+                version.preprocess_worker_name = None
                 version.preprocess_finished_at = now_utc()
                 version.preprocess_error = None
                 version.run_switch_status = False
@@ -945,6 +1025,7 @@ class PreJobExecutor(StageJobExecutor):
                         error=exc,
                     )
                     version.preprocess_status = PreprocessStatus.failed
+                    version.preprocess_worker_name = None
                     version.preprocess_finished_at = now_utc()
                     version.preprocess_error = str(exc)
                     # A failed compile requires user/API correction before retry.

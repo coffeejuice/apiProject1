@@ -49,6 +49,8 @@ Configuration/setup details (including `.env` editing during install) are tracke
 - The preprocessor no longer carries an `is_simulation` split; all valid materialized operation rows follow the same simulation-step path.
 - Pre compile/parse failures include row context (`operation_id`, `document_operation_id`, `operation_template_id`, `source_block_id`) whenever available and are written to sibling `simulation_steps.calculations` diagnostics plus runtime `simulation_step_status.failed` so failed rows can be traced back to their source block.
 - Pre worker output is persisted incrementally: before a run, current sibling `simulation_steps` rows are reset to pending output; every successfully compiled row is committed immediately; a later compile failure leaves earlier compiled rows available for troubleshooting and marks the failing row as failed.
+- Worker loops are job-error-proofed: ordinary `Exception` from a claimed Pre/Solver/Post job is logged, persisted as a stage-specific failed runtime state, and the long-running worker returns to waiting for more work. Process-level stop signals and `BaseException` subclasses are still allowed to terminate the worker.
+- For local development, Pre can be run with graceful source reload via `python -m app.workers.pre_dev_reload`; reload waits for the active Pre job to finish and then restarts only the Pre child process with changed code. Solver/Post reload is intentionally not implemented.
 - `document_operations` is regenerated from `document_blocks` after structural and prop edits. It stores final per-row JSON in `operation_parameters`; direct parent Deformation values are copied there by explicit materialization rules and no inherited/effective namespace columns are stored. A Deformation section does not inherit missing copied values from previous Deformation sections.
 - The Steps tool can explicitly requeue the latest editable document version for Pre with `POST /documents/{document_id}/simulation-steps/preprocess`; this is the active troubleshooting/retry path after a failed draft Pre run. The command uses existing saved operation/step rows and must not regenerate `document_operations`, because that would erase visible compiled `simulation_steps` data before the next Pre run writes replacements.
 
@@ -197,12 +199,12 @@ Implemented in `frontend/src/pages/AppPage.tsx`, `frontend/src/components/BlockE
     - the left step list is built from `GET /documents/{document_id}/blocks/root` plus `GET /documents/{document_id}/simulation-steps`
     - the left step list includes visual-only title cards for numbered Heating/Deformation sections and numbered Furnace/Operation children
     - step cards are nested under those visual title cards and show compact Pre-output chips from `simulation_steps.calculations` and `simulation_steps.pre_output`
-    - the main detail area displays selected-step JSON diagnostics, related Pre log records, status errors, shared-scale 2D geometry overlays, and lazy-loaded legacy-STL surface-mesh 3D previews
+    - the main detail area displays selected-step JSON diagnostics, related Pre log records, status errors, shared-scale 2D geometry overlays, and lazy-loaded legacy-STL surface-mesh 3D previews rendered with Three.js/WebGL plus visual-only sharp-edge overlays; Steps 3D view state is remembered in frontend session memory while browsing steps and can be restored to the default fitted view through the reset-view icon
     - selected-step surface artifacts are generated during Pre compilation by the restored legacy Trimesh/STL mesh-state path and stored as JSON/STL files outside the default list payload; only compact references are persisted in `simulation_steps.calculations.surface_artifacts`
     - if a selected row has no legacy Pre artifact yet, the backend surface endpoint returns an explicit error; hidden geometry synthesis from `simulation_steps` JSON is forbidden
   - `Library` (selector for `Dies`, `Die Assemblies`, `Presses`, `Materials`)
   - `Simulation` (no middle pane content; selecting it opens the Simulation dashboard in the main pane)
-  - `Logs` (no middle pane content; selecting it opens local API/Pre/Post/Coordinator log tailing in the main pane; Solver logs are excluded)
+  - `Logs` (no middle pane content; selecting it opens local Frontend/API/Pre/Post/Solver/Coordinator log tailing in the main pane)
   - `Users` (current user/session information)
 - `MenuBar` contains document-level controls (`Save`, `Cancel`, `Undo`, `Redo`, `Lineage`, `Sessions`), save/dirty status, and explicit `Preprocessor` / `Postprocessor` inline result toggles.
 - `MainEditorPane` routes active content:

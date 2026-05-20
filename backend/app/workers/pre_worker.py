@@ -8,7 +8,12 @@ import os
 from app.logging_config import configure_logging
 from app.orchestration.channels import PRE_JOBS_CHANNEL
 from app.orchestration.claims import ClaimedStageJob, StageJobClaimer, StageJobExecutor
-from app.orchestration.runtime_backend import PreJobClaimer, PreJobExecutor, SqlAlchemyLeaseManager
+from app.orchestration.runtime_backend import (
+    PreJobClaimer,
+    PreJobExecutor,
+    SqlAlchemyLeaseManager,
+    record_pre_job_unexpected_failure,
+)
 from app.workers.base import WorkerConfig, WorkerProcess, WorkerRole
 
 
@@ -35,6 +40,9 @@ class PreWorker(WorkerProcess[ClaimedStageJob]):
     def process_job(self, job: ClaimedStageJob) -> None:
         LOGGER.info("Processing pre job_id=%s", job.job_id)
         self._executor.execute(job)
+
+    def handle_job_error(self, job: ClaimedStageJob, exc: Exception) -> None:
+        record_pre_job_unexpected_failure(job, exc)
 
 
 def main() -> None:
