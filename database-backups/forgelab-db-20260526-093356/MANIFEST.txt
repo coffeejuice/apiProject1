@@ -1,0 +1,24 @@
+ForgeLab PostgreSQL backup
+Created: 2026-05-26 09:33:56 America/Denver
+Source repo: /home/alextub/Documents/apiProject1
+Git commit: 1a929aaec5d4371d7f1b1e5b936b59e8a78f2bd4
+Database: notion_db
+Host: localhost
+Port: 5432
+Dump format: pg_dump custom format (-Fc), portable restore flags (--no-owner --no-acl)
+pg_dump version: PostgreSQL 16.14
+
+Files:
+- notion_db.dump: PostgreSQL custom-format database dump
+- notion_db.dump.sha256: SHA-256 checksum for the dump
+- notion_db.dump.contents.txt: pg_restore object listing for verification
+
+Verify checksum:
+  cd database-backups/forgelab-db-20260526-093356
+  sha256sum -c notion_db.dump.sha256
+
+Example restore on the new PC:
+  createdb notion_db
+  pg_restore --no-owner --no-acl -d notion_db notion_db.dump
+
+If restoring over an existing database, stop the app first and use a clean target DB or restore with explicit clean/drop options after confirming that is intended.
