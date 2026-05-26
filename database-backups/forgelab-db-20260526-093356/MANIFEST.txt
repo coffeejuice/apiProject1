@@ -11,14 +11,67 @@ pg_dump version: PostgreSQL 16.14
 Files:
 - notion_db.dump: PostgreSQL custom-format database dump
 - notion_db.dump.sha256: SHA-256 checksum for the dump
+- notion_db.dump.local.sha256: portable SHA-256 checksum usable from inside this extracted backup folder
 - notion_db.dump.contents.txt: pg_restore object listing for verification
 
 Verify checksum:
   cd database-backups/forgelab-db-20260526-093356
   sha256sum -c notion_db.dump.sha256
+- notion_db.dump.local.sha256: portable SHA-256 checksum usable from inside this extracted backup folder
 
 Example restore on the new PC:
   createdb notion_db
   pg_restore --no-owner --no-acl -d notion_db notion_db.dump
 
 If restoring over an existing database, stop the app first and use a clean target DB or restore with explicit clean/drop options after confirming that is intended.
+
+Assuming the new PC is Linux/Ubuntu with PostgreSQL installed:
+
+  1. Copy this file to the new PC:
+
+  database-backups/forgelab-db-20260526-093356.tar.gz
+
+  2. Extract and verify it:
+
+  tar -xzf forgelab-db-20260526-093356.tar.gz
+  cd forgelab-db-20260526-093356
+
+  sha256sum -c notion_db.dump.local.sha256
+
+  You should see:
+
+  notion_db.dump: OK
+
+  3. Create the database user and database on the new PC:
+
+  sudo -u postgres psql
+
+  Inside psql:
+
+  CREATE ROLE notion_sys_user WITH LOGIN PASSWORD 'use-the-password-from-backend-env';
+  CREATE DATABASE notion_db OWNER notion_sys_user;
+  \q
+
+  Use the same password that is in old backend/.env inside DATABASE_URL.
+
+  4. Restore the dump:
+
+  pg_restore --no-owner --no-acl -h localhost -U notion_sys_user -d notion_db notion_db.dump
+
+  5. Put your old backend/.env on the new PC and make sure it points to the restored DB:
+
+  DATABASE_URL=postgresql+psycopg://notion_sys_user:password@localhost:5432/notion_db
+
+  6. From the project on the new PC, verify:
+
+  cd backend
+  .venv/bin/alembic current
+
+  Then start the app:
+
+  cd /path/to/apiProject1
+  python dev.py --check-only all
+  python dev.py all
+
+  If notion_db already exists on the new PC, do not restore into it unless you are okay replacing it. The clean approach is dropdb
+  notion_db, then recreate it, but that deletes the existing DB.

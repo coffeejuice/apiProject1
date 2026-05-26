@@ -7,13 +7,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="small update">
+    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="kitty backup">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/api/api-console.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/api/api-console.jsonl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/post/post-1.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/post/post-1.jsonl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/pre/pre-1-console.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/pre/pre-1-console.jsonl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/solver/solver-1.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/solver/solver-1.jsonl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -21,7 +16,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="890" />
+    <option name="cachedIndexableFilesCount" value="966" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="FileTemplateManagerImpl">
@@ -40,23 +35,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0078160214314682" />
-      <entry key="MS500" value="1.492277480837226" />
-      <entry key="S2" value="2.742168786690136" />
-      <entry key="S5" value="3.3948424807256306" />
-      <entry key="S10" value="3.676900797534906" />
-      <entry key="S30" value="3.887352361260536" />
-      <entry key="S60" value="3.943031680974374" />
-      <entry key="M2" value="3.9713526940319412" />
-      <entry key="M5" value="3.9885016606530668" />
-      <entry key="M10" value="3.9942442388871973" />
-      <entry key="M15" value="3.996161359530261" />
-      <entry key="M30" value="3.998079946159858" />
-      <entry key="H1" value="3.9990397896020684" />
-      <entry key="H2" value="3.9995198489219974" />
-      <entry key="H4" value="3.999759912990043" />
-      <entry key="D1" value="3.9999599839050513" />
-      <entry key="W1" value="3.9999942833759867" />
+      <entry key="MS100" value="1.0013715281989628" />
+      <entry key="MS500" value="1.267572174606656" />
+      <entry key="S2" value="1.7192174850206678" />
+      <entry key="S5" value="1.8764842063821645" />
+      <entry key="S10" value="1.9362073522367655" />
+      <entry key="S30" value="1.9783378725111693" />
+      <entry key="S60" value="2.0129014068144633" />
+      <entry key="M2" value="2.4311041363535524" />
+      <entry key="M5" value="4.497435147235102" />
+      <entry key="M10" value="6.470698919935391" />
+      <entry key="M15" value="7.427826551359095" />
+      <entry key="M30" value="8.589660582529042" />
+      <entry key="H1" value="9.2606852157793" />
+      <entry key="H2" value="9.621387637451235" />
+      <entry key="H4" value="9.808400491805834" />
+      <entry key="D1" value="9.967743489645967" />
+      <entry key="W1" value="9.995383947975116" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -78,23 +73,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9871285619210218" />
-      <entry key="MS500" value="1.4836026678724" />
-      <entry key="S2" value="2.730380901988608" />
-      <entry key="S5" value="3.387435518452443" />
-      <entry key="S10" value="3.672575941864457" />
-      <entry key="S30" value="3.885752004926622" />
-      <entry key="S60" value="3.942210230040992" />
-      <entry key="M2" value="3.970936537405324" />
-      <entry key="M5" value="3.9883338798162926" />
-      <entry key="M10" value="3.9941601275350114" />
-      <entry key="M15" value="3.996105236107131" />
-      <entry key="M30" value="3.9980518598311026" />
-      <entry key="H1" value="3.999025740279073" />
-      <entry key="H2" value="3.999512822720305" />
-      <entry key="H4" value="3.9997563995040806" />
-      <entry key="D1" value="3.9999593982705623" />
-      <entry key="W1" value="3.9999941997126074" />
+      <entry key="MS100" value="0.9807636001437039" />
+      <entry key="MS500" value="1.2623114371114437" />
+      <entry key="S2" value="1.7174309078235546" />
+      <entry key="S5" value="1.8757039607987072" />
+      <entry key="S10" value="1.935804771095259" />
+      <entry key="S30" value="1.978200726054216" />
+      <entry key="S60" value="2.0128276803368474" />
+      <entry key="M2" value="2.431025402609027" />
+      <entry key="M5" value="4.497319760829475" />
+      <entry key="M10" value="6.470601053963494" />
+      <entry key="M15" value="7.427748304980924" />
+      <entry key="M30" value="8.589613563993604" />
+      <entry key="H1" value="9.260659425733389" />
+      <entry key="H2" value="9.621374129320008" />
+      <entry key="H4" value="9.808393578788111" />
+      <entry key="D1" value="9.967742314902841" />
+      <entry key="W1" value="9.995383779595267" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -262,9 +257,9 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="npm.Dev Server" />
       <item itemvalue="Python.Backend Server" />
       <item itemvalue="Python.Pre" />
-      <item itemvalue="npm.Dev Server" />
     </list>
   </component>
   <component name="SharedIndexes">
@@ -375,6 +370,9 @@
       <workItem from="1778997963361" duration="118000" />
       <workItem from="1778998092054" duration="1860000" />
       <workItem from="1779002783419" duration="7112000" />
+      <workItem from="1779807054765" duration="91000" />
+      <workItem from="1779807625062" duration="611000" />
+      <workItem from="1779808515436" duration="610000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -592,7 +590,39 @@
       <option name="project" value="LOCAL" />
       <updated>1779257856349</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="small update">
+      <option name="closed" value="true" />
+      <created>1779807074092</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1779807074092</updated>
+    </task>
+    <task id="LOCAL-00029" summary="codex backup">
+      <option name="closed" value="true" />
+      <created>1779807695871</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1779807695871</updated>
+    </task>
+    <task id="LOCAL-00030" summary="codex backup">
+      <option name="closed" value="true" />
+      <created>1779807876272</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1779807876272</updated>
+    </task>
+    <task id="LOCAL-00031" summary="kitty backup">
+      <option name="closed" value="true" />
+      <created>1779808193443</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1779808193443</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
@@ -621,8 +651,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Moved all tables from forgelab" />
-    <MESSAGE value="Add 'parameters' column into 'operations' table" />
     <MESSAGE value="Add PROJECT_CONTEXT.md fo r initial Codding Agent context" />
     <MESSAGE value="Fix username -&gt; login column rename in User" />
     <MESSAGE value="Fix problem: create new document" />
@@ -646,7 +674,9 @@
     <MESSAGE value="Add new Logs and Steps views" />
     <MESSAGE value="add Simulations dashboard" />
     <MESSAGE value="small update" />
-    <option name="LAST_COMMIT_MESSAGE" value="small update" />
+    <MESSAGE value="codex backup" />
+    <MESSAGE value="kitty backup" />
+    <option name="LAST_COMMIT_MESSAGE" value="kitty backup" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/apiProject1$gui_client.coverage" NAME="gui_client Coverage Results" MODIFIED="1768468851893" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
