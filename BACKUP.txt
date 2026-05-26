@@ -1,0 +1,123 @@
+• I’d treat the move as four separate backups, not one copy.
+
+  What To Preserve
+
+  1. Git/code state
+      - Copy the whole repo including .git, or push all branches to GitHub/private remote.
+      - Current dirty state is only .idea/workspace.xml; decide whether IDE layout matters.
+      - Do not rely only on committed files, because ignored local config matters here.
+  2. Secrets and machine config
+      - Backup backend/.env.
+      - It is ignored by Git and required by dev.py.
+      - Current important paths:
+          - TEMP_FILES_ROOT=/home/alextub/Documents/apiProject1/backend/tmp
+          - LIBRARY_FILES_ROOT=/var/lib/forgelab/
+          - LOGS_FILES_ROOT=/var/log/forgelab
+          - NAS_MOUNT_ROOT=/mnt/forgelab
+  3. PostgreSQL database
+      - This is the most important runtime state: users, projects, documents, blocks, operations, simulation steps, library tables,
+        materials, etc.
+      - Use pg_dump from the old PC, then restore on the new PC.
+      - Keep the DB dump with the repo backup.
+  4. Local runtime/artifact files
+      - Include backend/tmp if you want current preprocessor surface artifacts and cached run outputs.
+      - Include backend/logs only if troubleshooting history matters.
+      - /var/lib/forgelab, /var/log/forgelab, and /mnt/forgelab are currently tiny, but they should still be checked before the final
+        move.
+
+  Do Not Bother Copying
+
+  - backend/.venv is about 1.7 GB. Rebuild it.
+  - frontend/node_modules is about 228 MB. Rebuild it with npm install.
+  - Python caches, frontend build output, test output, and most IDE cache files.
+
+  Backup Plan
+
+  1. Stop the app/workers cleanly:
+
+     # If running through dev.py/tmux:
+     Ctrl+C
+
+  2. Record versions on the old PC:
+
+     python3 --version
+     node --version
+     npm --version
+     psql --version
+     git status --short
+
+     Current observed versions:
+      - Python 3.12.3
+      - Node v24.13.1
+      - npm 11.12.1
+      - PostgreSQL client 16.14
+
+  3. Create a repo archive excluding rebuildable folders:
+
+     tar \
+       --exclude='backend/.venv' \
+       --exclude='frontend/node_modules' \
+       --exclude='__pycache__' \
+       --exclude='*.pyc' \
+       -czf forgelab-project-backup.tar.gz apiProject1
+
+  4. Create a PostgreSQL dump.
+     Best format:
+
+     pg_dump -Fc -f forgelab-db.dump "<database-url>"
+
+     Since backend/.env uses SQLAlchemy-style URLs like postgresql+psycopg://..., convert it to plain PostgreSQL format first:
+
+     postgresql://user:password@host:port/dbname
+
+  5. Save these together:
+
+     forgelab-project-backup.tar.gz
+     forgelab-db.dump
+     backend/.env copy
+     notes with Python/Node/Postgres versions
+
+  Restore Plan
+
+  1. Install prerequisites on the new PC:
+      - Python 3.12
+      - Node/npm
+      - PostgreSQL 16
+      - Git
+      - system libraries needed by trimesh, shapely, PySide6, and solver/preprocessor tooling if applicable
+  2. Extract or clone the repo.
+  3. Restore backend/.env, then edit machine-specific paths if the username/project location changed.
+  4. Rebuild backend:
+
+     cd backend
+     python3 -m venv .venv
+     .venv/bin/pip install -r requirements.txt
+
+  5. Rebuild frontend:
+
+     cd frontend
+     npm install
+
+  6. Restore database:
+
+     createdb notion_db
+     pg_restore -d notion_db forgelab-db.dump
+
+     Or restore into whatever DB name is configured in backend/.env.
+
+  7. Verify migrations:
+
+     cd backend
+     .venv/bin/alembic current
+     .venv/bin/alembic upgrade head
+
+  8. Start the project:
+
+     cd /path/to/apiProject1
+     python dev.py --check-only all
+     python dev.py all
+
+  Lowest-Risk Strategy
+  Use Git for code, a pg_dump -Fc database dump for app state, and a small tarball for ignored local files: backend/.env, backend/tmp,
+  selected logs, and any /var/lib/forgelab or NAS files. That gives you a clean restore without carrying fragile dependency folders
+  across machines.
