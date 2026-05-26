@@ -1,0 +1,16 @@
+kitty-shortcuts-20260526-090627/
+kitty-shortcuts-20260526-090627/.config/
+kitty-shortcuts-20260526-090627/.config/kitty/
+kitty-shortcuts-20260526-090627/.config/kitty/kitty.conf
+kitty-shortcuts-20260526-090627/.config/kitty/kitty-startup.session
+kitty-shortcuts-20260526-090627/.config/kitty/kitty_search/
+kitty-shortcuts-20260526-090627/.config/kitty/kitty_search/pyproject.toml
+kitty-shortcuts-20260526-090627/.config/kitty/kitty_search/README.md
+kitty-shortcuts-20260526-090627/.config/kitty/kitty_search/LICENSE
+kitty-shortcuts-20260526-090627/.config/kitty/kitty_search/search.py
+kitty-shortcuts-20260526-090627/.config/kitty/kitty_search/scroll_mark.py
+kitty-shortcuts-20260526-090627/meta/
+kitty-shortcuts-20260526-090627/meta/manifest.txt
+kitty-shortcuts-20260526-090627/meta/active-map-lines.txt
+kitty-shortcuts-20260526-090627/meta/relevant-shortcuts.txt
+kitty-shortcuts-20260526-090627/RESTORE.md
