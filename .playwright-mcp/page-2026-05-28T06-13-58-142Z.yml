@@ -1,0 +1,51 @@
+- generic [ref=e27]:
+  - banner [ref=e28]:
+    - generic [ref=e29]:
+      - generic [ref=e30]: No document selected
+      - generic [ref=e31]: "Source document: None"
+    - generic [ref=e32]:
+      - link "Setup" [ref=e33] [cursor=pointer]:
+        - /url: /setup
+      - button "Save" [disabled] [ref=e34]
+      - button "Cancel" [disabled] [ref=e35]
+      - generic [ref=e36]:
+        - button "Preprocessor" [disabled] [ref=e37]
+        - button "Postprocessor" [disabled] [ref=e38]
+      - button "Undo" [disabled] [ref=e39]
+      - button "Redo" [disabled] [ref=e40]
+      - button "Lineage" [disabled] [ref=e41]
+      - button "Sessions" [disabled] [ref=e42]
+      - generic [ref=e43]: Up to date
+  - generic [ref=e44]:
+    - complementary [ref=e45]:
+      - button "Projects" [ref=e46] [cursor=pointer]:
+        - img [ref=e47]
+      - button "Documents" [ref=e49] [cursor=pointer]:
+        - img [ref=e50]
+      - button "Blocks" [ref=e54] [cursor=pointer]:
+        - img [ref=e55]
+      - button "Operations" [ref=e60] [cursor=pointer]:
+        - img [ref=e61]
+      - button "Steps" [ref=e64] [cursor=pointer]:
+        - img [ref=e65]
+      - button "Library" [ref=e71] [cursor=pointer]:
+        - img [ref=e72]
+      - button "Simulation" [ref=e75] [cursor=pointer]:
+        - img [ref=e76]
+      - button "Logs" [ref=e78] [cursor=pointer]:
+        - img [ref=e79]
+      - button "Users" [ref=e83] [cursor=pointer]:
+        - img [ref=e84]
+    - complementary [ref=e86]:
+      - heading "Projects" [level=2] [ref=e88]
+      - generic [ref=e89]:
+        - generic [ref=e90]:
+          - textbox "Filter projects..." [ref=e91]
+          - button "New project" [ref=e92] [cursor=pointer]:
+            - img [ref=e93]
+          - button "Remove selected project" [ref=e96] [cursor=pointer]:
+            - img [ref=e97]
+        - 'button "Project ver 1 ID: 11" [ref=e100] [cursor=pointer]':
+          - generic [ref=e101]: Project ver 1
+          - generic [ref=e102]: "ID: 11"
+    - generic [ref=e105]: Select a document to start editing

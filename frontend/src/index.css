@@ -680,83 +680,167 @@
     min-width: 0;
   }
 
-  .doc-die-summary {
-    display: inline-flex;
+  .doc-die-inline-row {
+    display: flex;
     align-items: center;
-    min-width: 0;
     gap: 0.45rem;
-    min-height: 1.55rem;
-    padding: 0.02rem 0;
+    min-width: 0;
+    min-height: 2.5rem;
     color: rgba(55, 53, 47, 0.76);
     font-size: 0.8125rem;
     line-height: 1.55;
   }
 
-  .doc-die-summary-text {
+  .doc-die-inline-control {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 auto;
     min-width: 0;
-    overflow: hidden;
+  }
+
+  .doc-die-name-control {
+    flex: 1 1 auto;
+  }
+
+  .doc-die-inline-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    border: 0;
+    border-radius: 0.35rem;
+    background: transparent;
     color: rgba(55, 53, 47, 0.76);
+    box-shadow: 0 0 0 1px transparent;
+    transition: background-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+  }
+
+  .doc-die-type-trigger {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+  }
+
+  .doc-die-name-trigger {
+    max-width: 100%;
+    min-height: 1.55rem;
+    padding: 0.02rem 0.32rem;
+    overflow: hidden;
     font: inherit;
+    text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .doc-die-editor-line {
-    display: none;
-    align-items: center;
-    gap: 0.38rem;
+  .doc-die-static-text {
+    flex: 0 1 auto;
     min-width: 0;
-    max-width: 100%;
     overflow: hidden;
-  }
-
-  .doc-deformation-dies-block:hover .doc-die-editor-line,
-  .doc-deformation-dies-block.doc-block-active .doc-die-editor-line,
-  .doc-deformation-dies-block:focus-within .doc-die-editor-line {
-    display: flex;
-  }
-
-  .doc-deformation-dies-block:hover .doc-die-summary,
-  .doc-deformation-dies-block.doc-block-active .doc-die-summary,
-  .doc-deformation-dies-block:focus-within .doc-die-summary {
-    display: none;
-  }
-
-  .doc-die-line-label {
-    flex: 0 0 auto;
-    color: rgba(55, 53, 47, 0.52);
-    font-size: 0.72rem;
-    font-weight: 650;
-    line-height: 1;
+    color: rgba(55, 53, 47, 0.76);
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .doc-die-type-buttons {
-    display: flex;
-    flex: 0 1 auto;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 0.16rem;
-    min-width: 0;
-    overflow-x: auto;
-    scrollbar-width: thin;
+  .doc-deformation-dies-block:hover .doc-die-inline-button,
+  .doc-deformation-dies-block.doc-block-active .doc-die-inline-button,
+  .doc-deformation-dies-block:focus-within .doc-die-inline-button {
+    box-shadow: 0 0 0 1px rgba(55, 53, 47, 0.14);
   }
 
-  .doc-die-type-button {
-    flex: 0 0 auto;
+  .doc-die-inline-button:hover,
+  .doc-die-inline-button:focus-visible,
+  .doc-die-inline-button-open {
+    background: rgba(55, 53, 47, 0.06);
+    color: rgba(55, 53, 47, 0.94);
+    box-shadow: 0 0 0 1px rgba(47, 111, 159, 0.34);
+    outline: none;
+  }
+
+  .doc-die-inline-button-dirty {
+    color: rgba(153, 27, 27, 0.98);
+    box-shadow: 0 0 0 1px rgba(185, 28, 28, 0.24), inset 0 -1px 0 rgba(185, 28, 28, 0.28);
+  }
+
+  .doc-die-popover {
+    position: absolute;
+    top: calc(100% + 0.22rem);
+    left: 0;
+    z-index: 60;
+    min-width: max-content;
+    border-radius: 0.45rem;
+    background: rgba(255, 254, 250, 0.98);
+    padding: 0.28rem;
+    box-shadow: 0 14px 34px rgba(55, 53, 47, 0.18), inset 0 0 0 1px rgba(55, 53, 47, 0.12);
+  }
+
+  .doc-die-type-palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.18rem;
+    width: max-content;
+    max-width: min(20rem, calc(100vw - 2rem));
+  }
+
+  .doc-die-popover-option {
+    border-radius: 0.32rem;
+    background: transparent;
+    color: rgba(55, 53, 47, 0.76);
+    box-shadow: inset 0 0 0 1px transparent;
+    transition: background-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+  }
+
+  .doc-die-popover-option:hover,
+  .doc-die-popover-option:focus-visible {
+    background: rgba(55, 53, 47, 0.07);
+    color: rgba(55, 53, 47, 0.95);
+    outline: none;
+  }
+
+  .doc-die-popover-option-selected {
+    background: rgba(47, 111, 159, 0.08);
+    color: rgba(47, 111, 159, 0.96);
+    box-shadow: inset 0 0 0 1px rgba(47, 111, 159, 0.24);
+  }
+
+  .doc-die-popover-option-dirty {
+    background: #fff7f5;
+    color: rgba(153, 27, 27, 0.98);
+    box-shadow: inset 0 0 0 1px rgba(185, 28, 28, 0.24), inset 0 -1px 0 rgba(185, 28, 28, 0.34);
+  }
+
+  .doc-die-type-option {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 3rem;
     height: 3rem;
-    padding: 0.28rem;
-    line-height: 1;
+    padding: 0.25rem;
   }
 
-  .doc-die-select {
-    flex: 0 1 13.5rem;
-    min-width: 8.5rem;
-    max-width: 100%;
+  .doc-die-name-popover {
+    max-width: min(44rem, calc(100vw - 2rem));
+  }
+
+  .doc-die-name-list {
+    width: max-content;
+    max-width: min(44rem, calc(100vw - 2rem));
+    max-height: min(28rem, calc(100vh - 7rem));
+    columns: 12rem auto;
+    column-fill: auto;
+    column-gap: 0.25rem;
+  }
+
+  .doc-die-name-option {
+    display: block;
+    width: 100%;
+    margin: 0 0 0.1rem;
+    padding: 0.22rem 0.48rem;
+    break-inside: avoid;
+    font-size: 0.76rem;
+    font-weight: 550;
+    line-height: 1.25;
+    text-align: left;
+    white-space: nowrap;
   }
 
   .doc-die-icon {
@@ -767,8 +851,10 @@
     opacity: 0.8;
   }
 
-  .doc-die-type-button.doc-selector-button-selected .doc-die-icon,
-  .doc-die-type-button:hover .doc-die-icon {
+  .doc-die-inline-button:hover .doc-die-icon,
+  .doc-die-inline-button-open .doc-die-icon,
+  .doc-die-popover-option:hover .doc-die-icon,
+  .doc-die-popover-option-selected .doc-die-icon {
     opacity: 0.98;
   }
 

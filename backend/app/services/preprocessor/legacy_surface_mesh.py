@@ -13,9 +13,12 @@ from dataclasses import dataclass
 import math
 from typing import Any
 
-from shapely.geometry import Polygon
-
 from app.services.preprocessor.geometry import GeneratedGeometry
+from app.services.preprocessor.mesh_primitives import (
+    RotationSpec,
+    extruded_polygon_surface_mesh,
+    rotate_trimesh_object,
+)
 from app.services.preprocessor.operation_keys import (
     CUTTING_TEMPLATE_IDS,
     FULL_DIE_TEMPLATE_IDS,
@@ -24,9 +27,6 @@ from app.services.preprocessor.operation_keys import (
     UPSETTING_TEMPLATE_IDS,
 )
 from app.services.preprocessor.surface_mesh import SurfaceMesh, SurfaceMeshError
-
-
-RotationSpec = Sequence[tuple[str, float]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,10 +42,9 @@ class LegacySurfaceMeshBuilder:
     """Generate 3D surfaces using the old preprocessor's Trimesh approach."""
 
     def billet(self, geometry: GeneratedGeometry) -> LegacySurfacePair:
-        mesh = SurfaceMesh.from_trimesh(
-            polygon_to_3d_trimesh_object(_geometry_polygon(geometry), geometry.length_mm),
-            cross_section_point_count=len(geometry.cross_section_outline),
-        )
+        if geometry.surface_mesh is None:
+            raise SurfaceMeshError("Billet geometry has no generated 3D surface mesh.")
+        mesh = geometry.surface_mesh
         return LegacySurfacePair(initial=mesh, final=mesh)
 
     def static(self, previous_final: SurfaceMesh | None) -> LegacySurfacePair:
@@ -148,40 +147,12 @@ class LegacySurfaceMeshBuilder:
         initial = previous_final
         if template_id not in CUTTING_TEMPLATE_IDS:
             return LegacySurfacePair(initial, initial)
-        final = SurfaceMesh.from_trimesh(
-            polygon_to_3d_trimesh_object(_geometry_polygon(final_geometry), final_geometry.length_mm),
+        final = extruded_polygon_surface_mesh(
+            final_geometry.cross_section_outline,
+            final_geometry.length_mm,
             cross_section_point_count=len(final_geometry.cross_section_outline),
         )
         return LegacySurfacePair(initial=initial, final=final)
-
-
-def polygon_to_3d_trimesh_object(polygon: Polygon, length: float) -> Any:
-    """Port of old ``polygon_to_3d_trimesh_object``."""
-
-    trimesh = _trimesh_module()
-    vertices, faces = trimesh.creation.triangulate_polygon(polygon=polygon, force_vertices=True)
-    mesh_obj = trimesh.creation.extrude_triangulation(vertices=vertices, faces=faces, height=length)
-    mesh_obj.apply_translation([0.0, 0.0, -0.5 * length])
-    return rotate_trimesh_object(mesh_obj, (("x", 90.0), ("z", 90.0)))
-
-
-def rotate_trimesh_object(trimesh_obj: Any, rotations: RotationSpec) -> Any:
-    """Port of old ``rotate_trimesh_object``."""
-
-    _trimesh_module()
-    transformations = _transformations_module()
-    axes = {"x": [1, 0, 0], "y": [0, 1, 0], "z": [0, 0, 1]}
-    mesh = trimesh_obj.copy()
-    for axis_name, angle in rotations:
-        if float(angle) == 0.0:
-            continue
-        matrix = transformations.rotation_matrix(
-            angle=math.radians(float(angle)),
-            direction=axes[str(axis_name)],
-            point=[0, 0, 0],
-        )
-        mesh.apply_transform(matrix)
-    return mesh
 
 
 def _legacy_final_3d_stl_like(
@@ -228,8 +199,12 @@ def _legacy_final_polygon_and_trimesh_like(
 
 
 def _trim_with_top_bottom_boxes(mesh: Any, final_height_mm: float) -> Any:
-    _trimesh_module()
-    from trimesh import boolean, creation
+    try:
+        from trimesh import boolean, creation
+    except ModuleNotFoundError as exc:  # pragma: no cover - runtime dependency check
+        raise SurfaceMeshError(
+            "Legacy Trimesh mesh trimming requires 'trimesh'. Install backend requirements before running Pre."
+        ) from exc
 
     bounds = mesh.bounds.copy()
     top_bounds = bounds.copy()
@@ -291,15 +266,6 @@ def _surface_to_trimesh(surface: SurfaceMesh) -> Any:
         raise SurfaceMeshError(f"Cannot convert carried surface mesh to Trimesh: {exc}") from exc
 
 
-def _geometry_polygon(geometry: GeneratedGeometry) -> Polygon:
-    polygon = Polygon(geometry.cross_section_outline)
-    if not polygon.is_valid:
-        polygon = polygon.buffer(0)
-    if polygon.is_empty or polygon.area <= 0.0:
-        raise SurfaceMeshError("Geometry cross-section polygon is empty; cannot generate STL surface")
-    return polygon
-
-
 def _prolongation_initial_rotations(
     *,
     template_id: str | None,
@@ -340,27 +306,3 @@ def _float(value: object, *, default: float) -> float:
         return float(value)
     except (TypeError, ValueError):
         return default
-
-
-def _trimesh_module() -> Any:
-    try:
-        import trimesh
-
-        return trimesh
-    except ModuleNotFoundError as exc:  # pragma: no cover - runtime dependency check
-        raise SurfaceMeshError(
-            "Legacy STL mesh generation requires 'trimesh[easy]'. "
-            "Install backend requirements before running Pre."
-        ) from exc
-
-
-def _transformations_module() -> Any:
-    try:
-        from trimesh import transformations
-
-        return transformations
-    except ModuleNotFoundError as exc:  # pragma: no cover - runtime dependency check
-        raise SurfaceMeshError(
-            "Legacy STL mesh generation requires 'trimesh[easy]'. "
-            "Install backend requirements before running Pre."
-        ) from exc

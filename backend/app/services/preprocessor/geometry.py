@@ -4,15 +4,58 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+import logging
 import math
-from typing import Mapping
+from typing import Any, Mapping
 
+from app.services.preprocessor.mesh_primitives import (
+    extruded_polygon_surface_mesh,
+    round_tail_chamfer_surface_mesh,
+    round_tail_radius_surface_mesh,
+)
+from app.services.preprocessor.surface_mesh import SurfaceMesh, SurfaceMeshError
 
 Point2D = tuple[float, float]
+LOGGER = logging.getLogger(__name__)
 
 
 class GeometryError(ValueError):
     """Raised when billet geometry input parameters are invalid."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        type_id: int | None = None,
+        parameter: str | None = None,
+        value: object | None = None,
+        limits: Mapping[str, object] | None = None,
+        details: Mapping[str, object] | None = None,
+    ) -> None:
+        self.message = message
+        self.type_id = type_id
+        self.parameter = parameter
+        self.value = value
+        self.limits = dict(limits or {})
+        self.details = dict(details or {})
+        super().__init__(message)
+
+    def to_payload(self) -> dict[str, object]:
+        payload: dict[str, object] = {
+            "category": "geometry_validation",
+            "message": self.message,
+        }
+        if self.type_id is not None:
+            payload["type_id"] = self.type_id
+        if self.parameter is not None:
+            payload["parameter"] = self.parameter
+        if self.value is not None:
+            payload["value"] = self.value
+        if self.limits:
+            payload["limits"] = self.limits
+        if self.details:
+            payload["details"] = self.details
+        return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,6 +83,7 @@ class GeneratedGeometry:
     length_mm: float
     cross_section_outline: tuple[Point2D, ...]
     parameters_json: str
+    surface_mesh: SurfaceMesh | None = None
 
 
 def outline_area_mm2(outline: tuple[Point2D, ...]) -> float:
@@ -192,37 +236,55 @@ class GeometryBuilder:
     ) -> GeneratedGeometry:
         definition = GEOMETRY_TYPES.get(type_id)
         if definition is None:
-            raise GeometryError(f"Unsupported billet geometry type_id={type_id}")
+            raise GeometryError(f"Unsupported billet geometry type_id={type_id}", type_id=type_id)
         if volume_mm3 <= 0.0:
-            raise GeometryError(f"Billet volume must be positive, got {volume_mm3}")
+            raise GeometryError(
+                "Billet volume must be positive",
+                type_id=type_id,
+                parameter="volume_mm3",
+                value=volume_mm3,
+                limits={"min_exclusive": 0.0},
+            )
 
         normalized_parameters = self._normalize_parameters(definition, parameters)
-        match type_id:
-            case 68:
-                return self._round_diameter(definition, normalized_parameters, volume_mm3)
-            case 69:
-                return self._round_tail_radius(definition, normalized_parameters, volume_mm3)
-            case 70:
-                return self._round_tail_chamfer(definition, normalized_parameters, volume_mm3)
-            case 71:
-                return self._round_length_ratio(definition, normalized_parameters, volume_mm3)
-            case 72:
-                return self._square_side(definition, normalized_parameters, volume_mm3)
-            case 73:
-                return self._square_diagonal(definition, normalized_parameters, volume_mm3)
-            case 74:
-                return self._square_length_ratio(definition, normalized_parameters, volume_mm3)
-            case 75:
-                return self._rectangle_size(definition, normalized_parameters, volume_mm3)
-            case 76:
-                return self._rectangle_ratios(definition, normalized_parameters, volume_mm3)
-            case 77:
-                return self._rectangle_single_diagonal(definition, normalized_parameters, volume_mm3)
-            case 78:
-                return self._rectangle_double_diagonal(definition, normalized_parameters, volume_mm3)
-            case 79:
-                return self._octagon(definition, normalized_parameters, volume_mm3)
-        raise GeometryError(f"Unsupported billet geometry type_id={type_id}")
+        try:
+            match type_id:
+                case 68:
+                    geometry = self._round_diameter(definition, normalized_parameters, volume_mm3)
+                case 69:
+                    geometry = self._round_tail_radius(definition, normalized_parameters, volume_mm3)
+                case 70:
+                    geometry = self._round_tail_chamfer(definition, normalized_parameters, volume_mm3)
+                case 71:
+                    geometry = self._round_length_ratio(definition, normalized_parameters, volume_mm3)
+                case 72:
+                    geometry = self._square_side(definition, normalized_parameters, volume_mm3)
+                case 73:
+                    geometry = self._square_diagonal(definition, normalized_parameters, volume_mm3)
+                case 74:
+                    geometry = self._square_length_ratio(definition, normalized_parameters, volume_mm3)
+                case 75:
+                    geometry = self._rectangle_size(definition, normalized_parameters, volume_mm3)
+                case 76:
+                    geometry = self._rectangle_ratios(definition, normalized_parameters, volume_mm3)
+                case 77:
+                    geometry = self._rectangle_single_diagonal(definition, normalized_parameters, volume_mm3)
+                case 78:
+                    geometry = self._rectangle_double_diagonal(definition, normalized_parameters, volume_mm3)
+                case 79:
+                    geometry = self._octagon(definition, normalized_parameters, volume_mm3)
+                case _:
+                    raise GeometryError(f"Unsupported billet geometry type_id={type_id}", type_id=type_id)
+            self._validate_geometry(geometry)
+            return geometry
+        except GeometryError:
+            raise
+        except SurfaceMeshError as exc:
+            raise GeometryError(
+                f"Billet 3D geometry generation failed: {exc}",
+                type_id=type_id,
+                details={"source_error": str(exc)},
+            ) from exc
 
     def supported_type_ids(self) -> tuple[int, ...]:
         """Return all currently supported billet geometry type ids."""
@@ -246,14 +308,19 @@ class GeometryBuilder:
         for label in definition.labels:
             if label not in parameters:
                 raise GeometryError(
-                    f"Missing parameter {label!r} for billet geometry type_id={definition.type_id}"
+                    f"Missing parameter {label!r} for billet geometry type_id={definition.type_id}",
+                    type_id=definition.type_id,
+                    parameter=label,
                 )
             raw_value = parameters[label]
             try:
                 normalized[label] = float(raw_value)
             except (TypeError, ValueError) as exc:
                 raise GeometryError(
-                    f"Parameter {label!r} must be numeric for type_id={definition.type_id}"
+                    f"Parameter {label!r} must be numeric for type_id={definition.type_id}",
+                    type_id=definition.type_id,
+                    parameter=label,
+                    value=raw_value,
                 ) from exc
         return normalized
 
@@ -287,26 +354,49 @@ class GeometryBuilder:
         true_diameter = self._require_positive(parameters["diameter"], "diameter")
         tail_radius = self._require_positive(parameters["tail_radius"], "tail_radius")
         radius = true_diameter / 2.0
+        if tail_radius > radius:
+            raise GeometryError(
+                "Tail radius must not exceed billet radius",
+                type_id=definition.type_id,
+                parameter="tail_radius",
+                value=tail_radius,
+                limits={"min": 0.0, "max": radius},
+            )
         b_value = radius - tail_radius
-        volume_removed = math.pi / 6.0 * tail_radius * (
+        end_volume = math.pi / 6.0 * tail_radius * (
             4 * tail_radius ** 2 + 3 * math.pi * tail_radius * b_value + 6 * b_value ** 2
         )
-        cylindrical_volume = volume_mm3 - 2 * volume_removed
-        length = (
-            cylindrical_volume + 2 * math.pi * tail_radius * radius ** 2
-        ) / (math.pi * radius ** 2)
-        area = volume_mm3 / length
-        diameter = math.sqrt(area / math.pi) * 2.0
-        outline = self._circle_outline(diameter)
+        if volume_mm3 <= 2.0 * end_volume:
+            raise GeometryError(
+                "Billet volume is too small for two rounded tail ends",
+                type_id=definition.type_id,
+                parameter="volume_mm3",
+                value=volume_mm3,
+                limits={"min_exclusive": 2.0 * end_volume},
+                details={"single_tail_end_volume_mm3": end_volume},
+            )
+        area = math.pi * radius ** 2
+        straight_length = (volume_mm3 - 2.0 * end_volume) / area
+        length = straight_length + 2.0 * tail_radius
+        outline = self._circle_outline(true_diameter)
         return self._build_result(
             definition,
-            parameters,
+            {
+                **parameters,
+                "tail_straight_length": straight_length,
+                "tail_end_volume_mm3": end_volume,
+            },
             volume_mm3,
             area,
-            diameter,
-            diameter,
+            true_diameter,
+            true_diameter,
             length,
             outline,
+            surface_mesh=round_tail_radius_surface_mesh(
+                diameter=true_diameter,
+                tail_radius=tail_radius,
+                length=length,
+            ),
         )
 
     def _round_tail_chamfer(
@@ -315,20 +405,52 @@ class GeometryBuilder:
         parameters: dict[str, float],
         volume_mm3: float,
     ) -> GeneratedGeometry:
-        diameter = self._require_positive(parameters["diameter"], "diameter")
-        self._require_positive(parameters["tail_chamfer"], "tail_chamfer")
-        area = math.pi * (diameter / 2.0) ** 2
-        length = volume_mm3 / area
-        outline = self._circle_outline(diameter)
+        true_diameter = self._require_positive(parameters["diameter"], "diameter")
+        tail_chamfer = self._require_positive(parameters["tail_chamfer"], "tail_chamfer")
+        radius = true_diameter / 2.0
+        if tail_chamfer > radius:
+            raise GeometryError(
+                "Tail chamfer must not exceed billet radius",
+                type_id=definition.type_id,
+                parameter="tail_chamfer",
+                value=tail_chamfer,
+                limits={"min": 0.0, "max": radius},
+            )
+        flat_radius = radius - tail_chamfer
+        end_volume = math.pi * tail_chamfer / 3.0 * (
+            radius ** 2 + radius * flat_radius + flat_radius ** 2
+        )
+        if volume_mm3 <= 2.0 * end_volume:
+            raise GeometryError(
+                "Billet volume is too small for two chamfered tail ends",
+                type_id=definition.type_id,
+                parameter="volume_mm3",
+                value=volume_mm3,
+                limits={"min_exclusive": 2.0 * end_volume},
+                details={"single_tail_end_volume_mm3": end_volume},
+            )
+        area = math.pi * radius ** 2
+        straight_length = (volume_mm3 - 2.0 * end_volume) / area
+        length = straight_length + 2.0 * tail_chamfer
+        outline = self._circle_outline(true_diameter)
         return self._build_result(
             definition,
-            parameters,
+            {
+                **parameters,
+                "tail_straight_length": straight_length,
+                "tail_end_volume_mm3": end_volume,
+            },
             volume_mm3,
             area,
-            diameter,
-            diameter,
+            true_diameter,
+            true_diameter,
             length,
             outline,
+            surface_mesh=round_tail_chamfer_surface_mesh(
+                diameter=true_diameter,
+                tail_chamfer=tail_chamfer,
+                length=length,
+            ),
         )
 
     def _round_length_ratio(
@@ -717,8 +839,14 @@ class GeometryBuilder:
         height_mm: float,
         length_mm: float,
         outline: tuple[Point2D, ...],
+        surface_mesh: SurfaceMesh | None = None,
     ) -> GeneratedGeometry:
         equivalent_diameter_mm = math.sqrt(cross_section_area_mm2 / math.pi) * 2.0
+        mesh = surface_mesh or extruded_polygon_surface_mesh(
+            outline,
+            length_mm,
+            cross_section_point_count=len(outline),
+        )
         return GeneratedGeometry(
             type_id=definition.type_id,
             shape=definition.shape,
@@ -731,6 +859,7 @@ class GeometryBuilder:
             length_mm=length_mm,
             cross_section_outline=outline,
             parameters_json=json.dumps(parameters, sort_keys=True),
+            surface_mesh=mesh,
         )
 
     def _circle_outline(self, diameter: float, *, vertices_count: int = 96) -> tuple[Point2D, ...]:
@@ -788,5 +917,76 @@ class GeometryBuilder:
 
     def _require_positive(self, value: float, label: str) -> float:
         if value <= 0.0:
-            raise GeometryError(f"Parameter {label!r} must be positive, got {value}")
+            raise GeometryError(
+                f"Parameter {label!r} must be positive",
+                parameter=label,
+                value=value,
+                limits={"min_exclusive": 0.0},
+            )
         return value
+
+    def _validate_geometry(self, geometry: GeneratedGeometry) -> None:
+        errors: list[dict[str, Any]] = []
+        for label, value in (
+            ("volume_mm3", geometry.volume_mm3),
+            ("cross_section_area_mm2", geometry.cross_section_area_mm2),
+            ("equivalent_diameter_mm", geometry.equivalent_diameter_mm),
+            ("width_mm", geometry.width_mm),
+            ("height_mm", geometry.height_mm),
+            ("length_mm", geometry.length_mm),
+        ):
+            if not math.isfinite(value) or value <= 0.0:
+                errors.append({"parameter": label, "value": value, "message": f"{label} must be positive and finite"})
+        if len(geometry.cross_section_outline) < 3:
+            errors.append({"parameter": "cross_section_outline", "message": "Cross-section outline must have at least three points"})
+        outline_area = outline_area_mm2(geometry.cross_section_outline)
+        if outline_area <= 0.0:
+            errors.append({"parameter": "cross_section_outline", "message": "Cross-section outline area must be positive"})
+        if geometry.surface_mesh is None:
+            errors.append({"parameter": "surface_mesh", "message": "3D surface mesh is missing"})
+        else:
+            mesh = geometry.surface_mesh
+            if not mesh.vertices or not mesh.faces:
+                errors.append({"parameter": "surface_mesh", "message": "3D surface mesh must contain vertices and faces"})
+            if mesh.surface_area_mm2 <= 0.0 or not math.isfinite(mesh.surface_area_mm2):
+                errors.append({"parameter": "surface_mesh.surface_area_mm2", "value": mesh.surface_area_mm2, "message": "3D surface area must be positive and finite"})
+            if mesh.volume_mm3 <= 0.0 or not math.isfinite(mesh.volume_mm3):
+                errors.append({"parameter": "surface_mesh.volume_mm3", "value": mesh.volume_mm3, "message": "3D mesh volume must be positive and finite"})
+            volume_tolerance = max(1.0, abs(geometry.volume_mm3) * 0.02)
+            if abs(mesh.volume_mm3 - geometry.volume_mm3) > volume_tolerance:
+                errors.append(
+                    {
+                        "parameter": "surface_mesh.volume_mm3",
+                        "value": mesh.volume_mm3,
+                        "expected": geometry.volume_mm3,
+                        "message": "3D mesh volume does not match analytical billet volume within tolerance",
+                    }
+                )
+            bounds = mesh.bounds
+            if bounds:
+                mesh_dimensions = (
+                    abs(bounds.get("x_max", 0.0) - bounds.get("x_min", 0.0)),
+                    abs(bounds.get("y_max", 0.0) - bounds.get("y_min", 0.0)),
+                    abs(bounds.get("z_max", 0.0) - bounds.get("z_min", 0.0)),
+                )
+                expected_dimensions = (geometry.length_mm, geometry.width_mm, geometry.height_mm)
+                for axis, actual, expected in zip(("x", "y", "z"), mesh_dimensions, expected_dimensions):
+                    tolerance = max(1e-6, abs(expected) * 0.002)
+                    if abs(actual - expected) > tolerance:
+                        errors.append(
+                            {
+                                "parameter": f"surface_mesh.bounds.{axis}",
+                                "value": actual,
+                                "expected": expected,
+                                "message": "3D mesh bounds do not match analytical billet dimensions",
+                            }
+                        )
+
+        if errors:
+            error = GeometryError(
+                "Billet geometry validation failed",
+                type_id=geometry.type_id,
+                details={"errors": errors},
+            )
+            LOGGER.error("Billet geometry validation failed type_id=%s details=%s", geometry.type_id, error.to_payload())
+            raise error

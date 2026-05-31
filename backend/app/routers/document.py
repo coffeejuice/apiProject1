@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 from typing import List, Optional
 from uuid import UUID
 
@@ -351,6 +352,18 @@ def _simulation_step_diagnostics_response(step: SimulationStep) -> SimulationSte
                 "source": "simulation_steps.calculations.preprocessor_error",
             }
         )
+    if isinstance(calculations.get("preprocessor_error_details"), dict):
+        api_messages.append(
+            {
+                "severity": "error",
+                "message": str(
+                    calculations["preprocessor_error_details"].get("message")
+                    or "Geometry validation failed"
+                ),
+                "source": "simulation_steps.calculations.preprocessor_error_details",
+                "details": calculations["preprocessor_error_details"],
+            }
+        )
     if status_row is not None and status_row.last_error:
         api_messages.append(
             {
@@ -520,8 +533,8 @@ def get_document_simulation_step_surface_artifact(
 ):
     if kind not in {"initial", "final"}:
         raise HTTPException(status_code=400, detail="kind must be 'initial' or 'final'")
-    if artifact_format not in {"json", "stl"}:
-        raise HTTPException(status_code=400, detail="artifact_format must be 'json' or 'stl'")
+    if artifact_format not in {"ply", "json", "stl"}:
+        raise HTTPException(status_code=400, detail="artifact_format must be 'ply', 'json', or 'stl'")
 
     document = check_document_access(db, document_id, current_user.user_id)
     step = _get_simulation_step_for_document(
@@ -542,10 +555,24 @@ def get_document_simulation_step_surface_artifact(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if kind not in generated.meshes:
         raise HTTPException(status_code=404, detail=f"{kind} surface artifact is not available")
+    artifacts = generated.summary.get("artifacts") if isinstance(generated.summary, dict) else None
+    artifact = artifacts.get(kind) if isinstance(artifacts, dict) else None
+    files = artifact.get("files") if isinstance(artifact, dict) else None
+    if not isinstance(files, dict) or artifact_format not in files:
+        raise HTTPException(
+            status_code=404,
+            detail=f"{kind} surface artifact format {artifact_format!r} is not available",
+        )
 
     path = surface_artifact_abs_path(step, kind, artifact_format)
+    if not os.path.isfile(path):
+        raise HTTPException(status_code=404, detail=f"Surface artifact file is missing: {path}")
     filename = f"document_{document.document_id}_operation_{step.document_operation_id}_{kind}_surface.{artifact_format}"
-    media_type = "application/json" if artifact_format == "json" else "model/stl"
+    media_type = {
+        "json": "application/json",
+        "stl": "model/stl",
+        "ply": "application/octet-stream",
+    }[artifact_format]
     return FileResponse(path, media_type=media_type, filename=filename)
 
 

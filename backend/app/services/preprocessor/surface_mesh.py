@@ -36,6 +36,35 @@ class SurfaceMesh:
     surface_area_mm2: float
     volume_mm3: float
 
+    @classmethod
+    def from_vertices_faces(
+        cls,
+        *,
+        vertices: Iterable[Point3D],
+        faces: Iterable[Face],
+        cross_section_point_count: int = 0,
+        units: str = "mm",
+    ) -> "SurfaceMesh":
+        """Build a mesh payload from explicit vertices/faces."""
+
+        vertices_tuple = tuple(
+            (float(vertex[0]), float(vertex[1]), float(vertex[2]))
+            for vertex in vertices
+        )
+        faces_tuple = tuple(
+            (int(face[0]), int(face[1]), int(face[2]))
+            for face in faces
+        )
+        return cls(
+            units=units,
+            vertices=vertices_tuple,
+            faces=faces_tuple,
+            bounds=_bounds(list(vertices_tuple)) if vertices_tuple else {},
+            cross_section_point_count=cross_section_point_count,
+            surface_area_mm2=_mesh_area(vertices_tuple, faces_tuple),
+            volume_mm3=abs(_mesh_signed_volume(vertices_tuple, faces_tuple)),
+        )
+
     def to_payload(self) -> dict[str, Any]:
         return {
             "units": self.units,
@@ -107,6 +136,57 @@ class SurfaceMesh:
             volume_mm3=abs(float(getattr(mesh, "volume", 0.0) or 0.0)),
         )
 
+    @classmethod
+    def from_mesh_file(
+        cls,
+        path: str,
+        *,
+        file_type: str | None = None,
+        cross_section_point_count: int = 0,
+        units: str = "mm",
+    ) -> "SurfaceMesh":
+        """Load a supported mesh file through Trimesh."""
+
+        try:
+            import trimesh
+        except ModuleNotFoundError as exc:  # pragma: no cover - runtime dependency check
+            raise SurfaceMeshError(
+                "Mesh artifact loading requires 'trimesh'. Install backend requirements before running Pre."
+            ) from exc
+
+        try:
+            mesh = trimesh.load(path, file_type=file_type, force="mesh", process=False)
+        except Exception as exc:
+            raise SurfaceMeshError(f"Cannot load mesh artifact at {path}: {type(exc).__name__}: {exc}") from exc
+        if isinstance(mesh, trimesh.Scene):
+            if not mesh.geometry:
+                raise SurfaceMeshError(f"Mesh artifact at {path} contains an empty scene.")
+            mesh = trimesh.util.concatenate(tuple(mesh.geometry.values()))
+        if not hasattr(mesh, "vertices") or not hasattr(mesh, "faces"):
+            raise SurfaceMeshError(f"Mesh artifact at {path} did not load as a triangular mesh.")
+        return cls.from_trimesh(
+            mesh,
+            cross_section_point_count=cross_section_point_count,
+            units=units,
+        )
+
+    @classmethod
+    def from_ply(
+        cls,
+        path: str,
+        *,
+        cross_section_point_count: int = 0,
+        units: str = "mm",
+    ) -> "SurfaceMesh":
+        """Load the canonical binary PLY mesh artifact."""
+
+        return cls.from_mesh_file(
+            path,
+            file_type="ply",
+            cross_section_point_count=cross_section_point_count,
+            units=units,
+        )
+
     def to_trimesh(self) -> Any:
         """Convert this payload back to Trimesh for legacy mesh continuation."""
 
@@ -124,6 +204,26 @@ class SurfaceMesh:
             faces=np.array(self.faces, dtype=int),
             process=False,
         )
+
+    def write_ply(self, path: str) -> None:
+        """Serialize the mesh as canonical binary PLY with shared vertices."""
+
+        try:
+            from trimesh.exchange.ply import export_ply
+        except ModuleNotFoundError as exc:  # pragma: no cover - runtime dependency check
+            raise SurfaceMeshError(
+                "PLY mesh artifact writing requires 'trimesh'. Install backend requirements before running Pre."
+            ) from exc
+
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        data = export_ply(
+            self.to_trimesh(),
+            encoding="binary",
+            vertex_normal=False,
+            include_attributes=False,
+        )
+        with open(path, "wb") as handle:
+            handle.write(data)
 
     def to_binary_stl(self, *, solid_name: str = "forgelab_surface") -> bytes:
         """Serialize the mesh to binary STL without introducing a trimesh runtime dependency."""
@@ -156,6 +256,33 @@ def _face_normal(a: Point3D, b: Point3D, c: Point3D) -> Point3D:
     if length <= 0.0:
         return (0.0, 0.0, 0.0)
     return (normal[0] / length, normal[1] / length, normal[2] / length)
+
+
+def _mesh_area(vertices: tuple[Point3D, ...], faces: tuple[Face, ...]) -> float:
+    total = 0.0
+    for face in faces:
+        a, b, c = (vertices[index] for index in face)
+        ab = (b[0] - a[0], b[1] - a[1], b[2] - a[2])
+        ac = (c[0] - a[0], c[1] - a[1], c[2] - a[2])
+        cross = (
+            ab[1] * ac[2] - ab[2] * ac[1],
+            ab[2] * ac[0] - ab[0] * ac[2],
+            ab[0] * ac[1] - ab[1] * ac[0],
+        )
+        total += 0.5 * math.sqrt(cross[0] ** 2 + cross[1] ** 2 + cross[2] ** 2)
+    return total
+
+
+def _mesh_signed_volume(vertices: tuple[Point3D, ...], faces: tuple[Face, ...]) -> float:
+    total = 0.0
+    for face in faces:
+        a, b, c = (vertices[index] for index in face)
+        total += (
+            a[0] * (b[1] * c[2] - b[2] * c[1])
+            + a[1] * (b[2] * c[0] - b[0] * c[2])
+            + a[2] * (b[0] * c[1] - b[1] * c[0])
+        ) / 6.0
+    return total
 
 
 def _bounds(vertices: list[Point3D]) -> dict[str, float]:

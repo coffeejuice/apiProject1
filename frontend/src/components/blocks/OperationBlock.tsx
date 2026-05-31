@@ -144,6 +144,7 @@ const FURNACE_PROGRAM_MIN_LINE_LENGTH = 86
 const FURNACE_PROGRAM_HEIGHT = 208
 type DieIconFamily = 'flat' | 'v' | 'rounding' | 'gfm' | 'knife'
 type DieIconMode = 'assembly' | 'top' | 'bottom'
+type DiePopoverTarget = { kind: 'type' | 'name'; key: string } | null
 const DIE_ICON_PATHS: Record<DieIconFamily, Partial<Record<DieIconMode, string[]>>> = {
   flat: {
     assembly: ['M18 32 H110 V58 H18 Z', 'M18 74 H110 V100 H18 Z'],
@@ -676,8 +677,10 @@ export default function OperationBlock({
   const [operationPathIds, setOperationPathIds] = useState<string[]>([])
   const [isOperationSelectorOpen, setIsOperationSelectorOpen] = useState(false)
   const [furnaceProgramView, setFurnaceProgramView] = useState<'diagram' | 'table'>('diagram')
+  const [openDiePopover, setOpenDiePopover] = useState<DiePopoverTarget>(null)
   const operationTextareaRef = useRef<HTMLTextAreaElement | null>(null)
   const operationTextSelectionRef = useRef<{ start: number; end: number } | null>(null)
+  const diePickerRootRef = useRef<HTMLDivElement | null>(null)
   const operationTypeSelector = (props.operation_type_selector || {}) as OperationTypeSelector
   const calculationSelector = (props.parameters_calculation_mode_selector || {}) as ParametersCalculationModeSelector
   const operationTree = asSelectorNodes(operationTypeSelector.tree)
@@ -752,6 +755,33 @@ export default function OperationBlock({
     }
     void fetchLibrary()
   }, [block.block_type_id, fetchLibrary, libraryHasLoaded, libraryIsLoading])
+
+  useEffect(() => {
+    if (!openDiePopover) {
+      return undefined
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const root = diePickerRootRef.current
+      if (root && event.target instanceof Node && root.contains(event.target)) {
+        return
+      }
+      setOpenDiePopover(null)
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpenDiePopover(null)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [openDiePopover])
 
   useLayoutEffect(() => {
     const selection = operationTextSelectionRef.current
@@ -1029,11 +1059,24 @@ export default function OperationBlock({
           [typePath, dieTypeId],
           [selectPath, ''],
         ])
+        setOpenDiePopover(null)
       }
       const setMode = (mode: typeof DIE_SELECTION_MODE_PAIR | typeof DIE_SELECTION_MODE_SEPARATE) => {
         updatePath(modePath, mode)
+        setOpenDiePopover(null)
       }
-      const setSelectValue = (path: string, value: string) => updatePath(path, value ? Number(value) : '')
+      const setSelectValue = (path: string, value: string) => {
+        updatePath(path, value ? Number(value) : '')
+        setOpenDiePopover(null)
+      }
+
+      const isDiePopoverOpen = (kind: 'type' | 'name', key: string) =>
+        openDiePopover?.kind === kind && openDiePopover.key === key
+      const toggleDiePopover = (kind: 'type' | 'name', key: string) => {
+        setOpenDiePopover((current) =>
+          current?.kind === kind && current.key === key ? null : { kind, key }
+        )
+      }
 
       const renderDieIcon = (name: unknown, mode: DieIconMode) => (
         <svg
@@ -1052,40 +1095,83 @@ export default function OperationBlock({
         </svg>
       )
 
-      const renderDieTypeButtons = (
-        ariaLabel: string,
+      const renderDieTypePopover = (
         iconMode: DieIconMode,
         selectedDieTypeId: number | null,
         typePath: string,
         selectPath: string,
       ) => (
-        <div className="doc-die-type-buttons" aria-label={ariaLabel}>
+        <div className="doc-die-popover doc-die-type-popover" role="menu">
           {dieTypes.length > 0 ? (
-            dieTypes.map((entry) => {
-              const selected = entry.id === selectedDieTypeId
-              const dirty = selected && isPathDirty(typePath)
-              const label = formatLibraryName(entry.name)
+            <div className="doc-die-type-palette">
+              {dieTypes.map((entry) => {
+                const selected = entry.id === selectedDieTypeId
+                const dirty = selected && isPathDirty(typePath)
+                const label = formatLibraryName(entry.name)
+                return (
+                  <button
+                    key={entry.id}
+                    type="button"
+                    onClick={() => setDieType(typePath, selectPath, entry.id)}
+                    title={label}
+                    aria-label={label}
+                    aria-pressed={selected}
+                    className={[
+                      'doc-die-popover-option',
+                      'doc-die-type-option',
+                      selected ? 'doc-die-popover-option-selected' : '',
+                      dirty ? 'doc-die-popover-option-dirty' : '',
+                    ].filter(Boolean).join(' ')}
+                  >
+                    {renderDieIcon(entry.name, iconMode)}
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <span className="doc-muted">{libraryIsLoading ? 'Loading die types...' : 'Die types are not loaded.'}</span>
+          )}
+        </div>
+      )
+
+      const renderDieNamePopover = (
+        selectPath: string,
+        selectValue: string,
+        options: Array<{ id: number; name: unknown }>,
+      ) => (
+        <div className="doc-die-popover doc-die-name-popover" role="listbox">
+          <div className="doc-die-name-list">
+            <button
+              type="button"
+              onClick={() => setSelectValue(selectPath, '')}
+              aria-selected={!selectValue}
+              className={[
+                'doc-die-popover-option',
+                'doc-die-name-option',
+                !selectValue ? 'doc-die-popover-option-selected' : '',
+              ].filter(Boolean).join(' ')}
+            >
+              None
+            </button>
+            {options.map((entry) => {
+              const selected = String(entry.id) === selectValue
               return (
                 <button
                   key={entry.id}
                   type="button"
-                  onClick={() => setDieType(typePath, selectPath, entry.id)}
-                  title={label}
-                  aria-label={label}
+                  onClick={() => setSelectValue(selectPath, String(entry.id))}
+                  aria-selected={selected}
                   className={[
-                    'doc-selector-button',
-                    'doc-die-type-button',
-                    selected ? 'doc-selector-button-selected' : '',
-                    dirty ? 'doc-selector-button-dirty' : '',
+                    'doc-die-popover-option',
+                    'doc-die-name-option',
+                    selected ? 'doc-die-popover-option-selected' : '',
                   ].filter(Boolean).join(' ')}
                 >
-                  {renderDieIcon(entry.name, iconMode)}
+                  {formatLibraryName(entry.name)}
                 </button>
               )
-            })
-          ) : (
-            <span className="doc-muted">{libraryIsLoading ? 'Loading die types...' : 'Die types are not loaded.'}</span>
-          )}
+            })}
+          </div>
         </div>
       )
 
@@ -1113,42 +1199,58 @@ export default function OperationBlock({
         selectValue: string
         selectedName: string
         options: Array<{ id: number; name: unknown }>
-      }) => (
-        <div className="doc-die-selector-line">
-          <div className="doc-die-summary">
-            {renderDieIcon(selectedDieType?.name, iconMode)}
-            <span className="doc-die-summary-text">
-              {summaryPrefix} {selectedDieTypeName || 'Flat'} {selectedName}
-            </span>
+      }) => {
+        const typeOpen = isDiePopoverOpen('type', dieTypePath)
+        const nameOpen = isDiePopoverOpen('name', selectPath)
+        return (
+          <div className="doc-die-selector-line">
+            <div className="doc-die-inline-row">
+              <span className="doc-die-inline-control" data-block-action-silent="true">
+                <button
+                  type="button"
+                  onClick={() => toggleDiePopover('type', dieTypePath)}
+                  aria-label={label ? `${label} die type` : 'Die assembly type'}
+                  aria-expanded={typeOpen}
+                  title={selectedDieTypeName || 'Die type'}
+                  className={[
+                    'doc-die-inline-button',
+                    'doc-die-type-trigger',
+                    typeOpen ? 'doc-die-inline-button-open' : '',
+                    isPathDirty(dieTypePath) ? 'doc-die-inline-button-dirty' : '',
+                  ].filter(Boolean).join(' ')}
+                >
+                  {renderDieIcon(selectedDieType?.name, iconMode)}
+                </button>
+                {typeOpen ? renderDieTypePopover(iconMode, selectedDieTypeId, dieTypePath, selectPath) : null}
+              </span>
+              <span className="doc-die-static-text">
+                {summaryPrefix} {selectedDieTypeName || 'Flat'}
+              </span>
+              <span className="doc-die-inline-control doc-die-name-control" data-block-action-silent="true">
+                <button
+                  type="button"
+                  onClick={() => toggleDiePopover('name', selectPath)}
+                  aria-label={label ? `${label} die` : 'Die assembly'}
+                  aria-expanded={nameOpen}
+                  title={selectedName}
+                  className={[
+                    'doc-die-inline-button',
+                    'doc-die-name-trigger',
+                    nameOpen ? 'doc-die-inline-button-open' : '',
+                    isPathDirty(selectPath) ? 'doc-die-inline-button-dirty' : '',
+                  ].filter(Boolean).join(' ')}
+                >
+                  {selectedName}
+                </button>
+                {nameOpen ? renderDieNamePopover(selectPath, selectValue, options) : null}
+              </span>
+            </div>
           </div>
-          <div className="doc-die-editor-line">
-            {label ? <span className="doc-die-line-label">{label}: </span> : null}
-            {renderDieTypeButtons(
-              label ? `${label} die type filter` : 'Die assembly type filter',
-              iconMode,
-              selectedDieTypeId,
-              dieTypePath,
-              selectPath,
-            )}
-            <select
-              className={`doc-select doc-die-select ${isPathDirty(selectPath) ? 'doc-field-dirty' : ''}`}
-              value={selectValue}
-              onChange={(event) => setSelectValue(selectPath, event.target.value)}
-              aria-label={label ? `${label} die` : 'Die assembly'}
-            >
-              <option value="">None</option>
-              {options.map((entry) => (
-                <option key={entry.id} value={entry.id}>
-                  {formatLibraryName(entry.name)}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )
+        )
+      }
 
       return (
-        <div className="doc-deformation-dies-panel">
+        <div className="doc-deformation-dies-panel" ref={diePickerRootRef}>
           <div className="doc-title-row doc-die-title-row">
             <h2 className="doc-title doc-title-child">Dies</h2>
             <div className="doc-title-mode-controls doc-die-mode-controls doc-segmented-control" aria-label="Die selection mode">

@@ -9,7 +9,7 @@ import logging
 import socket
 from typing import Iterable, Sequence
 
-from sqlalchemy import case, func, or_, select
+from sqlalchemy import case, delete, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
@@ -27,6 +27,7 @@ from app.models.workflow_runtime import (
     PostprocessingTask,
     PostprocessingTaskStatusEnum,
     SimulationStep,
+    SimulationStepGeometryArtifact,
     SimulationStepStatus,
     SimulationStepStatusEnum,
 )
@@ -428,6 +429,11 @@ def _prepare_simulation_steps_for_pre_run(
             "operation_template_id": operation_row.operation_template_id,
             "preprocessor_started_at": now_utc().isoformat(),
         }
+        session.execute(
+            delete(SimulationStepGeometryArtifact).where(
+                SimulationStepGeometryArtifact.document_operation_id == document_operation_id
+            )
+        )
         step.accumulated_time_start_seconds = None
         step.duration_seconds = None
         step.accumulated_time_stop_seconds = None
@@ -739,6 +745,7 @@ def _record_preprocess_compile_failure(
             "operation_id": error.operation_id,
             "document_operation_id": error.document_operation_id,
             "operation_template_id": error.operation_template_id,
+            "preprocessor_error_details": error.details,
         }
     )
     step.calculations = calculations
@@ -767,6 +774,7 @@ def _record_preprocess_compile_failure(
         "operation_template_id": error.operation_template_id,
         "source_block_id": str(error.source_block_id) if error.source_block_id is not None else None,
         "message": str(error),
+        "details": error.details,
     }
 
 

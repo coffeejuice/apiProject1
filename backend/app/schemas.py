@@ -273,7 +273,7 @@ class DocumentSimulationStepSurfaceResponse(BaseModel):
     initial: Optional[SimulationStepSurfaceMesh] = None
     final: Optional[SimulationStepSurfaceMesh] = None
     artifacts: Dict[str, SimulationStepSurfaceArtifact] = Field(default_factory=dict)
-    source: str = "legacy_preprocessor_trimesh"
+    source: str = "preprocessor_mesh"
 
 
 class DocumentPreprocessQueueResponse(BaseModel):

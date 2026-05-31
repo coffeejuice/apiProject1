@@ -943,13 +943,13 @@ export function Geometry3DPreview({
           3D {kind} geometry
         </div>
         <div className={GEOMETRY_VIEW_NOTE_CLASS}>
-          {isSurfaceLoading ? 'loading legacy mesh...' : surface ? `${surface.face_count ?? 0} faces` : 'no legacy mesh'}
+          {isSurfaceLoading ? 'loading surface mesh...' : surface ? `${surface.face_count ?? 0} faces` : 'no surface mesh'}
         </div>
       </div>
       <SurfaceMeshThreeView
         layers={layers}
         isLoading={isSurfaceLoading}
-        emptyMessage="Legacy STL mesh is unavailable"
+        emptyMessage="Surface mesh is unavailable"
         className="h-[220px] w-full"
       />
       <div className="mt-2 grid grid-cols-2 gap-1 font-mono text-[10px] leading-tight text-[rgba(55,53,47,0.58)]">
@@ -1019,7 +1019,7 @@ export function Geometry3DOverlayPreview({
         <SurfaceMeshThreeView
           layers={layers}
           isLoading={isSurfaceLoading}
-          emptyMessage="Legacy STL meshes are unavailable"
+          emptyMessage="Surface meshes are unavailable"
           className="h-full w-full"
         />
         <div className="pointer-events-none absolute left-3 top-3" style={{ width: statsTableWidth }}>
@@ -2012,12 +2012,7 @@ export default function SimulationStepsView({
     () => relatedSourceBlockIds(blocks, hoveredBlockId),
     [blocks, hoveredBlockId]
   )
-  const visibleSteps = useMemo(() => {
-    if (activeSourceBlockIds.size === 0) {
-      return steps
-    }
-    return steps.filter((step) => step.source_block_id && activeSourceBlockIds.has(step.source_block_id))
-  }, [activeSourceBlockIds, steps])
+  const visibleSteps = steps
 
   const selectedStep = useMemo(() => {
     if (visibleSteps.length === 0) {
@@ -2231,7 +2226,7 @@ export default function SimulationStepsView({
               isQueueingPre={isQueueingPre}
               visibleRowsCount={visibleSteps.length}
               totalRowsCount={steps.length}
-              isFiltered={activeSourceBlockIds.size > 0}
+              isFiltered={false}
               issueSummary={documentIssueSummary}
               onSelectStep={setSelectedStepId}
               onRefresh={() => void queuePreprocess()}

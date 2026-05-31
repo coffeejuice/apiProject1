@@ -205,7 +205,7 @@ function disposeObject3D(object: THREE.Object3D) {
 export default function SurfaceMeshThreeView({
   layers,
   isLoading = false,
-  emptyMessage = 'Legacy STL mesh is unavailable',
+  emptyMessage = 'Surface mesh is unavailable',
   className = '',
 }: {
   layers: SurfaceMeshLayer[]
@@ -560,7 +560,7 @@ export default function SurfaceMeshThreeView({
       ) : null}
       {!hasMesh ? (
         <div className="absolute inset-0 flex items-center justify-center px-4 text-center font-mono text-[10px] text-[rgba(55,53,47,0.45)]">
-          {isLoading ? 'Loading legacy STL mesh...' : emptyMessage}
+          {isLoading ? 'Loading surface mesh...' : emptyMessage}
         </div>
       ) : null}
     </div>

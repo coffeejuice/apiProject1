@@ -19,7 +19,7 @@ from app.services.preprocessor.control_program_builder import (
     OperationTypeDefinition,
     load_operation_library_snapshot,
 )
-from app.services.preprocessor.geometry import GeneratedGeometry, GeometryBuilder
+from app.services.preprocessor.geometry import GeneratedGeometry, GeometryBuilder, GeometryError
 from app.services.preprocessor.legacy_surface_mesh import (
     LegacySurfaceMeshBuilder,
     LegacySurfacePair,
@@ -85,12 +85,14 @@ class PreprocessorCompileError(ValueError):
         document_operation_id: int | None = None,
         operation_template_id: str | None = None,
         source_block_id: object | None = None,
+        details: Mapping[str, object] | None = None,
     ) -> None:
         self.message = message
         self.operation_id = operation_id
         self.document_operation_id = document_operation_id
         self.operation_template_id = operation_template_id
         self.source_block_id = source_block_id
+        self.details = dict(details or {})
         super().__init__(self._formatted_message())
 
     def with_operation_output_context(self, operation_output: "DocumentOperationOutput") -> "PreprocessorCompileError":
@@ -109,6 +111,7 @@ class PreprocessorCompileError(ValueError):
             document_operation_id=self.document_operation_id or operation_output.document_operation_id,
             operation_template_id=self.operation_template_id or operation_output.operation_template_id,
             source_block_id=self.source_block_id or operation_output.source_block_id,
+            details=self.details,
         )
 
     def _formatted_message(self) -> str:
@@ -714,11 +717,27 @@ class PreprocessorCompiler:
             raise PreprocessorCompileError(
                 f"Geometry operation_output operation_id={operation_output.operation_id} requires volume_mm3"
             )
-        return self._geometry_builder.build(
-            type_id=operation_output.type_id,
-            parameters=operation_output.parameters,
-            volume_mm3=operation_output.volume_mm3,
-        )
+        try:
+            return self._geometry_builder.build(
+                type_id=operation_output.type_id,
+                parameters=operation_output.parameters,
+                volume_mm3=operation_output.volume_mm3,
+            )
+        except GeometryError as exc:
+            LOGGER.error(
+                "Billet geometry validation failed operation_id=%s document_operation_id=%s payload=%s",
+                operation_output.operation_id,
+                operation_output.document_operation_id,
+                exc.to_payload(),
+            )
+            raise PreprocessorCompileError(
+                f"Billet geometry validation failed: {exc.message}",
+                operation_id=operation_output.operation_id,
+                document_operation_id=operation_output.document_operation_id,
+                operation_template_id=operation_output.operation_template_id,
+                source_block_id=operation_output.source_block_id,
+                details=exc.to_payload(),
+            ) from exc
 
     def _compile_billet_row(
         self,
@@ -732,10 +751,12 @@ class PreprocessorCompiler:
     ) -> CompiledControlProgramRow:
         geometry = self._build_geometry_if_needed(operation_output, operation)
         assert geometry is not None
-        surface_area = self._surface_area_mm2(geometry)
         step_control = operation_output.material_label or control_parameters.get("material_short_name")
         metrics: dict[str, object] = {}
         surface_pair = self._safe_surface_pair("billet", lambda: self._surface_builder.billet(geometry))
+        initial_surface_area, final_surface_area = self._surface_areas_from_pair(surface_pair, context="billet")
+        metrics["initial_surface_area_mm2"] = initial_surface_area
+        metrics["final_surface_area_mm2"] = final_surface_area
         if surface_pair.notes:
             metrics["legacy_surface_notes"] = list(surface_pair.notes)
         mesh_elements = self._coerce_optional_int(operation_output.parameters.get("mesh_elements"))
@@ -770,8 +791,8 @@ class PreprocessorCompiler:
             simulation_expected_duration_days=0.0,
             initial_geometry=geometry,
             final_geometry=geometry,
-            initial_surface_area_mm2=surface_area,
-            final_surface_area_mm2=surface_area,
+            initial_surface_area_mm2=initial_surface_area,
+            final_surface_area_mm2=final_surface_area,
             initial_surface_mesh=surface_pair.initial,
             final_surface_mesh=surface_pair.final,
             metrics=metrics,
@@ -808,7 +829,10 @@ class PreprocessorCompiler:
             "furnace",
             lambda: self._surface_builder.static(previous.final_surface_mesh),
         )
+        initial_surface_area, final_surface_area = self._surface_areas_from_pair(surface_pair, context="furnace")
         metrics = dict(previous.metrics)
+        metrics["initial_surface_area_mm2"] = initial_surface_area
+        metrics["final_surface_area_mm2"] = final_surface_area
         if surface_pair.notes:
             metrics["legacy_surface_notes"] = list(surface_pair.notes)
 
@@ -841,8 +865,8 @@ class PreprocessorCompiler:
             simulation_expected_duration_days=0.0,
             initial_geometry=final_geometry,
             final_geometry=final_geometry,
-            initial_surface_area_mm2=previous.final_surface_area_mm2,
-            final_surface_area_mm2=previous.final_surface_area_mm2,
+            initial_surface_area_mm2=initial_surface_area,
+            final_surface_area_mm2=final_surface_area,
             initial_surface_mesh=surface_pair.initial,
             final_surface_mesh=surface_pair.final,
             metrics=metrics,
@@ -882,7 +906,10 @@ class PreprocessorCompiler:
             "heating",
             lambda: self._surface_builder.static(previous.final_surface_mesh),
         )
+        initial_surface_area, final_surface_area = self._surface_areas_from_pair(surface_pair, context="heating")
         metrics = dict(previous.metrics)
+        metrics["initial_surface_area_mm2"] = initial_surface_area
+        metrics["final_surface_area_mm2"] = final_surface_area
         if surface_pair.notes:
             metrics["legacy_surface_notes"] = list(surface_pair.notes)
 
@@ -915,8 +942,8 @@ class PreprocessorCompiler:
             simulation_expected_duration_days=0.0,
             initial_geometry=final_geometry,
             final_geometry=final_geometry,
-            initial_surface_area_mm2=previous.final_surface_area_mm2,
-            final_surface_area_mm2=previous.final_surface_area_mm2,
+            initial_surface_area_mm2=initial_surface_area,
+            final_surface_area_mm2=final_surface_area,
             initial_surface_mesh=surface_pair.initial,
             final_surface_mesh=surface_pair.final,
             metrics=metrics,
@@ -1036,6 +1063,9 @@ class PreprocessorCompiler:
                 template_id=operation.operation_template_id,
             ),
         )
+        initial_surface_area, final_surface_area = self._surface_areas_from_pair(surface_pair, context="upsetting")
+        metrics["initial_surface_area_mm2"] = initial_surface_area
+        metrics["final_surface_area_mm2"] = final_surface_area
         if surface_pair.notes:
             metrics["legacy_surface_notes"] = list(surface_pair.notes)
 
@@ -1073,8 +1103,8 @@ class PreprocessorCompiler:
             simulation_expected_duration_days=upsetting_result.simulation_expected_duration_days,
             initial_geometry=initial_geometry,
             final_geometry=upsetting_result.final_geometry,
-            initial_surface_area_mm2=upsetting_result.metrics.get("initial_surface_area_mm2"),
-            final_surface_area_mm2=upsetting_result.metrics.get("final_surface_area_mm2"),
+            initial_surface_area_mm2=initial_surface_area,
+            final_surface_area_mm2=final_surface_area,
             initial_surface_mesh=surface_pair.initial,
             final_surface_mesh=surface_pair.final,
             metrics=metrics,
@@ -1193,6 +1223,9 @@ class PreprocessorCompiler:
                 template_id=operation.operation_template_id,
             ),
         )
+        initial_surface_area, final_surface_area = self._surface_areas_from_pair(surface_pair, context="prolongation")
+        metrics["initial_surface_area_mm2"] = initial_surface_area
+        metrics["final_surface_area_mm2"] = final_surface_area
         if surface_pair.notes:
             metrics["legacy_surface_notes"] = list(surface_pair.notes)
 
@@ -1234,8 +1267,8 @@ class PreprocessorCompiler:
             simulation_expected_duration_days=result.simulation_expected_duration_days,
             initial_geometry=initial_geometry,
             final_geometry=result.final_geometry,
-            initial_surface_area_mm2=result.metrics.get("initial_surface_area_mm2"),
-            final_surface_area_mm2=result.metrics.get("final_surface_area_mm2"),
+            initial_surface_area_mm2=initial_surface_area,
+            final_surface_area_mm2=final_surface_area,
             initial_surface_mesh=surface_pair.initial,
             final_surface_mesh=surface_pair.final,
             metrics=metrics,
@@ -1281,6 +1314,9 @@ class PreprocessorCompiler:
             "radial initial rotations",
             lambda: self._surface_builder.static(previous.final_surface_mesh),
         )
+        initial_surface_area, final_surface_area = self._surface_areas_from_pair(surface_pair, context="radial initial rotations")
+        metrics["initial_surface_area_mm2"] = initial_surface_area
+        metrics["final_surface_area_mm2"] = final_surface_area
         if surface_pair.notes:
             metrics["legacy_surface_notes"] = list(surface_pair.notes)
         operation_specific_parameters = {
@@ -1320,8 +1356,8 @@ class PreprocessorCompiler:
             simulation_expected_duration_days=0.0,
             initial_geometry=geometry,
             final_geometry=geometry,
-            initial_surface_area_mm2=previous.final_surface_area_mm2,
-            final_surface_area_mm2=previous.final_surface_area_mm2,
+            initial_surface_area_mm2=initial_surface_area,
+            final_surface_area_mm2=final_surface_area,
             initial_surface_mesh=surface_pair.initial,
             final_surface_mesh=surface_pair.final,
             metrics=metrics,
@@ -1392,6 +1428,9 @@ class PreprocessorCompiler:
                 template_id=operation.operation_template_id,
             ),
         )
+        initial_surface_area, final_surface_area = self._surface_areas_from_pair(surface_pair, context="cutting")
+        metrics["initial_surface_area_mm2"] = initial_surface_area
+        metrics["final_surface_area_mm2"] = final_surface_area
         if surface_pair.notes:
             metrics["legacy_surface_notes"] = list(surface_pair.notes)
 
@@ -1429,8 +1468,8 @@ class PreprocessorCompiler:
             simulation_expected_duration_days=cutting_result.simulation_expected_duration_days,
             initial_geometry=initial_geometry,
             final_geometry=cutting_result.final_geometry,
-            initial_surface_area_mm2=cutting_result.metrics.get("initial_surface_area_mm2"),
-            final_surface_area_mm2=cutting_result.metrics.get("final_surface_area_mm2"),
+            initial_surface_area_mm2=initial_surface_area,
+            final_surface_area_mm2=final_surface_area,
             initial_surface_mesh=surface_pair.initial,
             final_surface_mesh=surface_pair.final,
             metrics=metrics,
@@ -1451,7 +1490,6 @@ class PreprocessorCompiler:
         default_press_id: int,
     ) -> CompiledControlProgramRow:
         previous_geometry = previous_row.final_geometry if previous_row is not None else None
-        previous_surface_area = previous_row.final_surface_area_mm2 if previous_row is not None else None
         metrics = dict(previous_row.metrics or {}) if previous_row is not None else {}
         mesh_elements = self._coerce_optional_int(operation_output.parameters.get("mesh_elements"))
         if mesh_elements is not None:
@@ -1490,6 +1528,9 @@ class PreprocessorCompiler:
             "generic",
             lambda: self._surface_builder.static(previous_row.final_surface_mesh if previous_row is not None else None),
         )
+        initial_surface_area, final_surface_area = self._surface_areas_from_pair(surface_pair, context="generic")
+        metrics["initial_surface_area_mm2"] = initial_surface_area
+        metrics["final_surface_area_mm2"] = final_surface_area
         if surface_pair.notes:
             metrics["legacy_surface_notes"] = list(surface_pair.notes)
 
@@ -1522,8 +1563,8 @@ class PreprocessorCompiler:
             simulation_expected_duration_days=None,
             initial_geometry=previous_geometry,
             final_geometry=previous_geometry,
-            initial_surface_area_mm2=previous_surface_area,
-            final_surface_area_mm2=previous_surface_area,
+            initial_surface_area_mm2=initial_surface_area,
+            final_surface_area_mm2=final_surface_area,
             initial_surface_mesh=surface_pair.initial,
             final_surface_mesh=surface_pair.final,
             metrics=metrics,
@@ -1931,9 +1972,18 @@ class PreprocessorCompiler:
             return "StepsNum"
         return "Feed"
 
-    def _surface_area_mm2(self, geometry: GeneratedGeometry) -> float:
-        perimeter = self._outline_perimeter_mm(geometry.cross_section_outline)
-        return 2.0 * geometry.cross_section_area_mm2 + perimeter * geometry.length_mm
+    def _surface_areas_from_pair(self, surface_pair: LegacySurfacePair, *, context: str) -> tuple[float, float]:
+        if surface_pair.initial is None:
+            raise PreprocessorCompileError(f"{context} surface generation did not produce an initial 3D mesh")
+        if surface_pair.final is None:
+            raise PreprocessorCompileError(f"{context} surface generation did not produce a final 3D mesh")
+        initial_area = float(surface_pair.initial.surface_area_mm2)
+        final_area = float(surface_pair.final.surface_area_mm2)
+        if initial_area <= 0.0 or not math.isfinite(initial_area):
+            raise PreprocessorCompileError(f"{context} initial 3D mesh surface area is invalid: {initial_area}")
+        if final_area <= 0.0 or not math.isfinite(final_area):
+            raise PreprocessorCompileError(f"{context} final 3D mesh surface area is invalid: {final_area}")
+        return initial_area, final_area
 
     def _safe_surface_pair(self, context: str, producer: Callable[[], LegacySurfacePair]) -> LegacySurfacePair:
         """Run legacy surface generation and fail loudly on missing algorithms/data."""
@@ -1942,7 +1992,7 @@ class PreprocessorCompiler:
             return producer()
         except SurfaceMeshError as exc:
             raise PreprocessorCompileError(
-                f"Legacy STL mesh generation failed for {context}: {exc}"
+                f"3D surface mesh generation failed for {context}: {exc}"
             ) from exc
 
     def _outline_perimeter_mm(self, outline: Sequence[tuple[float, float]]) -> float:

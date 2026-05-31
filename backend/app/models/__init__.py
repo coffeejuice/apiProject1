@@ -33,6 +33,7 @@ from app.models.library import (
 from app.models.server import Server, PhysicalMachine, ServerType
 from app.models.workflow_runtime import (
     SimulationStep,
+    SimulationStepGeometryArtifact,
     SimulationStepStatus,
     SimulationStepStatusEnum,
     PostprocessingTask,
@@ -94,6 +95,7 @@ __all__ = [
     "Server",
     "PhysicalMachine",
     "SimulationStep",
+    "SimulationStepGeometryArtifact",
     "SimulationStepStatus",
     "SimulationStepStatusEnum",
     "PostprocessingTask",

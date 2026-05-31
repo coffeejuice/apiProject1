@@ -11,6 +11,7 @@ from sqlalchemy import (
     Double,
     Enum as SQLEnum,
     ForeignKey,
+    Index,
     Integer,
     SmallInteger,
     String,
@@ -197,12 +198,79 @@ class SimulationStep(Base):
         back_populates="simulation_step",
         cascade="all, delete-orphan",
     )
+    geometry_artifacts: Mapped[list["SimulationStepGeometryArtifact"]] = relationship(
+        "SimulationStepGeometryArtifact",
+        back_populates="simulation_step",
+        cascade="all, delete-orphan",
+    )
 
     __table_args__ = (
         UniqueConstraint(
             "document_version_id",
             "execution_order",
             name="uq_simulation_steps_document_version_execution_order",
+        ),
+    )
+
+
+class SimulationStepGeometryArtifact(Base):
+    __tablename__ = "simulation_step_geometry_artifacts"
+
+    geometry_artifact_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    document_operation_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("simulation_steps.document_operation_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    document_version_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("document_versions.document_version_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    kind: Mapped[str] = mapped_column(String(16), nullable=False)
+    artifact_format: Mapped[str] = mapped_column(String(16), nullable=False)
+    source: Mapped[str] = mapped_column(
+        String(63),
+        nullable=False,
+        default="preprocessor_mesh",
+        server_default="preprocessor_mesh",
+    )
+    relative_path: Mapped[str] = mapped_column(Text, nullable=False)
+    checksum_sha256: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, default=None)
+    byte_size: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0, server_default="0")
+    vertex_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=None)
+    face_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=None)
+    cross_section_point_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=None)
+    bounds: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict, server_default="{}")
+    surface_area_mm2: Mapped[Optional[float]] = mapped_column(Double, nullable=True, default=None)
+    volume_mm3: Mapped[Optional[float]] = mapped_column(Double, nullable=True, default=None)
+    artifact_metadata: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict, server_default="{}")
+    generated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=func.now(), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=func.now(), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=func.now(),
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+    simulation_step: Mapped["SimulationStep"] = relationship("SimulationStep", back_populates="geometry_artifacts")
+    document_version: Mapped["DocumentVersion"] = relationship("DocumentVersion")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "document_operation_id",
+            "kind",
+            "artifact_format",
+            name="uq_simulation_step_geometry_artifacts_step_kind_format",
+        ),
+        Index(
+            "ix_simulation_step_geometry_artifacts_version_kind",
+            "document_version_id",
+            "kind",
         ),
     )
 
