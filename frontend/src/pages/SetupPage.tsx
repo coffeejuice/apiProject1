@@ -33,6 +33,7 @@ export default function SetupPage({
   const [seedSuccess, setSeedSuccess] = useState<string | null>(null)
   const [newAdminPassword, setNewAdminPassword] = useState('')
   const [confirmAdminPassword, setConfirmAdminPassword] = useState('')
+  const [setupResetToken, setSetupResetToken] = useState('')
   const [isResettingAdminPassword, setIsResettingAdminPassword] = useState(false)
   const [resetAdminPasswordError, setResetAdminPasswordError] = useState<string | null>(null)
   const [resetAdminPasswordSuccess, setResetAdminPasswordSuccess] = useState<string | null>(null)
@@ -48,6 +49,10 @@ export default function SetupPage({
   }, [status, isAuthenticated])
 
   const lastRunError = useMemo(() => getLastRunError(status?.last_run), [status?.last_run])
+  const canResetAdminPassword =
+    isAuthenticated || Boolean(status?.can_reset_admin_password_with_setup_token)
+  const resetRequiresSetupToken =
+    !isAuthenticated && Boolean(status?.can_reset_admin_password_with_setup_token)
 
   const handleSeed = async () => {
     setSeedError(null)
@@ -81,12 +86,21 @@ export default function SetupPage({
       setResetAdminPasswordError('Password confirmation does not match.')
       return
     }
+    const trimmedSetupResetToken = setupResetToken.trim()
+    if (!isAuthenticated && !trimmedSetupResetToken) {
+      setResetAdminPasswordError('Setup reset token is required.')
+      return
+    }
 
     setIsResettingAdminPassword(true)
+    const body: ResetAdminPasswordRequest = {
+      new_password: newAdminPassword,
+    }
+    if (!isAuthenticated) {
+      body.setup_token = trimmedSetupResetToken
+    }
     const response = await apiClient.post<ResetAdminPasswordResponse>('/setup/reset-admin-password', {
-      body: {
-        new_password: newAdminPassword,
-      } satisfies ResetAdminPasswordRequest,
+      body,
     })
     setIsResettingAdminPassword(false)
 
@@ -98,6 +112,7 @@ export default function SetupPage({
     setResetAdminPasswordSuccess(`Password updated for user '${response.data.login}'.`)
     setNewAdminPassword('')
     setConfirmAdminPassword('')
+    setSetupResetToken('')
   }
 
   return (
@@ -160,6 +175,7 @@ export default function SetupPage({
           <div className="text-xs text-gray-700 space-y-1">
             <div>Needs seed: {status?.needs_seed ? 'yes' : 'no'}</div>
             <div>Can seed without auth: {status?.can_seed_without_auth ? 'yes' : 'no'}</div>
+            <div>Admin user exists: {status?.admin_user_exists ? 'yes' : 'no'}</div>
             <div>Config file exists: {status?.file_exists ? 'yes' : 'no'}</div>
             <div>Config hash: {status?.file_hash || 'n/a'}</div>
           </div>
@@ -200,20 +216,35 @@ export default function SetupPage({
             Reset password for account <span className="font-semibold">admin</span>.
           </p>
 
-          {!isAuthenticated && (
+          {!isAuthenticated && !status?.can_reset_admin_password_with_setup_token && (
             <div className="text-xs text-amber-700 border border-amber-300 bg-amber-50 rounded p-2">
-              Login as administrator to reset admin password.
+              Login as administrator to reset admin password, or configure a setup reset token.
+            </div>
+          )}
+          {resetRequiresSetupToken && (
+            <div className="text-xs text-amber-700 border border-amber-300 bg-amber-50 rounded p-2">
+              Local recovery is enabled. Use SETUP_ADMIN_RESET_TOKEN from backend/.env.
             </div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {resetRequiresSetupToken && (
+              <input
+                type="password"
+                className="ui-input sm:col-span-2"
+                placeholder="Setup reset token"
+                value={setupResetToken}
+                onChange={(e) => setSetupResetToken(e.target.value)}
+                disabled={isResettingAdminPassword}
+              />
+            )}
             <input
               type="password"
               className="ui-input"
               placeholder="New admin password"
               value={newAdminPassword}
               onChange={(e) => setNewAdminPassword(e.target.value)}
-              disabled={!isAuthenticated || isResettingAdminPassword}
+              disabled={!canResetAdminPassword || isResettingAdminPassword}
             />
             <input
               type="password"
@@ -221,7 +252,7 @@ export default function SetupPage({
               placeholder="Confirm new password"
               value={confirmAdminPassword}
               onChange={(e) => setConfirmAdminPassword(e.target.value)}
-              disabled={!isAuthenticated || isResettingAdminPassword}
+              disabled={!canResetAdminPassword || isResettingAdminPassword}
             />
           </div>
 
@@ -229,7 +260,11 @@ export default function SetupPage({
             <button
               type="button"
               className="ui-btn-secondary"
-              disabled={!isAuthenticated || isResettingAdminPassword}
+              disabled={
+                !canResetAdminPassword ||
+                (resetRequiresSetupToken && !setupResetToken.trim()) ||
+                isResettingAdminPassword
+              }
               onClick={handleResetAdminPassword}
             >
               {isResettingAdminPassword ? 'Updating...' : 'Reset Admin Password'}

@@ -87,6 +87,16 @@ def backend_python() -> Path:
     )
 
 
+def npm_executable() -> str:
+    if os.name == "nt":
+        for candidate in ("npm.cmd", "npm.exe", "npm"):
+            resolved = shutil.which(candidate)
+            if resolved:
+                return resolved
+        return "npm.cmd"
+    return "npm"
+
+
 def configured_logs_root() -> Path:
     global _LOGS_ROOT_CACHE
     if _LOGS_ROOT_CACHE is not None:
@@ -166,7 +176,7 @@ def process_specs(
             specs.append(
                 DevProcessSpec(
                     name="front",
-                    command=["npm", "run", "dev"],
+                    command=[npm_executable(), "run", "dev"],
                     cwd=FRONTEND_DIR,
                     port=DEFAULT_FRONTEND_PORT,
                     log_service="frontend",
@@ -241,7 +251,7 @@ def check_prerequisites(specs: list[DevProcessSpec], *, allow_used_ports: bool) 
 
     selected_names = {spec.name for spec in specs}
     if "front" in selected_names:
-        if shutil.which("npm") is None:
+        if shutil.which(npm_executable()) is None:
             raise RuntimeError("npm was not found in PATH.")
         if not (FRONTEND_DIR / "node_modules").exists():
             raise RuntimeError("frontend/node_modules was not found. Run npm install in frontend/ first.")
@@ -357,7 +367,12 @@ def request_stop(running: RunningProcess) -> None:
     print(f"[dev] stopping {running.spec.name} pid={process.pid}", flush=True)
     try:
         if os.name == "nt":
-            process.terminate()
+            subprocess.run(
+                ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
         else:
             os.killpg(process.pid, signal.SIGTERM)
     except ProcessLookupError:
@@ -371,7 +386,12 @@ def force_stop(running: RunningProcess) -> None:
     print(f"[dev] force stopping {running.spec.name} pid={process.pid}", flush=True)
     try:
         if os.name == "nt":
-            process.kill()
+            subprocess.run(
+                ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
         else:
             os.killpg(process.pid, signal.SIGKILL)
     except ProcessLookupError:

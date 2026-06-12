@@ -119,6 +119,8 @@ export interface SetupStatusResponse {
   needs_seed: boolean
   is_seeded: boolean
   can_seed_without_auth: boolean
+  admin_user_exists?: boolean
+  can_reset_admin_password_with_setup_token?: boolean
   last_run?: SeedRunSummary | null
 }
 
@@ -132,6 +134,7 @@ export interface SeedLibraryResponse {
 
 export interface ResetAdminPasswordRequest {
   new_password: string
+  setup_token?: string
 }
 
 export interface ResetAdminPasswordResponse {

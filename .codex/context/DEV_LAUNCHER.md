@@ -11,6 +11,10 @@ It starts the normal local development processes together, records child stdout/
 
 It is not a production process manager and must not replace Windows services, NSSM/sc.exe, system services, or deployment scripts.
 
+On Windows, shutdown uses `taskkill /T /F` for each selected root process so child
+processes spawned by tools such as Uvicorn reload and npm/Vite do not keep ports
+open after the launcher exits.
+
 ## Recommended Remote Workflow
 Use `tmux` on the home-lab PC so the dev stack survives SSH disconnects:
 
@@ -72,6 +76,10 @@ Frontend:
 cd frontend
 npm run dev
 ```
+
+On Windows, `dev.py` resolves the frontend command to the command-shell entry point
+(`npm.cmd` when available). This is required because Python `subprocess.Popen`
+does not launch the extensionless `npm` shim reliably with `shell=False`.
 
 FastAPI:
 
@@ -179,7 +187,7 @@ Then start the Pre run configuration from PyCharm.
 
 ## Prerequisites Checked By Launcher
 For frontend:
-- `npm` exists in `PATH`.
+- `npm` exists in `PATH`; on Windows the launcher prefers `npm.cmd`.
 - `frontend/node_modules` exists.
 - port `5173` is free unless `--allow-used-ports` is used.
 

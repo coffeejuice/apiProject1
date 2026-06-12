@@ -8,716 +8,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Fixed Billet block backend and fronted">
-      <change afterPath="$PROJECT_DIR$/.junie/memory/errors.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.junie/memory/feedback.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.junie/memory/language.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.junie/memory/memory.version" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.junie/memory/tasks.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.playwright-mcp/page-2026-05-28T06-12-59-763Z.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.playwright-mcp/page-2026-05-28T06-13-12-503Z.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.playwright-mcp/page-2026-05-28T06-13-33-709Z.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.playwright-mcp/page-2026-05-28T06-13-39-526Z.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.playwright-mcp/page-2026-05-28T06-13-58-142Z.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.playwright-mcp/page-2026-05-28T06-57-39-670Z.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.playwright-mcp/page-2026-05-28T06-57-47-336Z.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/alembic/versions/0008_add_simulation_step_geometry_artifacts.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/mesh_primitives.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/logs/api/api.jsonl.1" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/logs/api/api.jsonl.2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/logs/api/api.jsonl.3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/logs/api/api.jsonl.4" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/logs/api/api.jsonl.5" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.codex/context/DB_SCHEMA.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/DB_SCHEMA.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.codex/context/DOCUMENT_BLOCK_ARCHITECTURE.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/DOCUMENT_BLOCK_ARCHITECTURE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.codex/context/PRE_OUTPUT_INVENTORY.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/PRE_OUTPUT_INVENTORY.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.codex/context/PROJECT_CONTEXT.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/PROJECT_CONTEXT.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.codex/context/DEV_LAUNCHER.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/DEV_LAUNCHER.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/apiProject1.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/apiProject1.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.env.example" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/alembic.ini" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/alembic/env.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/env.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/alembic/script.py.mako" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/script.py.mako" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/.gitkeep" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/versions/.gitkeep" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/0001_current_schema_baseline.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/versions/0001_current_schema_baseline.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/0002_simplify_document_operations_parameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/versions/0002_simplify_document_operations_parameters.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/0003_require_simulation_step_document_operation.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/versions/0003_require_simulation_step_document_operation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/0004_use_document_operation_id_as_simulation_step_pk.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/versions/0004_use_document_operation_id_as_simulation_step_pk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/0005_materialize_simulation_step_siblings.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/versions/0005_materialize_simulation_step_siblings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/0006_rename_simulation_step_payloads.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/versions/0006_rename_simulation_step_payloads.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/0007_restore_simulation_step_status_name.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/alembic/versions/0007_restore_simulation_step_status_name.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/auth.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/database.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/logging_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/logging_config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block_types/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block_types/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/base.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block_types/document.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/document.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/block_types/document_geometry.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/block_types/document_geometry.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/document.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/document.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/document_operation.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/document_operation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/document/simulation.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/document/simulation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/library/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/library/die.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/die.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/library/library.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/library.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/library/library_item.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/library_item.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/library/material.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/material.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/library/material_chemistry.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/material_chemistry.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/library/material_classification.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/material_classification.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/library/material_properties.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/material_properties.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/library/material_standards.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/material_standards.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/library/press.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/press.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/library/press_die_map.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/library/press_die_map.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/log.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/log.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/project.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/project.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/seed_run.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/seed_run.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/server.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/user.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/workflow_runtime.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/workflow_runtime.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/orchestration/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/orchestration/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/orchestration/channels.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/orchestration/channels.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/orchestration/claims.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/orchestration/claims.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/orchestration/coordinator.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/orchestration/coordinator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/orchestration/leases.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/orchestration/leases.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/orchestration/pg_notify.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/orchestration/pg_notify.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/orchestration/runtime_backend.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/orchestration/runtime_backend.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/orchestration/state_machine.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/orchestration/state_machine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/blocks.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/blocks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/document.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/document.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/library.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/library.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/logs.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/logs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/operation_templates.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/operation_templates.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/projects.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/projects.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/search.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/search.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/settings.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/routers/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/setup.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/workflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/workflow.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/block_props.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/block_props.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/block_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/block_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/block_type_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/block_type_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/commit_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/commit_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/document_operations.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/document_operations.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/files/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/files/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/files/paths.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/files/paths.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/files/storage.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/files/storage.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/library_seed_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/library_seed_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/errors.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/errors.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/parsers/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/parsers/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/parsers/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/parsers/base.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/parsers/deform/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/parsers/deform/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/parsers/deform/diagrams.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/parsers/deform/diagrams.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/parsers/deform/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/parsers/deform/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/parsers/deform/section_readers.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/parsers/deform/section_readers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/parsers/forge/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/parsers/forge/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/parsers/forge/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/parsers/forge/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/parsers/qform/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/parsers/qform/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/parsers/qform/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/parsers/qform/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/parsers/simufact/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/parsers/simufact/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/parsers/simufact/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/parsers/simufact/parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/registry.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/registry.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/materials/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/materials/service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/operation_blocks.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/operation_blocks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/postprocess/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/postprocess/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/postprocess/image_generation.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/postprocess/image_generation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/postprocess/ppt_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/postprocess/ppt_builder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/postprocess/reporter.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/postprocess/reporter.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/compiler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/control_program_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/control_program_builder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/cutting.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/cutting.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/geometry.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/geometry.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/legacy_surface_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/legacy_surface_mesh.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/operation_keys.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/operation_keys.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/prolongation.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/prolongation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/prolongation_geometry.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/prolongation_geometry.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/surface_artifacts.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/surface_artifacts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/surface_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/surface_mesh.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/upsetting.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/upsetting.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/provisioning_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/provisioning_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/search_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/search_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/settings_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/settings_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/solver/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/solver/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/solver/boundary_conditions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/solver/boundary_conditions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/solver/deform_io.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/solver/deform_io.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/solver/operations/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/solver/operations/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/solver/operations/billet.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/solver/operations/billet.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/solver/operations/cogging_bite.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/solver/operations/cogging_bite.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/solver/operations/cut.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/solver/operations/cut.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/solver/operations/forming_frozen_speed_window_boxes.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/solver/operations/forming_frozen_speed_window_boxes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/solver/operations/heat.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/solver/operations/heat.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/solver/operations/offset_and_rotation.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/solver/operations/offset_and_rotation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/solver/operations/remesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/solver/operations/remesh.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/solver/runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/solver/runner.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/solver/step_executor.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/solver/step_executor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/workflow_commands.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/workflow_commands.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/workers/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/workers/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/workers/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/workers/base.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/workers/post_worker.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/workers/post_worker.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/workers/pre_dev_reload.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/workers/pre_dev_reload.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/workers/pre_worker.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/workers/pre_worker.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/workers/solver_worker.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/workers/solver_worker.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/config/Testing Alex network config.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/config/Testing Alex network config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/config/UI_initial_settings.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/config/UI_initial_settings.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/config/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/config/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/database_seeding/library.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/database_seeding/library.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/database_seeding/materials.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/database_seeding/materials.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/gfm_die_gfm20_w90_bottom.stl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/gfm_die_gfm20_w90_bottom.stl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/gfm_die_gfm20_w90_bottom.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/gfm_die_gfm20_w90_bottom.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/gfm_die_gfm20_w90_minus_y.stl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/gfm_die_gfm20_w90_minus_y.stl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/gfm_die_gfm20_w90_minus_y.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/gfm_die_gfm20_w90_minus_y.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/gfm_die_gfm20_w90_plus_y.stl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/gfm_die_gfm20_w90_plus_y.stl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/gfm_die_gfm20_w90_plus_y.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/gfm_die_gfm20_w90_plus_y.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/gfm_die_gfm20_w90_top.stl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/gfm_die_gfm20_w90_top.stl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/gfm_die_gfm20_w90_top.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/gfm_die_gfm20_w90_top.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/press_45_flat_550_bottom.STL" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/press_45_flat_550_bottom.STL" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/press_45_flat_550_bottom.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/press_45_flat_550_bottom.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/press_45_flat_550_top.STL" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/press_45_flat_550_top.STL" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/press_45_flat_550_top.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/press_45_flat_550_top.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/press_80_flat_650_bottom.STL" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/press_80_flat_650_bottom.STL" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/press_80_flat_650_bottom.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/press_80_flat_650_bottom.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/press_80_flat_650_top.STL" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/press_80_flat_650_top.STL" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/press_80_flat_650_top.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/press_80_flat_650_top.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/press_80_flat_900_bottom.STL" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/press_80_flat_900_bottom.STL" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/press_80_flat_900_bottom.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/press_80_flat_900_bottom.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/press_80_flat_900_top.STL" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/press_80_flat_900_top.STL" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/press_80_flat_900_top.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/press_80_flat_900_top.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/press_80_v_a122_d355_d180_bottom.stl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/press_80_v_a122_d355_d180_bottom.stl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/press_80_v_a122_d355_d180_bottom.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/press_80_v_a122_d355_d180_bottom.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/press_80_v_a122_d355_d180_top.stl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/press_80_v_a122_d355_d180_top.stl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/dies/press_80_v_a122_d355_d180_top.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/dies/press_80_v_a122_d355_d180_top.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/materials/A-286[1800F(980C)]_s000002.KEY" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/materials/A-286[1800F(980C)]_s000002.KEY" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/materials/A-286[1800F(980C)]_s000002_1.KEY" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/materials/A-286[1800F(980C)]_s000002_1.KEY" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/materials/A-286[1800F(980C)]_s000002_2.KEY" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/materials/A-286[1800F(980C)]_s000002_2.KEY" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/materials/WASPALOY[1800-2050F(980-1120C)]_s000006.KEY" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/materials/WASPALOY[1800-2050F(980-1120C)]_s000006.KEY" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/materials/material_Inc718_20220602.key" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/materials/material_Inc718_20220602.key" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/materials/material_TA15_20221024_RUSSIA_JMATPRO.KEY" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/materials/material_TA15_20221024_RUSSIA_JMATPRO.KEY" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/materials/material_TB18_20220602.key" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/materials/material_TB18_20220602.key" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/materials/material_TB6_20220717.key" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/materials/material_TB6_20220717.key" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/materials/material_TC17_20220602.key" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/materials/material_TC17_20220602.key" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/materials/material_TC18_TC18-D500-T16-v04-sparse.KEY" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/materials/material_TC18_TC18-D500-T16-v04-sparse.KEY" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/materials/material_TC21_20220622.KEY" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/materials/material_TC21_20220622.KEY" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/materials/material_TC2_20220602.key" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/materials/material_TC2_20220602.key" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/materials/material_TC4_20220602.key" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/materials/material_TC4_20220602.key" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/materials/material_Ti5553_20220621.key" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/materials/material_Ti5553_20220621.key" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/materials/material_Ti80_WST_20240528.KEY" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/materials/material_Ti80_WST_20240528.KEY" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/operations/cogging_bite_01.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/operations/cogging_bite_01.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/operations/cut_0002.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/operations/cut_0002.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/operations/forming_frozen_speed_window_boxes_01.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/operations/forming_frozen_speed_window_boxes_01.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/operations/heat_0004.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/operations/heat_0004.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/operations/offset_rotation_z_y_x_01.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/operations/offset_rotation_z_y_x_01.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/operations/remesh_0001.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/operations/remesh_0001.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/data/ppt/template.pptx" beforeDir="false" afterPath="$PROJECT_DIR$/backend/data/ppt/template.pptx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/db_setup/recreate_settings_table.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/db_setup/recreate_settings_table.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/db_setup/reinit_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/db_setup/reinit_db.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/db_setup/run_migration.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/db_setup/run_migration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/deploy/windows/install_api_host.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/backend/deploy/windows/install_api_host.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/deploy/windows/install_solver_host.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/backend/deploy/windows/install_solver_host.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/deploy/windows/nssm/.gitkeep" beforeDir="false" afterPath="$PROJECT_DIR$/backend/deploy/windows/nssm/.gitkeep" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/logs/api/api-console.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/api/api-console.jsonl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/logs/api/api.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/api/api.jsonl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/api/server.out" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/api/server.out" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/logs/api/api.jsonl.1" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/api/api.jsonl.1" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/logs/api/api.jsonl.2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/logs/api/api.jsonl.3" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/logs/api/api.jsonl.4" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/logs/frontend/frontend.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/frontend/frontend.jsonl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/post/post-1.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/post/post-1.jsonl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/post/post-1.jsonl.1" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/post/post-1.jsonl.1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/post/post-1.jsonl.2" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/post/post-1.jsonl.2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/post/post-1.jsonl.3" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/post/post-1.jsonl.3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/post/post-1.jsonl.4" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/post/post-1.jsonl.4" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/post/post-1.jsonl.5" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/post/post-1.jsonl.5" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/logs/pre/pre-1-console.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/pre/pre-1-console.jsonl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl.1" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl.1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl.2" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl.2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl.3" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl.3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl.4" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl.4" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl.5" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl.5" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/solver/solver-1.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/solver/solver-1.jsonl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/solver/solver-1.jsonl.1" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/solver/solver-1.jsonl.1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/solver/solver-1.jsonl.2" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/solver/solver-1.jsonl.2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/solver/solver-1.jsonl.3" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/solver/solver-1.jsonl.3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/solver/solver-1.jsonl.4" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/solver/solver-1.jsonl.4" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/solver/solver-1.jsonl.5" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/solver/solver-1.jsonl.5" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/run.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/scripts/check_preprocessor_pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/check_preprocessor_pipeline.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/scripts/check_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/check_schema.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/scripts/check_user.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/check_user.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/scripts/check_users_content.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/check_users_content.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/scripts/create_test_user.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/create_test_user.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/scripts/list_all_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/list_all_tables.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/scripts/list_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/list_tables.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/scripts/reproduce_issue.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/scripts/reproduce_issue.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/seed/v0003_settings.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/seed/v0003_settings.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/setup_database.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/setup_database.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/tests/test_login.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_login.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/tests/test_provisioning.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_provisioning.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/tests/test_register.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_register.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/tests/test_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_search.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/tests/test_settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tests/test_settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/DB Migration.ods" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/DB Migration.ods" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/Update design of Operation block types and blocks" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/Update design of Operation block types and blocks" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/common/boundary_conditions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/common/boundary_conditions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/common/common_funcs.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/common/common_funcs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/common/file_operations.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/common/file_operations.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/common/fluent_bit_logger.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/common/fluent_bit_logger.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/common/library_sql_query.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/common/library_sql_query.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/common/matlib.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/common/matlib.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/common/plot_funcs.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/common/plot_funcs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/common/queries.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/common/queries.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/common/read_deform_keyfile.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/common/read_deform_keyfile.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/common/shapely_2d_funcs.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/common/shapely_2d_funcs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/common/time_between_operations.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/common/time_between_operations.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/config/Testing Alex network config.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/config/Testing Alex network config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/config/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/config/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_bottom.stl" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_bottom.stl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_bottom.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_bottom.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_minus_y.stl" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_minus_y.stl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_minus_y.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_minus_y.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_plus_y.stl" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_plus_y.stl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_plus_y.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_plus_y.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_top.stl" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_top.stl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_top.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/gfm_die_gfm20_w90_top.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_45_flat_550_bottom.STL" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_45_flat_550_bottom.STL" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_45_flat_550_bottom.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_45_flat_550_bottom.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_45_flat_550_top.STL" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_45_flat_550_top.STL" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_45_flat_550_top.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_45_flat_550_top.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_650_bottom.STL" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_650_bottom.STL" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_650_bottom.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_650_bottom.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_650_top.STL" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_650_top.STL" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_650_top.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_650_top.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_900_bottom.STL" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_900_bottom.STL" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_900_bottom.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_900_bottom.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_900_top.STL" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_900_top.STL" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_900_top.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_flat_900_top.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_v_a122_d355_d180_bottom.stl" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_v_a122_d355_d180_bottom.stl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_v_a122_d355_d180_bottom.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_v_a122_d355_d180_bottom.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_v_a122_d355_d180_top.stl" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_v_a122_d355_d180_top.stl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_v_a122_d355_d180_top.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/dies/press_80_v_a122_d355_d180_top.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_Inc718_20220602.key" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_Inc718_20220602.key" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TA15_20221024_RUSSIA_JMATPRO.KEY" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TA15_20221024_RUSSIA_JMATPRO.KEY" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TB18_20220602.key" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TB18_20220602.key" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TB6_20220717.key" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TB6_20220717.key" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TC17_20220602.key" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TC17_20220602.key" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TC18_TC18-D500-T16-v04-sparse.KEY" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TC18_TC18-D500-T16-v04-sparse.KEY" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TC21_20220622.KEY" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TC21_20220622.KEY" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TC2_20220602.key" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TC2_20220602.key" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TC4_20220602.key" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_TC4_20220602.key" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_Ti5553_20220621.key" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_Ti5553_20220621.key" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_Ti80_WST_20240528.KEY" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/materials/material_Ti80_WST_20240528.KEY" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/operations/cogging_bite_01.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/operations/cogging_bite_01.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/operations/cut_0002.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/operations/cut_0002.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/operations/forming_frozen_speed_window_boxes_01.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/operations/forming_frozen_speed_window_boxes_01.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/operations/heat_0004.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/operations/heat_0004.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/operations/offset_rotation_z_y_x_01.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/operations/offset_rotation_z_y_x_01.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/operations/remesh_0001.zip" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/operations/remesh_0001.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/data/ppt/template.pptx" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/data/ppt/template.pptx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/notifications_listener_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/notifications_listener_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/plot_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/plot_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/plot_service_2.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/plot_service_2.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/server.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/service_file_remover.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/service_file_remover.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/connections.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/connections.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_admin_management_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_admin_management_functions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_functions_and_triggers.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_functions_and_triggers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_functions_communicate_with_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_functions_communicate_with_client.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_operations.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_operations.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_operations_table_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_operations_table_functions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_queue_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_queue_functions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_run_stop_buttons_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_run_stop_buttons_functions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_tables.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_tooltip_images.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/create_tooltip_images.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/hash_password.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/hash_password.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_1.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_1.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_10.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_10.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_11.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_11.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_12.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_12.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_13.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_13.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_14.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_14.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_15.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_15.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_16.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_16.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_17.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_17.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_18.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_18.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_19.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_19.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_2.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_2.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_20.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_20.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_21.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_21.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_22.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_22.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_23.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_23.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_24.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_24.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_25.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_25.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_26.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_26.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_27.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_27.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_28.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_28.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_29.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_29.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_3.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_3.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_30.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_30.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_31.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_31.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_32.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_32.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_33.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_33.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_34.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_34.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_35.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_35.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_36.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_36.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_37.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_37.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_38.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_38.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_39.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_39.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_4.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_4.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_40.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_40.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_41.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_41.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_42.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_42.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_43.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_43.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_44.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_44.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_45.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_45.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_46.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_46.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_47.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_47.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_48.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_48.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_49.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_49.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_5.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_5.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_50.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_50.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_51.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_51.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_52.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_52.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_53.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_53.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_54.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_54.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_55.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_55.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_56.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_56.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_57.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_57.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_58.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_58.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_59.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_59.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_6.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_6.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_60.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_60.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_61.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_61.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_62.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_62.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_63.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_63.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_64.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_64.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_65.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_65.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_66.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_66.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_67.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_67.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_68.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_68.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_69.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_69.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_7.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_7.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_70.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_70.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_71.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_71.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_72.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_72.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_73.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_73.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_74.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_74.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_75.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_75.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_76.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_76.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_77.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_77.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_78.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_78.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_79.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_79.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_8.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_8.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_80.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_80.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_81.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_81.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_82.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_82.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_83.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_83.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_84.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_84.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_85.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_85.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_86.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_86.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_87.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_87.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_88.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_88.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_89.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_89.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_9.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_9.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_90.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_90.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_91.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_91.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_92.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_92.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_93.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_93.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_94.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_94.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_95.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_95.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_96.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_96.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_97.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_97.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_98.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_98.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_99.png" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/images/tooltip_image_99.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/import_json.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/import_json.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_die_records_from_library.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_die_records_from_library.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_feed_direction_records.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_feed_direction_records.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_material_records.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_material_records.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_or_update_table_from_library.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_or_update_table_from_library.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_press_records_from_library.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_press_records_from_library.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_time_records.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/insert_time_records.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/library_dictionary.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/library_dictionary.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/operations.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/operations.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/query_operation.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/query_operation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/query_press.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/query_press.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/test_records_add.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/sql_setup/test_records_add.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_post/gen_ppt.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_post/gen_ppt.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_post/mayavi_worker_class.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_post/mayavi_worker_class.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_post/post_worker_class.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_post/post_worker_class.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_post/tensor_variables.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_post/tensor_variables.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_pre/geometry_class.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_pre/geometry_class.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_pre/pre_worker_class.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_pre/pre_worker_class.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/import_last_step_parameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/import_last_step_parameters.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/billet.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/billet.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/cogging_bite.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/cogging_bite.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/cut.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/cut.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/forming_frozen_speed_window_boxes.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/forming_frozen_speed_window_boxes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/heat.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/heat.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/offset_and_rotation.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/offset_and_rotation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/remesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/operations/remesh.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/plot_2d.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/plot_2d.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/pre_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/pre_functions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/shapely_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/shapely_functions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/simulation_worker_class.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/simulation_worker_class.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/solver_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/forgelab/srv_solver/solver_functions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/icons/flat_die_bottom.svg" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/icons/flat_die_bottom.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/icons/flat_die_top.svg" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/icons/flat_die_top.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/icons/flat_dies_assembly.svg" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/icons/flat_dies_assembly.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/icons/gfm_dies_assembly.svg" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/icons/gfm_dies_assembly.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/icons/knife_die_assembly.svg" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/icons/knife_die_assembly.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/icons/knife_die_bottom.svg" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/icons/knife_die_bottom.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/icons/rounding_die_bottom.svg" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/icons/rounding_die_bottom.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/icons/rounding_die_top.svg" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/icons/rounding_die_top.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/icons/rounding_dies_assembly.svg" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/icons/rounding_dies_assembly.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/icons/v_die_bottom.svg" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/icons/v_die_bottom.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/icons/v_die_top.svg" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/icons/v_die_top.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/icons/v_dies_assembly.svg" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/icons/v_dies_assembly.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/task1" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/task1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/tasks0509" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/tasks0509" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/tasks0510" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/tasks0510" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/add_attributes_to_operations_json.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/add_attributes_to_operations_json.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/add_die_records_from_library.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/add_die_records_from_library.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/add_operations.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/add_operations.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/add_press_records_from_library.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/add_press_records_from_library.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/autostart.bat" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/autostart.bat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/convert.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/convert.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/die_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/die_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/fluent-bit.conf" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/fluent-bit.conf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/freeze_packages.sh" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/freeze_packages.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/get_available_lybrary_type_id_numbers.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/get_available_lybrary_type_id_numbers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/install.bat" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/install.bat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/install_initial.bat" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/install_initial.bat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/install_update.bat" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/install_update.bat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/operations_old.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/operations_old.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/pb_dumpall.bat" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/pb_dumpall.bat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/query_and_file_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/query_and_file_functions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/refresh_time_between_operations.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/refresh_time_between_operations.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/rot4.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/rot4.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/setup_sql.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/setup_sql.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/srv_post/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/srv_post/server.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/srv_pre/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/srv_pre/server.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/test_psql.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/test_psql.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend_old/utils/triggers.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend_old/utils/triggers.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718.tar.gz" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718.tar.gz.contents.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718.tar.gz.sha256" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/history.project.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/session_index.project.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/10/rollout-2026-02-10T16-56-15-019c49fb-f704-7303-95d6-4e98c847e32f.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/10/rollout-2026-02-10T16-57-30-019c49fd-1cc6-78b3-a847-369a65db27cf.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/10/rollout-2026-02-10T20-13-04-019c4ab0-2897-7e90-bc12-4a773f769a7e.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/10/rollout-2026-02-10T20-44-59-019c4acd-5fec-7132-b4ed-9c46662a353a.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/10/rollout-2026-02-10T22-10-15-019c4b1b-6fa6-7cc0-8316-cdcbdb169a21.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/10/rollout-2026-02-10T22-11-16-019c4b1c-60c0-7d62-ba18-00bb38a7de95.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/11/rollout-2026-02-11T00-21-41-019c4b93-c471-73d0-adc3-0f1627ece88c.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/11/rollout-2026-02-11T00-27-31-019c4b99-1b32-7a60-b6ec-555bf967d00c.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/11/rollout-2026-02-11T00-29-44-019c4b9b-235c-7e10-a71d-51c3782d215c.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/11/rollout-2026-02-11T00-32-16-019c4b9d-75a6-73d0-9c48-df73b2699e36.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/11/rollout-2026-02-11T00-44-15-019c4ba8-6d73-7c63-9ef3-4af32c8ea31e.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/11/rollout-2026-02-11T00-46-48-019c4baa-c293-7111-a433-542df5aea176.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/11/rollout-2026-02-11T00-47-58-019c4bab-d60c-7c73-9404-019ab2f20cc9.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/11/rollout-2026-02-11T00-49-07-019c4bac-e2db-7c01-be18-00ed7ab744bd.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/11/rollout-2026-02-11T00-50-07-019c4bad-cca9-76b2-9252-293a51d418cf.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/11/rollout-2026-02-11T01-36-13-019c4bd8-02d8-7053-8b8a-cafc695b211c.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/11/rollout-2026-02-11T01-37-57-019c4bd9-975a-7493-a771-56c3247f8a9c.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/11/rollout-2026-02-11T18-13-38-019c4f69-2a59-7b63-95f3-d7ed246284a7.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/11/rollout-2026-02-11T18-14-24-019c4f69-de01-7b11-a97d-2fbe596386b8.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/11/rollout-2026-02-11T22-36-37-019c5059-eeda-7f82-a1ec-a9e405a87072.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/11/rollout-2026-02-11T22-46-27-019c5062-f146-7281-bb52-ddcc855892ee.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/12/rollout-2026-02-12T03-21-13-019c515e-7f91-7970-8865-3462418bf852.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/21/rollout-2026-02-21T21-33-13-019c839f-7b7a-7753-93a4-63a3b846efe3.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/22/rollout-2026-02-22T07-48-55-019c85d3-2e29-7a13-8865-447099f04892.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/24/rollout-2026-02-24T19-22-36-019c929a-fc34-79d2-8cab-34cec1b6f337.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/25/rollout-2026-02-25T19-05-36-019c97b1-c609-7862-8818-e708623da3cc.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/25/rollout-2026-02-25T19-32-24-019c97ca-4edd-7d72-8e3d-f065644b7ade.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/02/27/rollout-2026-02-27T03-18-48-019c9e9b-ae09-7ee0-92e4-362cc53076f1.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/03/03/rollout-2026-03-03T19-50-15-019cb6c0-d1c6-7bc3-ab96-9c02b51aed7f.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/03/23/rollout-2026-03-23T18-17-51-019d1d34-7a15-72f1-9308-b917965882cb.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/03/25/rollout-2026-03-25T03-47-46-019d2464-9c67-7520-b20d-a765479a4d66.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/03/27/rollout-2026-03-27T20-58-56-019d3261-6250-7ba3-9a0d-18fb42853139.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/03/30/rollout-2026-03-30T02-51-43-019d3df1-18fa-71e3-898d-8c115efd2a20.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/03/30/rollout-2026-03-30T19-18-05-019d4178-2450-7d02-8866-4afabc3b8ece.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/04/03/rollout-2026-04-03T22-21-35-019d56b9-9318-7632-9d93-149a5526b88d.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/04/03/rollout-2026-04-03T22-23-01-019d56ba-e19c-74f3-9ff4-2210135fdb54.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/04/04/rollout-2026-04-04T03-21-05-019d57cb-c5c9-7963-b2c4-62a2642166a8.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/04/14/rollout-2026-04-14T20-03-45-019d8ee1-53f6-7921-9f30-966dda18839c.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/04/14/rollout-2026-04-14T20-21-58-019d8ef2-02a7-71f0-9439-2b4321f3f2d4.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/04/15/rollout-2026-04-15T00-39-23-019d8fdd-af6a-7452-8ee0-20ee712d472d.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/04/15/rollout-2026-04-15T21-03-06-019d943e-06b0-7ab1-bd69-3171a328efed.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/04/29/rollout-2026-04-29T08-07-04-019dd990-942b-7e52-9d44-1435da31dc44.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/04/29/rollout-2026-04-29T17-25-54-019ddb90-34f2-74e0-a670-8fc85adfc242.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/04/29/rollout-2026-04-29T19-35-19-019ddc06-b387-7951-92bf-178af16a0298.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/05/04/rollout-2026-05-04T21-10-22-019df61d-8225-77c3-90b0-248a16afa935.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/05/06/rollout-2026-05-06T20-06-52-019e0030-1789-7e91-8901-bfdcbc0b96f1.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/05/10/rollout-2026-05-10T22-18-12-019e1541-c515-7952-b947-2b53939fbae9.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/05/13/rollout-2026-05-13T10-46-21-019e223b-71c2-7603-ab21-779fdd8d71b7.jsonl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/.codex/sessions/2026/05/26/rollout-2026-05-26T08-53-34-019e64c6-dc5d-7f70-9700-1c21a1f9cf8a.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/.output.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/RESTORE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/meta/copied-session-count.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/meta/copied-session-files.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/meta/history-row-count.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/meta/session-files-absolute.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/meta/session-files-relative.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/apiProject1-codex-resume-20260526-085718/meta/session-ids.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/codex-resume-backups/config.toml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/database-backups/forgelab-db-20260526-093356.tar.gz" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/database-backups/forgelab-db-20260526-093356.tar.gz.sha256" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/database-backups/forgelab-db-20260526-093356/MANIFEST.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/database-backups/forgelab-db-20260526-093356/notion_db.dump" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/database-backups/forgelab-db-20260526-093356/notion_db.dump.contents.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/database-backups/forgelab-db-20260526-093356/notion_db.dump.local.sha256" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/database-backups/forgelab-db-20260526-093356/notion_db.dump.sha256" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/dev.py" beforeDir="false" afterPath="$PROJECT_DIR$/dev.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.env.example" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.eslintrc.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.eslintrc.cjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.prettierrc" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.prettierrc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/e2e/MCP_DEBUG_PROMPT.txt" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/e2e/MCP_DEBUG_PROMPT.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/e2e/MCP_DEBUG_QUICKSTART.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/e2e/MCP_DEBUG_QUICKSTART.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/e2e/playwright.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/e2e/playwright.config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/e2e/tests/smoke.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/e2e/tests/smoke.spec.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/postcss.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/postcss.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/vite.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/vite.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/BlockEditor.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/BlockEditor.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/MainEditorPane.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/MainEditorPane.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/MenuBar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/MenuBar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/ToolsPane.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ToolsPane.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/ToolsSwitcher.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ToolsSwitcher.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/BlockRegistry.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/blocks/BlockRegistry.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/DocumentBlock.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/blocks/DocumentBlock.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/OperationBlock.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/blocks/OperationBlock.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/blocks/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/blocks/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/clipboard/ClipboardPane.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/clipboard/ClipboardPane.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/editorPaneTypes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/editorPaneTypes.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/inlineResults/DocumentInlineResults.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/inlineResults/DocumentInlineResults.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/library/DieStlPreview.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/library/DieStlPreview.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/library/LibraryViews.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/library/LibraryViews.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/operations/DocumentOperationsView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/operations/DocumentOperationsView.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/runtimeLogs/LogsView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/runtimeLogs/LogsView.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/simulation/SimulationView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/simulation/SimulationView.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/simulationSteps/SimulationStepsView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/simulationSteps/SimulationStepsView.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/simulationSteps/SurfaceMeshThreeView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/simulationSteps/SurfaceMeshThreeView.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/ui/Tooltip.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ui/Tooltip.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/index.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/lib/apiClient.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/apiClient.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/lib/blockFieldLimits.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/blockFieldLimits.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/lib/blockTypeMeta.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/blockTypeMeta.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/lib/documentResumeState.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/documentResumeState.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/lib/libraryDisplay.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/libraryDisplay.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/lib/utils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/utils.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/main.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/AppPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AppPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/LoginPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/LoginPage.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/SetupPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/SetupPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/stores/useBlockClipboardStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/stores/useBlockClipboardStore.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/stores/useDocumentsStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/stores/useDocumentsStore.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/stores/useLibraryStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/stores/useLibraryStore.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/stores/useSessionStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/stores/useSessionStore.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/types/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/types/api.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/tailwind.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/tailwind.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/tsconfig.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/tsconfig.node.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/tsconfig.node.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vite.config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mypy.ini" beforeDir="false" afterPath="$PROJECT_DIR$/mypy.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.bin/playwright" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.bin/playwright" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.bin/playwright-core" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.bin/playwright-core" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.bin/playwright-core.cmd" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.bin/playwright-core.cmd" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.bin/playwright-core.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.bin/playwright-core.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.bin/playwright.cmd" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.bin/playwright.cmd" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.bin/playwright.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.bin/playwright.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/@playwright/test/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/@playwright/test/LICENSE" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/@playwright/test/NOTICE" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/@playwright/test/NOTICE" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/@playwright/test/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/@playwright/test/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/@playwright/test/cli.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/@playwright/test/cli.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/@playwright/test/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/@playwright/test/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/@playwright/test/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/@playwright/test/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/@playwright/test/index.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/@playwright/test/index.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/@playwright/test/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/@playwright/test/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/@playwright/test/reporter.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/@playwright/test/reporter.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/@playwright/test/reporter.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/@playwright/test/reporter.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/@playwright/test/reporter.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/@playwright/test/reporter.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/LICENSE" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/NOTICE" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/NOTICE" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/ThirdPartyNotices.txt" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/ThirdPartyNotices.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/install_media_pack.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/install_media_pack.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/install_webkit_wsl.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/install_webkit_wsl.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_chrome_beta_linux.sh" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_chrome_beta_linux.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_chrome_beta_mac.sh" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_chrome_beta_mac.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_chrome_beta_win.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_chrome_beta_win.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_chrome_stable_linux.sh" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_chrome_stable_linux.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_chrome_stable_mac.sh" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_chrome_stable_mac.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_chrome_stable_win.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_chrome_stable_win.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_beta_linux.sh" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_beta_linux.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_beta_mac.sh" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_beta_mac.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_beta_win.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_beta_win.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_dev_linux.sh" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_dev_linux.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_dev_mac.sh" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_dev_mac.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_dev_win.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_dev_win.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_stable_linux.sh" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_stable_linux.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_stable_mac.sh" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_stable_mac.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_stable_win.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/bin/reinstall_msedge_stable_win.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/browsers.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/browsers.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/cli.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/cli.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/index.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/index.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/types/protocol.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/types/protocol.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/types/structs.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/types/structs.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright-core/types/types.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright-core/types/types.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright/LICENSE" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright/NOTICE" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright/NOTICE" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright/ThirdPartyNotices.txt" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright/ThirdPartyNotices.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright/cli.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright/cli.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright/index.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright/index.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright/jsx-runtime.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright/jsx-runtime.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright/jsx-runtime.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright/jsx-runtime.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright/test.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright/test.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright/test.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright/test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright/test.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright/test.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright/types/test.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright/types/test.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/playwright/types/testReporter.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/playwright/types/testReporter.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/playwright/betaflight-home-viewport.png" beforeDir="false" afterPath="$PROJECT_DIR$/output/playwright/betaflight-home-viewport.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/playwright/betaflight-options-after-click.png" beforeDir="false" afterPath="$PROJECT_DIR$/output/playwright/betaflight-options-after-click.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/terminal-settings-backups/kitty-shortcuts-20260526-090627.tar.gz" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terminal-settings-backups/kitty-shortcuts-20260526-090627.tar.gz.contents.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terminal-settings-backups/kitty-shortcuts-20260526-090627.tar.gz.sha256" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terminal-settings-backups/kitty-shortcuts-20260526-090627/.config/kitty/kitty-startup.session" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terminal-settings-backups/kitty-shortcuts-20260526-090627/.config/kitty/kitty.conf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terminal-settings-backups/kitty-shortcuts-20260526-090627/.config/kitty/kitty_search/LICENSE" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terminal-settings-backups/kitty-shortcuts-20260526-090627/.config/kitty/kitty_search/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terminal-settings-backups/kitty-shortcuts-20260526-090627/.config/kitty/kitty_search/pyproject.toml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terminal-settings-backups/kitty-shortcuts-20260526-090627/.config/kitty/kitty_search/scroll_mark.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terminal-settings-backups/kitty-shortcuts-20260526-090627/.config/kitty/kitty_search/search.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terminal-settings-backups/kitty-shortcuts-20260526-090627/RESTORE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terminal-settings-backups/kitty-shortcuts-20260526-090627/meta/active-map-lines.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terminal-settings-backups/kitty-shortcuts-20260526-090627/meta/manifest.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terminal-settings-backups/kitty-shortcuts-20260526-090627/meta/relevant-shortcuts.txt" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -725,7 +35,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="2476" />
+    <option name="cachedIndexableFilesCount" value="590" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="FileTemplateManagerImpl">
@@ -738,29 +48,38 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {}
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;git@github.com:coffeejuice/apiProject1.git&quot;,
+    &quot;accountId&quot;: &quot;9efd8ec0-a607-4604-956c-fef0507651d7&quot;
+  }
+}</component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.2060498878489812" />
-      <entry key="MS500" value="2.7997644599642086" />
-      <entry key="S2" value="6.313011991018165" />
-      <entry key="S5" value="11.380318798742477" />
-      <entry key="S10" value="17.6888879472761" />
-      <entry key="S30" value="27.170677361449478" />
-      <entry key="S60" value="32.193591887987736" />
-      <entry key="M2" value="43.68082017787579" />
-      <entry key="M5" value="91.47739142407167" />
-      <entry key="M10" value="172.96843339049795" />
-      <entry key="M15" value="238.81205645146" />
-      <entry key="M30" value="356.65952473387694" />
-      <entry key="H1" value="450.43973072679756" />
-      <entry key="H2" value="510.55032649022246" />
-      <entry key="H4" value="544.7170964560034" />
-      <entry key="D1" value="575.5566256519008" />
-      <entry key="W1" value="581.073715647864" />
+      <entry key="MS100" value="1.1984765669918678" />
+      <entry key="MS500" value="3.3176331884027457" />
+      <entry key="S2" value="9.691334945938454" />
+      <entry key="S5" value="17.22412951660015" />
+      <entry key="S10" value="24.6306341642183" />
+      <entry key="S30" value="62.82250705828948" />
+      <entry key="S60" value="129.52926873491126" />
+      <entry key="M2" value="223.07063000367373" />
+      <entry key="M5" value="375.62736151820275" />
+      <entry key="M10" value="525.3391900827475" />
+      <entry key="M15" value="628.6047724085802" />
+      <entry key="M30" value="809.72374756188" />
+      <entry key="H1" value="957.6334518219653" />
+      <entry key="H2" value="1055.1453498280628" />
+      <entry key="H4" value="1111.57776081799" />
+      <entry key="D1" value="1163.1490043428696" />
+      <entry key="W1" value="1172.438468584762" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -782,23 +101,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.1825612346416434" />
-      <entry key="MS500" value="2.7900744004449156" />
-      <entry key="S2" value="6.307916357073151" />
-      <entry key="S5" value="11.37663871380992" />
-      <entry key="S10" value="17.685995404751033" />
-      <entry key="S30" value="27.16917936617358" />
-      <entry key="S60" value="32.192695730798036" />
-      <entry key="M2" value="43.68019452033232" />
-      <entry key="M5" value="91.47683380655195" />
-      <entry key="M10" value="172.96786576433848" />
-      <entry key="M15" value="238.81151203807747" />
-      <entry key="M30" value="356.6590970564364" />
-      <entry key="H1" value="450.4394528444722" />
-      <entry key="H2" value="510.5501666392078" />
-      <entry key="H4" value="544.7170105305294" />
-      <entry key="D1" value="575.5566104229296" />
-      <entry key="W1" value="581.0737134490158" />
+      <entry key="MS100" value="1.157644780225778" />
+      <entry key="MS500" value="3.2944507954543103" />
+      <entry key="S2" value="9.674435854437405" />
+      <entry key="S5" value="17.212027489423665" />
+      <entry key="S10" value="24.621918395728038" />
+      <entry key="S30" value="62.81496581708029" />
+      <entry key="S60" value="129.52140683447684" />
+      <entry key="M2" value="223.06378903659518" />
+      <entry key="M5" value="375.62274010072514" />
+      <entry key="M10" value="525.3360565504747" />
+      <entry key="M15" value="628.6023422725968" />
+      <entry key="M30" value="809.7222503091939" />
+      <entry key="H1" value="957.6325912910531" />
+      <entry key="H2" value="1055.144882986787" />
+      <entry key="H4" value="1111.5775168395471" />
+      <entry key="D1" value="1163.1489620731327" />
+      <entry key="W1" value="1172.4384625048972" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -831,7 +150,7 @@
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/alextub/Documents/apiProject1&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/alext/Projects/apiProject1&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.stylelint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -974,9 +293,13 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-PY-261.24374.152" />
         <option value="bundled-python-sdk-c59985aa861c-c2ffad84badb-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.24374.152" />
       </set>
     </attachedChunks>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration>C:\Users\alext\AppData\Roaming\Subversion</configuration>
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -1088,6 +411,14 @@
       <workItem from="1779947956890" duration="5078000" />
       <workItem from="1780028063471" duration="2302000" />
       <workItem from="1780199647175" duration="722000" />
+      <workItem from="1780562890602" duration="326000" />
+      <workItem from="1780563330698" duration="521000" />
+      <workItem from="1780564132318" duration="939000" />
+      <workItem from="1781159928973" duration="3340000" />
+      <workItem from="1781163890937" duration="353000" />
+      <workItem from="1781164260809" duration="57000" />
+      <workItem from="1781164329404" duration="12741000" />
+      <workItem from="1781233817492" duration="1040000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -1366,6 +697,7 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="MARK_IGNORED_AS_EXCLUDED" value="true" />
     <MESSAGE value="Fix username -&gt; login column rename in User" />
     <MESSAGE value="Fix problem: create new document" />
     <MESSAGE value="Add API for settings and GUI commands" />

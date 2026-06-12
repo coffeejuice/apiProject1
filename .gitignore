@@ -144,6 +144,7 @@ celerybeat.pid
 
 # Environments
 backend/.env
+backend/logs/
 backend/tmp/
 .envrc
 .venv

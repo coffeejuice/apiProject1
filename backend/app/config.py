@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    SETUP_ADMIN_RESET_TOKEN: str = ""
     LIBRARY_FILES_ROOT: str = "/var/lib/forgelab/"
     NAS_MOUNT_ROOT: str = "/mnt/forgelab"
     LOGS_FILES_ROOT: str = "/var/log/forgelab"

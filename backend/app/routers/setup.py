@@ -1,6 +1,8 @@
+import hmac
+import ipaddress
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from pydantic import BaseModel, Field
@@ -19,6 +21,7 @@ optional_bearer = HTTPBearer(auto_error=False)
 
 class AdminPasswordResetRequest(BaseModel):
     new_password: str = Field(min_length=8, max_length=255)
+    setup_token: Optional[str] = Field(default=None, min_length=16, max_length=255)
 
 
 def _get_optional_user(
@@ -38,11 +41,63 @@ def _get_optional_user(
     return db.execute(select(User).filter(User.user_id == user_id)).scalars().first()
 
 
+def _is_loopback_request(request: Request) -> bool:
+    host = request.client.host if request.client else ""
+    if not host:
+        return False
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return host.lower() == "localhost"
+
+
+def _authorize_admin_password_reset(
+    request: Request,
+    current_user: Optional[User],
+    setup_token: Optional[str],
+) -> None:
+    if current_user is not None and current_user.supervisor_id == 1:
+        return
+
+    configured_token = settings.SETUP_ADMIN_RESET_TOKEN.strip()
+    if not configured_token:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator authentication is required; setup token reset is not configured",
+        )
+
+    if not _is_loopback_request(request):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Setup token admin reset is only allowed from localhost",
+        )
+
+    if not setup_token or not hmac.compare_digest(setup_token, configured_token):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid setup reset token",
+        )
+
+
 @router.get("/status")
 def setup_status(
+    request: Request,
     db: Session = Depends(get_db),
 ):
-    return library_seed_service.get_status(db)
+    setup_data = library_seed_service.get_status(db)
+    admin_user_exists = db.execute(
+        select(User.user_id).filter(User.login == "admin")
+    ).first() is not None
+    if not admin_user_exists:
+        admin_user_exists = db.execute(
+            select(User.user_id).filter(User.user_id == 1)
+        ).first() is not None
+
+    setup_data["admin_user_exists"] = admin_user_exists
+    setup_data["can_reset_admin_password_with_setup_token"] = bool(
+        settings.SETUP_ADMIN_RESET_TOKEN.strip() and _is_loopback_request(request)
+    )
+    return setup_data
 
 
 @router.post("/seed-library")
@@ -73,15 +128,12 @@ def seed_library(
 
 @router.post("/reset-admin-password")
 def reset_admin_password(
+    request: Request,
     payload: AdminPasswordResetRequest,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(_get_optional_user),
 ):
-    if current_user is None or current_user.supervisor_id != 1:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Administrator authentication is required to reset admin password",
-        )
+    _authorize_admin_password_reset(request, current_user, payload.setup_token)
 
     admin_user = db.execute(select(User).filter(User.login == "admin")).scalars().first()
     if admin_user is None:
