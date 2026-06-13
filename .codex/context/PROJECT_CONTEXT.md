@@ -433,6 +433,19 @@ ForgeLab is a monorepo for a project-scoped, Notion-like editor with a FastAPI b
 - `frontend_obsolete/` was removed after active React/Vite frontend became the only supported client.
 - Prefer non-destructive changes and keep backend/frontend contract synchronized.
 
+## Backend engineering math style standard
+- Backend domain math, especially Pre/Solver/Post forging calculations, should be readable by an engineer who is not primarily a programmer.
+- Current cogging/prolongation code follows this standard under `backend/app/services/preprocessor/cogging/`; `backend/app/services/preprocessor/prolongation.py` is a compatibility wrapper.
+- Do not mix different operation families or operation variants into one large math function. Branching by semantic template ID belongs in a small adapter/dispatcher near compiler plumbing, not inside the engineering formula implementation.
+- Prefer one top-level calculation function per operation variant, for example axial cogging by height/feed, axial cogging by height/bites, skipped-bites cogging, spiral rounding, radial cogging, and transverse/full-die cogging.
+- Within each operation-variant function, use a linear calculation-sheet flow: validate/normalize typed inputs, compute named intermediate quantities, compute 2D contour inputs/results, compute strain/deformation metrics, compute bite/feed/timing outputs, and return a typed result.
+- Encapsulate repeated engineering idioms into small functions with clear names and units, such as `penetration_from_height`, `relative_deformation_percent`, `contact_length_along_die_edge`, `logarithmic_height_strain`, `logarithmic_length_strain_from_area`, `equivalent_strain_increment`, and `cycle_time_per_bite`.
+- Do not wrap every arithmetic operator in a helper. Use helper functions for meaningful engineering formulas, not for trivial arithmetic.
+- Use typed dataclasses or Pydantic models for math inputs and outputs where practical. Avoid loose dictionaries inside the math layer; convert to `metrics`, `pre_output`, and API/DB payload dictionaries only at adapter boundaries.
+- Keep 2D contour generation and 3D surface/mesh generation in separate geometry modules. Math functions may request or consume contour/surface results, but they should not embed Shapely/Trimesh implementation details.
+- Preserve old-project variable names only in backend adapters and compatibility mappings. New math code should use explicit engineering names with units, such as `initial_height_mm`, `final_cross_section_area_mm2`, and `speed_mm_per_s`.
+- When migrating legacy formulas, first lock current behavior with focused fixtures, then refactor structure without changing formulas, and only then consider formula corrections.
+
 ## Current testing reality
 - Frontend has Playwright e2e scaffold (`frontend/e2e`).
 - Backend `backend/tests/` currently has limited script-style coverage.

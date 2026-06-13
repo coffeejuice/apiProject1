@@ -24,9 +24,14 @@ from app.services.preprocessor.legacy_surface_mesh import (
     LegacySurfaceMeshBuilder,
     LegacySurfacePair,
 )
-from app.services.preprocessor.prolongation import (
-    ProlongationMathError,
-    calculate_prolongation,
+from app.services.preprocessor.cogging import (
+    CoggingCalculationInput,
+    CoggingMathError,
+    calculate_cogging,
+)
+from app.services.preprocessor.cogging.surfaces_3d import (
+    CoggingSurfaceInput,
+    build_cogging_surface_pair,
 )
 from app.services.preprocessor.surface_mesh import SurfaceMesh, SurfaceMeshError
 from app.services.preprocessor.cutting import CuttingMathError, calculate_cutting
@@ -1170,36 +1175,38 @@ class PreprocessorCompiler:
         compiled_operation_type = "FullDie" if operation.deformation_type == "full_die" else "Draw"
 
         try:
-            result = calculate_prolongation(
-                template_id=operation.operation_template_id,
-                initial_geometry=initial_geometry,
-                press_mode=press_mode,
-                top_die=top_die,
-                bottom_die=bottom_die,
-                speed_mm_per_s=target_speed,
-                previous_total_time_seconds=previous.total_time_seconds,
-                time_between_operation_seconds=time_before,
-                angle_deg=angle_deg,
-                final_height_mm=self._first_optional_float(operation_output, "height", "final_height"),
-                final_diameter_mm=self._first_optional_float(operation_output, "diameter", "final_diameter"),
-                radial_feed_mm=self._first_optional_float(operation_output, "radial_feed"),
-                feed_mm=self._first_optional_float(operation_output, "feed", "feed_first"),
-                feed_first_mm=self._first_optional_float(operation_output, "feed_first"),
-                feed_middle_mm=self._first_optional_float(operation_output, "feed_middle"),
-                feed_last_mm=self._first_optional_float(operation_output, "feed_last"),
-                num_of_bites_input=self._coerce_optional_int(operation_output.parameters.get("num_of_bites")),
-                skip_bites=self._parse_skip_bites(operation_output.parameters.get("skip_bites")),
-                rotation_per_bite_deg=self._first_optional_float(operation_output, "rotation_per_bite") or 0.0,
-                current_feed_direction_id=current_feed_direction_id,
-                previous_feed_direction_id=previous_feed_direction_id,
-                is_same_operation_type_as_previous=previous.operation_type == compiled_operation_type,
-                mesh_elements=self._resolve_mesh_elements(operation_output, previous),
-                extra_rotations={
-                    "y_rotation": self._first_optional_float(operation_output, "y_rotation") or 0.0,
-                    "z_rotation": self._first_optional_float(operation_output, "z_rotation") or 0.0,
-                },
+            result = calculate_cogging(
+                CoggingCalculationInput(
+                    template_id=operation.operation_template_id,
+                    initial_geometry=initial_geometry,
+                    press_mode=press_mode,
+                    top_die=top_die,
+                    bottom_die=bottom_die,
+                    speed_mm_per_s=target_speed,
+                    previous_total_time_seconds=previous.total_time_seconds,
+                    time_between_operation_seconds=time_before,
+                    angle_deg=angle_deg,
+                    final_height_mm=self._first_optional_float(operation_output, "height", "final_height"),
+                    final_diameter_mm=self._first_optional_float(operation_output, "diameter", "final_diameter"),
+                    radial_feed_mm=self._first_optional_float(operation_output, "radial_feed"),
+                    feed_mm=self._first_optional_float(operation_output, "feed", "feed_first"),
+                    feed_first_mm=self._first_optional_float(operation_output, "feed_first"),
+                    feed_middle_mm=self._first_optional_float(operation_output, "feed_middle"),
+                    feed_last_mm=self._first_optional_float(operation_output, "feed_last"),
+                    num_of_bites_input=self._coerce_optional_int(operation_output.parameters.get("num_of_bites")),
+                    skip_bites=self._parse_skip_bites(operation_output.parameters.get("skip_bites")),
+                    rotation_per_bite_deg=self._first_optional_float(operation_output, "rotation_per_bite") or 0.0,
+                    current_feed_direction_id=current_feed_direction_id,
+                    previous_feed_direction_id=previous_feed_direction_id,
+                    is_same_operation_type_as_previous=previous.operation_type == compiled_operation_type,
+                    mesh_elements=self._resolve_mesh_elements(operation_output, previous),
+                    extra_rotations={
+                        "y_rotation": self._first_optional_float(operation_output, "y_rotation") or 0.0,
+                        "z_rotation": self._first_optional_float(operation_output, "z_rotation") or 0.0,
+                    },
+                )
             )
-        except ProlongationMathError as exc:
+        except CoggingMathError as exc:
             raise PreprocessorCompileError(
                 f"Prolongation operation_output operation_id={operation_output.operation_id} cannot be compiled: {exc}"
             ) from exc
@@ -1214,13 +1221,16 @@ class PreprocessorCompiler:
         self._store_feed_direction_metrics(metrics, operation, current_feed_direction_id)
         surface_pair = self._safe_surface_pair(
             "prolongation",
-            lambda: self._surface_builder.prolongation(
-                previous_final=previous.final_surface_mesh,
-                initial_geometry=initial_geometry,
-                final_geometry=result.final_geometry,
-                metrics=metrics,
-                operation_specific_parameters=operation_specific_parameters,
-                template_id=operation.operation_template_id,
+            lambda: build_cogging_surface_pair(
+                CoggingSurfaceInput(
+                    previous_final=previous.final_surface_mesh,
+                    initial_geometry=initial_geometry,
+                    final_geometry=result.final_geometry,
+                    metrics=metrics,
+                    operation_specific_parameters=operation_specific_parameters,
+                    template_id=operation.operation_template_id,
+                ),
+                builder=self._surface_builder,
             ),
         )
         initial_surface_area, final_surface_area = self._surface_areas_from_pair(surface_pair, context="prolongation")

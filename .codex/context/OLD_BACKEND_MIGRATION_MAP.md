@@ -189,18 +189,20 @@ Mutable postprocessing queue and output records derived from simulation steps.
   - axial prolongation operations `46`, `83`, `90`
   - spiral prolongation operations `50`, `51`
   - radial prolongation operations `95`, `96`, legacy `80`, `82`
-- Current prolongation implementation lives in `backend/app/services/preprocessor/prolongation.py`.
-  - It ports feed/bite table construction, deformation/timing state, rotations metadata, and final-geometry propagation into a dependency-light implementation.
-  - It now uses `backend/app/services/preprocessor/prolongation_geometry.py` for the Shapely-backed die/polygon path migrated from `common/shapely_2d_funcs.py`.
+- Current prolongation compatibility entrypoint lives in `backend/app/services/preprocessor/prolongation.py`; the active engineer-readable implementation lives under `backend/app/services/preprocessor/cogging/`.
+  - `cogging/models.py` defines typed math input/result contracts, `cogging/adapter.py` is the only scalar-math template dispatcher, and `cogging/math/` contains per-variant calculation modules for axial, skipped-bites, spiral, radial, and transverse/full-die cogging.
+  - `cogging/contours_2d/` owns operation-specific 2D contour entrypoints and delegates the migrated Shapely path to `backend/app/services/preprocessor/prolongation_geometry.py`.
+  - `cogging/surfaces_3d/` owns operation-specific 3D surface entrypoints and delegates the current legacy-compatible Trimesh/STL behavior to `backend/app/services/preprocessor/legacy_surface_mesh.py`.
   - The migrated Shapely path covers polygon conversion, die gap positioning, final die positioning, vertical pre-scaling, split-line trimming, contact-width optimization, middle-zone reconstruction, and area/height validation.
   - If Shapely is unavailable or the trim result fails quality checks, prolongation falls back to deterministic dependency-light scaling and records a compiler note.
   - The old STL die-section import path is not ported; the new path reconstructs simplified 2D die cross-sections from `dies.properties` dimensions.
+  - The mixed branch-heavy `calculate_prolongation()` implementation has been replaced by the typed cogging package; keep future formula changes inside per-variant modules and keep semantic-template dispatch in adapters.
 - `simulation_steps.source_block_id` is now populated from the source `document_blocks.block_id` when the runtime pre worker compiles a document.
 
 - `backend_old/forgelab/srv_pre/pre_worker_class.py`
   - Target: `backend/app/workers/pre_worker.py`, `backend/app/services/preprocessor/compiler.py`, `backend/app/services/preprocessor/control_program_builder.py`
   - Status: `split`
-  - Notes: thin worker shell goes into `workers/`; process-analysis and control-program generation logic goes into `services/preprocessor/`.
+  - Notes: thin worker shell goes into `workers/`; process-analysis and control-program generation logic goes into `services/preprocessor/`. Do not copy the old hidden-row-state style into new math modules; extract formulas into typed, per-variant calculation functions.
 
 - `backend_old/forgelab/srv_pre/geometry_class.py`
   - Target: `backend/app/services/preprocessor/` as a future geometry helper module
@@ -334,7 +336,7 @@ Mutable postprocessing queue and output records derived from simulation steps.
 - `backend_old/forgelab/common/shapely_2d_funcs.py`
   - Target: `backend/app/services/preprocessor/` and `backend/app/services/solver/`
   - Status: `split`
-  - Notes: likely one of the most reusable geometry modules, but too broad for one direct destination.
+  - Notes: likely one of the most reusable geometry modules, but too broad for one direct destination. When porting, split Shapely-backed 2D contour logic by geometry responsibility and keep it separate from scalar cogging math and Trimesh/PLY surface generation.
 
 - `backend_old/forgelab/common/time_between_operations.py`
   - Target: `backend/app/services/preprocessor/control_program_builder.py`

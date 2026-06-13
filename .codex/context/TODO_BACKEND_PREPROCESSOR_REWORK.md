@@ -49,6 +49,7 @@ The first work item remains the Simulations/Steps inspection UI plus correct 2D/
 - Use local JSONL files plus read-only API endpoints for API/Pre/Post/Coordinator diagnostics. Do not store diagnostic logs in workflow tables.
 - Naming cleanup rule: old `process` terms that mean technological process/document flow should become `document`; old materialized-operation input wording should become `document_operation`. Do not rename `preprocess`, `preprocessor`, `postprocessing`, OS/runtime process terminology, or UI card styling terms such as `ui-card`.
 - Final chosen target for the old `ProcessCard` artifact is now implemented: `DocumentOperationOutput`. In the current architecture this name means the output of the `document_blocks -> document_operations` materialization stage as consumed by Pre, not the final Pre output.
+- Backend forging math should use an engineer-readable calculation-sheet style. Keep semantic-template dispatch and compatibility mapping outside math functions; keep one top-level calculation function per operation variant; keep 2D contour generation and 3D surface generation separate from scalar engineering formulas; use typed inputs/results with explicit units where practical; and convert typed math results to JSON/dict payloads only at compiler/API boundaries.
 
 ## Deferred Or Rejected Items
 - Do not add a duplicate Operations table elsewhere in the UI. Extend the existing Operations workspace instead.
@@ -199,9 +200,12 @@ Tasks:
 - 9.12 Maintain mapping report: semantic operation id -> Pre adapter -> legacy operation/math source.
 - 9.13 Maintain mapping report: new JSON parameter name -> old preprocessor/math variable name.
 - 9.14 Fail loudly if a new semantic template would use generic fallback.
+- 9.15 Done: introduced typed Pre math input/result models for cogging/prolongation variants under `backend/app/services/preprocessor/cogging/models.py`.
+- 9.16 Done: split current mixed prolongation math into separate operation-variant modules under `backend/app/services/preprocessor/cogging/math/`: axial height/feed, axial height/bites, axial skipped-bites, spiral one-rotation, spiral three-rotations, radial height/feed, radial press-axis feed, radial height/bites, transverse all-in-one, and transversal rotation-height.
+- 9.17 Done: branching by `operation_template_id` is isolated in narrow cogging adapters; compiler plumbing now calls the typed adapter, and individual operation-variant math functions do not branch across unrelated cogging types.
 
 Exit criteria:
-- Every current operation template has documented parameter mapping and a real adapter.
+- Every current operation template has documented parameter mapping and a real adapter; cogging/prolongation math is reachable through typed, per-variant calculation functions rather than one mixed branch-heavy function.
 
 ## Stage 10: Pre Geometry, Artifacts, And Orientation Payload
 Goal: keep Pre geometry useful for both expert inspection and future animation/Solver/Post without hidden fallback algorithms.
@@ -218,9 +222,12 @@ Tasks:
 - 10.7 Preserve old-project variable names only inside backend adapters.
 - 10.8 Add diagnostics when animation or orientation-sensitive result display is requested but orientation payload is missing.
 - 10.9 Decide whether persistent heavy artifacts need a dedicated artifact table before Solver/Post depend on them.
+- 10.10 Done: split cogging/prolongation 2D contour generation into operation-specific contour functions under `backend/app/services/preprocessor/cogging/contours_2d/`; Shapely details remain behind that layer.
+- 10.11 Done: split cogging/prolongation 3D surface generation into operation-specific surface functions under `backend/app/services/preprocessor/cogging/surfaces_3d/`; Trimesh behavior remains behind that layer and existing explicit missing-artifact behavior is preserved.
+- 10.12 Done: scalar math, 2D contour, and 3D surface responsibilities are separated for cogging/prolongation.
 
 Exit criteria:
-- Frontend can trust geometry/orientation payloads and never invent orientation, rotation, or substitute meshes.
+- Frontend can trust geometry/orientation payloads and never invent orientation, rotation, or substitute meshes; backend cogging geometry is separated into scalar math, 2D contour, and 3D surface layers.
 
 ## Stage 11: Pre Fixtures And Regression Tests
 Goal: keep operation materialization and Pre bridge stable while Solver/Post migration continues.
@@ -239,9 +246,11 @@ Tasks:
 - 11.9 Add focused billet-first fixture for `document_initial_data -> NewBillet -> simulation_steps`.
 - 11.10 Add 2-3 typical document fixtures covering Billet, Furnace, Upsetting, Cogging, Rounding, Radial, Transverse, and Cutting.
 - 11.11 Verify fixed document/version immutability after document fixation.
+- 11.12 Done: added per-variant cogging/prolongation regression coverage in `backend/tests/test_cogging_prolongation_math.py` using captured outputs from the old mixed `calculate_prolongation` behavior; the compatibility wrapper remains.
+- 11.13 Partially done: added focused cogging 2D contour regression through final-geometry outputs and lightweight 3D surface-dispatch coverage; heavier persisted artifact-summary fixtures are still deferred until Pre artifact test harnesses are broader.
 
 Exit criteria:
-- A regression run catches accidental breaks in parsing, materialization, Pre compilation, and row-by-row `simulation_steps` output.
+- A regression run catches accidental breaks in parsing, materialization, Pre compilation, cogging math/contour/surface calculations, and row-by-row `simulation_steps` output.
 
 ## Stage 12: Solver Input Contract
 Goal: define the minimum `simulation_steps` payload Solver needs before migrating Solver workers.

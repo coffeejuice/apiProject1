@@ -7,27 +7,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Fixed Billet block backend and fronted">
-      <change beforePath="$PROJECT_DIR$/.codex/context/DEV_LAUNCHER.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/DEV_LAUNCHER.md" afterDir="false" />
+    <list default="true" id="f2ca874d-b92b-480d-88d5-4074cc762a1d" name="Changes" comment="Migration to Windows">
+      <change beforePath="$PROJECT_DIR$/.codex/context/OLD_BACKEND_MIGRATION_MAP.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/OLD_BACKEND_MIGRATION_MAP.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.codex/context/PROJECT_CONTEXT.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/PROJECT_CONTEXT.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.codex/context/TODO_BACKEND_PREPROCESSOR_REWORK.md" beforeDir="false" afterPath="$PROJECT_DIR$/.codex/context/TODO_BACKEND_PREPROCESSOR_REWORK.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/apiProject1.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/apiProject1.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.env.example" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/routers/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/routers/setup.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/api/api-console.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/api/api-console.jsonl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/api/api.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/api/api.jsonl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/api/api.jsonl.1" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/api/api.jsonl.1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/api/api.jsonl.2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/api/api.jsonl.3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/api/api.jsonl.4" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/frontend/frontend.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/frontend/frontend.jsonl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/pre/pre-1-console.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/pre/pre-1-console.jsonl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/backend/logs/pre/pre-1.jsonl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dev.py" beforeDir="false" afterPath="$PROJECT_DIR$/dev.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/SetupPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/SetupPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/types/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/types/api.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/compiler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/preprocessor/prolongation.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/preprocessor/prolongation.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,7 +22,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="590" />
+    <option name="cachedIndexableFilesCount" value="566" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="FileTemplateManagerImpl">
@@ -63,23 +50,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.1984765669918678" />
-      <entry key="MS500" value="3.3176331884027457" />
-      <entry key="S2" value="9.691334945938454" />
-      <entry key="S5" value="17.22412951660015" />
-      <entry key="S10" value="24.6306341642183" />
-      <entry key="S30" value="62.82250705828948" />
-      <entry key="S60" value="129.52926873491126" />
-      <entry key="M2" value="223.07063000367373" />
-      <entry key="M5" value="375.62736151820275" />
-      <entry key="M10" value="525.3391900827475" />
-      <entry key="M15" value="628.6047724085802" />
-      <entry key="M30" value="809.72374756188" />
-      <entry key="H1" value="957.6334518219653" />
-      <entry key="H2" value="1055.1453498280628" />
-      <entry key="H4" value="1111.57776081799" />
-      <entry key="D1" value="1163.1490043428696" />
-      <entry key="W1" value="1172.438468584762" />
+      <entry key="MS100" value="1.334670992519689" />
+      <entry key="MS500" value="3.1223370366717833" />
+      <entry key="S2" value="4.389143895733478" />
+      <entry key="S5" value="4.741313198203319" />
+      <entry key="S10" value="4.868129127316296" />
+      <entry key="S30" value="4.955468059454994" />
+      <entry key="S60" value="4.977661307248026" />
+      <entry key="M2" value="4.988812408637196" />
+      <entry key="M5" value="4.9955205763917565" />
+      <entry key="M10" value="4.997759556328692" />
+      <entry key="M15" value="4.998506208197508" />
+      <entry key="M30" value="4.999258482197683" />
+      <entry key="H1" value="5.1030261096750165" />
+      <entry key="H2" value="19.464449759543225" />
+      <entry key="H4" value="176.87344977510915" />
+      <entry key="D1" value="1360.347734921779" />
+      <entry key="W1" value="1936.5137694680993" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -101,23 +88,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.157644780225778" />
-      <entry key="MS500" value="3.2944507954543103" />
-      <entry key="S2" value="9.674435854437405" />
-      <entry key="S5" value="17.212027489423665" />
-      <entry key="S10" value="24.621918395728038" />
-      <entry key="S30" value="62.81496581708029" />
-      <entry key="S60" value="129.52140683447684" />
-      <entry key="M2" value="223.06378903659518" />
-      <entry key="M5" value="375.62274010072514" />
-      <entry key="M10" value="525.3360565504747" />
-      <entry key="M15" value="628.6023422725968" />
-      <entry key="M30" value="809.7222503091939" />
-      <entry key="H1" value="957.6325912910531" />
-      <entry key="H2" value="1055.144882986787" />
-      <entry key="H4" value="1111.5775168395471" />
-      <entry key="D1" value="1163.1489620731327" />
-      <entry key="W1" value="1172.4384625048972" />
+      <entry key="MS100" value="1.2960641778582431" />
+      <entry key="MS500" value="3.044688923087042" />
+      <entry key="S2" value="4.350792879652743" />
+      <entry key="S5" value="4.723654926489423" />
+      <entry key="S10" value="4.858873462001121" />
+      <entry key="S30" value="4.952284027142983" />
+      <entry key="S60" value="4.976056680247488" />
+      <entry key="M2" value="4.988006922658158" />
+      <entry key="M5" value="4.995197618062124" />
+      <entry key="M10" value="4.9975979496284095" />
+      <entry key="M15" value="4.998398442040348" />
+      <entry key="M30" value="4.99920458492555" />
+      <entry key="H1" value="5.102999054433596" />
+      <entry key="H2" value="19.464429173604874" />
+      <entry key="H4" value="176.87340112595783" />
+      <entry key="D1" value="1360.3476790900488" />
+      <entry key="W1" value="1936.5137581830825" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -418,7 +405,8 @@
       <workItem from="1781163890937" duration="353000" />
       <workItem from="1781164260809" duration="57000" />
       <workItem from="1781164329404" duration="12741000" />
-      <workItem from="1781233817492" duration="1040000" />
+      <workItem from="1781233817492" duration="2814000" />
+      <workItem from="1781241867847" duration="7961000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -668,7 +656,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779808193443</updated>
     </task>
-    <option name="localTasksCounter" value="32" />
+    <task id="LOCAL-00032" summary="Migration to Windows">
+      <option name="closed" value="true" />
+      <created>1781235408676</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1781235408676</updated>
+    </task>
+    <option name="localTasksCounter" value="33" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
@@ -698,7 +694,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="MARK_IGNORED_AS_EXCLUDED" value="true" />
-    <MESSAGE value="Fix username -&gt; login column rename in User" />
     <MESSAGE value="Fix problem: create new document" />
     <MESSAGE value="Add API for settings and GUI commands" />
     <MESSAGE value="Convert 'operations.json' to 'operations.yaml'" />
@@ -723,7 +718,8 @@
     <MESSAGE value="codex backup" />
     <MESSAGE value="kitty backup" />
     <MESSAGE value="Fixed Billet block backend and fronted" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed Billet block backend and fronted" />
+    <MESSAGE value="Migration to Windows" />
+    <option name="LAST_COMMIT_MESSAGE" value="Migration to Windows" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/apiProject1$gui_client.coverage" NAME="gui_client Coverage Results" MODIFIED="1768468851893" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

@@ -4,6 +4,7 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/backend/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/backend/tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/logs" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
